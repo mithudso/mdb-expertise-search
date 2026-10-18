@@ -24,10 +24,11 @@ except ImportError as exc:  # pragma: no cover - exercised only without the extr
 
 from . import embed as embedmod
 from . import index as idx
+from . import recipes as recipemod
 from . import search as srch
 
 MODES = ["hybrid", "keyword", "semantic"]
-KINDS = [None, "skill", "llms", "memory"]
+KINDS = [None, "skill", "llms", "memory", "recipe"]
 
 #: Quick-jump queries for common MongoDB topics (digit keys 1-9).
 TOPICS = [
@@ -58,6 +59,7 @@ class MdbxApp(App):
         Binding("ctrl+t", "cycle_mode", "Mode"),
         Binding("ctrl+k", "cycle_kind", "Kind"),
         Binding("ctrl+f", "focus_facets", "Facets"),
+        Binding("ctrl+r", "recipes", "Recipes"),
         Binding("slash", "focus_query", "Search", show=False),
         Binding("escape", "clear_scope", "Clear scope"),
         Binding("q", "quit", "Quit", show=False),
@@ -116,6 +118,20 @@ class MdbxApp(App):
     def action_cycle_kind(self) -> None:
         self.kind = (self.kind + 1) % len(KINDS)
         self._rerun()
+
+    def action_recipes(self) -> None:
+        """Show every recipe (empty query) or search within recipes when a query is typed."""
+        self.kind = KINDS.index("recipe")
+        self.source = None
+        q = self.query_one("#q", Input).value
+        if q.strip():
+            self._search(q)
+            return
+        hits = [
+            srch.Hit(-1, r.path, r.name, "recipe", r.title, 1, r.text, 0.0, "recipe", r.summary)
+            for r in recipemod.load()
+        ]
+        self._render_hits(hits, " · recipes (type to search within them)")
 
     def action_focus_query(self) -> None:
         self.query_one("#q", Input).focus()

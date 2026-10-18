@@ -554,18 +554,13 @@ Upload this file to your IdP to auto-populate SP configuration values.
 
 Each configured IdP gets a unique **Login URL** in FMC. Share this URL with users for SP-initiated login that goes directly to the correct IdP, bypassing the email-lookup step.
 
-### RelayState URLs for multiple MongoDB properties
+### RelayState URL for Atlas
 
-Use RelayState to direct users to specific MongoDB services after authentication. The URLs below contain MongoDB's own static Okta app IDs — these are fixed values provided by MongoDB, not customer-specific. Copy them exactly.
+Use RelayState to direct users to Atlas after authentication.
 
 | Service | RelayState URL |
 |---------|----------------|
 | MongoDB Atlas | Use the Login URL from FMC (unique per customer IdP) |
-| Support Portal | `https://auth.mongodb.com/app/salesforce/exk1rw00vux0h1iFz297/sso/saml` |
-| MongoDB University | `https://auth.mongodb.com/home/mongodb_thoughtindustriesstaging_1/0oadne22vtcdV5riC297/alndnea8d6SkOGXbS297` |
-| Community Forums | `https://auth.mongodb.com/home/mongodbexternal_communityforums_3/0oa3bqf5mlIQvkbmF297/aln3bqgadajdHoymn297` |
-| Feedback Engine | `https://auth.mongodb.com/home/mongodbexternal_uservoice_1/0oa27cs0zouYPwgj0297/aln27cvudlhBT7grX297` |
-| MongoDB JIRA | `https://auth.mongodb.com/app/mongodbexternal_mongodbjira_1/exk1s832qkFO3Rqox297/sso/saml` |
 
 ### Audit logging for federation events
 

@@ -52,12 +52,17 @@
   {
     "path": ".github/workflows/ci.yml",
     "purpose": "docs/config",
-    "bytes": 530
+    "bytes": 684
   },
   {
     "path": ".gitignore",
     "purpose": "docs/config",
-    "bytes": 452
+    "bytes": 726
+  },
+  {
+    "path": ".mcp.json",
+    "purpose": "docs/config",
+    "bytes": 103
   },
   {
     "path": ".vscode/extensions.json",
@@ -82,7 +87,7 @@
   {
     "path": "CLAUDE.md",
     "purpose": "docs/config",
-    "bytes": 1107
+    "bytes": 1423
   },
   {
     "path": "CODE_OF_CONDUCT.md",
@@ -107,7 +112,7 @@
   {
     "path": "README.md",
     "purpose": "Overview and quick start",
-    "bytes": 3235
+    "bytes": 3704
   },
   {
     "path": "docs/ARCHITECTURE.md",
@@ -117,12 +122,12 @@
   {
     "path": "docs/COMPONENTS.md",
     "purpose": "docs/config",
-    "bytes": 1940
+    "bytes": 2254
   },
   {
     "path": "docs/DEVELOPMENT.md",
     "purpose": "docs/config",
-    "bytes": 1469
+    "bytes": 1604
   },
   {
     "path": "docs/INSTALLATION.md",
@@ -130,9 +135,14 @@
     "bytes": 478
   },
   {
+    "path": "docs/LSP.md",
+    "purpose": "docs/config",
+    "bytes": 3287
+  },
+  {
     "path": "docs/MCP.md",
     "purpose": "docs/config",
-    "bytes": 1076
+    "bytes": 1242
   },
   {
     "path": "docs/SECURITY.md",
@@ -142,7 +152,7 @@
   {
     "path": "docs/TESTING.md",
     "purpose": "docs/config",
-    "bytes": 1168
+    "bytes": 1400
   },
   {
     "path": "docs/archive/.gitkeep",
@@ -167,7 +177,7 @@
   {
     "path": "docs/high_signal_file_index.json",
     "purpose": "docs/config",
-    "bytes": 5299
+    "bytes": 5303
   },
   {
     "path": "docs/integrations-and-assumptions.md",
@@ -177,7 +187,7 @@
   {
     "path": "docs/known-issues.md",
     "purpose": "docs/config",
-    "bytes": 1278
+    "bytes": 2037
   },
   {
     "path": "docs/logging.md",
@@ -200,6 +210,21 @@
     "bytes": 390
   },
   {
+    "path": "editors/helix-languages.toml",
+    "purpose": "docs/config",
+    "bytes": 248
+  },
+  {
+    "path": "editors/neovim.lua",
+    "purpose": "docs/config",
+    "bytes": 253
+  },
+  {
+    "path": "examples/orders.mql",
+    "purpose": "docs/config",
+    "bytes": 672
+  },
+  {
     "path": "mdbx/__init__.py",
     "purpose": "Package version",
     "bytes": 106
@@ -207,12 +232,12 @@
   {
     "path": "mdbx/cli.py",
     "purpose": "mdbx command entry point",
-    "bytes": 5760
+    "bytes": 7318
   },
   {
     "path": "mdbx/corpus.py",
     "purpose": "Corpus discovery, classification, chunking",
-    "bytes": 4062
+    "bytes": 4151
   },
   {
     "path": "mdbx/embed.py",
@@ -225,6 +250,41 @@
     "bytes": 4452
   },
   {
+    "path": "mdbx/mcp_server.py",
+    "purpose": "MCP server (stdio)",
+    "bytes": 4857
+  },
+  {
+    "path": "mdbx/mql/__init__.py",
+    "purpose": "docs/config",
+    "bytes": 86
+  },
+  {
+    "path": "mdbx/mql/analyze.py",
+    "purpose": "Context-aware MQL lint + outline",
+    "bytes": 39336
+  },
+  {
+    "path": "mdbx/mql/features.py",
+    "purpose": "LSP completion and hover logic",
+    "bytes": 6724
+  },
+  {
+    "path": "mdbx/mql/operators.py",
+    "purpose": "MQL operator table",
+    "bytes": 20783
+  },
+  {
+    "path": "mdbx/mql/parser.py",
+    "purpose": "Tolerant mongosh/MQL parser",
+    "bytes": 13947
+  },
+  {
+    "path": "mdbx/mql/server.py",
+    "purpose": "mql-lsp language server",
+    "bytes": 7664
+  },
+  {
     "path": "mdbx/search.py",
     "purpose": "Keyword, semantic, hybrid ranking",
     "bytes": 5903
@@ -232,17 +292,17 @@
   {
     "path": "mdbx/tui.py",
     "purpose": "Textual TUI",
-    "bytes": 7729
+    "bytes": 8378
   },
   {
     "path": "memory.md",
     "purpose": "docs/config",
-    "bytes": 1332
+    "bytes": 2306
   },
   {
     "path": "prompts.md",
     "purpose": "docs/config",
-    "bytes": 766
+    "bytes": 1006
   },
   {
     "path": "pyproject.toml",
@@ -260,6 +320,16 @@
     "bytes": 2744
   },
   {
+    "path": "scripts/redact_corpus.py",
+    "purpose": "Redact customer/internal references",
+    "bytes": 3956
+  },
+  {
+    "path": "scripts/sweep_customers.py",
+    "purpose": "Customer-marker sweep",
+    "bytes": 2371
+  },
+  {
     "path": "scripts/sync_corpus.sh",
     "purpose": "Rebuild corpus from local skills + reindex",
     "bytes": 1183
@@ -273,6 +343,21 @@
     "path": "tests/test_core.py",
     "purpose": "Core unit tests",
     "bytes": 3632
+  },
+  {
+    "path": "tests/test_lsp_e2e.py",
+    "purpose": "LSP stdio end-to-end test",
+    "bytes": 3228
+  },
+  {
+    "path": "tests/test_mcp.py",
+    "purpose": "MCP tool tests",
+    "bytes": 1592
+  },
+  {
+    "path": "tests/test_mql.py",
+    "purpose": "MQL parser/analyzer/feature tests",
+    "bytes": 5518
   },
   {
     "path": "tests/test_tui.py",

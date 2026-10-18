@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-atlas-expert` hub.** Created by `/dr` deep research 2026-10-01; research dir `/Users/mitch/.global-ai-hub/research/mongodb-atlas-identity-policy-frontier-20261001`.
+> **Reference file — part of the `mongodb-atlas-expert` hub.** Created by deep research 2026-10-01.
 
 ---
 name: mongodb-atlas-identity-policy-frontier-20261001
@@ -13,7 +13,7 @@ whenToUse:
   - "Review Cedar resource policy compliance boundaries"
 keywords: ["atlas", "service accounts", "oauth", "oidc", "workforce identity", "workload identity", "cedar", "resource policies", "secret rotation", "group claims", "audience", "nonCompliantResources"]
 tags: ["mongodb", "atlas", "security", "iam", "federation", "oauth", "oidc", "cedar"]
-provenance: "/dr · /Users/mitch/.global-ai-hub/research/mongodb-atlas-identity-policy-frontier-20261001"
+provenance: "deep research 2026-10-01"
 ---
 
 # Atlas Identity Federation and Resource Policy Boundaries
@@ -39,7 +39,7 @@ Atlas Resource Policies are organization-level guardrails written in the open-so
 
 ### Atlas Workforce Identity Federation
 
-- Workforce Identity Federation requires Atlas dedicated clusters (M10+) running MongoDB 7.0.11 or later. verified-as-of: 2026-10-01[^c2-1][^c2-4]
+- Workforce Identity Federation requires Atlas dedicated clusters (M10+) running MongoDB 7.0.11 or later. verified-as-of: 2026-10-01[^c2-1]
 - An organization supports at most two Workforce IdPs: one OIDC IdP for database access and one SAML IdP for Atlas UI access; each org maps to one IdP per purpose, and Organization Owner is needed to configure. verified-as-of: 2026-10-01[^c2-1][^c2-2]
 - Tentative: Authorization is either by group membership (groups claim, default 'groups') or by user ID (user claim, default 'sub'); on Entra ID groups arrive as Object IDs, and user claim can be upn or oid.[^c2-1]
 - Tentative: Org mapping can assign a default org role to IdP-authenticated users (applies only if no role is mapped from their IdP group), restrict by approved domains, and requires prior domain mapping; mapping auto-creates an IdP certificate-expiry alert.[^c2-2]
@@ -79,7 +79,7 @@ Atlas Resource Policies are organization-level guardrails written in the open-so
 - Tentative: When a new secret is created, the old secret's expiry is capped at 7 days (shortened if it was longer, kept if already sooner), giving a bounded overlap window for rotation.[^c1-4] _(Atlas Service Accounts OAuth 2.0)_
 - Best practice: reuse a token for its hour rather than minting one per request, mint a replacement before expiry, and revoke tokens no longer needed via the Revoke Service Account Token endpoint. (two sources)[^c1-2][^c1-1] _(Atlas Service Accounts OAuth 2.0)_
 - Tentative: OWASP recommends least-privilege access to secrets and supported or automated rotation. Apply this independent security guidance to Atlas client secrets; OWASP does not specify Atlas secret lifetimes or rotation overlap.[^c1-7] _(Atlas Service Accounts OAuth 2.0)_
-- Workforce (human, mongosh/Compass) and Workload (application, driver-only) OIDC are separate IdP configurations; an Entra Workforce provider does not cover application data connections. (two sources)[^c2-4][^c2-1] _(Atlas Workforce Identity Federation)_
+- Workforce (human, mongosh/Compass) and Workload (application, driver-only) OIDC are separate IdP configurations; an Entra Workforce provider does not cover application data connections. [^c2-1] _(Atlas Workforce Identity Federation)_
 - Tentative: Atlas documents Azure identities using the identity or group Object ID and GCP service accounts using their Unique ID. Configure the matching claim and database principal; do not substitute a display name.[^c3-1] _(Atlas Workload Identity Federation)_
 - The Atlas Architecture Center lists Workload Identity Federation, AWS IAM and X.509 as workload authentication choices. It also lists X.509 or SCRAM as development/test choices. (two sources)[^c3-5][^c3-4] _(Atlas Workload Identity Federation)_
 - Cedar's native model has both permit and forbid effects plus entities, scope and optional schema; Atlas exposes only the forbid subset, which is why Atlas policies cannot express allow-lists directly and use `unless` for allow-list-style constraints. (two sources)[^c4-5][^c4-4] _(Atlas Resource Policies Cedar)_
@@ -132,7 +132,6 @@ Atlas Resource Policies are organization-level guardrails written in the open-so
 [^c2-1]: https://www.mongodb.com/docs/atlas/workforce-oidc/ — Set up Workforce Identity Federation with OIDC - Atlas (docs)
 [^c2-2]: https://www.mongodb.com/docs/atlas/security/manage-org-mapping/ — Manage Organization Mapping for Federated Authentication (docs)
 [^c2-3]: https://learn.microsoft.com/en-us/troubleshoot/entra/entra-id/app-integration/get-signed-in-users-groups-in-access-token — Get Signed-in User Group List from a Group Overage Claim (docs)
-[^c2-4]: https://help.napa.fi/design/public/setup/latest/en/-optional--step-4--configuring-mongodb-oidc.html — NAPA Setup: Configuring MongoDB OIDC (docs)
 
 ### Atlas Workload Identity Federation
 

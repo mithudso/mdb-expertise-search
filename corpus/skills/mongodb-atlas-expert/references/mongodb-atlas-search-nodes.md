@@ -518,7 +518,7 @@ The alternative to Search Nodes is scaling up the data node tier to give more RA
 
 ### Enterprise Discounts
 
-Search Node pricing is eligible for the same enterprise commit discounts as cluster pricing. MongoDB's default negotiating position is to protect Search Node pricing while discounting cluster aggressively — push for aligned discounts. Price-protection clauses lock Search Node rates for contract terms.
+Search Node pricing is eligible for the same enterprise commit discounts as cluster pricing.
 
 ---
 

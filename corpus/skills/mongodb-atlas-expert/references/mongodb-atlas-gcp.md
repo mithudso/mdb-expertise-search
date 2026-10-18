@@ -852,7 +852,7 @@ Atlas webhook payload is JSON; Cloud Functions can parse and route to any GCP se
 - Google for Startups Cloud Program credits apply to GCP services including Marketplace purchases
 - MongoDB Atlas on GCP Marketplace charges are typically covered by startup credit grants
 - Stack with MongoDB for Startups program for additional Atlas credits
-- Contact: mdb-gcp-marketplace@mongodb.com for private offers and startup credit stacking guidance
+- Contact your MongoDB account team or the GCP Marketplace listing for private offers and startup credit stacking guidance
 
 **Comparing Marketplace vs direct billing:**
 | Factor | GCP Marketplace | Direct MongoDB billing |
@@ -867,9 +867,9 @@ Atlas webhook payload is JSON; Cloud Functions can parse and route to any GCP se
 
 MongoDB's 6-year streak as **Google Cloud Partner of the Year for Data & Analytics - Marketplace** translates to practical billing benefits:
 - Marketplace listing is actively maintained — new Atlas features appear in Marketplace quickly
-- Co-sell motions mean Google Cloud AEs actively recommend Atlas, often bundling Marketplace subscription setup into GCP account planning
+- MongoDB and Google Cloud teams can collaborate on joint opportunities, often bundling Marketplace subscription setup into GCP account planning
 - Private offers negotiated jointly by MongoDB and Google Cloud AMs can yield custom pricing tiers not available on the public Marketplace listing
-- Contact mdb-gcp-marketplace@mongodb.com to initiate a private offer discussion
+- Contact your MongoDB account team or the GCP Marketplace listing to initiate a private offer discussion
 
 See Section 10 for the full partnership program details including Partner of the Year recognition, GDC, and AI/ML partnerships.
 
@@ -1245,17 +1245,16 @@ Ensure Cloud Build SA has `roles/secretmanager.secretAccessor` on the secrets.
 ### 10.1 Google Cloud Partner of the Year and Co-Sell
 
 MongoDB has been named **Google Cloud Partner of the Year for Data & Analytics - Marketplace** for 6 consecutive years through 2025. Practical implications:
-- Strong joint support escalation path — MongoDB and Google Cloud TAMs/SEs can collaborate on enterprise accounts
-- Co-sell eligibility: MongoDB AEs can engage with Google Cloud Sales on joint opportunities
+- MongoDB and Google Cloud teams can collaborate on joint opportunities
 - Marketplace listing is actively maintained; new Atlas features appear in Marketplace quickly
-- Private offer discussions: contact mdb-gcp-marketplace@mongodb.com
+- Private offer discussions: contact your MongoDB account team or the GCP Marketplace listing
 
 ### 10.2 MongoDB for Startups + Google Cloud Startup Credits
 
 - **MongoDB for Startups:** Apply at mongodb.com/startups for Atlas credits (up to $500/month for 12 months)
 - **Google for Startups Cloud Program:** GCP credits ($0-$200K+ depending on stage) cover Marketplace charges including Atlas
 - **Stacking:** Both programs can be active simultaneously — use GCP startup credits to cover Atlas Marketplace charges while MongoDB for Startups credits offset direct charges
-- Contact: mdb-gcp-marketplace@mongodb.com for private offers tailored to startups
+- Contact your MongoDB account team or the GCP Marketplace listing for private offers tailored to startups
 
 ### 10.3 Google Cloud Ready — Regulated and Sovereignty Solutions
 

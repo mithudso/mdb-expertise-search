@@ -217,7 +217,7 @@ const withIndexes = forecast.map(r => ({
 }));
 ```
 
-**Real-world example:** Large e-commerce cluster at 85 TB across 13 shards on M80. Autoscaling triggered at 90% disk used. Without forecast, team surprised by scale events mid-cycle.
+**Example:** A large sharded deployment where autoscaling triggers at 90% disk used. Without forecast, team surprised by scale events mid-cycle.
 
 ---
 
@@ -386,7 +386,7 @@ sh.shardCollection("events_db.events", { tenantId: 1, _id: 1 })
 sh.shardCollection("logs_db.logs", { _id: "hashed" })
 ```
 
-**Real-world example:** Large-scale sharded deployment — 13 shards, 85 TB total, M80 per shard. Autoscaling triggers at 90% disk. Shard key selection was critical design decision enabling balanced chunk distribution at this scale.
+**Example:** A large sharded deployment (e.g. many shards on a high-tier cluster). Autoscaling triggers at 90% disk. Shard key selection is a critical design decision enabling balanced chunk distribution at this scale.
 
 ---
 

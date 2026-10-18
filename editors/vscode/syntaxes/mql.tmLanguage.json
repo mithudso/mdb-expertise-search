@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "MQL",
+  "scopeName": "source.mql",
+  "patterns": [{ "include": "#comment" }, { "include": "#value" }, { "include": "#statement-words" }],
+  "repository": {
+    "comment": {
+      "patterns": [
+        { "name": "comment.line.double-slash.mql", "match": "//.*$" },
+        { "name": "comment.block.mql", "begin": "/\\*", "end": "\\*/" }
+      ]
+    },
+    "statement-words": {
+      "patterns": [
+        { "name": "keyword.control.mql", "match": "\\b(const|let|var|use|new)\\b" },
+        { "match": "\\b(db)\\b(?:\\.([A-Za-z_][\\w-]*))?(?:\\.(find|findOne|aggregate|countDocuments|distinct|insertOne|insertMany|updateOne|updateMany|replaceOne|deleteOne|deleteMany|findOneAndUpdate|findOneAndDelete|findOneAndReplace|createIndex|watch|bulkWrite|sort|limit|skip|project|projection|hint|count|remove|update))?",
+          "captures": { "1": { "name": "support.variable.mql" }, "2": { "name": "entity.name.type.collection.mql" }, "3": { "name": "support.function.method.mql" } } },
+        { "name": "support.function.method.mql", "match": "(?<=\\.)(find|findOne|aggregate|sort|limit|skip|project|projection|hint|toArray|forEach|explain|countDocuments|distinct|updateOne|updateMany|deleteOne|deleteMany|insertOne|insertMany)(?=\\s*\\()" }
+      ]
+    },
+    "value": {
+      "patterns": [
+        { "include": "#comment" },
+        { "name": "variable.language.system.mql", "match": "\\$\\$[A-Za-z_]\\w*" },
+        { "name": "keyword.operator.mql", "match": "(?<![\\w$\"'])\\$[A-Za-z_]\\w*(?=\\s*:)" },
+        { "name": "keyword.operator.mql", "match": "(?<=[\"'])\\$[A-Za-z_]\\w*(?=[\"']\\s*:)" },
+        { "name": "variable.other.field-path.mql", "match": "(?<=[\"'])\\$[A-Za-z_][\\w.]*(?=[\"'])" },
+        { "name": "support.class.constructor.mql", "match": "\\b(ObjectId|ISODate|Date|NumberLong|NumberInt|NumberDecimal|Decimal128|UUID|Timestamp|BinData|MinKey|MaxKey|RegExp|DBRef)\\b(?=\\s*\\()" },
+        { "name": "constant.language.mql", "match": "\\b(true|false|null|undefined|Infinity|NaN)\\b" },
+        { "name": "constant.numeric.mql", "match": "[-+]?(?:0[xX][0-9a-fA-F]+|(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][-+]?\\d+)?)" },
+        { "name": "string.regexp.mql", "match": "(?<![\\w)\\]])/(?![/*])(?:\\\\.|\\[(?:\\\\.|[^\\]\\\\])*\\]|[^/\\\\\\n])+/[a-z]*" },
+        { "name": "string.quoted.double.mql", "begin": "\"", "end": "\"", "patterns": [{ "name": "constant.character.escape.mql", "match": "\\\\." }] },
+        { "name": "string.quoted.single.mql", "begin": "'", "end": "'", "patterns": [{ "name": "constant.character.escape.mql", "match": "\\\\." }] },
+        { "name": "string.template.mql", "begin": "`", "end": "`" },
+        { "name": "support.type.property-name.mql", "match": "[A-Za-z_][\\w$]*(?=\\s*:)" }
+      ]
+    }
+  }
+}

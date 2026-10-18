@@ -8,6 +8,9 @@
 | `mdbx/search.py` | Keyword, semantic and hybrid ranking | `search`, `keyword`, `semantic`, `hybrid`, `VectorStore`, `Hit` |
 | `mdbx/cli.py` | `mdbx` command (`index`, `search`, `show`, `stats`, `tui`) | `main` |
 | `mdbx/tui.py` | Textual app: results table, detail pane, MongoDB-area facets | `MdbxApp`, `run` |
+| `mdbx/recipes.py` | Frontmatter parser and lookup for `corpus/recipes/*.md` | `load`, `find`, `Recipe` |
+| `editors/vscode/` | VS Code extension (grammar + launcher for `mql-lsp`), packaged with `vsce` | `extension.js`, `server-path.js` |
+| `scripts/gen_recipes_index.py` | Regenerates `docs/RECIPES.md` | — |
 | `mdbx/mcp_server.py` | MCP server (`MCPServer`, stdio): search, show, stats, MQL lint, operator lookup | `server`, `run` |
 | `mdbx/mql/operators.py` | Built-in table of ~280 MQL operators with categories, argument kinds and docs | `OPERATORS`, `get`, `suggest` |
 | `mdbx/mql/parser.py` | Tolerant mongosh/relaxed-JSON parser with offsets | `parse`, `Node`, `Statement` |

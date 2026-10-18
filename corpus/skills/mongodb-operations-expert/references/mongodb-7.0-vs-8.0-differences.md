@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-operations-expert` hub.** Created by `/dr` (2026-07-14).
+> **Reference file — part of the `mongodb-operations-expert` hub.** Created 2026-07-14.
 > Sibling MongoDB sub-topics are reference files under the four hubs (`mongodb-expert`,
 > `mongodb-atlas-expert`, `atlas-diagnostics-expert`, `mongodb-operations-expert`) — **not**
 > standalone skills. Ignore any "use the X skill" pointers that name a bare sibling; instead
@@ -19,9 +19,9 @@ description: >
   changes (not procedure); bulkWrite/client bulk write API; Queryable Encryption range queries; majority
   write-concern ack semantics; oplog buffer write/apply split; ExpressPlan; null-vs-undefined matching
   change; $rank/$denseRank null handling; same-key resharding; config shard; MongoDB 8.0 performance
-  claims (36%/56%/200%) and their credibility; a large-fleet 7.0→8.0 risk review.
+  claims (36%/56%/200%) and their credibility; a multi-cluster 7.0→8.0 risk review.
   SKIP: HOW to execute the upgrade — FCV lifecycle, rolling upgrade runbook, driver matrix,
-  "Straight-to-8", disk pre-warming SOP → `references/mongodb-upgrade-paths.md` (this hub); live
+  rapid sequential upgrade, disk pre-warming SOP → `references/mongodb-upgrade-paths.md` (this hub); live
   performance troubleshooting of an already-upgraded cluster → `atlas-diagnostics-expert`; WiredTiger
   cache/eviction/checkpoint mechanics in general → `mongodb-expert` (references/mongodb-wiredtiger-internals.md).
 category: mongodb
@@ -37,7 +37,7 @@ whenToUse:
   - "identifying deprecated/removed 8.0 features an app might depend on (LDAP auth, index filters, rangePreview QE, cleanupOrphaned)"
   - "explaining resharding-to-the-same-key or config shard behavior introduced/changed in 8.0"
 whenNotToUse:
-  - "FCV pinning schedule, rolling upgrade procedure, driver compatibility matrix, Straight-to-8 pattern, disk pre-warming SOP — use references/mongodb-upgrade-paths.md"
+  - "FCV pinning schedule, rolling upgrade procedure, driver compatibility matrix, rapid sequential upgrade pattern, disk pre-warming SOP — use references/mongodb-upgrade-paths.md"
   - "Diagnosing a live cluster's current performance/metrics — use atlas-diagnostics-expert"
   - "General WiredTiger cache/eviction/checkpoint mechanics with no version-diff angle — use mongodb-expert (references/mongodb-wiredtiger-internals.md)"
   - "Atlas platform config/UI upgrade flow — use mongodb-atlas-expert"
@@ -77,7 +77,7 @@ related_skills:
 
 > **Scope:** this reference answers "what changed" — the technical, behavioral, and default-value
 > deltas between MongoDB 7.0 and 8.0. It deliberately does **not** cover upgrade procedure (FCV
-> sequencing, rolling-upgrade runbook, driver matrices, "Straight-to-8", disk pre-warming) — that
+> sequencing, rolling-upgrade runbook, driver matrices, rapid sequential upgrade, disk pre-warming) — that
 > content lives in `references/mongodb-upgrade-paths.md` in this same hub. Use that file for *how*
 > to upgrade; use this file for *what will be different* once you're on 8.0, for upgrade risk
 > assessment.
@@ -198,7 +198,7 @@ layered on top of the same engine. This file catalogs those deltas.
     Durability is unaffected (the entry is journaled before ack) — this is a **visibility/causal-
     consistency** change, not a durability regression. Applications relying on implicit "majority write
     ack implies readable everywhere" behavior without explicit causally-consistent sessions are the
-    ones at risk; this is a natural audit item for a large-fleet-style 7.0→8.0 risk review.
+    ones at risk; this is a natural audit item for a multi-cluster 7.0→8.0 risk review.
 - **Oplog buffer split into separate write and apply stages.** Secondaries previously used a single
   oplog buffer; 8.0 splits this into a writer thread (reads from the primary, appends to the local
   oplog) and an applier thread (asynchronously applies the buffered entries), running in
@@ -426,5 +426,5 @@ This is a *behavior-change* audit list — pair it with the procedural pre-upgra
 [^blockproc]: [Key Enhancements in MongoDB 8.0 with Block Processing — MongoDB](https://www.mongodb.com/company/blog/technical/key-enhancements-mongodb-8-0-block-processing)
 
 Cross-reference: `references/mongodb-upgrade-paths.md` (this hub) for FCV lifecycle, rolling-upgrade
-runbook, driver compatibility matrix, "Straight-to-8", and the disk pre-warming SOP — the procedural
+runbook, driver compatibility matrix, rapid sequential upgrade, and the disk pre-warming SOP — the procedural
 counterpart to this file.

@@ -6,6 +6,7 @@ from mcp.server.mcpserver import MCPServer
 from . import __version__
 from . import embed as embedmod
 from . import index as idx
+from . import recipes as rec
 from . import search as srch
 from .mql import operators as ops
 from .mql.analyze import analyze
@@ -72,6 +73,30 @@ def mdb_show(path: str, start_line: int = 1, end_line: int | None = None) -> str
     end = end_line if end_line is not None else min(len(lines), start + 199)
     body = "\n".join(lines[start - 1 : end])
     return body[:MAX_SHOW_CHARS]
+
+
+@server.tool()
+def mdb_recipes(topic: str | None = None) -> list[dict]:
+    """List step-by-step recipes (shard a collection, add Private Link, upgrade a cluster, restore, ...).
+
+    topic: optional words to filter name/title/summary. Then fetch one with mdb_recipe(name).
+    """
+    items = rec.load()
+    if topic:
+        t = topic.lower()
+        items = [r for r in items if t in (r.name + " " + r.title + " " + r.summary).lower()]
+    return [{"name": r.name, "title": r.title, "summary": r.summary, "applies_to": r.applies_to} for r in items]
+
+
+@server.tool()
+def mdb_recipe(name: str) -> str:
+    """Return the full text of one recipe by exact name or unique words (e.g. "shard a collection")."""
+    found = rec.find(name)
+    if not found:
+        raise ValueError(f"no recipe matches {name!r}; call mdb_recipes first")
+    if len(found) > 1:
+        raise ValueError("ambiguous: " + ", ".join(r.name for r in found))
+    return found[0].text
 
 
 @server.tool()

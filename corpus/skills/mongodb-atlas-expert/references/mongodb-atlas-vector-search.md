@@ -30,7 +30,6 @@ Deep expertise in MongoDB Atlas Vector Search — HNSW index tuning, `$vectorSea
 > **Securing vector search for regulated (FSI/PII) data:** for entitlement-filtered
 > retrieval, tenant/PII isolation, and the rule that the embedding field cannot be
 > Queryable-Encrypted yet searched, see `atlas-vector-search-pii-isolation`;
-> embedding-inversion / vector-store leakage risk in `embedding-inversion-threat-model`;
 > LLM-layer injection defense in `rag-prompt-injection-defense`; bank AI governance in
 > `bank-genai-model-risk-governance`.
 

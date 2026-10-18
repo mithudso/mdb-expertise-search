@@ -15,19 +15,19 @@ version: "1.1.1"
 updated: "2026-07-14"
 description: >
   MongoDB self-managed upgrade-path expert — sequential 4.4→5.0→6.0→7.0→8.0 paths,
-  "Straight-to-8" same-cluster rollout, Feature Compatibility Version (FCV) pinning,
+  rapid sequential upgrade same-cluster rollout, Feature Compatibility Version (FCV) pinning,
   downgrade preservation window, "Point of No Return", rolling replica-set procedure
   (secondaries→primary, arbiter handling, election timing), sharded-cluster ordering
   (balancer→config servers→shards→mongos→FCV), driver compatibility matrix (Java 5.x,
   Node 6.x, PyMongo 4.9+, C# 3.0+, Go 1.17+), pre-upgrade safety checks (in-flight
   index builds, change-stream resumability, oplog window), disk pre-warming SOP gap
-  (large-fleet 7.0→8.0), upgrade-event coverage (pre/during/post checklist, Error Envelope,
+  (multi-cluster 7.0→8.0 upgrades), upgrade-event coverage (pre/during/post checklist, Error Envelope,
   customer sign-off), and common failure modes (driver mismatch, FCV unpin too early,
   index build conflicts, mongos version skew, PSA stepdown).
   TRIGGER: planning/executing/troubleshooting any MongoDB major-version upgrade; FCV
   questions; rolling upgrade runbook; driver compatibility for upgrade; "can I skip a
   version"; sharded cluster upgrade ordering; PSA stepdown failure; oplog window sizing
-  for maintenance; "Straight-to-8"; large-fleet upgrade; cold cache after
+  for maintenance; rapid sequential upgrade; multi-cluster upgrade; cold cache after
   rolling upgrade.
   SKIP: Atlas-managed upgrades driven purely through the Atlas UI — auto-upgrade
   cadence, maintenance windows, EOL forced upgrades, 7.0->8.0 Atlas-only gotchas
@@ -71,9 +71,7 @@ related_skills:
 
 # MongoDB Upgrade Paths
 
-Operational reference for MongoDB major-version upgrades on self-managed deployments. Covers the supported version sequence, Feature Compatibility Version (FCV) lifecycle, rolling replica-set and sharded-cluster procedures, driver matrices, pre-/post-upgrade verification, and the common failure modes that show up in real customer upgrades.
-
-Large-customer upgrade programs (2026): **a 7.0 → 8.0 fleet upgrade** and **Straight-to-8 self-managed** initiatives. Both rely on every section below being correct.
+Operational reference for MongoDB major-version upgrades on self-managed deployments. Covers the supported version sequence, Feature Compatibility Version (FCV) lifecycle, rolling replica-set and sharded-cluster procedures, driver matrices, pre-/post-upgrade verification, and the common failure modes that show up in real-world upgrades.
 
 ## When to use this skill
 
@@ -108,7 +106,7 @@ Large-customer upgrade programs (2026): **a 7.0 → 8.0 fleet upgrade** and **St
 | Question | Answer |
 | --- | --- |
 | Supported upgrade hop | One major version at a time: 4.4 → 5.0 → 6.0 → 7.0 → 8.0 |
-| Can I skip a major version? | **No.** Even "Straight-to-8" walks through each hop sequentially. |
+| Can I skip a major version? | **No.** Even rapid sequential upgrade walks through each hop sequentially. |
 | Replica-set upgrade order | Secondaries (one at a time) → arbiters → primary (via `rs.stepDown()`) |
 | Sharded-cluster order | Stop balancer → config servers → shards → mongos → re-enable balancer → FCV |
 | FCV command | `db.adminCommand({ setFeatureCompatibilityVersion: "8.0", confirm: true })` |
@@ -137,15 +135,15 @@ Each arrow above is one full upgrade cycle: bump binaries → wait for cluster t
 - The same chain holds for 5.0 ← 4.4. You cannot jump 5.0 → 7.0 or 6.0 → 8.0.
 - Patch-level (revision) upgrades within a major (e.g., `8.0.3 → 8.0.10`) are unrestricted and use the same rolling pattern but never require FCV changes.
 
-### "Straight-to-8" jump pattern
+### Rapid sequential upgrade pattern
 
-"Straight-to-8" is a customer-facing label for **rapid sequential** upgrades on the same cluster, not a literal skip. The pattern compresses the 4.4 → 8.0 ladder into a small number of well-rehearsed maintenance windows by:
+A rapid sequential upgrade means back-to-back upgrades of the same cluster, one major version at a time, not a literal version skip. The pattern compresses the 4.4 → 8.0 ladder into a small number of well-rehearsed maintenance windows by:
 
 1. Doing back-to-back **binary-only** upgrades through 5.0, 6.0, 7.0 with the **FCV held at the source version** for each hop (so each hop remains downgrade-eligible until validation).
 2. Validating workload + drivers between hops, but **deferring `setFeatureCompatibilityVersion`** until the cluster is sitting on the 8.0 binary set with all health and driver tests passing.
 3. Pinning FCV to `"7.0"` before the 7.0 → 8.0 hop so you retain a full 4-week binary-downgrade window from 8.0 back to 7.0 if 8.0 misbehaves under production load.
 
-Straight-to-8 is **not** a documented MongoDB product feature — it is an operational rollout pattern. The supported upgrade matrix is unchanged: 4.4 → 5.0 → 6.0 → 7.0 → 8.0.
+A rapid sequential upgrade is **not** a documented MongoDB product feature — it is an operational rollout pattern. The supported upgrade matrix is unchanged: 4.4 → 5.0 → 6.0 → 7.0 → 8.0.
 
 ### Pre-flight: identify your starting version honestly
 
@@ -357,7 +355,7 @@ The rollback path depends entirely on **whether FCV was pinned before the upgrad
    - Apply rolling **binary downgrade** in reverse order: primary last for replica sets; mongos → shards → config servers for sharded clusters.
 3. If FCV has been advanced:
    - Audit for use of new-version-only features. Atlas indexes that depend on new operators, new index types, sharded time-series with reshardCollection, etc.
-   - If clean, run `setFeatureCompatibilityVersion: "N-1", confirm: true`. If features are in use, open a Premium Support case before touching anything.
+   - If clean, run `setFeatureCompatibilityVersion: "N-1", confirm: true`. If features are in use, open a support case before touching anything.
 4. Document the rollback as a near-miss event regardless of whether downgrade succeeded. The data is the most valuable input for the next upgrade.
 
 ---
@@ -368,7 +366,7 @@ The rollback path depends entirely on **whether FCV was pinned before the upgrad
 
 ### The problem
 
-Large-fleet cluster upgrades from 7.0 → 8.0 exposed a recurring symptom: secondaries that come back online after the binary swap return to `SECONDARY` state quickly, but their **WiredTiger block cache is cold**. When the load balancer (or a stepDown on the primary) shifts read traffic onto a freshly upgraded secondary, query latency spikes 10–100× until the cache rewarms. For latency-sensitive workloads (Cookie's read SLA is sub-10ms p99), this looks like a production incident.
+Multi-cluster 7.0 → 8.0 upgrades exposed a recurring symptom: secondaries that come back online after the binary swap return to `SECONDARY` state quickly, but their **WiredTiger block cache is cold**. When the load balancer (or a stepDown on the primary) shifts read traffic onto a freshly upgraded secondary, query latency spikes 10–100× until the cache rewarms. For latency-sensitive workloads, this looks like a production incident.
 
 ### Why MongoDB docs don't cover it
 
@@ -376,7 +374,7 @@ The WiredTiger cache is in-process memory; it always starts empty after `mongod`
 
 ### Pre-warming SOP (manual, customer-driven)
 
-This is the pattern customer operators developed. There is no automated tool from MongoDB.
+This is a commonly used operator pattern. There is no automated tool from MongoDB.
 
 1. After binary swap and `SECONDARY` state, **hold the node out of routing** (e.g., `hidden: true, priority: 0`, or remove from driver readPreference rotation).
 2. Run a **scripted touch query workload** that mimics the production read pattern — typically a parallel sweep over the most-frequently-accessed indexes (covered queries against the hot collections), constrained to a small key range so the OS cache and WT cache fill in a controlled order.
@@ -387,20 +385,12 @@ This is the pattern customer operators developed. There is no automated tool fro
    Watch `bytes currently in the cache` and `pages read into cache` — when growth flattens, warm-up is complete.
 4. Reset `hidden: false` (or re-add to routing rotation) only after the cache fills to ~70% of `cacheSizeGB` and p99 latency from the touch workload matches pre-upgrade baseline.
 
-### Recommendation to MongoDB Engineering
-
-This SOP is a documentation and tooling gap. The TAM team should propose:
-
-- A documented "pre-warming after rolling upgrade" appendix in the upgrade tutorial.
-- A built-in `cacheWarmup` admin command that walks the hot indexes for the calling user — opt-in, time-boxed, and observable via `currentOp`.
-
-Until then, the manual SOP above is the supported pattern for latency-critical customers.
 
 ---
 
 ## 9. Upgrade event coverage
 
-An upgrade is a **scheduled maintenance event**, not a deploy. TAM-owned upgrades follow a three-phase template with explicit sign-offs.
+An upgrade is a **scheduled maintenance event**, not a deploy. Upgrade events follow a three-phase template with explicit sign-offs.
 
 ### Pre-event (T-7 days through T-0)
 
@@ -409,7 +399,7 @@ An upgrade is a **scheduled maintenance event**, not a deploy. TAM-owned upgrade
 - Backup tested via restore (not just taken).
 - Customer change ticket approved with explicit start/end timestamps.
 - Rollback decision matrix (Section 7) attached to the change ticket.
-- On-call rotation: TAM + MongoDB Premium Support + customer DBA, contact tree pre-shared.
+- On-call rotation: MongoDB support + customer DBA, contact tree pre-shared.
 - Communication template ready: customer status page, internal Slack channel, exec summary email.
 
 ### During event (T-0 → T-end)
@@ -431,7 +421,7 @@ An upgrade is a **scheduled maintenance event**, not a deploy. TAM-owned upgrade
 - Metrics baseline restored: p50/p95/p99 latency, error rate, replication lag, oplog window.
 - Burn-in monitoring window opens (1–4 weeks before FCV advance).
 - Customer sign-off captured in writing, attached to the change ticket. Without sign-off the event is **not** closed even if the binaries are upgraded.
-- Post-event review within 5 business days: what worked, what surprised us, what changes the runbook for the next upgrade. Append to the customer's `customer-files/.../upgrade-history.md`.
+- Post-event review within 5 business days: what worked, what surprised us, what changes the runbook for the next upgrade. Append to the change record.
 
 ### Sign-off artefacts
 
@@ -450,7 +440,7 @@ Anything less and the event is not auditable.
 
 ## 10. Common upgrade failures
 
-The recurring failure modes, ranked by frequency from real customer post-mortems:
+The recurring failure modes, ranked by frequency from post-mortems:
 
 ### 10.1 Driver mismatch
 
@@ -510,7 +500,7 @@ The recurring failure modes, ranked by frequency from real customer post-mortems
 **Root cause**: PSA only has two data-bearing voters. While the secondary is offline for upgrade, the primary alone cannot achieve majority for any write that requires `w: majority`, and the arbiter cannot help. If the primary then steps down, the cluster has no eligible primary until the secondary returns.
 
 **Mitigation**:
-- Pre-upgrade: convert PSA to PSS (three data-bearing voters) before the major upgrade. This is the single most impactful PSA recommendation TAMs can make.
+- Pre-upgrade: convert PSA to PSS (three data-bearing voters) before the major upgrade. This is the single most impactful PSA recommendation available.
 - If conversion is impossible, do **not** combine the secondary upgrade with the primary upgrade in the same window — leave 24+ hours between them.
 
 ### 10.6 Oplog window overflow during long maintenance

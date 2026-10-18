@@ -9,6 +9,8 @@
   queries produce no diagnostics, completion contexts, hover, outline.
 - `tests/test_lsp_e2e.py` — spawns `python -m mdbx.mql.server` and drives real stdio JSON-RPC: initialize,
   didOpen → publishDiagnostics, codeAction, hover, completion, documentSymbol.
+- `tests/test_recipes.py` — recipe frontmatter, lookup, `-k recipe` search, CLI and MCP recipe tools.
+- `editors/vscode/test/` — `cd editors/vscode && npm test` (node:test): server-path resolution, manifest/grammar consistency.
 - `tests/test_mcp.py` — calls the MCP tool functions against a temp index (Ollama unreachable → keyword fallback).
 
 Target: meaningful coverage of ranking, filtering and fallback paths, asserting on behaviour

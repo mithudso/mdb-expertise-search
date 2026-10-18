@@ -1,6 +1,6 @@
 interface:
   display_name: "MongoDB Atlas Expert"
-  short_description: "MongoDB Atlas Expert reference generated from docs/mongodb-atlas-expert-context.md; use when the request ne..."
+  short_description: "MongoDB Atlas platform reference for architecture, administration, connectivity, schema and query design."
   brand_color: "#2563EB"
   default_prompt: "Use the bundled MongoDB Atlas Expert context and its cited sources to answer the user's request."
 policy:

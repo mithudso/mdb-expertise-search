@@ -605,7 +605,6 @@ FTDC writes to `dbPath/diagnostic.data/` at ~1 Hz: hundreds of metrics, ~1 MiB/h
 Tools:
 - `mongo-ftdc` — Grafana-fed dashboards
 - `keyhole` (Percona) — Go CLI parser, prints WT cache/eviction/checkpoint summaries
-- `tsdiag` (MongoDB internal) — bundles FTDC + logs + serverStatus for support cases
 
 Key derived metrics to compute from FTDC deltas:
 - `pages evicted by application threads` / second → throttling rate
@@ -764,7 +763,7 @@ db.events.stats().indexSizes   // per-index on-disk bytes (post prefix compressi
 | Forgetting `cacheSizeGB` in containers | Sizes against host RAM, exceeds cgroup, OOMKilled | Pin explicitly to ≤ 50% of cgroup limit |
 | Treating snappy as obsolete | It's still fastest; perfectly fine for OLTP | Use zstd only when ratio matters and CPU headroom exists |
 | Running `mongodump` against busy collection without `--snapshotHistoryWindow` planning | Pins old snapshot → history store explodes | Use Atlas snapshots or quiescent windows |
-| Reading FTDC by eye | Easy to miss multi-hour trends | Use mongo-ftdc / keyhole / tsdiag for time-series view |
+| Reading FTDC by eye | Easy to miss multi-hour trends | Use mongo-ftdc / keyhole / a diagnostic bundle for time-series view |
 | Confusing `syncPeriodSecs` with journal flush | They're different mechanisms | `syncPeriodSecs` = checkpoint; journal = 100 ms group commit |
 
 ---
@@ -843,7 +842,7 @@ db.currentOp({ "$or":[
 
 **Action**:
 1. Lower `syncPeriodSecs` to make checkpoints more frequent
-2. Pre-warm the cache on an upgraded node before serving traffic (see `mongodb-upgrade-paths` pre-warm SOP)
+2. Pre-warm the cache on an upgraded node before serving traffic (see `mongodb-upgrade-paths`)
 
 ### 15.6 Cold-cache after restart / failover
 
@@ -907,8 +906,8 @@ Background index builds (post-4.2) hold uncommitted entries in the WiredTiger ca
 - `mongodb-performance-troubleshooting` — surface-level triage; this skill is the deep dive
 - `mongodb-capacity-planning` — uses WT cache sizing formulas
 - `mongodb-monitoring-observability` — FTDC parsing, Atlas metrics
-- `atlas-diagnostics-expert` — ts-diag and diagnostic packaging
-- `mongodb-upgrade-paths` — references cache pre-warm SOP (7.0→8.0 lesson)
+- `atlas-diagnostics-expert` — FTDC and diagnostic packaging
+- `mongodb-upgrade-paths` — covers pre-warming the cache after upgrade
 - `mongodb-transactions` — multi-doc transaction layer above WT
 - `mongodb-encryption` — CSFLE/QE complement to WT encryption-at-rest
 - `mongodb-indexes-deep` — prefix compression interaction with index design

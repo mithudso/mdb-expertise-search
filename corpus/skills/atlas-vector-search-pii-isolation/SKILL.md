@@ -9,8 +9,7 @@ description: >-
   isolation; Queryable Encryption/CSFLE interplay with vector search (what can
   and cannot be encrypted when a field must be embedded/searched); PrivateLink,
   CMEK/BYOK, data residency, audit logging for bank RAG. SKIP: prompt-injection /
-  lethal-trifecta defense -> rag-prompt-injection-defense; embedding inversion /
-  vector-store leakage -> embedding-inversion-threat-model; general Atlas Vector
+  lethal-trifecta defense -> rag-prompt-injection-defense; general Atlas Vector
   Search query/index tuning (HNSW, numCandidates, quantization) ->
   mongodb-atlas-expert; QE/CSFLE mechanics in general -> mongodb-operations-expert;
   bank AI governance/model risk -> bank-genai-model-risk-governance.
@@ -63,7 +62,7 @@ result. If you put many tenants' or many entitlement-classes' documents in one
 index and don't constrain the query, a RAG retrieval can surface another
 party's data into the LLM context. This is **OWASP LLM02 (Sensitive Info
 Disclosure)** realized through retrieval. Pair with `rag-prompt-injection-defense`
-(the trifecta) and `embedding-inversion-threat-model` (why the embedding itself leaks).
+(the trifecta); the embedding itself can leak source text.
 
 ## 2. Enforce entitlements in the `$vectorSearch` pre-filter
 
@@ -112,7 +111,7 @@ and shared+filtered for the rest. Decide per data-classification, not globally.
 
 - **The embedding vector must be stored as raw floats to be searchable** — you
   **cannot** Queryable-Encrypt or CSFLE-encrypt the vector field and still run
-  `$vectorSearch` over it. (See `embedding-inversion-threat-model` for why that raw
+  `$vectorSearch` over it. (That raw
   vector is itself sensitive.)
 - **Do** encrypt the **sensitive source/metadata fields** (account numbers, names, SSNs)
   with **Queryable Encryption** (equality/range GA) or **CSFLE**, keeping them out of
@@ -130,8 +129,7 @@ and shared+filtered for the rest. Decide per data-classification, not globally.
 - **Audit logging**: enable Atlas database auditing; ship logs to the bank's SIEM;
   capture access to PII collections/views.
 - **Bring this to the first technical meeting** — large-bank-class procurement expects the
-  PrivateLink + CMEK + audit + Terraform/Atlas-Operator story up front (see the
-  account-intelligence skills + `enterprise-vendor-management-and-tprm`).
+  PrivateLink + CMEK + audit + Terraform/Atlas-Operator story up front.
 
 ## Sources
 

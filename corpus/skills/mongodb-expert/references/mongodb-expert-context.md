@@ -1,7 +1,7 @@
 # MongoDB expert context
 
 > Extracted from the hub `SKILL.md` body on 2026-07-20 to keep the hub under its per-invocation
-> token budget. Source document: `docs/mongodb-expert-context.md` in an internal repository.
+> token budget.
 > The hub's routing tables stay in `SKILL.md`; this file carries the general MongoDB
 > fundamentals and is the fallback reference when no Sub-skill routing-table row matches.
 

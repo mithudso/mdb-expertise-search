@@ -11,6 +11,9 @@ jobs:
         python: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
@@ -18,5 +21,6 @@ jobs:
       - run: ruff check .
       - run: pytest -q
       - run: python scripts/sweep_customers.py
+      - run: cd editors/vscode && npm install --ignore-scripts && npm test
       - name: Index doc paths exist
         run: python scripts/check_doc_indexes.py

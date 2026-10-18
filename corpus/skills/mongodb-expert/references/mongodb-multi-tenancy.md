@@ -1317,7 +1317,7 @@ db.events.find({ tenantId: "acme-corp", status: "active", createdAt: { $gt: yest
 - [Choosing In-Use Encryption: QE vs CSFLE](https://www.mongodb.com/docs/manual/core/queryable-encryption/about-qe-csfle/)
 
 ### Articles and Deep-Dives
-- [Multi-Tenancy and MongoDB — Mike LaSpina, MongoDB Blog](https://medium.com/mongodb/multi-tenancy-and-mongodb-5658512ed398) — official patterns, hybrid strategy, meta-store design
+- [Multi-Tenancy and MongoDB — MongoDB Blog](https://medium.com/mongodb/multi-tenancy-and-mongodb-5658512ed398) — official patterns, hybrid strategy, meta-store design
 - [Implementing Multi-Tenancy RBAC in MongoDB — Permit.io](https://www.permit.io/blog/implement-multi-tenancy-rbac-in-mongodb) — application vs database RBAC
 - [Enhance MongoDB Security for Atlas With Scalable Tenant Isolation — Jit.io](https://www.jit.io/blog/enhance-mongodb-security-for-atlas-with-scalable-tenant-isolation) — Data API + JWT filter injection
 - [How to Design Multi-Tenant Schemas in MongoDB — OneUptime](https://oneuptime.com/blog/post/2026-01-25-mongodb-multi-tenant-schema-design/view) — index strategies, repository pattern

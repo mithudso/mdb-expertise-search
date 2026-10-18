@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-operations-expert` hub.** Created by `/dr` via `concept-family-explorer` (2026-06-13).
+> **Reference file — part of the `mongodb-operations-expert` hub.** Created 2026-06-13.
 > This is **vendor-neutral, public** cloud-database architecture scaffolding — the industry pattern of separating
 > compute from storage in operational databases. Load it from the owning hub; ignore any "use the X skill" pointers
 > that name a bare sibling — read that topic's `references/<name>.md` from its hub instead.

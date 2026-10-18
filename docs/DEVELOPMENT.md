@@ -21,6 +21,9 @@ Add a row to `_TABLE` in `mdbx/mql/operators.py` (`name|categories|arg kind|doc`
 Customer-safety: `scripts/redact_corpus.py` then `scripts/sweep_customers.py` before committing corpus changes
 (put customer-name regexes in `~/.config/mdbx/denylist.txt`, never in the repo).
 
+## VS Code extension
+`cd editors/vscode && npm install && npm test && npx vsce package` builds `mql-vscode-0.1.0.vsix` (git-ignored).
+
 ## Troubleshooting
 - `semantic index skipped: cannot reach Ollama` — start Ollama and run `ollama pull nomic-embed-text`.
 - Empty results — run `mdbx stats`; zero chunks means `mdbx index` has not run or `MDBX_CORPUS` is wrong.

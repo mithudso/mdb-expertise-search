@@ -100,6 +100,43 @@ def cmd_tui(args) -> int:
     return 0
 
 
+def cmd_recipes(args) -> int:
+    from . import recipes as rec
+
+    items = rec.load()
+    if args.query:
+        q = " ".join(args.query).lower()
+        items = [r for r in items if q in (r.name + " " + r.title + " " + r.summary).lower()]
+    if args.json:
+        print(json.dumps([{"name": r.name, "title": r.title, "summary": r.summary,
+                           "applies_to": r.applies_to, "path": r.path} for r in items], indent=2))
+        return 0
+    if not items:
+        _say("no recipes found")
+        return 1
+    width = max(len(r.name) for r in items)
+    for r in items:
+        tag = "/".join(r.applies_to) or "-"
+        print(f"{r.name:<{width}}  [{tag}]  {r.summary}")
+    return 0
+
+
+def cmd_recipe(args) -> int:
+    from . import recipes as rec
+
+    found = rec.find(" ".join(args.name))
+    if not found:
+        _say(f"no recipe matches {' '.join(args.name)!r}; try `mdbx recipes`")
+        return 1
+    if len(found) > 1:
+        _say("ambiguous; matches:")
+        for r in found:
+            _say(f"  {r.name}")
+        return 1
+    sys.stdout.write(found[0].text)
+    return 0
+
+
 def cmd_mcp(args) -> int:
     try:
         from .mcp_server import run
@@ -138,7 +175,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("query", nargs="+")
     s.add_argument("-m", "--mode", choices=["hybrid", "keyword", "semantic"], default="hybrid")
     s.add_argument("-n", "--limit", type=int, default=8)
-    s.add_argument("-k", "--kind", choices=["skill", "llms", "memory"])
+    s.add_argument("-k", "--kind", choices=["skill", "llms", "memory", "recipe"])
     s.add_argument("-s", "--source", help="substring of skill / llms set name")
     s.add_argument("--full", action="store_true", help="print whole chunks")
     s.add_argument("--json", action="store_true")
@@ -153,6 +190,15 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--sources", action="store_true")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_stats)
+
+    s = sub.add_parser("recipes", help="list step-by-step recipes (sharding, Private Link, upgrades, ...)")
+    s.add_argument("query", nargs="*", help="filter by words in name/title/summary")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_recipes)
+
+    s = sub.add_parser("recipe", help="print one recipe (exact name or unique words)")
+    s.add_argument("name", nargs="+")
+    s.set_defaults(fn=cmd_recipe)
 
     s = sub.add_parser("mcp", help="run the MCP server over stdio (needs the mcp extra)")
     s.set_defaults(fn=cmd_mcp)

@@ -14,7 +14,7 @@
 
 MongoDB Atlas Flex tier (GA: February 6, 2025) is the successor to both the shared tier (M2/M5) and the serverless tier. As of January 22, 2026, M2/M5 clusters and Serverless instances are end-of-life and no longer supported — all existing instances were automatically migrated. Flex is now the entry-level paid cluster in Atlas, bridging the gap between the free M0 tier and full dedicated clusters (M10+).
 
-**Why this matters for TAMs:** Customers with development clusters, MVPs, GenAI prototypes, or low-traffic SaaS products need accurate guidance on Flex vs. dedicated sizing thresholds, migration urgency, and billing predictability.
+**Why this matters:** Development clusters, MVPs, GenAI prototypes, and low-traffic SaaS products need accurate guidance on Flex vs. dedicated sizing thresholds, migration urgency, and billing predictability.
 
 ---
 
@@ -214,7 +214,7 @@ spec:
 
 ## Flex vs. Dedicated Decision Matrix
 
-Use this to guide customers on when to stay on Flex vs. upgrade:
+Use this to decide when to stay on Flex vs. upgrade:
 
 ### Stay on Flex if ALL of these are true:
 - Peak throughput stays under 500 ops/sec

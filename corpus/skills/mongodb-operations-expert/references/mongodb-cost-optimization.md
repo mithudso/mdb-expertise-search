@@ -43,7 +43,7 @@ related_skills:
 
 # MongoDB Atlas Cost Optimization
 
-Expert guidance on reducing MongoDB Atlas spend while maintaining performance SLAs. Applicable to all Atlas dedicated cluster tiers (M10–M700+). Real-world context: this skill was developed in part to support a $300k cost optimization target for enterprise Atlas deployments.
+Expert guidance on reducing MongoDB Atlas spend while maintaining performance SLAs. Applicable to all Atlas dedicated cluster tiers (M10–M700+).
 
 ## Scope
 
@@ -124,7 +124,7 @@ Consolidating several under-utilized M30 clusters onto fewer M50 clusters often 
 - Cost break-even: provisioned IOPS becomes cost-effective only when you need > 3,000 IOPS from a disk that would otherwise require scaling the cluster tier.
 
 ### When to use NVMe
-- Hot data caches (Okta session store, rate-limiting counters, real-time leaderboards).
+- Hot data caches (session store, rate-limiting counters, real-time leaderboards).
 - When working set exceeds 500 GB and cache miss latency is unacceptable.
 - Note: NVMe local disks are not network-attached persistent storage — if an individual node fails, WiredTiger data on that node must be rebuilt by initial sync from a healthy peer. Atlas manages this automatically, but it means the replica set must stay healthy (never lose quorum) or recovery time increases significantly.
 
@@ -264,7 +264,7 @@ For AWS customers with an existing AWS EDP agreement, Atlas Marketplace spend ca
 ### When to trigger a renegotiation
 - Annual Atlas spend > $100k: dedicated Technical Account Manager and discount eligibility.
 - Annual Atlas spend > $250k: committed-use discount almost always warranted.
-- At Okta's $300k cost optimization target: combination of right-sizing + committed-use renegotiation + Marketplace private offer is the typical playbook.
+- For large accounts with a significant savings target: combine right-sizing, committed-use renegotiation and a Marketplace private offer.
 
 ---
 
@@ -412,14 +412,14 @@ This is a customer-defined classification, not an Atlas-native concept. Align wi
 - **Separate clusters by tier**: avoid co-mingling Tier 0 and Tier 2 workloads on the same cluster (multi-tenancy) — a noisy Tier 2 workload can degrade Tier 0 performance.
 - **Tier 2 pause savings**: if you have 20 Tier 2 clusters at M20 average, pausing them 65% of the time saves ~$5,000–$8,000/month.
 
-### Okta-scale application
-For an account targeting $300k in savings:
+### Worked example: large-account savings plan
+For a large account with a significant savings target (illustrative ranges):
 - Audit all clusters: classify into T0/T1/T2.
-- Right-size T1 clusters (likely 20–40% of spend, 40% reduction = $30–60k savings).
-- Pause T2 clusters off-hours (~$60–80k savings if significant T2 footprint).
-- Negotiate committed-use discount on remaining T0/T1 spend (~15–25% = $60–120k savings).
-- Prune backup retention on T1/T2 (~$20–30k savings).
-- Total: $170–290k annualized, reaching or exceeding the $300k target with combined levers.
+- Right-size T1 clusters (T1 is often 20–40% of spend; a 40% reduction on that share is a large lever).
+- Pause T2 clusters off-hours (a large lever if the T2 footprint is significant).
+- Negotiate a committed-use discount on remaining T0/T1 spend (typically ~15–25%).
+- Prune backup retention on T1/T2.
+- Combined levers can add up to a substantial annualized reduction; the figures above are illustrative, not benchmarks.
 
 ---
 

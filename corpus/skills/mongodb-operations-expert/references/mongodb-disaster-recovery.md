@@ -22,7 +22,7 @@ description: >
   cloud backup, cross-region snapshot copy schedules and their RPO impact, AWS region
   outage scenarios (me-central-1 / me-south-1 case study, customer migration patterns,
   rs.reconfigForPSASet during outages), failover testing methodology (Error Envelope
-  concept from a customer PFT, chaos engineering for DR validation), DR runbook
+  pattern: pre-declared abort conditions, chaos engineering for DR validation), DR runbook
   structure (pre-event checklist, mid-event decision tree, post-event blameless
   postmortem), and DR anti-patterns (single-region production, untested failover,
   missing backup verification, weak decision authority, single-region snapshot copies).
@@ -58,7 +58,7 @@ keywords:
   - rs.reconfigForPSASet
   - Error Envelope
   - blameless postmortem
-  - customer PFT
+  - failover test abort conditions
   - decision authority
   - DR runbook
   - chaos engineering
@@ -87,16 +87,13 @@ related_skills:
   - mongodb-atlas-expert
   - mongodb-aws-networking
   - incident-response
-  - tam-reference
-  - tam-expertise
 ---
 
 # MongoDB Disaster Recovery Expert
 
 This skill captures the patterns, vocabulary, and decision frameworks needed to
 design, operate, test, and recover MongoDB deployments under regional or platform
-failure. It is biased toward MongoDB Atlas (the Premium Services TAM operating
-surface) but the underlying replica-set and DR theory applies to self-managed
+failure. It is biased toward MongoDB Atlas but the underlying replica-set and DR theory applies to self-managed
 clusters as well.
 
 ## TL;DR — operational summary
@@ -351,8 +348,7 @@ Untested DR is theatre.
 
 ### 5.2 The "Error Envelope" concept
 
-The Error Envelope (popularized by the a customer's Production Failover Test
-playbook in 2025) is the *pre-declared* set of conditions under which the test
+The Error Envelope (a failover-test pattern: pre-declare abort conditions) is the *pre-declared* set of conditions under which the test
 is allowed to continue running. It typically includes:
 
 - **Hard error ceiling** — e.g. "if customer-facing error rate exceeds 2% for
@@ -365,7 +361,7 @@ is allowed to continue running. It typically includes:
   minutes of trigger, abort."
 
 The envelope is agreed in writing between the customer's DBA, app owner, and
-TAM *before* the test starts. Anything inside the envelope is acceptable
+support/account team *before* the test starts. Anything inside the envelope is acceptable
 test noise; anything outside is grounds for immediate rollback. This pre-
 declaration eliminates mid-event debate about whether the test is "still
 going well" and converts the failover into an experiment with a deterministic
@@ -485,7 +481,7 @@ in me-south-1 (Bahrain) left two AZs in me-central-1 significantly impaired
 and me-south-1 workloads unable to migrate, backup, or restore. AWS estimated
 "several months" to full recovery.
 
-MongoDB Atlas presented affected customers three options:
+Affected Atlas customers had three options:
 
 1. **Move the cluster** to an unaffected region (most disruptive, most
    defensible).
@@ -494,8 +490,8 @@ MongoDB Atlas presented affected customers three options:
 3. **Wait** for AWS to recover the AZs (only acceptable for non-critical
    workloads).
 
-MongoDB **strongly recommended option 1 or 2** rather than waiting. This is
-the same recommendation TAMs should default to in any "extended region
+Option 1 or 2 is **strongly recommended** rather than waiting. This is
+the same recommendation to default to in any "extended region
 event."
 
 ### 8.2 Recovery toolkit
@@ -668,15 +664,15 @@ If any answer is "we don't know," "more than a year ago," or "we don't have one,
 
 ## 12. Worked example — applying the framework end-to-end
 
-**Scenario:** Tier-0 fintech customer running a 5-node Atlas replica set in
-AWS us-east-1 across three AZs. M60 cluster, ~3 TB, daily snapshots, no
-cross-region copy, no continuous backup. Customer asks for a DR review ahead
-of a regulator audit.
+**Scenario (hypothetical):** A Tier-0 application runs on a 5-node Atlas replica set in
+AWS us-east-1 across three AZs. Dedicated cluster, multi-TB dataset, daily snapshots, no
+cross-region copy, no continuous backup. The owner asks for a DR review ahead
+of an audit.
 
 **Step 1 — RTO/RPO discovery (§1).**
 Customer states: "RTO 30 minutes, RPO 5 minutes." Convert to design
 constraints: RTO 30 min eliminates same-region snapshot restore as the
-primary mechanism (3 TB restore alone will exceed it); RPO 5 min eliminates
+primary mechanism (a multi-TB restore alone will exceed it); RPO 5 min eliminates
 daily snapshots as the floor.
 
 **Step 2 — Posture audit (§11.2 five questions).**
@@ -752,9 +748,6 @@ permanent topology change and the first scheduled failover test.
 - **incident-response** — incident lifecycle (severity, IC, comms templates,
   postmortems) generic to any system. Use for incident-process questions
   beyond the database.
-- **tam-reference** / **tam-expertise** — TAM operating model, account
-  review structure, escalation paths. Use when the DR conversation feeds
-  into an EBR/QBR or account-health discussion.
 
 ---
 

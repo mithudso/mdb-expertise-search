@@ -15,6 +15,7 @@ MIN_CHUNK_CHARS = 120
 KIND_LABELS = {
     "skills": "skill",
     "llms": "llms",
+    "recipes": "recipe",
 }
 
 _HEADING = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
@@ -37,6 +38,8 @@ class Chunk:
 def classify(rel: Path) -> tuple[str, str]:
     """Return ``(kind, source)`` for a corpus-relative path."""
     parts = rel.parts
+    if parts[0] == "recipes":
+        return "recipe", rel.stem
     if parts[0] == "skills":
         return "skill", parts[1]
     if len(parts) > 1 and parts[1] == "memory-central":

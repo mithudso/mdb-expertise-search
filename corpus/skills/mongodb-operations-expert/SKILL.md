@@ -26,7 +26,6 @@ whenNotToUse:
 - "Atlas platform features or networking config (Search, Vector Search, Charts, App Services, IaC, PrivateLink/VPC/IP access list) \u2014 use mongodb-atlas-expert"
 - "Diagnosing a live cluster's performance, metrics, or capacity \u2014 use atlas-diagnostics-expert"
 - "Looking up a knowledge-base article \u2014 use misc-catch-all (references/mongodb-kb.md)"
-- "Cloning, installing, or running this repo \u2014 use misc-catch-all (references/internal-repos.md)"
 related_skills:
 - mongodb-expert
 - mongodb-atlas-expert
@@ -105,7 +104,6 @@ falls into a sibling hub:
 - **Live cluster diagnostics, performance, monitoring, capacity** →
   `atlas-diagnostics-expert`.
 - **Knowledge-base article lookup** → `misc-catch-all` (references/mongodb-kb.md).
-- **Cloning, installing, or running this repo** → `misc-catch-all` (references/internal-repos.md).
 
 Some topics legitimately touch two hubs (e.g., Atlas Cloud Backup is both an
 operations concern here and an Atlas platform feature). Lead with the hub that
@@ -115,7 +113,7 @@ matches the user's intent — reliability/data-movement intent stays here.
 ## Cross-hub map — where every MongoDB topic lives
 
 All MongoDB knowledge is split across **four hubs**, plus `misc-catch-all` for KB-article
-lookups (`misc-catch-all/references/mongodb-kb.md`) and repo install/run (`misc-catch-all/references/internal-repos.md`). If a task's
+lookups (`misc-catch-all/references/mongodb-kb.md`). If a task's
 deep material is **not** in this hub's Sub-skill routing table, it is a reference file under a
 sibling hub — **activate that hub or Read its `references/<name>.md` directly**. (`database-migrations`
 is a sibling skill covering the same schema-migration patterns generically across databases;
@@ -126,7 +124,7 @@ copy — it is not a separate hub in this map.)
 | --- | --- | --- |
 | `mongodb-expert` | Core data plane + **engine internals**: CRUD/MQL, aggregation, indexes, query performance, schema design, transactions, change streams, time-series, geospatial, views, BSON, error codes, connection strings, driver internals, **WiredTiger cache/eviction/checkpoint internals**, mongosh, database tools, multi-tenancy, sharding, replication, Compass | `mongodb-expert/references/mongodb-wiredtiger-internals.md`, `mongodb-indexes-deep.md`, `mongodb-sharding.md`, `mongodb-replication.md` |
 | `mongodb-atlas-expert` | Atlas **cloud platform**: control plane, Atlas Search, Vector Search, Stream Processing, Charts, Data Federation, App Services, Triggers, Online Archive, Flex, networking, IAM/RBAC, Terraform, AKO | `mongodb-atlas-expert/references/mongodb-atlas-search.md`, `mongodb-atlas-vector-search.md` |
-| `atlas-diagnostics-expert` | Live **diagnostics & performance**: ts-diag, FTDC, performance-troubleshooting symptom triage, benchmarking, monitoring/observability, capacity planning | `atlas-diagnostics-expert/references/mongodb-performance-troubleshooting.md` |
+| `atlas-diagnostics-expert` | Live **diagnostics & performance**: FTDC, performance-troubleshooting symptom triage, benchmarking, monitoring/observability, capacity planning | `atlas-diagnostics-expert/references/mongodb-performance-troubleshooting.md` |
 | `mongodb-operations-expert` | **Ops & data movement**: backup/restore, DR, Ops Manager, upgrades, migration, mongosync, relational migrator, CDC, data lifecycle, security architecture, encryption, compliance, cost, Kafka/Spark connectors | `references/mongosync.md`, `mongodb-backup-restore.md` |
 
 **High-overlap routing notes:**

@@ -300,7 +300,7 @@ validators) and **data** (backfills, reshaping).
 - **Spring Data update "did nothing"** → `@Version` mismatch →
   `OptimisticLockingFailureException`; the row changed under you. [^spring-crud]
 - **Optimizing the emitted MQL/aggregation itself** (explain-verified rewrite loop,
-  index recommendation) → mongodb-expert (references/deep-mongodb-mql-query-optimizer.md) (/dmqo).
+  index recommendation) → an explain-verified MQL optimizer.
 - **Need a MongoDB feature the ODM lacks** (change streams, CSFLE, complex
   pipeline, GridFS) → drop to the raw driver / Prisma raw escape hatches; GridFS
   is explicitly "not an ORM concern, use the driver." [^prisma-discussion][^prisma-priorities]

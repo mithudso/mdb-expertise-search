@@ -19,7 +19,7 @@ description: MongoDB Atlas Infrastructure as Code — Terraform provider mongodb
 
 MongoDB Atlas exposes the same underlying Atlas Admin API v2 surface through every Infrastructure as Code (IaC) tool in the ecosystem. The choice of tool — Terraform, the Atlas Kubernetes Operator, Pulumi, CloudFormation, AWS CDK, or direct REST — depends on where your platform engineering already lives, not on capability gaps. All tools eventually call the same `cloud.mongodb.com/api/atlas/v2/` endpoints under OAuth 2.0 or HTTP Digest authentication.
 
-**Why this matters for TAMs and platform engineers:** Customers running Atlas at scale rarely use a single tool. A common shape is Terraform for project/cluster baseline, AKO for application teams' database users and search indexes, the Atlas CLI for one-off scripted operations, and direct Admin API calls for things no IaC tool has caught up to yet (typically new features within their first six months of GA). Mixing tools is fine; mixing tools **with manual UI changes** is the universal anti-pattern.
+**Why this matters for platform engineers:** Teams running Atlas at scale rarely use a single tool. A common shape is Terraform for project/cluster baseline, AKO for application teams' database users and search indexes, the Atlas CLI for one-off scripted operations, and direct Admin API calls for things no IaC tool has caught up to yet (typically new features within their first six months of GA). Mixing tools is fine; mixing tools **with manual UI changes** is the universal anti-pattern.
 
 **Versions current as of May 2026:**
 - Terraform provider (`mongodb/mongodbatlas`): **v2.12.0** (May 6, 2026) — 72.5M downloads

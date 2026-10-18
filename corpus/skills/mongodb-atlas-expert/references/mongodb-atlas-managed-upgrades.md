@@ -102,8 +102,8 @@ version without a customer-initiated click:
    not support clusters on **Latest Version With Auto Upgrades** (minor
    versions) — only a major-version-pinned cluster, or a self-guided
    migration tool, works there.[^1] This affects migration planning timing,
-   not the upgrade trigger itself, but TAMs should flag it before recommending
-   auto-upgrade to a customer who still has cluster-to-cluster migrations
+   not the upgrade trigger itself, but flag it before recommending
+   auto-upgrade to a team that still has cluster-to-cluster migrations
    planned.
 
 ## 2. Maintenance windows, protected hours, and sequence waves
@@ -203,7 +203,7 @@ timeout)** at the driver/cluster-parameter level — so a bare 8.0 upgrade does
 not itself introduce query timeouts. The Atlas-specific gotcha is at the
 **tooling layer**: the Atlas Data Explorer query view applies its **own**
 default `MAX TIME MS` of 60 seconds, independent of and pre-dating the
-`defaultMaxTimeMS` cluster parameter.[^12] Separately, if a TAM or customer
+`defaultMaxTimeMS` cluster parameter.[^12] Separately, if an operator
 explicitly configures `defaultMaxTimeMS` during an 8.0 upgrade rollout — a
 step some upgrade runbooks now recommend for query-governance reasons — any
 existing long-running analytics or reporting query that previously ran to
@@ -257,7 +257,7 @@ sunset, not a version-compatibility gate:
   App Services wire protocol.[^9] Functions remain available **only in the
   context of Triggers** — any Function invoked directly through a Device SDK
   needs a different integration path.
-- **TAM guidance:** when a customer raises "will my Triggers break on 8.0",
+- **Guidance:** when asked "will my Triggers break on 8.0",
   the accurate answer is that Database Triggers are unaffected by the server
   version bump; the real, unrelated action item is whether they depend on
   any of the deprecated App Services surfaces above, on a timeline set by
@@ -280,9 +280,9 @@ TLS with a specific `openssl` package version on the host OS.[^11] On
 self-managed deployments this requires the operator to track OS package
 versions manually; **on Atlas, MongoDB controls and patches the underlying
 host OS**, so this specific class of OS-package-interaction regression is one
-Atlas customers structurally do not have to track themselves — call this out
-explicitly when a customer asks "how do you know your infra doesn't hit
-this" as a genuine Atlas risk-reduction point, not a talking point.
+Atlas customers structurally do not have to track themselves — a genuine Atlas
+risk-reduction point when asked "how do you know your infra doesn't hit
+this".
 
 ## 5. Risk-profile comparison: Atlas-managed vs self-managed
 
@@ -296,7 +296,7 @@ this" as a genuine Atlas risk-reduction point, not a talking point.
 | Forced-upgrade exposure | None — the operator always initiates | **EOL forced upgrade** after 6-month notice is a real, Atlas-initiated path customers must plan around even on a "pinned" cadence |
 | Ecosystem surfaces that can be mistaken for version-upgrade risk | N/A | App Services/Triggers deprecation (§4.4) — a parallel platform sunset, not a version gate |
 
-**Net TAM guidance:** Atlas removes most of the *mechanical* upgrade risk
+**Net guidance:** Atlas removes most of the *mechanical* upgrade risk
 (rolling order, host-OS patching, cache pre-warming automation) but adds a
 distinct set of **platform-governance risks** — forced EOL upgrades on a
 timeline the customer doesn't fully control, and new 8.0-era safety

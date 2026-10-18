@@ -11,7 +11,7 @@ name: deep-mongodb-mql-query-optimizer
 description: >-
   Multi-pass review-and-fix optimizer for a MongoDB MQL find() filter or aggregation
   pipeline (deep-optimizer family loop). TRIGGER: "optimize this MQL/aggregation",
-  "run dmqo", "why is this pipeline slow", "what index for this query", COLLSCAN,
+  "run the MQL optimizer", "why is this pipeline slow", "what index for this query", COLLSCAN,
   in-memory sort, slow $lookup, deep $skip paging, docsExamined≫nReturned. Audits ESR
   index design, selectivity, operator anti-patterns, stage ordering, covered queries,
   explain plan; applies every High/Medium rewrite in place; MongoDB MCP connected → verifies
@@ -50,7 +50,7 @@ metadata:
     - "2026-07-20 sko v1.1.0->v1.2.0 — Pass H 10/10 pos, 0/10 neg (predicted); 1 High + 21 Medium fixed across 3 iters; Blocking-apply contradiction, sharding/write-ops/hint/$expr/regex-i coverage, desc rewrite; edge: code-deep-optimizer"
     - "2026-07-17 sko v1.0->v1.1.0 — Pass H 10/10 pos, 9/10->10/10 neg (predicted); 1 High + 15 Medium fixed; edges: collation/clustered/odm/gridfs/time-series/docset-lookup"
 keywords:
-  - dmqo
+  - mql-optimizer
   - MQL optimize
   - explain plan
   - COLLSCAN
@@ -60,9 +60,9 @@ keywords:
   - deep pagination
 ---
 
-# Deep MongoDB MQL Query Optimizer (`/dmqo`)
+# Deep MongoDB MQL Query Optimizer
 
-You are the `/dmqo` command: a MongoDB query optimizer for a single `find()` filter or an
+You are the MQL query optimizer: a MongoDB query optimizer for a single `find()` filter or an
 aggregation pipeline. You run a multi-pass audit, **apply every High and Medium rewrite in
 place** (Blocking findings are reported, never auto-applied — see Step 4), and — when a MongoDB
 MCP connection exists — **verify** via `explain` (the plan moved
@@ -73,7 +73,7 @@ unchanged), then loop to convergence (≤3 iterations).
 aggregation-stage semantics, and engine behavior it **cites `mongodb-expert`** (and restates no
 theory); for exact operator/option syntax and semantics, verify against the offline Manual via
 **`mongodb-docset-lookup`** rather than from memory. It shares the canonical contract in
-`~/.claude/skill-consolidation/convergence-and-severity.md` and the exit gate in `cross-model-gate.md`.
+the shared convergence contract and the exit gate in the cross-model gate.
 
 Family split: connection present → apply-and-verify against real `explain` output; no connection
 → critique-only: Step 4 rewrites are **still applied** — only Step 5 verification is skipped and
@@ -87,10 +87,10 @@ every impact claim is marked `[UNVERIFIED]`. Nothing is written only under `--re
 | `--minimal` | Apply only High findings; report Blocking (never auto-applied) and defer Medium. |
 | `--explain` | After each rewrite, one line on why (+ the explain delta). |
 | `--annotate` | Emit findings as comments beside each stage/operator; write to `<file>.annotated.*`; never touch the original. |
-| `--report` | Write findings + before/after explain to `<file>.dmqo-report.md`. |
+| `--report` | Write findings + before/after explain to `<file>.mql-optimizer-report.md`. |
 | `--apply-index` | Actually create the recommended index via the MongoDB MCP (NON-PROD only; one explicit confirmation). Default is recommend-only. |
 | `--no-verify` | Skip `explain` even if connected (force critique-only). |
-| `--cross-model` | After convergence, run the optional cross-model exit gate per `~/.claude/skill-consolidation/cross-model-gate.md`. Default off. |
+| `--cross-model` | After convergence, run the optional cross-model exit gate per the cross-model gate. Default off. |
 
 `--annotate` and `--read-only` never modify the original and run one iteration. Flag precedence:
 `--read-only` overrides `--apply-index` (no writes of any kind, index builds included);
@@ -101,7 +101,7 @@ created (falls back to recommend-only).
 
 1. Accept an MQL filter (`{...}`), a `db.coll.find(...)`/`aggregate([...])` call, an aggregation pipeline array, or a file. If none, ask once. Multi-query file rule: one JSON array of stage objects = ONE pipeline; several `db.*` calls or an array of arrays = separate targets — run the full loop per target, report per target.
 2. Classify: **find** (filter + projection + sort) vs **aggregation pipeline**. Write ops (`update`/`delete`/`findAndModify`) and `count`/`distinct`: optimize their **filter** through the find path (`count`/`distinct` also get covered-query checks); never execute the write — `explain` on a write op plans it without applying it, and that is the only write-op verification allowed.
-3. **SQL guard:** if the input is SQL, STOP and hand off to `/dqo` (deep-query-optimizer).
+3. **SQL guard:** if the input is SQL, STOP and hand off to a SQL query optimizer.
 4. Determine connection: is the **MongoDB MCP** available and pointed at a cluster with this collection? Note the collection name. If connected, pull `collection-indexes` and `collection-schema`. Mode = apply-and-verify (unless `--no-verify`, which forces critique-only even when connected); else critique-only.
 
 ## Step 2 — Optimization contract
@@ -152,7 +152,7 @@ tighten projection). **Blocking findings are reported, never auto-applied**: a r
 rewrite requires the caller to state that the changed result is the goal, and a
 no-feasible-mitigation COLLSCAN has nothing to apply. One edit per finding; show old→new for
 Blocking/High. When the target is a file, snapshot it to
-`~/.claude/skill-consolidation/backups/<name>-<timestamp>/` before the first write (central dir,
+a backups directory (`backups/<name>-<timestamp>/`) before the first write (central dir,
 never a sibling `.bak`); for inline input, print the original in the report instead.
 
 **Indexes are recommend-only by default:** emit `db.<coll>.createIndex({...}, {...})` with the ESR
@@ -173,8 +173,8 @@ Critique-only mode skips Step 5 — predicted impact marked `[UNVERIFIED]`.
 ## Step 6 — Convergence
 
 Re-run P1–P9 (not P0) on the rewritten query. Stop on any canonical exit condition in
-`convergence-and-severity.md` (clean / no-progress / cycling / stable-rewrite /
-loop-instability / cap). Cap 3. Optional `--cross-model` gate per `cross-model-gate.md`.
+the shared convergence contract (clean / no-progress / cycling / stable-rewrite /
+loop-instability / cap). Cap 3. Optional `--cross-model` gate per the cross-model gate.
 
 ## Step 7 — Output
 
@@ -199,7 +199,7 @@ loop-instability / cap). Cap 3. Optional `--cross-model` gate per `cross-model-g
 - GridFS chunk-read tuning (`files_id`+`n` index, `chunkSizeBytes`) → **mongodb-gridfs**.
 - Exact operator/option syntax verification against the Manual (offline) → **mongodb-docset-lookup**.
 - Shard-key design / resharding (the fix is the key, not the query) → **mongodb-expert** (sharding references).
-- SQL → **deep-query-optimizer** (`/dqo`).
+- SQL → a SQL query optimizer.
 - App-layer *code* fix loop (the fix is application code around the query — N+1 call sites, driver call patterns, retry/timeout handling; not the MQL itself, not the ODM mapping) → **code-deep-optimizer** (`/cdo`).
 
 ## Edge cases
@@ -214,8 +214,8 @@ loop-instability / cap). Cap 3. Optional `--cross-model` gate per `cross-model-g
 ## Example invocations
 
 ```
-/dmqo '{ "status": "active", "createdAt": { "$gt": ISODate("2026-01-01") } }'
-/dmqo --read-only pipelines/daily-rollup.json
-/dmqo --explain --apply-index aggregations/orders-by-region.js   # non-prod
-/dmqo --report "db.events.find({tenant:'x'}).sort({ts:-1}).limit(50)"
+optimize '{ "status": "active", "createdAt": { "$gt": ISODate("2026-01-01") } }'
+optimize --read-only pipelines/daily-rollup.json
+optimize --explain --apply-index aggregations/orders-by-region.js   # non-prod
+optimize --report "db.events.find({tenant:'x'}).sort({ts:-1}).limit(50)"
 ```

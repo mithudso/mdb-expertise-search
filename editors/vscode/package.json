@@ -1,0 +1,43 @@
+{
+  "name": "mql-vscode",
+  "displayName": "MQL (MongoDB Query Language)",
+  "description": "Syntax highlighting and language-server features (diagnostics, completion, hover, outline, quick fixes) for MQL files, powered by mql-lsp.",
+  "version": "0.1.0",
+  "publisher": "mithudso",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/mithudso/mdb-expertise-search.git", "directory": "editors/vscode" },
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Programming Languages", "Linters"],
+  "keywords": ["mongodb", "mql", "aggregation", "lsp"],
+  "main": "./extension.js",
+  "activationEvents": ["onLanguage:mql"],
+  "contributes": {
+    "languages": [
+      { "id": "mql", "aliases": ["MQL", "mql"], "extensions": [".mql"], "configuration": "./language-configuration.json" }
+    ],
+    "grammars": [
+      { "language": "mql", "scopeName": "source.mql", "path": "./syntaxes/mql.tmLanguage.json" }
+    ],
+    "configuration": {
+      "title": "MQL",
+      "properties": {
+        "mql.server.path": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to the `mql-lsp` executable. Empty = `.venv/bin/mql-lsp` in the workspace if present, otherwise `mql-lsp` on PATH."
+        },
+        "mql.server.args": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Extra arguments for mql-lsp." },
+        "mql.trace.server": { "type": "string", "enum": ["off", "messages", "verbose"], "default": "off", "description": "Trace LSP traffic in the MQL output channel." }
+      }
+    },
+    "commands": [
+      { "command": "mql.restartServer", "title": "MQL: Restart Language Server" }
+    ]
+  },
+  "scripts": {
+    "test": "node --test test/",
+    "package": "vsce package"
+  },
+  "dependencies": { "vscode-languageclient": "^9.0.1" },
+  "devDependencies": { "@vscode/vsce": "^3.0.0" }
+}

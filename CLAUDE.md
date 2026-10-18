@@ -12,6 +12,8 @@ Project: `mdb-expertise-search` (`mdbx`) — hybrid search CLI/TUI over a MongoD
 - Run `python3 scripts/redact_corpus.py && python3 scripts/sweep_customers.py` after any corpus change.
 - MQL LSP/lint code is in `mdbx/mql/`; the MCP server is `mdbx/mcp_server.py` (mcp v2 SDK, `MCPServer`).
 - Never commit `data/`, `.venv/`, or the private corpus paths listed in `.gitignore`.
+- Recipes live in `corpus/recipes/*.md` with frontmatter (name, title, summary, applies_to, sources); regenerate `docs/RECIPES.md` with `python3 scripts/gen_recipes_index.py`.
+- Customer-name redaction rules and the denylist stay OUTSIDE the repo (`~/.config/mdbx/`); never add customer names to any committed file.
 - Never put customer names, account figures or internal tooling notes into `corpus/` files that are committed.
 - Keep `pytest` and `ruff` green before committing; update `docs/` when behavior changes.
 - Log every completed change in `memory.md`; append every user request to `prompts.md`.

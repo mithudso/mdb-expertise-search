@@ -14,7 +14,7 @@ category: mongodb
 version: 1.2.0
 updated: 2026-05-29
 tags: [mongodb, atlas, backup, restore, disaster-recovery, compliance, pit-recovery, snapshots]
-description: "MongoDB backup and restore — Atlas Cloud Backup snapshot policies, Continuous Cloud Backup PIT windows and oplog sizing, Queryable Backups, Ops Manager / Cloud Manager backup for self-managed deployments, restore workflows (download .tar.gz, automated to new cluster, in-place, point-in-time), Backup Compliance Policy and WORM retention, cross-region snapshot copy for DR, restore verification and tabletop exercises, snapshot interactions with primary promotion (a real support-case pattern), HIPAA/SOC2/PCI backup compliance, or troubleshooting stuck snapshots, failed restores, missing backups, RPO/RTO gaps, and backup anti-patterns. TRIGGER for: Atlas backup policy design, PIT window sizing, Queryable Backup forensics, BCP/WORM compliance, DR runbooks, restore testing, or cases where a customer says 'backups exist but cannot restore'. SKIP for live cluster-to-cluster data movement or zero-downtime cutover — that requires mongosync (use mongosync skill)."
+description: "MongoDB backup and restore — Atlas Cloud Backup snapshot policies, Continuous Cloud Backup PIT windows and oplog sizing, Queryable Backups, Ops Manager / Cloud Manager backup for self-managed deployments, restore workflows (download .tar.gz, automated to new cluster, in-place, point-in-time), Backup Compliance Policy and WORM retention, cross-region snapshot copy for DR, restore verification and tabletop exercises, snapshot interactions with primary promotion (a commonly seen pattern), HIPAA/SOC2/PCI backup compliance, or troubleshooting stuck snapshots, failed restores, missing backups, RPO/RTO gaps, and backup anti-patterns. TRIGGER for: Atlas backup policy design, PIT window sizing, Queryable Backup forensics, BCP/WORM compliance, DR runbooks, restore testing, or cases where a customer says 'backups exist but cannot restore'. SKIP for live cluster-to-cluster data movement or zero-downtime cutover — that requires mongosync (use mongosync skill)."
 when_to_use:
   - Designing or reviewing an Atlas backup policy (snapshot cadence and retention)
   - Sizing Continuous Cloud Backup PIT windows and explaining cost implications
@@ -54,7 +54,7 @@ This skill covers the full backup/restore surface for MongoDB Atlas and Ops Mana
 - Investigating restore failures, stuck snapshots, or snapshot operations that appear to interact with primary election
 - Reviewing backup compliance for regulated workloads (HIPAA, SOC 2, PCI DSS, GDPR)
 - Authoring restore-test runbooks or tabletop exercises
-- Triaging support cases where the customer claims "backups exist" but cannot restore (see a real support-case pattern)
+- Triaging support cases where the customer claims "backups exist" but cannot restore (see the commonly seen pattern in section 9)
 
 ---
 
@@ -393,7 +393,7 @@ The runbook **is** the disaster recovery plan. If it lives only in an engineer's
 
 ---
 
-## 9. Snapshot operations and primary promotion (a real support-case pattern)
+## 9. Snapshot operations and primary promotion (a commonly seen pattern)
 
 There is a documented interaction between long-running snapshot operations and replica-set events that can make snapshots **appear** to block primary promotion. The symptom: a primary step-down or maintenance window is queued behind an in-flight snapshot or snapshot-copy operation, and the cluster appears stuck.
 
@@ -422,7 +422,7 @@ Anything returned here will gate primary-mutating operations.
 
 ### Support-case takeaway
 
-The TS Tools case file shows this exact pattern: customer perceived "snapshots blocking primary promotion" during a maintenance window. Resolution was operational (sequence the maintenance after snapshot completion), not a code defect. Document this in the customer's runbook so the next on-call engineer doesn't escalate.
+A common support pattern is customers perceiving snapshots as blocking primary promotion during maintenance; the resolution is operational (sequence maintenance after snapshot completion). Document this in the runbook so the next on-call engineer doesn't escalate.
 
 ---
 

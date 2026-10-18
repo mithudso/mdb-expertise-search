@@ -182,7 +182,7 @@ db.names.createIndex(
 - **`$lookup` between views errors on collation** → the joined views must share a
   collation. [^collation]
 - **Need the full optimize-and-verify loop on a specific collated query** (explain-verified
-  rewrite + index recommendation) → mongodb-expert (references/deep-mongodb-mql-query-optimizer.md) (/dmqo).
+  rewrite + index recommendation) → an explain-verified MQL optimizer.
 
 ## References
 
@@ -193,4 +193,4 @@ db.names.createIndex(
 
 ## Digest
 
-Cheap digest: `mongodb-collation.llms/llms-small.txt` (≤2k tokens). Citable claims with locators: `mongodb-collation.llms/llms-facts.txt`. Produced by skill-to-llms-txt digest mode; the SKILL.md body above stays the full reference.
+Cheap digest: `mongodb-collation.llms/llms-small.txt` (≤2k tokens). Citable claims with locators: `mongodb-collation.llms/llms-facts.txt`.

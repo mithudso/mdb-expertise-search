@@ -64,7 +64,6 @@ related_skills:
 
 # MongoDB Developer Context
 
-This local skill is generated from `docs/mongodb-developer-context.md` in an internal repository.
 
 ## When to use this skill
 
@@ -90,7 +89,6 @@ Start from the bundled context below, and defer to the cited official documentat
 
 ## Skill guidance
 
-- Treat `docs/mongodb-developer-context.md` as the source document for this skill.
 - Prefer the workflows, checklists, and patterns captured in the bundled context before improvising.
 - Cross-reference with `mongodb-expert` skill for general MQL/aggregation depth.
 - Cross-reference with `mongodb-atlas-expert` skill for Atlas-specific operational depth.

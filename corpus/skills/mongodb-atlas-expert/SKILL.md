@@ -40,7 +40,7 @@ whenNotToUse:
 - What changed between MongoDB engine versions (e.g. 7.0→8.0 behavior/feature diffs)
   — use mongodb-operations-expert
 - Tenant/PII isolation and entitlement boundaries for Atlas Vector Search — use atlas-vector-search-pii-isolation
-- Looking up a MongoDB KB article, or cloning/installing/running this repo — use misc-catch-all
+- Looking up a MongoDB knowledge-base article — use misc-catch-all
 related_skills:
 - mongodb-expert
 - atlas-diagnostics-expert
@@ -53,7 +53,7 @@ updated: '2026-10-02'
 
 # MongoDB Atlas Expert
 
-Generated from `docs/mongodb-atlas-expert-context.md` in an internal repository. Use it as a **MongoDB Atlas platform reference** when planning Atlas architecture, automating Atlas administration, connecting applications, designing Atlas-backed schemas and queries, or reviewing Atlas operational posture. Start from the context below, then defer to the linked **official MongoDB Atlas docs**, **MongoDB Manual**, and **driver docs** as the source of truth for exact endpoint, command, operator, and version details. For a deep sub-area, match the task to the Sub-skill routing table below and read the listed `references/…md` file before answering.
+Use this skill as a **MongoDB Atlas platform reference** when planning Atlas architecture, automating Atlas administration, connecting applications, designing Atlas-backed schemas and queries, or reviewing Atlas operational posture. Start from the context below, then defer to the linked **official MongoDB Atlas docs**, **MongoDB Manual**, and **driver docs** as the source of truth for exact endpoint, command, operator, and version details. For a deep sub-area, match the task to the Sub-skill routing table below and read the listed `references/…md` file before answering.
 
 ## Frontier refresh scope
 
@@ -541,20 +541,19 @@ Peer hubs to hand off to:
 - [[mongodb-expert]] — data-plane query, index, schema, aggregation, and storage-engine work
 - [[atlas-diagnostics-expert]] — live cluster diagnostics, performance, monitoring, and capacity
 - [[mongodb-operations-expert]] — backups, DR, Ops Manager, migration, mongosync, security architecture, encryption, compliance, connectors, and cost
-- [[misc-catch-all]] — MongoDB knowledge-base article lookup, internal repo cloning/install/run
+- [[misc-catch-all]] — MongoDB knowledge-base article lookup
 
 <!-- cross-hub-map -->
 ## Cross-hub map — where every MongoDB topic lives
 
-All MongoDB knowledge is split across **four hubs** (plus `misc-catch-all` for KB-article lookups
-and internal repo install/run). If a task's deep material is **not** in this hub's Sub-skill routing
+All MongoDB knowledge is split across **four hubs** (plus `misc-catch-all` for KB-article lookups). If a task's deep material is **not** in this hub's Sub-skill routing
 table, it is a reference file under a sibling hub — **activate that hub or Read its `references/<name>.md` directly**.
 
 | Hub | Owns | Example reference files |
 | --- | --- | --- |
 | `mongodb-expert` | Core data plane + **engine internals**: CRUD/MQL, aggregation, indexes, query performance, schema design, transactions, change streams, time-series, geospatial, views, BSON, error codes, connection strings, driver internals, **WiredTiger cache/eviction/checkpoint internals**, mongosh, database tools, multi-tenancy, sharding, replication, Compass | `mongodb-expert/references/mongodb-wiredtiger-internals.md`, `…/mongodb-indexes-deep.md`, `…/mongodb-sharding.md`, `…/mongodb-replication.md` |
 | `mongodb-atlas-expert` (this hub) | Atlas **cloud platform**: control plane, Atlas Search, Vector Search, Stream Processing, Charts, Data Federation, App Services, Triggers, Online Archive, Flex, networking, IAM/RBAC, Terraform, AKO | local `references/mongodb-atlas-search.md`, `references/mongodb-atlas-vector-search.md` |
-| `atlas-diagnostics-expert` | Live **diagnostics & performance**: ts-diag, FTDC, performance-troubleshooting symptom triage, benchmarking, monitoring/observability, capacity planning | `atlas-diagnostics-expert/references/mongodb-performance-troubleshooting.md` |
+| `atlas-diagnostics-expert` | Live **diagnostics & performance**: diagnostic bundles, FTDC, performance-troubleshooting symptom triage, benchmarking, monitoring/observability, capacity planning | `atlas-diagnostics-expert/references/mongodb-performance-troubleshooting.md` |
 | `mongodb-operations-expert` | **Ops & data movement**: backup/restore, DR, Ops Manager, upgrades, migration, mongosync, relational migrator, CDC, data lifecycle, security architecture, encryption, compliance, cost, Kafka/Spark connectors | `mongodb-operations-expert/references/mongosync.md`, `…/mongodb-backup-restore.md` |
 
 **High-overlap routing notes:**

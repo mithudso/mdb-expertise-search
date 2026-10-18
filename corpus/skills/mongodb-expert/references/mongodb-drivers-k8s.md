@@ -96,7 +96,6 @@ Activate when the task involves any of:
 - `mongodb-atlas-expert` — Atlas-specific cluster management
 - `mongodb-schema-design` — document modeling and index design
 - `mongodb-sharding` — sharded cluster architecture
-- `mongodb-kb` — diagnostic commands and KB articles
 - `mongodb-performance-troubleshooting` — deep query performance analysis
 
 ## Example Use Cases

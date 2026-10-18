@@ -311,7 +311,7 @@ The `eviction_dirty_target` (5%) and `eviction_dirty_trigger` (20%) exist becaus
 
 ### Checkpoint Triggers
 
-MongoDB configures WiredTiger to create a checkpoint **every 60 seconds** (`storage.syncPeriodSecs`). That is the only documented trigger in the current Manual (`core/wiredtiger`: "at intervals of 60 seconds"). The older "or 2 GB of journal data, whichever comes first" wording is **not** a checkpoint trigger; the Manual's journaling page says "the default maximum size for a checkpoint is 2 GB" only in the context of sizing journal disk space. (Corrected 2026-09-15 after a claim-validation pass; the stale "2 GB" trigger had leaked into a customer-facing draft.)
+MongoDB configures WiredTiger to create a checkpoint **every 60 seconds** (`storage.syncPeriodSecs`). That is the only documented trigger in the current Manual (`core/wiredtiger`: "at intervals of 60 seconds"). The older "or 2 GB of journal data, whichever comes first" wording is **not** a checkpoint trigger; the Manual's journaling page says "the default maximum size for a checkpoint is 2 GB" only in the context of sizing journal disk space.
 
 Other things that force a checkpoint outside the 60 s cadence: `fsync`/`db.fsyncLock()`, clean shutdown, and `compact`/`autoCompact` ("Compaction regularly checkpoints the database").
 
@@ -716,7 +716,7 @@ db.adminCommand({
 });
 ```
 
-Background compaction that continuously keeps free space per collection/index file below `freeSpaceTargetMB` (default 20 MB). `runOnce: true` does a single pass over every collection/index on the node and stops; `autoCompact: false` stops a continuous run. Verified facts (Manual `autoCompact`, WiredTiger source, Jira; validated 2026-09-15):
+Background compaction that continuously keeps free space per collection/index file below `freeSpaceTargetMB` (default 20 MB). `runOnce: true` does a single pass over every collection/index on the node and stops; `autoCompact: false` stops a continuous run. Verified facts (Manual `autoCompact`, WiredTiger source, Jira):
 
 - **Per node, not replicated.** "The primary node does not replicate the autoCompact command to the secondary nodes." A node compacts only if the command is issued on that node. Sharded: run on each shard's mongods directly; cannot be issued to `mongos`.
 - **Non-blocking.** "Reads and writes are permitted while background compaction is running"; no `force` needed on a primary. Calling `autoCompact` again while one is active returns an error — disable first.
@@ -725,7 +725,7 @@ Background compaction that continuously keeps free space per collection/index fi
 - **Atlas.** Not supported on M0/Flex; supported on dedicated tiers. Requires the Atlas `autoCompact` built-in role (`atlasAdmin` alone got an auth error on 8.0 RCs — SERVER-90459). Atlas storage auto-scales **up only**; reclaimed bytes save money only after a manual disk decrease, which is a volume-replacement with per-node sync (`cluster-autoscaling`, `customize-storage`).
 - **Sizing.** `db.runCommand({compact: "<coll>", dryRun: true})` (8.0+) returns `estimatedBytesFreed`; `db.stats({freeStorage: 1})` returns `freeStorageSize` / `indexFreeStorageSize`.
 - **Observability.** `serverStatus().wiredTiger["background-compact"]`: `running`, `recovered bytes`, `files tracked`, `skipped file, not meeting requirements`, `failed calls due to cache pressure`, `sleeps due to cache pressure`, `timeout`. Checkpoint timings are `wiredTiger.checkpoint["total time (msecs)"]` (WT 11+ / MongoDB 7.0+), not the pre-7.0 `transaction checkpoint ...` names. Atlas has no checkpoint chart.
-- **Known tickets.** WT-18413 (open): background compaction bypasses the eviction-assist check and kept running while a secondary hit the 20% dirty trigger on a very large collection. WT-13216 (fixed 8.0.10/7.0.21) added eviction assistance to foreground `compact` only. WT-13340 (fixed 8.1.0): on 8.0.x, truncation can wait for a later non-skipped checkpoint. WT-13447 (fixed 8.0.5): `runOnce` stats. WT-15258 (open): memory fragmentation after autoCompact (HELP-80527). SERVER-106156 (backlog): no time-window/throttle knob exists. Recommend >=8.0.10 before piloting.
+- **Known tickets.** WT-18413 (open): background compaction bypasses the eviction-assist check and kept running while a secondary hit the 20% dirty trigger on a very large collection. WT-13216 (fixed 8.0.10/7.0.21) added eviction assistance to foreground `compact` only. WT-13340 (fixed 8.1.0): on 8.0.x, truncation can wait for a later non-skipped checkpoint. WT-13447 (fixed 8.0.5): `runOnce` stats. WT-15258 (open): memory fragmentation after autoCompact. SERVER-106156 (backlog): no time-window/throttle knob exists. Recommend >=8.0.10 before piloting.
 - No `incrementalCompactionMaxFileSizeMB` / `freeSpaceTargetPercent` parameters exist.
 
 ### When compaction Does Not Help

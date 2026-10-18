@@ -17,7 +17,7 @@ description: >-
   authoritative Manual text; docs lookup when offline or docs.mongodb.com is unreachable; find the
   precise manual page/URL for a topic; ground generated MongoDB advice in real Manual text. SKIP:
   distilled conceptual guidance → mongodb-expert / mongodb-atlas-expert /
-  mongodb-operations-expert / atlas-diagnostics-expert; KB troubleshooting articles → mongodb-kb;
+  mongodb-operations-expert / atlas-diagnostics-expert;
   Atlas platform docs (not mirrored — server manual only) → mongodb-atlas-expert; need
   current-version freshness while online → live docs.mongodb.com; docset format/creation/Dash MCP
   setup → dash-docsets. Corpus: version-pinned mirror of
@@ -51,7 +51,6 @@ whenToUse:
   - Finding docs when offline or when docs.mongodb.com is unreachable
 whenNotToUse:
   - Distilled conceptual guidance or design advice — use mongodb-expert (or mongodb-atlas-expert / mongodb-operations-expert / atlas-diagnostics-expert for their domains)
-  - KB / troubleshooting article lookup — use mongodb-kb
   - Atlas platform documentation (the mirror covers the server Manual only) — use mongodb-atlas-expert
   - Version-sensitive answers where the latest docs matter and you are online — use live docs.mongodb.com
 related_skills:
@@ -172,7 +171,7 @@ mdb_docs() {  # usage: mdb_docs '$merge'   (single-quote $-names)
 - **Snapshot, not live.** Content is frozen at 2026-05-16 (`master`). For brand-new features or
   changed defaults, cross-check live docs when online — and cite the snapshot date offline.
 - **Server Manual only.** No `/docs/atlas`, drivers, or Compass docs in this mirror. Atlas
-  questions route to `mongodb-atlas-expert`; KB articles to `mongodb-kb`.
+  questions route to `mongodb-atlas-expert`.
 - **Read-only artifact.** Never modify, move, or delete anything under the docset — Dash manages
   it. Re-downloading the docset in Dash refreshes the snapshot (counts and dates here will drift;
   re-derive with `SELECT type, COUNT(*) FROM searchIndex GROUP BY type`).
@@ -187,6 +186,5 @@ mdb_docs() {  # usage: mdb_docs '$merge'   (single-quote $-names)
 | Channel | Corpus | Use for |
 | --- | --- | --- |
 | `mongodb-expert` + sibling hubs | Distilled expertise (73 reference files) | Design guidance, trade-offs, patterns |
-| `mongodb-kb` | ~2,717 internal KB articles | Troubleshooting, error codes, escalation |
 | **this skill** | 3,555-page Manual mirror (offline) | Exact authoritative Manual text, offline/citation-grade lookup |
 | live docs.mongodb.com | Current docs | Latest-version behavior when online |

@@ -49,14 +49,13 @@ version: 1.7.0
 updated: '2026-09-29'
 metadata:
   changelog:
-  - "2026-07-20 sko v1.5.4->v1.6.0 \u2014 Pass H pos 10/10->10/10, neg FP 2/10->0/10; 13 Medium fixed (desc SKIP edges ODM/dmqo/clustered, category added, routing rows disambiguated, context extracted to references/, no-match fallback, peer seed atlas-diagnostics-expert); residual: 7-vs-8 perf-spoke routing edge (BLIND-AUDIT-DISSENT)"
+  - "2026-07-20 sko v1.5.4->v1.6.0 \u2014 Pass H pos 10/10->10/10, neg FP 2/10->0/10; 13 Medium fixed (desc SKIP edges ODM/MQL-optimizer/clustered, category added, routing rows disambiguated, context extracted to references/, no-match fallback, peer seed atlas-diagnostics-expert); residual: 7-vs-8 perf-spoke routing edge (BLIND-AUDIT-DISSENT)"
 model: claude-opus-5
 effort: high
 ---
 
 # MongoDB Expert
 
-This local skill is generated from `docs/mongodb-expert-context.md` in an internal repository.
 
 This skill consolidates 27 MongoDB data-plane/engine sub-skills as on-demand reference files under `references/`. It is the **primary, first-choice skill** for core MongoDB questions — not a fallback. Match the task to the **Sub-skill routing table** below and **Read the listed `references/…md` file before answering deep questions** — the table alone is not enough for depth. Route to a sibling hub (`mongodb-atlas-expert`, `atlas-diagnostics-expert`, `mongodb-operations-expert`, `misc-catch-all`) only when the question falls into one of those domains (see frontmatter `SKIP`).
 
@@ -104,7 +103,7 @@ This hub absorbs 27 former standalone skills as on-demand reference files. When 
 
 ## Cross-hub routing (domains this hub does NOT own)
 
-The **Sub-skill routing table** above is the authoritative map of the reference files this hub owns (27 routed sub-topics plus `mongodb-mql-quick-reference.md` and `mongodb-expert-context.md`) — route data-plane/engine depth through `references/<name>.md`. Most former standalone spokes exist only as these reference files; a few are hot-tiered and also installed top-level (`deep-mongodb-mql-query-optimizer`, `mongodb-docset-lookup`) — for those, prefer the live top-level skill when the task needs its full workflow (e.g. the dmqo fix-loop), and the reference file for background depth.
+The **Sub-skill routing table** above is the authoritative map of the reference files this hub owns (27 routed sub-topics plus `mongodb-mql-quick-reference.md` and `mongodb-expert-context.md`) — route data-plane/engine depth through `references/<name>.md`. Most former standalone spokes exist only as these reference files; a few are hot-tiered and also installed top-level (`deep-mongodb-mql-query-optimizer`, `mongodb-docset-lookup`) — for those, prefer the live top-level skill when the task needs its full workflow (e.g. the MQL-optimizer fix-loop), and the reference file for background depth.
 
 For domains outside this hub, route to the **sibling hub** that owns them. Each sibling hub has its own internal routing table for its sub-areas — do not name individual sub-skills here:
 
@@ -128,7 +127,6 @@ When a question crosses categories, pick the deepest reference that covers the p
 
 ## Skill guidance
 
-- Treat `docs/mongodb-expert-context.md` as the source document for this skill.
 - Prefer the workflows, checklists, and constraints captured in the bundled context before improvising.
 - If the request is outside this topic, choose a more appropriate skill instead of forcing this one.
 - For deep data-plane/engine questions, **Read the matching `references/<name>.md` file** from the Sub-skill routing table rather than improvising from this overview. For out-of-domain questions, route to the sibling hub named in the cross-hub routing table above.
@@ -136,8 +134,7 @@ When a question crosses categories, pick the deepest reference that covers the p
 
 ## Bundled context
 
-The full MongoDB fundamentals context — quick rules, core document/MQL model, CRUD and write-atomicity semantics, transactions, data-modeling and embed-vs-reference guidance, index and aggregation principles, driver-vs-mongosh guidance, and version-sensitivity notes — lives in `references/mongodb-expert-context.md` (**Read it** when a question needs grounding in fundamentals rather than one sub-skill's depth; it is also the no-match fallback target named in Skill guidance). Source: `docs/mongodb-expert-context.md` in an internal repository.
-
+The full MongoDB fundamentals context — quick rules, core document/MQL model, CRUD and write-atomicity semantics, transactions, data-modeling and embed-vs-reference guidance, index and aggregation principles, driver-vs-mongosh guidance, and version-sensitivity notes — lives in `references/mongodb-expert-context.md` (**Read it** when a question needs grounding in fundamentals rather than one sub-skill's depth; it is also the no-match fallback target named in Skill guidance).
 <!-- cross-hub-map -->
 ## Cross-hub map — where every MongoDB topic lives
 
@@ -152,7 +149,7 @@ table, it is either a reference file under a sibling hub — **activate that hub
 | --- | --- | --- |
 | `mongodb-expert` | Core data plane + **engine internals**: CRUD/MQL, aggregation, indexes, query performance, schema design, transactions, change streams, time-series, geospatial, views, BSON, error codes, connection strings, driver internals, **WiredTiger cache/eviction/checkpoint internals**, mongosh, database tools, multi-tenancy, sharding, replication, Compass | `references/mongodb-wiredtiger-internals.md`, `mongodb-indexes-deep.md`, `mongodb-sharding.md`, `mongodb-replication.md` |
 | `mongodb-atlas-expert` | Atlas **cloud platform**: control plane, Atlas Search, Vector Search, Stream Processing, Charts, Data Federation, App Services, Triggers, Online Archive, Flex, networking, IAM/RBAC, Terraform, AKO | `mongodb-atlas-expert/references/mongodb-atlas-search.md`, `mongodb-atlas-vector-search.md` |
-| `atlas-diagnostics-expert` | Live **diagnostics & performance**: ts-diag, FTDC, performance-troubleshooting symptom triage, benchmarking, monitoring/observability, capacity planning | `atlas-diagnostics-expert/references/mongodb-performance-troubleshooting.md` |
+| `atlas-diagnostics-expert` | Live **diagnostics & performance**: diagnostic bundles, FTDC, performance-troubleshooting symptom triage, benchmarking, monitoring/observability, capacity planning | `atlas-diagnostics-expert/references/mongodb-performance-troubleshooting.md` |
 | `mongodb-operations-expert` | **Ops & data movement**: backup/restore, DR, Ops Manager, upgrades, migration, mongosync, relational migrator, CDC, data lifecycle, security architecture, encryption, compliance, cost, Kafka/Spark connectors | `mongodb-operations-expert/references/mongosync.md`, `mongodb-backup-restore.md` |
 
 **High-overlap routing notes:**

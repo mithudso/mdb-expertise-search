@@ -1084,7 +1084,7 @@ db.suppliers.aggregate([
 - **Cross-tenant report**: union per-tenant collections (when the schema
   forbids a single collection).
 - **Migration**: dual-read from old and new collections during cutover.
-- **Heterogeneous corpora**: union "cases", "slack", "meetings" into a
+- **Heterogeneous corpora**: union "orders", "returns", "refunds" into a
   single search/scoring pipeline.
 
 ---

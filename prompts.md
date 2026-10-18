@@ -11,3 +11,7 @@
 2. "1. Yes [redact withheld files], also make the repo private for now until we can do a full sweep to make sure all
    customer information is withheld. 2. yes [add an MCP server]. Also as part of this create a mongodb lsp server
    for the mql language."
+
+## 2026-10-17 (3)
+3. "Yes do that pass [full customer-info review]. 2. Yes [VS Code extension] also include a recipes section for the
+   most common series of actions like sharding a collection and adding private link and upgrading, etc."

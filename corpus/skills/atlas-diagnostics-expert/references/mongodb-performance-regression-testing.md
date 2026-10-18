@@ -292,7 +292,7 @@ baseline — requires all of the following:
    base is stated there — but that qualifier is easy to drop in secondary coverage or in a
    reader's own recollection of the headline number, which is exactly the gap a public critique
    of the claim called out.[^13] A customer upgrading directly from an older version (a common
-   "straight-to-8"-style jump — see `mongodb-operations-expert` for that upgrade path) should
+   rapid sequential upgrade-style jump — see `mongodb-operations-expert` for that upgrade path) should
    not assume a "faster than 7.0" figure describes their own upgrade delta from, say, 4.4 or
    5.0 — as the write-concern-driven regression documented immediately below shows, jumping
    multiple versions can introduce behavior changes the single-version comparison never

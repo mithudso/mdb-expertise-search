@@ -89,7 +89,7 @@ related_skills:
 
 ## Overview
 
-This skill covers proactive benchmarking methodology, load testing tools, and workload characterization for MongoDB deployments — both self-hosted and Atlas. It enables TAMs and engineers to establish performance baselines, validate infrastructure decisions before production, and present benchmark results to stakeholders.
+This skill covers proactive benchmarking methodology, load testing tools, and workload characterization for MongoDB deployments — both self-hosted and Atlas. It enables engineers to establish performance baselines, validate infrastructure decisions before production, and present benchmark results to stakeholders.
 
 Benchmarking MongoDB is fundamentally different from benchmarking relational databases: document size variance, write concern levels, read preference, and working-set-to-RAM ratios each produce non-linear effects on throughput and latency that simple micro-benchmarks miss.
 

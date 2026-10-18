@@ -21,6 +21,13 @@ BUILTIN = [
     r"case-assistant",
     r"[Cc]ase[ #:-]*0\d{7}\b",
     r"\bARR\b",
+    r"HELP-\d+",
+    r"/Users/[A-Za-z0-9._-]+",
+    r"~/\.claude",
+    r"Premium Services",
+    r"ts-?diag",
+    r"skill-to-llms-txt",
+    r"\bTAMs?\b",
 ]
 
 

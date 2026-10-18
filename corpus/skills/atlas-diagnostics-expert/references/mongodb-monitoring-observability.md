@@ -1,9 +1,3 @@
-The file being fixed isn't on disk in this session — it's passed in as text in the prompt. I'll apply the three targeted fixes and output the corrected file. The fixes are surgical:
-
-1. Section 4: prepend `For application-level custom metrics, poll \`$currentOp\` on a schedule.` before "Run from admin-context..."
-2. Section 7 Prometheus federation: append `Metrics include everything from \`serverStatus\`, \`replSetGetStatus\`, and \`dbStats\`.` 
-3. Section 13 customer template: add intro sentence with `[bracketed]` before the code block
-
 <!-- hub-reference-banner -->
 > **Reference file — part of the `atlas-diagnostics-expert` hub.** Formerly standalone `mongodb-monitoring-observability` skill.
 > Sibling MongoDB sub-topics now reference files under four hubs (`mongodb-expert`,
@@ -98,7 +92,7 @@ related_skills:
   - mongodb-ops-manager
   - mongodb-backup-restore
   - mongodb-cost-optimization
-audience: MongoDB TAMs, DBAs, and developers responsible for operating or advising on MongoDB Atlas and self-managed deployments
+audience: DBAs and developers responsible for operating or advising on MongoDB Atlas and self-managed deployments
 ---
 
 # MongoDB Monitoring and Observability
