@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mdbx": {
+      "command": ".venv/bin/mdbx",
+      "args": ["mcp"]
+    }
+  }
+}

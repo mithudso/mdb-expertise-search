@@ -1,0 +1,9 @@
+# Append to ~/.config/helix/languages.toml and fix the path.
+[language-server.mql-lsp]
+command = "/ABS/PATH/mdb-expertise-search/.venv/bin/mql-lsp"
+
+[[language]]
+name = "mql"
+scope = "source.mql"
+file-types = ["mql"]
+language-servers = ["mql-lsp"]

@@ -843,7 +843,7 @@ db.currentOp({ "$or":[
 
 **Action**:
 1. Lower `syncPeriodSecs` to make checkpoints more frequent
-2. Pre-warm the cache on an upgraded node before serving traffic (see `mongodb-upgrade-paths` cookie pre-warm SOP)
+2. Pre-warm the cache on an upgraded node before serving traffic (see `mongodb-upgrade-paths` pre-warm SOP)
 
 ### 15.6 Cold-cache after restart / failover
 
@@ -908,7 +908,7 @@ Background index builds (post-4.2) hold uncommitted entries in the WiredTiger ca
 - `mongodb-capacity-planning` — uses WT cache sizing formulas
 - `mongodb-monitoring-observability` — FTDC parsing, Atlas metrics
 - `atlas-diagnostics-expert` — ts-diag and diagnostic packaging
-- `mongodb-upgrade-paths` — references cache pre-warm SOP (Cookie 7.0→8.0 lesson)
+- `mongodb-upgrade-paths` — references cache pre-warm SOP (7.0→8.0 lesson)
 - `mongodb-transactions` — multi-doc transaction layer above WT
 - `mongodb-encryption` — CSFLE/QE complement to WT encryption-at-rest
 - `mongodb-indexes-deep` — prefix compression interaction with index design

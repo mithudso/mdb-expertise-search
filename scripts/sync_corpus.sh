@@ -17,4 +17,6 @@ for n in atlas-cli atlas-triage-workflows diagnostic-tool-design error-codes-and
   [ -d "$LLMS_SRC/$n.llms" ] && rsync -a --exclude .DS_Store "$LLMS_SRC/$n.llms" corpus/llms/
 done
 [ -d "$DOCS_SRC" ] && rsync -a --exclude .DS_Store "$DOCS_SRC" corpus/llms/
+python3 scripts/redact_corpus.py
+python3 scripts/sweep_customers.py
 .venv/bin/mdbx index

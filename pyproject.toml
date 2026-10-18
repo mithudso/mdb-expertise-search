@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mdb-expertise-search"
-version = "0.1.0"
+version = "0.2.0"
 description = "Hybrid keyword + semantic search CLI and TUI over a curated MongoDB / Atlas expertise corpus"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -15,13 +15,17 @@ dependencies = ["numpy>=1.26"]
 
 [project.optional-dependencies]
 tui = ["textual>=0.80", "rich>=13"]
-dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.6"]
+lsp = ["pygls>=2.0", "lsprotocol>=2025.0"]
+mcp = ["mcp>=2.0"]
+all = ["mdb-expertise-search[tui,lsp,mcp]"]
+dev = ["mdb-expertise-search[all]", "pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.6"]
 
 [project.scripts]
 mdbx = "mdbx.cli:main"
+mql-lsp = "mdbx.mql.server:main"
 
 [tool.setuptools]
-packages = ["mdbx"]
+packages = ["mdbx", "mdbx.mql"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

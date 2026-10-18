@@ -1,0 +1,14 @@
+// Open with an LSP-enabled editor to see mql-lsp diagnostics, hover and completion.
+use shop
+
+const pipeline = [
+  { $match: { status: "A", qty: { $gtt: 5 } } },          // typo: $gtt  -> quick fix $gt
+  { $group: { total: { $sum: "$amount" } } },             // missing _id
+  { $sort: { total: 2 } },                                // order must be 1 or -1
+  { $unwind: "items" },                                   // path needs '$'
+  { $out: "report" },
+  { $limit: 10 },                                         // $out must be last
+]
+db.orders.aggregate(pipeline)
+
+db.orders.updateOne({ _id: 1 }, { $set: { qty: 1 }, note: "x" })  // plain field mixed with operators

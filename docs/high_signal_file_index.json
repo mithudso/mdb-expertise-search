@@ -42,7 +42,7 @@
   {
     "path": ".github/copilot-instructions.md",
     "purpose": "docs/config",
-    "bytes": 241
+    "bytes": 285
   },
   {
     "path": ".github/dependabot.yml",
@@ -52,12 +52,12 @@
   {
     "path": ".github/workflows/ci.yml",
     "purpose": "docs/config",
-    "bytes": 487
+    "bytes": 530
   },
   {
     "path": ".gitignore",
     "purpose": "docs/config",
-    "bytes": 1093
+    "bytes": 452
   },
   {
     "path": ".vscode/extensions.json",
@@ -82,7 +82,7 @@
   {
     "path": "CLAUDE.md",
     "purpose": "docs/config",
-    "bytes": 902
+    "bytes": 1107
   },
   {
     "path": "CODE_OF_CONDUCT.md",
@@ -92,7 +92,7 @@
   {
     "path": "CONTRIBUTING.md",
     "purpose": "docs/config",
-    "bytes": 266
+    "bytes": 262
   },
   {
     "path": "GEMINI.md",
@@ -107,7 +107,7 @@
   {
     "path": "README.md",
     "purpose": "Overview and quick start",
-    "bytes": 2530
+    "bytes": 3235
   },
   {
     "path": "docs/ARCHITECTURE.md",
@@ -117,32 +117,32 @@
   {
     "path": "docs/COMPONENTS.md",
     "purpose": "docs/config",
-    "bytes": 1045
+    "bytes": 1940
   },
   {
     "path": "docs/DEVELOPMENT.md",
     "purpose": "docs/config",
-    "bytes": 1037
+    "bytes": 1469
   },
   {
     "path": "docs/INSTALLATION.md",
     "purpose": "docs/config",
-    "bytes": 452
+    "bytes": 478
   },
   {
     "path": "docs/MCP.md",
     "purpose": "docs/config",
-    "bytes": 244
+    "bytes": 1076
   },
   {
     "path": "docs/SECURITY.md",
     "purpose": "docs/config",
-    "bytes": 736
+    "bytes": 936
   },
   {
     "path": "docs/TESTING.md",
     "purpose": "docs/config",
-    "bytes": 680
+    "bytes": 1168
   },
   {
     "path": "docs/archive/.gitkeep",
@@ -157,7 +157,7 @@
   {
     "path": "docs/codebase-overview.md",
     "purpose": "docs/config",
-    "bytes": 2594
+    "bytes": 2693
   },
   {
     "path": "docs/external-calls.md",
@@ -167,7 +167,7 @@
   {
     "path": "docs/high_signal_file_index.json",
     "purpose": "docs/config",
-    "bytes": 5096
+    "bytes": 5299
   },
   {
     "path": "docs/integrations-and-assumptions.md",
@@ -177,7 +177,7 @@
   {
     "path": "docs/known-issues.md",
     "purpose": "docs/config",
-    "bytes": 620
+    "bytes": 1278
   },
   {
     "path": "docs/logging.md",
@@ -207,7 +207,7 @@
   {
     "path": "mdbx/cli.py",
     "purpose": "mdbx command entry point",
-    "bytes": 4769
+    "bytes": 5760
   },
   {
     "path": "mdbx/corpus.py",
@@ -237,17 +237,17 @@
   {
     "path": "memory.md",
     "purpose": "docs/config",
-    "bytes": 618
+    "bytes": 1332
   },
   {
     "path": "prompts.md",
     "purpose": "docs/config",
-    "bytes": 490
+    "bytes": 766
   },
   {
     "path": "pyproject.toml",
     "purpose": "Packaging, deps, tool config",
-    "bytes": 763
+    "bytes": 943
   },
   {
     "path": "scripts/check_doc_indexes.py",
@@ -257,12 +257,12 @@
   {
     "path": "scripts/gen_file_index.py",
     "purpose": "Regenerate this index",
-    "bytes": 2117
+    "bytes": 2744
   },
   {
     "path": "scripts/sync_corpus.sh",
     "purpose": "Rebuild corpus from local skills + reindex",
-    "bytes": 1115
+    "bytes": 1183
   },
   {
     "path": "tests/__init__.py",
