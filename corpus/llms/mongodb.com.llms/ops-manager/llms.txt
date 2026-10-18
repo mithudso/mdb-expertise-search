@@ -1,0 +1,11 @@
+# mongodb.com documentation — Ops Manager
+
+> 5 page(s) of mongodb.com documentation under Ops Manager. Part of the index one level up (../llms.txt).
+
+## Ops Manager
+
+- [Ops Manager - (current) (Part 1 of 5)](https://www.mongodb.com/docs/ops-manager/current/ops-manager-1-llms.txt.md): > Ops Manager automates, monitors, and backs up your MongoDB infrastructure, with core administration features, a data explorer, and a performance advisor.
+- [Ops Manager - (current) (Part 2 of 5)](https://www.mongodb.com/docs/ops-manager/current/ops-manager-2-llms.txt.md): > This part of the Ops Manager documentation covers the Ops Manager REST API reference.
+- [Ops Manager - (current) (Part 3 of 5)](https://www.mongodb.com/docs/ops-manager/current/ops-manager-3-llms.txt.md): > This part of the Ops Manager documentation continues the REST API reference and includes configuration, FAQ, legal, and troubleshooting information.
+- [Ops Manager - (current) (Part 4 of 5)](https://www.mongodb.com/docs/ops-manager/current/ops-manager-4-llms.txt.md): > This part of the Ops Manager documentation covers reference material for audit events and automation configuration, plus troubleshooting and role reference information.
+- [Ops Manager - (current) (Part 5 of 5)](https://www.mongodb.com/docs/ops-manager/current/ops-manager-5-llms.txt.md): > This part of the Ops Manager documentation covers release notes and changelogs, plus step-by-step tutorials for automation, backups, and monitoring.

@@ -1,0 +1,82 @@
+[
+  {
+    "query": "how do I use atlas diagnostics package for our application architecture",
+    "should_trigger": true
+  },
+  {
+    "query": "best practices and patterns for mongodb capacity planning",
+    "should_trigger": true
+  },
+  {
+    "query": "troubleshoot and debug issues with mongodb monitoring observability",
+    "should_trigger": true
+  },
+  {
+    "query": "guide me through atlas diagnostics expert concepts and setup",
+    "should_trigger": true
+  },
+  {
+    "query": "explain the core mechanics of atlas diagnostics package",
+    "should_trigger": true
+  },
+  {
+    "query": "configure production environment for mongodb capacity planning",
+    "should_trigger": true
+  },
+  {
+    "query": "audit our system configuration regarding mongodb monitoring observability",
+    "should_trigger": true
+  },
+  {
+    "query": "deep dive reference and implementation for atlas diagnostics package",
+    "should_trigger": true
+  },
+  {
+    "query": "recommended architecture pattern for mongodb capacity planning",
+    "should_trigger": true
+  },
+  {
+    "query": "optimize performance and reliability in atlas diagnostics expert",
+    "should_trigger": true
+  },
+  {
+    "query": "evaluate and validate our assertion test suite coverage",
+    "should_trigger": false
+  },
+  {
+    "query": "run autonomous eval convergence loop on this new skill",
+    "should_trigger": false
+  },
+  {
+    "query": "optimize this system prompt for customer support interactions",
+    "should_trigger": false
+  },
+  {
+    "query": "review and critique this runbook document in place",
+    "should_trigger": false
+  },
+  {
+    "query": "audit our git commit history for security disclosures",
+    "should_trigger": false
+  },
+  {
+    "query": "format these markdown tables using prettier",
+    "should_trigger": false
+  },
+  {
+    "query": "scaffold a new repository structure with CI actions",
+    "should_trigger": false
+  },
+  {
+    "query": "one-shot review of git diff on branch fix-login",
+    "should_trigger": false
+  },
+  {
+    "query": "benchmark LLM token throughput on metal accelerator",
+    "should_trigger": false
+  },
+  {
+    "query": "tune this slow postgresql query execution plan",
+    "should_trigger": false
+  }
+]

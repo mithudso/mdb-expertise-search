@@ -1,0 +1,7 @@
+# mongodb.com documentation — Mongodb Intellij
+
+> 1 page(s) of mongodb.com documentation under Mongodb Intellij. Part of the index one level up (../llms.txt).
+
+## Mongodb Intellij
+
+- [IntelliJ Plugin](https://www.mongodb.com/docs/mongodb-intellij/llms.txt.md): > The MongoDB for IntelliJ Plugin is a tool designed to improve the development experience for Java developers working with IntelliJ IDEA.

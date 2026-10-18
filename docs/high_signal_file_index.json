@@ -1,0 +1,282 @@
+[
+  {
+    "path": ".editorconfig",
+    "purpose": "docs/config",
+    "bytes": 220
+  },
+  {
+    "path": ".env.example",
+    "purpose": "docs/config",
+    "bytes": 154
+  },
+  {
+    "path": ".gitattributes",
+    "purpose": "docs/config",
+    "bytes": 48
+  },
+  {
+    "path": ".github/CODEOWNERS",
+    "purpose": "docs/config",
+    "bytes": 12
+  },
+  {
+    "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+    "purpose": "docs/config",
+    "bytes": 136
+  },
+  {
+    "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+    "purpose": "docs/config",
+    "bytes": 86
+  },
+  {
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "purpose": "docs/config",
+    "bytes": 160
+  },
+  {
+    "path": ".github/SECURITY.md",
+    "purpose": "docs/config",
+    "bytes": 238
+  },
+  {
+    "path": ".github/copilot-instructions.md",
+    "purpose": "docs/config",
+    "bytes": 241
+  },
+  {
+    "path": ".github/dependabot.yml",
+    "purpose": "docs/config",
+    "bytes": 189
+  },
+  {
+    "path": ".github/workflows/ci.yml",
+    "purpose": "docs/config",
+    "bytes": 487
+  },
+  {
+    "path": ".gitignore",
+    "purpose": "docs/config",
+    "bytes": 1093
+  },
+  {
+    "path": ".vscode/extensions.json",
+    "purpose": "docs/config",
+    "bytes": 95
+  },
+  {
+    "path": ".vscode/launch.json",
+    "purpose": "docs/config",
+    "bytes": 300
+  },
+  {
+    "path": ".vscode/settings.json",
+    "purpose": "docs/config",
+    "bytes": 166
+  },
+  {
+    "path": "AGENTS.md",
+    "purpose": "docs/config",
+    "bytes": 308
+  },
+  {
+    "path": "CLAUDE.md",
+    "purpose": "docs/config",
+    "bytes": 902
+  },
+  {
+    "path": "CODE_OF_CONDUCT.md",
+    "purpose": "docs/config",
+    "bytes": 299
+  },
+  {
+    "path": "CONTRIBUTING.md",
+    "purpose": "docs/config",
+    "bytes": 266
+  },
+  {
+    "path": "GEMINI.md",
+    "purpose": "docs/config",
+    "bytes": 86
+  },
+  {
+    "path": "LICENSE",
+    "purpose": "docs/config",
+    "bytes": 1090
+  },
+  {
+    "path": "README.md",
+    "purpose": "Overview and quick start",
+    "bytes": 2530
+  },
+  {
+    "path": "docs/ARCHITECTURE.md",
+    "purpose": "docs/config",
+    "bytes": 1728
+  },
+  {
+    "path": "docs/COMPONENTS.md",
+    "purpose": "docs/config",
+    "bytes": 1045
+  },
+  {
+    "path": "docs/DEVELOPMENT.md",
+    "purpose": "docs/config",
+    "bytes": 1037
+  },
+  {
+    "path": "docs/INSTALLATION.md",
+    "purpose": "docs/config",
+    "bytes": 452
+  },
+  {
+    "path": "docs/MCP.md",
+    "purpose": "docs/config",
+    "bytes": 244
+  },
+  {
+    "path": "docs/SECURITY.md",
+    "purpose": "docs/config",
+    "bytes": 736
+  },
+  {
+    "path": "docs/TESTING.md",
+    "purpose": "docs/config",
+    "bytes": 680
+  },
+  {
+    "path": "docs/archive/.gitkeep",
+    "purpose": "docs/config",
+    "bytes": 0
+  },
+  {
+    "path": "docs/caching-and-optimization.md",
+    "purpose": "docs/config",
+    "bytes": 353
+  },
+  {
+    "path": "docs/codebase-overview.md",
+    "purpose": "docs/config",
+    "bytes": 2594
+  },
+  {
+    "path": "docs/external-calls.md",
+    "purpose": "docs/config",
+    "bytes": 381
+  },
+  {
+    "path": "docs/high_signal_file_index.json",
+    "purpose": "docs/config",
+    "bytes": 5096
+  },
+  {
+    "path": "docs/integrations-and-assumptions.md",
+    "purpose": "docs/config",
+    "bytes": 437
+  },
+  {
+    "path": "docs/known-issues.md",
+    "purpose": "docs/config",
+    "bytes": 620
+  },
+  {
+    "path": "docs/logging.md",
+    "purpose": "docs/config",
+    "bytes": 402
+  },
+  {
+    "path": "docs/onboarding.md",
+    "purpose": "docs/config",
+    "bytes": 353
+  },
+  {
+    "path": "docs/requirements.md",
+    "purpose": "docs/config",
+    "bytes": 395
+  },
+  {
+    "path": "docs/runbooks/rebuild-index.md",
+    "purpose": "docs/config",
+    "bytes": 390
+  },
+  {
+    "path": "mdbx/__init__.py",
+    "purpose": "Package version",
+    "bytes": 106
+  },
+  {
+    "path": "mdbx/cli.py",
+    "purpose": "mdbx command entry point",
+    "bytes": 4769
+  },
+  {
+    "path": "mdbx/corpus.py",
+    "purpose": "Corpus discovery, classification, chunking",
+    "bytes": 4062
+  },
+  {
+    "path": "mdbx/embed.py",
+    "purpose": "Ollama embedding client",
+    "bytes": 1856
+  },
+  {
+    "path": "mdbx/index.py",
+    "purpose": "SQLite schema + keyword/semantic index builds",
+    "bytes": 4452
+  },
+  {
+    "path": "mdbx/search.py",
+    "purpose": "Keyword, semantic, hybrid ranking",
+    "bytes": 5903
+  },
+  {
+    "path": "mdbx/tui.py",
+    "purpose": "Textual TUI",
+    "bytes": 7729
+  },
+  {
+    "path": "memory.md",
+    "purpose": "docs/config",
+    "bytes": 618
+  },
+  {
+    "path": "prompts.md",
+    "purpose": "docs/config",
+    "bytes": 490
+  },
+  {
+    "path": "pyproject.toml",
+    "purpose": "Packaging, deps, tool config",
+    "bytes": 763
+  },
+  {
+    "path": "scripts/check_doc_indexes.py",
+    "purpose": "Validate index paths",
+    "bytes": 453
+  },
+  {
+    "path": "scripts/gen_file_index.py",
+    "purpose": "Regenerate this index",
+    "bytes": 2117
+  },
+  {
+    "path": "scripts/sync_corpus.sh",
+    "purpose": "Rebuild corpus from local skills + reindex",
+    "bytes": 1115
+  },
+  {
+    "path": "tests/__init__.py",
+    "purpose": "docs/config",
+    "bytes": 0
+  },
+  {
+    "path": "tests/test_core.py",
+    "purpose": "Core unit tests",
+    "bytes": 3632
+  },
+  {
+    "path": "tests/test_tui.py",
+    "purpose": "TUI pilot test",
+    "bytes": 666
+  }
+]

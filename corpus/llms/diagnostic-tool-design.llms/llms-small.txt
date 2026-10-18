@@ -1,0 +1,6 @@
+# Diagnostic Tool Design — Quick Reference
+
+- **Parent**: Atlas Diagnostics Expert
+- **Summary**: Architecture and design principles for non-intrusive MongoDB diagnostic, telemetry capture, and log analysis tooling in high-throughput environments.
+- **Key Metric**: Verified on 2026-10-05
+- **Frontier Count**: 4 child concepts

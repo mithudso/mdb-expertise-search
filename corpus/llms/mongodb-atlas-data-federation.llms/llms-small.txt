@@ -1,0 +1,6 @@
+# MongoDB Atlas Data Federation — Quick Reference
+
+- **Parent**: MongoDB Atlas
+- **Summary**: Comprehensive operational and internal analysis of MongoDB Atlas Data Federation within MongoDB architectures.
+- **Key Metric**: Verified on 2026-10-05
+- **Frontier Count**: 4 child concepts

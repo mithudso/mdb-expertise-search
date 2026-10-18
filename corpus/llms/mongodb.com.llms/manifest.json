@@ -1,0 +1,181 @@
+{
+ "docset": "mongodb.com",
+ "host": "mongodb.com",
+ "title": "mongodb.com documentation",
+ "pages": 82,
+ "acquired": "llms",
+ "chars_per_token": 4,
+ "files": {
+  "llms.txt": {
+   "bytes": 3624,
+   "tokens": 891
+  },
+  "llms-full.txt": {
+   "bytes": 1509921,
+   "tokens": 377477
+  },
+  "llms-small.txt": {
+   "bytes": 199751,
+   "tokens": 49937
+  },
+  "overview/llms.txt": {
+   "bytes": 1817,
+   "tokens": 453
+  },
+  "mcp-server/llms.txt": {
+   "bytes": 348,
+   "tokens": 86
+  },
+  "vector-search/llms.txt": {
+   "bytes": 420,
+   "tokens": 104
+  },
+  "search/llms.txt": {
+   "bytes": 526,
+   "tokens": 131
+  },
+  "voyageai/llms.txt": {
+   "bytes": 351,
+   "tokens": 87
+  },
+  "languages/llms.txt": {
+   "bytes": 2507,
+   "tokens": 626
+  },
+  "drivers/llms.txt": {
+   "bytes": 1993,
+   "tokens": 497
+  },
+  "entity-framework/llms.txt": {
+   "bytes": 443,
+   "tokens": 110
+  },
+  "php-library/llms.txt": {
+   "bytes": 421,
+   "tokens": 104
+  },
+  "ruby-driver/llms.txt": {
+   "bytes": 351,
+   "tokens": 87
+  },
+  "mongoid/llms.txt": {
+   "bytes": 372,
+   "tokens": 92
+  },
+  "manual/llms.txt": {
+   "bytes": 2300,
+   "tokens": 574
+  },
+  "atlas/llms.txt": {
+   "bytes": 3055,
+   "tokens": 761
+  },
+  "kubernetes/llms.txt": {
+   "bytes": 441,
+   "tokens": 109
+  },
+  "ops-manager/llms.txt": {
+   "bytes": 1480,
+   "tokens": 369
+  },
+  "cloud-manager/llms.txt": {
+   "bytes": 1171,
+   "tokens": 291
+  },
+  "mongocli/llms.txt": {
+   "bytes": 908,
+   "tokens": 226
+  },
+  "database-tools/llms.txt": {
+   "bytes": 365,
+   "tokens": 90
+  },
+  "mongodb-shell/llms.txt": {
+   "bytes": 336,
+   "tokens": 83
+  },
+  "bi-connector/llms.txt": {
+   "bytes": 380,
+   "tokens": 94
+  },
+  "kafka-connector/llms.txt": {
+   "bytes": 426,
+   "tokens": 106
+  },
+  "spark-connector/llms.txt": {
+   "bytes": 395,
+   "tokens": 98
+  },
+  "sql-interface/llms.txt": {
+   "bytes": 409,
+   "tokens": 101
+  },
+  "mongodb-analyzer/llms.txt": {
+   "bytes": 420,
+   "tokens": 104
+  },
+  "mongodb-vscode/llms.txt": {
+   "bytes": 378,
+   "tokens": 94
+  },
+  "mongodb-intellij/llms.txt": {
+   "bytes": 402,
+   "tokens": 100
+  },
+  "mongosync/llms.txt": {
+   "bytes": 396,
+   "tokens": 98
+  },
+  "relational-migrator/llms.txt": {
+   "bytes": 437,
+   "tokens": 108
+  },
+  "charts/llms.txt": {
+   "bytes": 382,
+   "tokens": 95
+  },
+  "compass/llms.txt": {
+   "bytes": 355,
+   "tokens": 88
+  },
+  "llms-facts.txt": {
+   "bytes": 348143,
+   "tokens": 86038
+  }
+ },
+ "units": 1769,
+ "sections": [
+  "atlas/llms.txt",
+  "bi-connector/llms.txt",
+  "charts/llms.txt",
+  "cloud-manager/llms.txt",
+  "compass/llms.txt",
+  "database-tools/llms.txt",
+  "drivers/llms.txt",
+  "entity-framework/llms.txt",
+  "kafka-connector/llms.txt",
+  "kubernetes/llms.txt",
+  "languages/llms.txt",
+  "manual/llms.txt",
+  "mcp-server/llms.txt",
+  "mongocli/llms.txt",
+  "mongodb-analyzer/llms.txt",
+  "mongodb-intellij/llms.txt",
+  "mongodb-shell/llms.txt",
+  "mongodb-vscode/llms.txt",
+  "mongoid/llms.txt",
+  "mongosync/llms.txt",
+  "ops-manager/llms.txt",
+  "overview/llms.txt",
+  "php-library/llms.txt",
+  "relational-migrator/llms.txt",
+  "ruby-driver/llms.txt",
+  "search/llms.txt",
+  "spark-connector/llms.txt",
+  "sql-interface/llms.txt",
+  "vector-search/llms.txt",
+  "voyageai/llms.txt"
+ ],
+ "dropped_empty_pages": 0,
+ "overrides": {}
+}

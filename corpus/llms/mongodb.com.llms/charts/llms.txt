@@ -1,0 +1,7 @@
+# mongodb.com documentation — Charts
+
+> 1 page(s) of mongodb.com documentation under Charts. Part of the index one level up (../llms.txt).
+
+## Charts
+
+- [Atlas Charts](https://www.mongodb.com/docs/charts/llms.txt.md): > Create visual representations of your data with Atlas Charts, featuring built-in aggregation, seamless integration with MongoDB Atlas, and various chart types.

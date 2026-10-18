@@ -1,0 +1,7 @@
+# mongodb.com documentation — Compass
+
+> 1 page(s) of mongodb.com documentation under Compass. Part of the index one level up (../llms.txt).
+
+## Compass
+
+- [Compass](https://www.mongodb.com/docs/compass/llms.txt.md): > MongoDB Compass is a GUI for querying, aggregating, and analyzing your data in a visual environment run on macOS, Windows, and Linux.

@@ -1,0 +1,7 @@
+# Facts: FTDC and Log Tooling
+
+FACT_1: FTDC captures periodic serverStatus, collStats, and system resource samples into zlib/snappy compressed BSON chunk files inside the diagnostic.data directory.
+FACT_2: FTDC samples are recorded at 1-second intervals by default; metric deltas are run-length encoded across chunk arrays to maintain a compact footprint under 200MB.
+FACT_3: Extracting serverStatus.wiredTiger.concurrentTransactions reveals read and write ticket exhaustion where available tickets drop to zero under burst workloads.
+FACT_4: Attempting to parse multi-gigabyte raw FTDC folders with text-based tools without decompressing chunk headers causes corrupt metric sequence extraction.
+FACT_5: Symptom: FTDC files consuming all root partition space. Cause: diagnosticDataCollectionDirectorySizeMB set too high on constrained storage. Fix: Set lower storage cap via setParameter.

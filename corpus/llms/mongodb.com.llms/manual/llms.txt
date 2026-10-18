@@ -1,0 +1,15 @@
+# mongodb.com documentation — Manual
+
+> 9 page(s) of mongodb.com documentation under Manual. Part of the index one level up (../llms.txt).
+
+## Manual
+
+- [Database Manual - (manual) (Part 1 of 9)](https://www.mongodb.com/docs/manual/manual-1-llms.txt.md): > This part of the MongoDB manual covers getting started, administration, and core concepts like clustered collections, change streams, and geospatial and other index types.
+- [Database Manual - (manual) (Part 2 of 9)](https://www.mongodb.com/docs/manual/manual-2-llms.txt.md): > This part of the MongoDB manual finishes core concepts like encryption and transactions, plus installation, introduction, and the MongoDB Query API.
+- [Database Manual - (manual) (Part 3 of 9)](https://www.mongodb.com/docs/manual/manual-3-llms.txt.md): > This part of the MongoDB reference covers general reference material and most of the database commands reference.
+- [Database Manual - (manual) (Part 4 of 9)](https://www.mongodb.com/docs/manual/manual-4-llms.txt.md): > This part of the MongoDB reference covers the remaining database commands and the start of the mongosh methods reference.
+- [Database Manual - (manual) (Part 5 of 9)](https://www.mongodb.com/docs/manual/manual-5-llms.txt.md): > This part of the MongoDB reference continues the mongosh methods reference, plus additional server and security reference material.
+- [Database Manual - (manual) (Part 6 of 9)](https://www.mongodb.com/docs/manual/manual-6-llms.txt.md): > This part of the MongoDB reference covers the first half of the aggregation pipeline operators reference.
+- [Database Manual - (manual) (Part 7 of 9)](https://www.mongodb.com/docs/manual/manual-7-llms.txt.md): > This part of the MongoDB reference continues the aggregation pipeline operators reference.
+- [Database Manual - (manual) (Part 8 of 9)](https://www.mongodb.com/docs/manual/manual-8-llms.txt.md): > This part of the MongoDB manual covers the remaining operators, release notes, replication, security, sharding, troubleshooting, and the start of step-by-step tutorials.
+- [Database Manual - (manual) (Part 9 of 9)](https://www.mongodb.com/docs/manual/manual-9-llms.txt.md): > This part of the MongoDB manual continues step-by-step tutorials, covering installation, security, sharding, and data modeling patterns.

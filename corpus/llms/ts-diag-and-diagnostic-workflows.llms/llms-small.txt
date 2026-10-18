@@ -1,0 +1,6 @@
+# ts-diag and Diagnostic Workflows — Quick Reference
+
+- **Parent**: Atlas Diagnostics Expert
+- **Summary**: Standardized MongoDB diagnostic triage workflow utilizing ts-diag scripts to collect cluster topology, hardware utilization, system logs, and FTDC archives into structured diagnostic bundles.
+- **Key Metric**: Verified on 2026-10-05
+- **Frontier Count**: 4 child concepts

@@ -1,0 +1,7 @@
+# mongodb.com documentation — Mongosync
+
+> 1 page(s) of mongodb.com documentation under Mongosync. Part of the index one level up (../llms.txt).
+
+## Mongosync
+
+- [MongoDB Mongosync - (current)](https://www.mongodb.com/docs/mongosync/current/llms.txt.md): > Mongosync is a cluster-to-cluster synchronization utility for migrating data between self-managed MongoDB deployments and MongoDB Atlas.

@@ -1,0 +1,4 @@
+# Facts: mongosh Reference
+
+FACT_1: mongosh Reference provides critical operational isolation and throughput guarantees.
+FACT_2: Improper configuration of mongosh Reference causes query plan de-optimization under high concurrency.

@@ -1,0 +1,7 @@
+# Facts: Atlas Triage Workflows
+
+FACT_1: Atlas Real-Time Performance Panel correlates normalized CPU, system memory, disk IOPS utilization, and query shapes within 1-second metric resolution.
+FACT_2: Disk IOPS throttling in AWS/Azure/GCP cloud environments manifests as sudden high execution latency accompanied by queuing WiredTiger disk checkpoints.
+FACT_3: Scaling cluster instance size (e.g. M30 to M50) as a first response to unindexed query spikes without verifying ESR indexing wastes cloud budget and leaves bottleneck queries unoptimized.
+FACT_4: In primary failover scenarios, verify Atlas election log lines to determine if the election was initiated by stepdown, heartbeat timeout, or out-of-memory kill.
+FACT_5: Symptom: High memory usage alert (>90%). Cause: WiredTiger cache (50% RAM) plus connection overhead (1MB per thread) plus sorting buffers. Fix: Scale RAM or tune maxConns and allowDiskUse.

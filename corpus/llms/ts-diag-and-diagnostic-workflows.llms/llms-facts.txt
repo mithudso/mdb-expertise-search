@@ -1,0 +1,7 @@
+# Facts: ts-diag and Diagnostic Workflows
+
+FACT_1: ts-diag aggregates host-level metrics, rs.status(), rs.conf(), sh.status(), and FTDC chunks into a non-destructive compressed archive for offline analysis.
+FACT_2: Diagnostic workflows must isolate whether latency regressions stem from WiredTiger cache exhaustion, ticket queuing, or unindexed collection scans before topology interventions.
+FACT_3: Running collection-heavy commands like db.collection.stats() during high lock contention can exacerbate read/write ticket stalls.
+FACT_4: In replica sets, ts-diag validates replication lag against the primary's oplog window size to prevent secondary sync failure during network partitions.
+FACT_5: Symptom: High network wait times with low CPU utilization. Cause: Socket queue backlog or connection pool exhaustion. Fix: Tune maxPoolSize and TCP keepalive.

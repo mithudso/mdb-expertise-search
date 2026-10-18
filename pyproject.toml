@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mdb-expertise-search"
+version = "0.1.0"
+description = "Hybrid keyword + semantic search CLI and TUI over a curated MongoDB / Atlas expertise corpus"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["mongodb", "atlas", "semantic-search", "fts5", "tui", "llms.txt"]
+dependencies = ["numpy>=1.26"]
+
+[project.optional-dependencies]
+tui = ["textual>=0.80", "rich>=13"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.6"]
+
+[project.scripts]
+mdbx = "mdbx.cli:main"
+
+[tool.setuptools]
+packages = ["mdbx"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100

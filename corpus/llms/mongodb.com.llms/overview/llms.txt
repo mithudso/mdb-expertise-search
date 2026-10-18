@@ -1,0 +1,16 @@
+# mongodb.com documentation — Overview
+
+> 10 page(s) of mongodb.com documentation under Overview. Part of the index one level up (../llms.txt).
+
+## Overview
+
+- [Get Started](https://www.mongodb.com/docs/get-started.md): This section shows how to set up a local or cloud MongoDB Atlas deployment and connect to the deployment by using the MongoDB Shell.
+- [Development](https://www.mongodb.com/docs/development.md): This page provides guidance for developers to build applications with MongoDB.
+- [Build with AI](https://www.mongodb.com/docs/build-with-ai.md): MongoDB provides tools and integrations to help you build effective AI-powered applications.
+- [MongoDB Agent Skills](https://www.mongodb.com/docs/agent-skills.md): MongoDB Agent Skills are pre-built, reusable instructions that help AI coding agents perform common MongoDB tasks efficiently.
+- [MongoDB with Claude](https://www.mongodb.com/docs/claude.md): You can use MongoDB with Claude Code through the official MongoDB Claude Plugin.
+- [MongoDB with Codex](https://www.mongodb.com/docs/codex.md): You can use MongoDB with Codex through the official MongoDB Codex Plugin.
+- [MongoDB with Cursor](https://www.mongodb.com/docs/cursor.md): You can use MongoDB with Cursor through the official MongoDB Cursor Plugin.
+- [MongoDB with Gemini](https://www.mongodb.com/docs/gemini.md): You can use MongoDB with Gemini through the official MongoDB Gemini Extension.
+- [Management](https://www.mongodb.com/docs/management.md): Learn how to administer and manage MongoDB deployments, including provisioning, scaling, backup, monitoring, disaster recovery, and security.
+- [Legacy Documentation](https://www.mongodb.com/docs/legacy.md): MongoDB recommends that you upgrade products to the most recent version so that you can use the most up-to-date documentation.

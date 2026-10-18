@@ -1,0 +1,16 @@
+# KB-Backed Troubleshooting — Complete Architecture Guide
+
+Knowledge-base backed troubleshooting methodology matching crash signatures, server error codes, and known issues against MongoDB SERVER tickets and technical bulletins.
+
+## System Architecture & Invariants
+- [HIGH] (core) MongoDB error codes (e.g. 11000 duplicate key, 13435 not master, 50 plan cache error) distinguish fatal assertions from transient client-retriable exceptions.
+- [HIGH] (methodology) Crash stack traces logged under mongod fatal assertions contain frame signatures that can be matched against public MongoDB Jira SERVER tickets.
+- [MEDIUM] (antipatterns) Treating intermittent network disconnects (SocketException / InterruptedAtShutdown) as database crashes leads to inaccurate post-mortems and misconfigured failovers.
+- [HIGH] (patterns) Correlate error code 11600 (InterruptedAtShutdown) with maintenance windows, rolling upgrades, or OS kernel OOM killer events in /var/log/messages.
+- [HIGH] (troubleshooting) Symptom: Invariant failure in WiredTiger session. Cause: Corrupted block header or storage media bit rot. Fix: Restore from latest PITR snapshot or resync node from replica member.
+
+## Primary Sources & Citations
+- MongoDB Error Codes Definition Source: https://github.com/mongodb/mongo/blob/master/src/mongo/base/error_codes.err (repo)
+- MongoDB Error Codes Reference: https://www.mongodb.com/docs/manual/reference/error-codes/ (docs)
+- MongoDB Server Bug Tracker: https://jira.mongodb.org/browse/SERVER (docs)
+- WiredTiger Storage Engine Guide: https://www.mongodb.com/docs/manual/core/wiredtiger-storage-engine/ (docs)

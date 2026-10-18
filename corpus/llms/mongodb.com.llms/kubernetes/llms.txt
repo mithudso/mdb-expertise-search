@@ -1,0 +1,7 @@
+# mongodb.com documentation — Kubernetes
+
+> 1 page(s) of mongodb.com documentation under Kubernetes. Part of the index one level up (../llms.txt).
+
+## Kubernetes
+
+- [MongoDB Controllers for Kubernetes Operator - (current)](https://www.mongodb.com/docs/kubernetes/current/llms.txt.md): > Discover how the MongoDB Controllers for Kubernetes automates MongoDB cluster deployment and management, integrating with Cloud Manager or Ops Manager.

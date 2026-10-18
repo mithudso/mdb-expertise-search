@@ -1,0 +1,6 @@
+# FTDC and Log Tooling — Quick Reference
+
+- **Parent**: Atlas Diagnostics Expert
+- **Summary**: Full-Time Diagnostic Data Capture (FTDC) architecture and log parsing utilities (bsondump, mtools, ftdc-tools) for microsecond metric inspection in MongoDB.
+- **Key Metric**: Verified on 2026-10-05
+- **Frontier Count**: 4 child concepts

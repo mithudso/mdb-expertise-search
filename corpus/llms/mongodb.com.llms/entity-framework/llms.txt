@@ -1,0 +1,7 @@
+# mongodb.com documentation — Entity Framework
+
+> 1 page(s) of mongodb.com documentation under Entity Framework. Part of the index one level up (../llms.txt).
+
+## Entity Framework
+
+- [EF Core Provider - (current)](https://www.mongodb.com/docs/entity-framework/current/llms.txt.md): > Explore the MongoDB Entity Framework Core Provider to integrate MongoDB with .NET applications using Entity Framework Core for data access and manipulation.

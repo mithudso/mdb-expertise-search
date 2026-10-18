@@ -1,0 +1,6 @@
+# Atlas Triage Workflows — Quick Reference
+
+- **Parent**: Atlas Diagnostics Expert
+- **Summary**: Systematic triage playbooks for MongoDB Atlas incidents including CPU spikes, memory pressure, disk IOPS throttles, and automatic election recovery.
+- **Key Metric**: Verified on 2026-10-05
+- **Frontier Count**: 4 child concepts

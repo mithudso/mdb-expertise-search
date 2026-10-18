@@ -1,0 +1,18 @@
+{
+  "concept": "KB-Backed Troubleshooting",
+  "slug": "kb-backed-troubleshooting",
+  "parent": "Atlas Diagnostics Expert",
+  "researched_at": "2026-10-05",
+  "files": [
+    "llms.txt",
+    "llms-full.txt",
+    "llms-small.txt",
+    "llms-facts.txt",
+    "llms-vocabulary.txt",
+    "concept-graph.json",
+    "manifest.json",
+    "units.jsonl"
+  ],
+  "sourcesCount": 4,
+  "claimsCount": 5
+}

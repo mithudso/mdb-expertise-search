@@ -1,0 +1,55 @@
+{
+  "concept": "ts-diag and Diagnostic Workflows",
+  "slug": "ts-diag-and-diagnostic-workflows",
+  "parent": "Atlas Diagnostics Expert",
+  "nodes": [
+    {
+      "id": "ts-diag and Diagnostic Workflows",
+      "type": "root",
+      "cvs": 4.6
+    },
+    {
+      "id": "ts-diag Collection Automation",
+      "type": "frontier"
+    },
+    {
+      "id": "Archive Redaction and PII Filtering",
+      "type": "frontier"
+    },
+    {
+      "id": "Hardware Saturation Profiling via ts-diag",
+      "type": "frontier"
+    },
+    {
+      "id": "Topology Split-Brain Detection in Diagnostic Archives",
+      "type": "frontier"
+    }
+  ],
+  "edges": [
+    {
+      "source": "Atlas Diagnostics Expert",
+      "target": "ts-diag and Diagnostic Workflows",
+      "relation": "contains"
+    },
+    {
+      "source": "ts-diag and Diagnostic Workflows",
+      "target": "ts-diag Collection Automation",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "ts-diag and Diagnostic Workflows",
+      "target": "Archive Redaction and PII Filtering",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "ts-diag and Diagnostic Workflows",
+      "target": "Hardware Saturation Profiling via ts-diag",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "ts-diag and Diagnostic Workflows",
+      "target": "Topology Split-Brain Detection in Diagnostic Archives",
+      "relation": "frontier_expansion"
+    }
+  ]
+}

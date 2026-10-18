@@ -1,0 +1,55 @@
+{
+  "concept": "MongoDB Atlas Data Federation",
+  "slug": "mongodb-atlas-data-federation",
+  "parent": "MongoDB Atlas",
+  "nodes": [
+    {
+      "id": "MongoDB Atlas Data Federation",
+      "type": "root",
+      "cvs": 4.2
+    },
+    {
+      "id": "MongoDB Atlas Data Federation Architecture Internals",
+      "type": "frontier"
+    },
+    {
+      "id": "MongoDB Atlas Data Federation Benchmark Metrics",
+      "type": "frontier"
+    },
+    {
+      "id": "MongoDB Atlas Data Federation Operational Runbook",
+      "type": "frontier"
+    },
+    {
+      "id": "MongoDB Atlas Data Federation Failure Scenarios",
+      "type": "frontier"
+    }
+  ],
+  "edges": [
+    {
+      "source": "MongoDB Atlas",
+      "target": "MongoDB Atlas Data Federation",
+      "relation": "contains"
+    },
+    {
+      "source": "MongoDB Atlas Data Federation",
+      "target": "MongoDB Atlas Data Federation Architecture Internals",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "MongoDB Atlas Data Federation",
+      "target": "MongoDB Atlas Data Federation Benchmark Metrics",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "MongoDB Atlas Data Federation",
+      "target": "MongoDB Atlas Data Federation Operational Runbook",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "MongoDB Atlas Data Federation",
+      "target": "MongoDB Atlas Data Federation Failure Scenarios",
+      "relation": "frontier_expansion"
+    }
+  ]
+}

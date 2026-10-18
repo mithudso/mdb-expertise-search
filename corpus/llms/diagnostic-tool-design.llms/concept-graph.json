@@ -1,0 +1,55 @@
+{
+  "concept": "Diagnostic Tool Design",
+  "slug": "diagnostic-tool-design",
+  "parent": "Atlas Diagnostics Expert",
+  "nodes": [
+    {
+      "id": "Diagnostic Tool Design",
+      "type": "root",
+      "cvs": 4.5
+    },
+    {
+      "id": "Lock-Free Diagnostic Sampling Engine",
+      "type": "frontier"
+    },
+    {
+      "id": "Streaming BSON Parser Architecture",
+      "type": "frontier"
+    },
+    {
+      "id": "PII Masking & Query Hash Anonymization",
+      "type": "frontier"
+    },
+    {
+      "id": "Telemetry Overhead Bounding Algorithms",
+      "type": "frontier"
+    }
+  ],
+  "edges": [
+    {
+      "source": "Atlas Diagnostics Expert",
+      "target": "Diagnostic Tool Design",
+      "relation": "contains"
+    },
+    {
+      "source": "Diagnostic Tool Design",
+      "target": "Lock-Free Diagnostic Sampling Engine",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "Diagnostic Tool Design",
+      "target": "Streaming BSON Parser Architecture",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "Diagnostic Tool Design",
+      "target": "PII Masking & Query Hash Anonymization",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "Diagnostic Tool Design",
+      "target": "Telemetry Overhead Bounding Algorithms",
+      "relation": "frontier_expansion"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# mongodb.com documentation — Relational Migrator
+
+> 1 page(s) of mongodb.com documentation under Relational Migrator. Part of the index one level up (../llms.txt).
+
+## Relational Migrator
+
+- [Relational Migrator](https://www.mongodb.com/docs/relational-migrator/llms.txt.md): > Migrate data from relational databases to MongoDB using Relational Migrator. Relational Migrator supports data modeling, schema design, and data migration.

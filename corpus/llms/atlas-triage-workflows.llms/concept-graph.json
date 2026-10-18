@@ -1,0 +1,55 @@
+{
+  "concept": "Atlas Triage Workflows",
+  "slug": "atlas-triage-workflows",
+  "parent": "Atlas Diagnostics Expert",
+  "nodes": [
+    {
+      "id": "Atlas Triage Workflows",
+      "type": "root",
+      "cvs": 4.5
+    },
+    {
+      "id": "Atlas Performance Advisor Auto-Index Evaluation",
+      "type": "frontier"
+    },
+    {
+      "id": "Disk IOPS Burst Credit Depletion Playbook",
+      "type": "frontier"
+    },
+    {
+      "id": "Network Connection Quota Management",
+      "type": "frontier"
+    },
+    {
+      "id": "Automated Cluster Scaling Decision Matrix",
+      "type": "frontier"
+    }
+  ],
+  "edges": [
+    {
+      "source": "Atlas Diagnostics Expert",
+      "target": "Atlas Triage Workflows",
+      "relation": "contains"
+    },
+    {
+      "source": "Atlas Triage Workflows",
+      "target": "Atlas Performance Advisor Auto-Index Evaluation",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "Atlas Triage Workflows",
+      "target": "Disk IOPS Burst Credit Depletion Playbook",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "Atlas Triage Workflows",
+      "target": "Network Connection Quota Management",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "Atlas Triage Workflows",
+      "target": "Automated Cluster Scaling Decision Matrix",
+      "relation": "frontier_expansion"
+    }
+  ]
+}

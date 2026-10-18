@@ -1,0 +1,9 @@
+# mongodb.com documentation — Mongocli
+
+> 3 page(s) of mongodb.com documentation under Mongocli. Part of the index one level up (../llms.txt).
+
+## Mongocli
+
+- [MongoCLI - (current) (Part 1 of 3)](https://www.mongodb.com/docs/mongocli/current/mongocli-1-llms.txt.md): > The mongocli is a command line interface for managing MongoDB services, with commands covering authentication, Cloud Manager, shell completion, and configuration.
+- [MongoCLI - (current) (Part 2 of 3)](https://www.mongodb.com/docs/mongocli/current/mongocli-2-llms.txt.md): > This part of the mongocli command reference covers identity and access management (IAM) and Ops Manager commands.
+- [MongoCLI - (current) (Part 3 of 3)](https://www.mongodb.com/docs/mongocli/current/mongocli-3-llms.txt.md): > Use these guides to install, configure, and get started with the mongocli, including compatibility notes and command reference details.

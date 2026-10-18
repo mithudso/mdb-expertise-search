@@ -1,0 +1,16 @@
+{
+  "generator": "skill-to-llms-txt v1.2.1 (digest mode)",
+  "generated": "2026-09-06",
+  "regenerated": "2026-09-08",
+  "source": "/Users/mitch/.claude/skills/mongodb-collation/SKILL.md",
+  "mode": "digest",
+  "verified_as_of": "2026-07-15",
+  "files": {
+    "llms-small.txt": {
+      "bytes": 2000
+    },
+    "llms-facts.txt": {
+      "bytes": 9216
+    }
+  }
+}

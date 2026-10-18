@@ -1,0 +1,7 @@
+# mongodb.com documentation — Mcp Server
+
+> 1 page(s) of mongodb.com documentation under Mcp Server. Part of the index one level up (../llms.txt).
+
+## Mcp Server
+
+- [MongoDB MCP Server](https://www.mongodb.com/docs/mcp-server/llms.txt.md): > Use the MongoDB MCP Server to interact with your MongoDB data from AI tools, assistants, and platforms.

@@ -1,0 +1,7 @@
+# mongodb.com documentation — Vector Search
+
+> 1 page(s) of mongodb.com documentation under Vector Search. Part of the index one level up (../llms.txt).
+
+## Vector Search
+
+- [MongoDB Vector Search](https://www.mongodb.com/docs/vector-search/llms.txt.md): > Use MongoDB Vector Search to create vector indexes and perform vector search, including semantic search and hybrid search, on your vector embeddings in MongoDB.

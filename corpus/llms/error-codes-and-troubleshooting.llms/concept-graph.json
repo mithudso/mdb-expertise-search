@@ -1,0 +1,55 @@
+{
+  "concept": "Error Codes and Troubleshooting",
+  "slug": "error-codes-and-troubleshooting",
+  "parent": "MongoDB Developer Patterns",
+  "nodes": [
+    {
+      "id": "Error Codes and Troubleshooting",
+      "type": "root",
+      "cvs": 4.2
+    },
+    {
+      "id": "Error Codes and Troubleshooting Architecture Internals",
+      "type": "frontier"
+    },
+    {
+      "id": "Error Codes and Troubleshooting Benchmark Metrics",
+      "type": "frontier"
+    },
+    {
+      "id": "Error Codes and Troubleshooting Operational Runbook",
+      "type": "frontier"
+    },
+    {
+      "id": "Error Codes and Troubleshooting Failure Scenarios",
+      "type": "frontier"
+    }
+  ],
+  "edges": [
+    {
+      "source": "MongoDB Developer Patterns",
+      "target": "Error Codes and Troubleshooting",
+      "relation": "contains"
+    },
+    {
+      "source": "Error Codes and Troubleshooting",
+      "target": "Error Codes and Troubleshooting Architecture Internals",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "Error Codes and Troubleshooting",
+      "target": "Error Codes and Troubleshooting Benchmark Metrics",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "Error Codes and Troubleshooting",
+      "target": "Error Codes and Troubleshooting Operational Runbook",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "Error Codes and Troubleshooting",
+      "target": "Error Codes and Troubleshooting Failure Scenarios",
+      "relation": "frontier_expansion"
+    }
+  ]
+}

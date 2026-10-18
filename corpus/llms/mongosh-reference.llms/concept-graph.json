@@ -1,0 +1,55 @@
+{
+  "concept": "mongosh Reference",
+  "slug": "mongosh-reference",
+  "parent": "MongoDB Developer Patterns",
+  "nodes": [
+    {
+      "id": "mongosh Reference",
+      "type": "root",
+      "cvs": 4.2
+    },
+    {
+      "id": "mongosh Reference Architecture Internals",
+      "type": "frontier"
+    },
+    {
+      "id": "mongosh Reference Benchmark Metrics",
+      "type": "frontier"
+    },
+    {
+      "id": "mongosh Reference Operational Runbook",
+      "type": "frontier"
+    },
+    {
+      "id": "mongosh Reference Failure Scenarios",
+      "type": "frontier"
+    }
+  ],
+  "edges": [
+    {
+      "source": "MongoDB Developer Patterns",
+      "target": "mongosh Reference",
+      "relation": "contains"
+    },
+    {
+      "source": "mongosh Reference",
+      "target": "mongosh Reference Architecture Internals",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "mongosh Reference",
+      "target": "mongosh Reference Benchmark Metrics",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "mongosh Reference",
+      "target": "mongosh Reference Operational Runbook",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "mongosh Reference",
+      "target": "mongosh Reference Failure Scenarios",
+      "relation": "frontier_expansion"
+    }
+  ]
+}

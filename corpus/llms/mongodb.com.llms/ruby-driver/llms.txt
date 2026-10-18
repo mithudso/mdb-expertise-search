@@ -1,0 +1,7 @@
+# mongodb.com documentation — Ruby Driver
+
+> 1 page(s) of mongodb.com documentation under Ruby Driver. Part of the index one level up (../llms.txt).
+
+## Ruby Driver
+
+- [Ruby Driver - (current)](https://www.mongodb.com/docs/ruby-driver/current/llms.txt.md): > Explore resources and tutorials to learn how to use the official Ruby driver for MongoDB.

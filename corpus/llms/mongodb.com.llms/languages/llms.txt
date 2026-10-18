@@ -1,0 +1,15 @@
+# mongodb.com documentation — Languages
+
+> 9 page(s) of mongodb.com documentation under Languages. Part of the index one level up (../llms.txt).
+
+## Languages
+
+- [C Driver - (current)](https://www.mongodb.com/docs/languages/c/c-driver/current/llms.txt.md): > Explore resources for using the MongoDB C Driver, including installation, connection setup, data operations, and more.
+- [C++ Driver - (current)](https://www.mongodb.com/docs/languages/cpp/cpp-driver/current/llms.txt.md): > Explore the MongoDB C++ Driver, including installation, connection setup, data operations, and advanced configuration options.
+- [MongoDB Extension for Hibernate ORM - (current)](https://www.mongodb.com/docs/languages/java/mongodb-hibernate/current/llms.txt.md): > The MongoDB Extension for Hibernate ORM lets you map Java classes to MongoDB data and interact with it using Hibernate ORM's data mapping and querying capabilities.
+- [Java Reactive Streams Driver - (current)](https://www.mongodb.com/docs/languages/java/reactive-streams-driver/current/llms.txt.md): > Explore resources and tutorials for using the Java Reactive Streams driver to connect, read, write, and optimize data operations with MongoDB applications.
+- [Kotlin Sync Driver - (current)](https://www.mongodb.com/docs/languages/kotlin/kotlin-sync-driver/current/llms.txt.md): > The MongoDB Kotlin Sync Driver is the official MongoDB driver for synchronous Kotlin applications, covering connecting, CRUD operations, aggregation, and more.
+- [Django MongoDB Backend - (current)](https://www.mongodb.com/docs/languages/python/django-mongodb/current/llms.txt.md): > The Django MongoDB Backend is an official database backend that lets you connect Django applications to MongoDB, model data, and use features like Queryable Encryption.
+- [PyMongo Driver - (current)](https://www.mongodb.com/docs/languages/python/pymongo-driver/current/llms.txt.md): > Explore the features and usage of the PyMongo Driver for Python, including installation, connection setup, data operations, and transitioning to PyMongo Async.
+- [PyMongoArrow - (current)](https://www.mongodb.com/docs/languages/python/pymongo-arrow-driver/current/llms.txt.md): > Explore PyMongoArrow, a PyMongo extension for loading MongoDB query results as Apache Arrow tables, NumPy arrays, and Pandas or Polars DataFrames.
+- [Scala Driver - (current)](https://www.mongodb.com/docs/languages/scala/scala-driver/current/llms.txt.md): > Explore resources and tutorials for using the MongoDB Scala Driver.

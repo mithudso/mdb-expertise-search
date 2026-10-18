@@ -1,0 +1,95 @@
+{
+  "": "https://json-schema.org/draft/2020-12/schema",
+  "skill_name": "mongodb-operations-expert",
+  "version": "1.0.0",
+  "description": "Functional evaluation suite for mongodb-operations-expert hub verifying spoke routing, architecture guidance, and domain invariants.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "mongodb-operations-e-spoke1-architectural-routing",
+      "prompt": "Our production system is experiencing integration challenges with cloud native database disaggregation. We need an authoritative architectural breakdown and implementation procedure.",
+      "expected_output": "Routes to references/cloud-native-database-disaggregation.md, providing domain architecture, operational guidelines, and configuration specifications.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "spoke reference routing",
+          "check": "identifies references/cloud-native-database-disaggregation.md as the target reference file",
+          "type": "structural"
+        },
+        {
+          "name": "architectural breakdown specification",
+          "check": "provides structured guidance detailing core architecture components",
+          "type": "structural"
+        },
+        {
+          "name": "domain configuration guidance",
+          "check": "specifies concrete configuration directives or implementation parameters",
+          "type": "content"
+        },
+        {
+          "name": "no unverified assumptions",
+          "check": "does not recommend unverified deprecated patterns or non-standard protocols",
+          "type": "negative"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "mongodb-operations-e-spoke2-production-configuration",
+      "prompt": "We are deploying a high-reliability setup utilizing database migrations. What core patterns and failure recovery mechanisms must be configured?",
+      "expected_output": "Routes to references/database-migrations.md, detailing high-availability patterns, error handling, and recovery mechanisms.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "spoke reference identification",
+          "check": "identifies references/database-migrations.md as authoritative",
+          "type": "structural"
+        },
+        {
+          "name": "failure recovery specification",
+          "check": "explains failover, retry handling, or fault tolerance mechanics",
+          "type": "content"
+        },
+        {
+          "name": "production hardening directives",
+          "check": "provides explicit reliability or security hardening recommendations",
+          "type": "content"
+        },
+        {
+          "name": "no manual error suppression",
+          "check": "does not advise ignoring exceptions or silencing failure alerts",
+          "type": "negative"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "mongodb-operations-e-spoke3-optimization-and-troubleshooting",
+      "prompt": "Our team is troubleshooting latency and throughput bottlenecks under heavy workload involving htap disaggregated storage. How do we isolate and resolve the root cause?",
+      "expected_output": "Routes to references/htap-disaggregated-storage.md, detailing diagnostic commands, profiling techniques, and performance optimization parameters.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "troubleshooting spoke reference",
+          "check": "identifies references/htap-disaggregated-storage.md as the target spoke",
+          "type": "structural"
+        },
+        {
+          "name": "diagnostic procedure specification",
+          "check": "specifies systematic inspection steps or diagnostic profiling tools",
+          "type": "structural"
+        },
+        {
+          "name": "performance parameter tuning",
+          "check": "identifies specific tuning parameters, caching layers, or concurrency limits",
+          "type": "content"
+        },
+        {
+          "name": "no blind resource overprovisioning",
+          "check": "does not recommend blindly increasing memory or CPU without diagnostic evidence",
+          "type": "negative"
+        }
+      ]
+    }
+  ]
+}

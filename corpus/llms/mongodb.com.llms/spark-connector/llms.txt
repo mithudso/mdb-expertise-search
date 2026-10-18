@@ -1,0 +1,7 @@
+# mongodb.com documentation — Spark Connector
+
+> 1 page(s) of mongodb.com documentation under Spark Connector. Part of the index one level up (../llms.txt).
+
+## Spark Connector
+
+- [Spark Connector - (current)](https://www.mongodb.com/docs/spark-connector/current/llms.txt.md): > Integrate MongoDB with Apache Spark using the MongoDB Connector for Spark, supporting Spark Structured Streaming.

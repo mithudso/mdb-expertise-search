@@ -1,0 +1,16 @@
+# Atlas Triage Workflows — Complete Architecture Guide
+
+Systematic triage playbooks for MongoDB Atlas incidents including CPU spikes, memory pressure, disk IOPS throttles, and automatic election recovery.
+
+## System Architecture & Invariants
+- [HIGH] (core) Atlas Real-Time Performance Panel correlates normalized CPU, system memory, disk IOPS utilization, and query shapes within 1-second metric resolution.
+- [HIGH] (methodology) Disk IOPS throttling in AWS/Azure/GCP cloud environments manifests as sudden high execution latency accompanied by queuing WiredTiger disk checkpoints.
+- [HIGH] (antipatterns) Scaling cluster instance size (e.g. M30 to M50) as a first response to unindexed query spikes without verifying ESR indexing wastes cloud budget and leaves bottleneck queries unoptimized.
+- [HIGH] (patterns) In primary failover scenarios, verify Atlas election log lines to determine if the election was initiated by stepdown, heartbeat timeout, or out-of-memory kill.
+- [HIGH] (troubleshooting) Symptom: High memory usage alert (>90%). Cause: WiredTiger cache (50% RAM) plus connection overhead (1MB per thread) plus sorting buffers. Fix: Scale RAM or tune maxConns and allowDiskUse.
+
+## Primary Sources & Citations
+- Atlas Cluster Metrics Documentation: https://www.mongodb.com/docs/atlas/monitor-cluster-metrics/ (docs)
+- Atlas Performance Advisor: https://www.mongodb.com/docs/atlas/performance-advisor/ (docs)
+- Atlas Cluster Architecture and Sizing: https://www.mongodb.com/docs/atlas/cluster-sizing/ (docs)
+- Atlas Replica Set State Reference: https://www.mongodb.com/docs/atlas/reference/replica-states/ (docs)

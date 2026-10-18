@@ -1,0 +1,10 @@
+# ts-diag and Diagnostic Workflows
+
+> Standardized MongoDB diagnostic triage workflow utilizing ts-diag scripts to collect cluster topology, hardware utilization, system logs, and FTDC archives into structured diagnostic bundles.
+
+## Documentation
+- [Full Documentation](llms-full.txt): Comprehensive operational and architectural guide
+- [Small Digest](llms-small.txt): Compact operational cheat sheet
+- [Atomic Facts](llms-facts.txt): Key facts, limits, and configuration values
+- [Vocabulary](llms-vocabulary.txt): Domain terminology and concepts
+- [Concept Graph](concept-graph.json): Directed relationship graph

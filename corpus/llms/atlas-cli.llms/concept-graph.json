@@ -1,0 +1,55 @@
+{
+  "concept": "Atlas CLI",
+  "slug": "atlas-cli",
+  "parent": "MongoDB Developer Patterns",
+  "nodes": [
+    {
+      "id": "Atlas CLI",
+      "type": "root",
+      "cvs": 4.2
+    },
+    {
+      "id": "Atlas CLI Architecture Internals",
+      "type": "frontier"
+    },
+    {
+      "id": "Atlas CLI Benchmark Metrics",
+      "type": "frontier"
+    },
+    {
+      "id": "Atlas CLI Operational Runbook",
+      "type": "frontier"
+    },
+    {
+      "id": "Atlas CLI Failure Scenarios",
+      "type": "frontier"
+    }
+  ],
+  "edges": [
+    {
+      "source": "MongoDB Developer Patterns",
+      "target": "Atlas CLI",
+      "relation": "contains"
+    },
+    {
+      "source": "Atlas CLI",
+      "target": "Atlas CLI Architecture Internals",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "Atlas CLI",
+      "target": "Atlas CLI Benchmark Metrics",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "Atlas CLI",
+      "target": "Atlas CLI Operational Runbook",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "Atlas CLI",
+      "target": "Atlas CLI Failure Scenarios",
+      "relation": "frontier_expansion"
+    }
+  ]
+}

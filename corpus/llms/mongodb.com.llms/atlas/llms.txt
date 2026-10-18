@@ -1,0 +1,17 @@
+# mongodb.com documentation — Atlas
+
+> 11 page(s) of mongodb.com documentation under Atlas. Part of the index one level up (../llms.txt).
+
+## Atlas
+
+- [Atlas (Part 1 of 3)](https://www.mongodb.com/docs/atlas/atlas-1-llms.txt.md): > MongoDB Atlas is a fully managed multi-cloud database service that helps you configure access, deploy clusters, and build with AI and stream processing features across AWS,…
+- [Atlas (Part 2 of 3)](https://www.mongodb.com/docs/atlas/atlas-2-llms.txt.md): > MongoDB Atlas is a fully managed multi-cloud database service with tools to manage, secure, and monitor your deployments, backed by tutorials and API reference documentation.
+- [Atlas (Part 3 of 3)](https://www.mongodb.com/docs/atlas/atlas-3-llms.txt.md): > This part of the Atlas documentation covers reference material for cloud providers and cluster limits, along with guidance on performance monitoring, disaster recovery, and…
+- [Atlas Architecture Center - (current)](https://www.mongodb.com/docs/atlas/architecture/current/llms.txt.md): > The Atlas Architecture Center provides guidance for building a robust data platform on Atlas, covering security, automation, governance, and Well-Architected Framework best…
+- [Atlas Kubernetes Operator - (current)](https://www.mongodb.com/docs/atlas/operator/current/llms.txt.md): > Manage Atlas resources within Kubernetes using Atlas Kubernetes Operator, which integrates data services with your cloud-native applications.
+- [MongoDB Atlas for Government](https://www.mongodb.com/docs/atlas/government/llms.txt.md): > Explore MongoDB Atlas for Government, a fully managed cloud database for U.S. federal, state, and local agencies with unique government-specific features.
+- [Atlas CLI - (current) (Part 1 of 5)](https://www.mongodb.com/docs/atlas/cli/current/atlas-cli-1-llms.txt.md): > The Atlas CLI lets you deploy and manage Atlas database deployments from the terminal, with tutorials for getting started, local development, and Docker-based workflows.
+- [Atlas CLI - (current) (Part 2 of 5)](https://www.mongodb.com/docs/atlas/cli/current/atlas-cli-2-llms.txt.md): > This part of the Atlas CLI command reference covers commands for managing access lists, access logs, alerts, and the Atlas Administration API.
+- [Atlas CLI - (current) (Part 3 of 5)](https://www.mongodb.com/docs/atlas/cli/current/atlas-cli-3-llms.txt.md): > This part of the Atlas CLI command reference covers commands for the Atlas Administration API, auditing, authentication, backups, cloud providers, and clusters.
+- [Atlas CLI - (current) (Part 4 of 5)](https://www.mongodb.com/docs/atlas/cli/current/atlas-cli-4-llms.txt.md): > This part of the Atlas CLI command reference covers commands for managing clusters, custom database roles, custom DNS, and Data Federation, among others.
+- [Atlas CLI - (current) (Part 5 of 5)](https://www.mongodb.com/docs/atlas/cli/current/atlas-cli-5-llms.txt.md): > Use these guides to install, configure, and troubleshoot the Atlas CLI, including compatibility notes and command reference details.

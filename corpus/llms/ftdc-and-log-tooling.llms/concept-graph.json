@@ -1,0 +1,55 @@
+{
+  "concept": "FTDC and Log Tooling",
+  "slug": "ftdc-and-log-tooling",
+  "parent": "Atlas Diagnostics Expert",
+  "nodes": [
+    {
+      "id": "FTDC and Log Tooling",
+      "type": "root",
+      "cvs": 4.8
+    },
+    {
+      "id": "FTDC Chunk Decompression & Stream Parsing",
+      "type": "frontier"
+    },
+    {
+      "id": "WiredTiger Ticket Metric Telemetry in FTDC",
+      "type": "frontier"
+    },
+    {
+      "id": "mtools Log Analysis Integration",
+      "type": "frontier"
+    },
+    {
+      "id": "FTDC Storage Overhead & Retention Budgeting",
+      "type": "frontier"
+    }
+  ],
+  "edges": [
+    {
+      "source": "Atlas Diagnostics Expert",
+      "target": "FTDC and Log Tooling",
+      "relation": "contains"
+    },
+    {
+      "source": "FTDC and Log Tooling",
+      "target": "FTDC Chunk Decompression & Stream Parsing",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "FTDC and Log Tooling",
+      "target": "WiredTiger Ticket Metric Telemetry in FTDC",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "FTDC and Log Tooling",
+      "target": "mtools Log Analysis Integration",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "FTDC and Log Tooling",
+      "target": "FTDC Storage Overhead & Retention Budgeting",
+      "relation": "frontier_expansion"
+    }
+  ]
+}

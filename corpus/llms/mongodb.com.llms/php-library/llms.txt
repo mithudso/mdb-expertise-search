@@ -1,0 +1,7 @@
+# mongodb.com documentation — Php Library
+
+> 1 page(s) of mongodb.com documentation under Php Library. Part of the index one level up (../llms.txt).
+
+## Php Library
+
+- [PHP Library Manual - (current)](https://www.mongodb.com/docs/php-library/current/llms.txt.md): > Explore the MongoDB PHP Library for high-level database operations, including installation, connection, data manipulation, and deployment on AWS Lambda.

@@ -1,0 +1,10 @@
+# mongodb.com documentation — Cloud Manager
+
+> 4 page(s) of mongodb.com documentation under Cloud Manager. Part of the index one level up (../llms.txt).
+
+## Cloud Manager
+
+- [Cloud Manager (Part 1 of 4)](https://www.mongodb.com/docs/cloud-manager/cloud-manager-1-llms.txt.md): > Cloud Manager helps you deploy, monitor, and back up MongoDB, with core administration features like a data explorer and a performance advisor.
+- [Cloud Manager (Part 2 of 4)](https://www.mongodb.com/docs/cloud-manager/cloud-manager-2-llms.txt.md): > This part of the Cloud Manager documentation covers reference material and the Cloud Manager REST API reference.
+- [Cloud Manager (Part 3 of 4)](https://www.mongodb.com/docs/cloud-manager/cloud-manager-3-llms.txt.md): > This part of the Cloud Manager documentation covers deployment configuration reference, the schema advisor, federated authentication and other security settings, and…
+- [Cloud Manager (Part 4 of 4)](https://www.mongodb.com/docs/cloud-manager/cloud-manager-4-llms.txt.md): > This part of the Cloud Manager documentation covers step-by-step tutorials for deploying, securing, and monitoring MongoDB with Cloud Manager.

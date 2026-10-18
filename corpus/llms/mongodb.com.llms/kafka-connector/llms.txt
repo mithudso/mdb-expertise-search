@@ -1,0 +1,7 @@
+# mongodb.com documentation — Kafka Connector
+
+> 1 page(s) of mongodb.com documentation under Kafka Connector. Part of the index one level up (../llms.txt).
+
+## Kafka Connector
+
+- [Kafka Connector - (current)](https://www.mongodb.com/docs/kafka-connector/current/llms.txt.md): > Explore how to use the MongoDB Kafka Connector to integrate data between Apache Kafka and MongoDB, including setup, configuration, and security.

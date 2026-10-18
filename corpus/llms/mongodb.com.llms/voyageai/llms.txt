@@ -1,0 +1,7 @@
+# mongodb.com documentation — Voyageai
+
+> 1 page(s) of mongodb.com documentation under Voyageai. Part of the index one level up (../llms.txt).
+
+## Voyageai
+
+- [Voyage AI by MongoDB](https://www.mongodb.com/docs/voyageai/llms.txt.md): > Use Voyage AI's best-in-class embedding models and rerankers to power your AI search and retrieval applications.

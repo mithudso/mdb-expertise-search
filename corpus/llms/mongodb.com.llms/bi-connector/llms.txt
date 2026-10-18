@@ -1,0 +1,7 @@
+# mongodb.com documentation — Bi Connector
+
+> 1 page(s) of mongodb.com documentation under Bi Connector. Part of the index one level up (../llms.txt).
+
+## Bi Connector
+
+- [BI Connector - (current)](https://www.mongodb.com/docs/bi-connector/current/llms.txt.md): > Query MongoDB data with SQL using the Connector for BI to integrate with tools like Tableau, Power BI, and Excel.

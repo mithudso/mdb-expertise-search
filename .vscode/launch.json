@@ -1,0 +1,8 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    { "name": "mdbx search", "type": "debugpy", "request": "launch", "module": "mdbx.cli",
+      "args": ["search", "compound index sort"] },
+    { "name": "mdbx tui", "type": "debugpy", "request": "launch", "module": "mdbx.cli", "args": ["tui"] }
+  ]
+}

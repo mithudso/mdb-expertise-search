@@ -1,0 +1,7 @@
+# Facts: KB-Backed Troubleshooting
+
+FACT_1: MongoDB error codes (e.g. 11000 duplicate key, 13435 not master, 50 plan cache error) distinguish fatal assertions from transient client-retriable exceptions.
+FACT_2: Crash stack traces logged under mongod fatal assertions contain frame signatures that can be matched against public MongoDB Jira SERVER tickets.
+FACT_3: Treating intermittent network disconnects (SocketException / InterruptedAtShutdown) as database crashes leads to inaccurate post-mortems and misconfigured failovers.
+FACT_4: Correlate error code 11600 (InterruptedAtShutdown) with maintenance windows, rolling upgrades, or OS kernel OOM killer events in /var/log/messages.
+FACT_5: Symptom: Invariant failure in WiredTiger session. Cause: Corrupted block header or storage media bit rot. Fix: Restore from latest PITR snapshot or resync node from replica member.

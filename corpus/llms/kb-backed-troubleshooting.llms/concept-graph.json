@@ -1,0 +1,55 @@
+{
+  "concept": "KB-Backed Troubleshooting",
+  "slug": "kb-backed-troubleshooting",
+  "parent": "Atlas Diagnostics Expert",
+  "nodes": [
+    {
+      "id": "KB-Backed Troubleshooting",
+      "type": "root",
+      "cvs": 4.4
+    },
+    {
+      "id": "SERVER JIRA Ticket Regression Mapping",
+      "type": "frontier"
+    },
+    {
+      "id": "Error Code Hierarchy & Assertion Types",
+      "type": "frontier"
+    },
+    {
+      "id": "Crash Stack Trace Symbolization",
+      "type": "frontier"
+    },
+    {
+      "id": "Customer Hotfix & Patch Verification",
+      "type": "frontier"
+    }
+  ],
+  "edges": [
+    {
+      "source": "Atlas Diagnostics Expert",
+      "target": "KB-Backed Troubleshooting",
+      "relation": "contains"
+    },
+    {
+      "source": "KB-Backed Troubleshooting",
+      "target": "SERVER JIRA Ticket Regression Mapping",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "KB-Backed Troubleshooting",
+      "target": "Error Code Hierarchy & Assertion Types",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "KB-Backed Troubleshooting",
+      "target": "Crash Stack Trace Symbolization",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "KB-Backed Troubleshooting",
+      "target": "Customer Hotfix & Patch Verification",
+      "relation": "frontier_expansion"
+    }
+  ]
+}

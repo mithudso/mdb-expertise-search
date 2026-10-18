@@ -1,0 +1,7 @@
+# mongodb.com documentation — Database Tools
+
+> 1 page(s) of mongodb.com documentation under Database Tools. Part of the index one level up (../llms.txt).
+
+## Database Tools
+
+- [Database Tools](https://www.mongodb.com/docs/database-tools/llms.txt.md): > The MongoDB Database Tools are a collection of command-line utilities for working with a MongoDB deployment.

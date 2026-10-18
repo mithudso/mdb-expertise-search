@@ -1,0 +1,55 @@
+{
+  "concept": "MongoDB Drivers",
+  "slug": "mongodb-drivers",
+  "parent": "MongoDB Developer Patterns",
+  "nodes": [
+    {
+      "id": "MongoDB Drivers",
+      "type": "root",
+      "cvs": 4.2
+    },
+    {
+      "id": "MongoDB Drivers Architecture Internals",
+      "type": "frontier"
+    },
+    {
+      "id": "MongoDB Drivers Benchmark Metrics",
+      "type": "frontier"
+    },
+    {
+      "id": "MongoDB Drivers Operational Runbook",
+      "type": "frontier"
+    },
+    {
+      "id": "MongoDB Drivers Failure Scenarios",
+      "type": "frontier"
+    }
+  ],
+  "edges": [
+    {
+      "source": "MongoDB Developer Patterns",
+      "target": "MongoDB Drivers",
+      "relation": "contains"
+    },
+    {
+      "source": "MongoDB Drivers",
+      "target": "MongoDB Drivers Architecture Internals",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "MongoDB Drivers",
+      "target": "MongoDB Drivers Benchmark Metrics",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "MongoDB Drivers",
+      "target": "MongoDB Drivers Operational Runbook",
+      "relation": "frontier_expansion"
+    },
+    {
+      "source": "MongoDB Drivers",
+      "target": "MongoDB Drivers Failure Scenarios",
+      "relation": "frontier_expansion"
+    }
+  ]
+}

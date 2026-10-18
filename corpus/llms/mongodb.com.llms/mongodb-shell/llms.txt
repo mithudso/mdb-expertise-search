@@ -1,0 +1,7 @@
+# mongodb.com documentation — Mongodb Shell
+
+> 1 page(s) of mongodb.com documentation under Mongodb Shell. Part of the index one level up (../llms.txt).
+
+## Mongodb Shell
+
+- [mongosh](https://www.mongodb.com/docs/mongodb-shell/llms.txt.md): > Use the MongoDB Shell to test queries and interact with the data in your MongoDB database.

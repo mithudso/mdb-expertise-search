@@ -1,0 +1,16 @@
+# Diagnostic Tool Design — Complete Architecture Guide
+
+Architecture and design principles for non-intrusive MongoDB diagnostic, telemetry capture, and log analysis tooling in high-throughput environments.
+
+## System Architecture & Invariants
+- [HIGH] (core) Diagnostic tooling must avoid acquiring exclusive database locks or triggering unindexed catalogue lookups during production incidents.
+- [HIGH] (methodology) Streaming BSON parsers must enforce strict chunk buffer caps to prevent diagnostic tools from inducing OOM kills on memory-constrained replica nodes.
+- [HIGH] (antipatterns) Capturing full query documents without regex-based PII redaction creates severe data governance and compliance violations in diagnostic bundles.
+- [HIGH] (patterns) Use query-shape normalization (stripping constants while retaining predicates) to allow deterministic error grouping without leaking sensitive field values.
+- [HIGH] (troubleshooting) Symptom: Diagnostic scraper causes replica set election. Cause: Scraper command timeout holding db lock. Fix: Use non-blocking serverStatus with small timeout.
+
+## Primary Sources & Citations
+- MongoDB Support Tools Repository: https://github.com/mongodb/support-tools (repo)
+- MongoDB Monitoring Guide: https://www.mongodb.com/docs/manual/administration/monitoring/ (docs)
+- FTDC Streaming Tools: https://github.com/mongodb/ftdc-utils (repo)
+- MongoDB Compliance Architecture: https://www.mongodb.com/docs/manual/core/security-compliance/ (docs)

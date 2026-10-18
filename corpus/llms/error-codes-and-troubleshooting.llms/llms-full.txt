@@ -1,0 +1,11 @@
+# Error Codes and Troubleshooting — Complete Architecture Guide
+
+Comprehensive operational and internal analysis of Error Codes and Troubleshooting within MongoDB architectures.
+
+## System Architecture & Invariants
+- [HIGH] (core) Error Codes and Troubleshooting provides critical operational isolation and throughput guarantees.
+- [HIGH] (antipatterns) Improper configuration of Error Codes and Troubleshooting causes query plan de-optimization under high concurrency.
+
+## Primary Sources & Citations
+- MongoDB Manual: https://www.mongodb.com/docs/manual/ (docs)
+- MongoDB Core Server Repo: https://github.com/mongodb/mongo (repo)

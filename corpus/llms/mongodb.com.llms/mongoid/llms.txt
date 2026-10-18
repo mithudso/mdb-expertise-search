@@ -1,0 +1,7 @@
+# mongodb.com documentation — Mongoid
+
+> 1 page(s) of mongodb.com documentation under Mongoid. Part of the index one level up (../llms.txt).
+
+## Mongoid
+
+- [Mongoid - (current)](https://www.mongodb.com/docs/mongoid/current/llms.txt.md): > Explore Mongoid, the Ruby ODM for MongoDB, with guides on connecting, configuring, and interacting with data in Ruby applications.

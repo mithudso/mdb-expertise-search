@@ -1,0 +1,8 @@
+# mongodb.com documentation — Search
+
+> 2 page(s) of mongodb.com documentation under Search. Part of the index one level up (../llms.txt).
+
+## Search
+
+- [MongoDB Search](https://www.mongodb.com/docs/search/llms.txt.md)
+- [Self-Managed MongoDB Search and Vector Search - (current)](https://www.mongodb.com/docs/search/self-managed/current/llms.txt.md): > Learn about deploying and operating mongot for MongoDB Search and MongoDB Vector Search on self-managed MongoDB deployments, including Community and Enterprise editions.

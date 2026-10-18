@@ -1,0 +1,2 @@
+{"id": "u0001", "concept": "MongoDB Atlas Data Federation", "text": "MongoDB Atlas Data Federation provides critical operational isolation and throughput guarantees.", "section": "core", "confidence": "high"}
+{"id": "u0002", "concept": "MongoDB Atlas Data Federation", "text": "Improper configuration of MongoDB Atlas Data Federation causes query plan de-optimization under high concurrency.", "section": "antipatterns", "confidence": "high"}

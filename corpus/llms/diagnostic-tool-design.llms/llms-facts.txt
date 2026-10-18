@@ -1,0 +1,7 @@
+# Facts: Diagnostic Tool Design
+
+FACT_1: Diagnostic tooling must avoid acquiring exclusive database locks or triggering unindexed catalogue lookups during production incidents.
+FACT_2: Streaming BSON parsers must enforce strict chunk buffer caps to prevent diagnostic tools from inducing OOM kills on memory-constrained replica nodes.
+FACT_3: Capturing full query documents without regex-based PII redaction creates severe data governance and compliance violations in diagnostic bundles.
+FACT_4: Use query-shape normalization (stripping constants while retaining predicates) to allow deterministic error grouping without leaking sensitive field values.
+FACT_5: Symptom: Diagnostic scraper causes replica set election. Cause: Scraper command timeout holding db lock. Fix: Use non-blocking serverStatus with small timeout.

@@ -1,0 +1,38 @@
+# mongodb.com documentation
+
+> This section shows how to set up a local or cloud MongoDB Atlas deployment and connect to the deployment by using the MongoDB Shell.
+
+Generated from a mirror of mongodb.com by docset_refine on the hub; 82 pages. Companion files: llms-full.txt (all pages), llms-small.txt (reference pages within ~50k tokens), llms-facts.txt (extracted units).
+
+## Sections
+
+- [Overview](overview/llms.txt): 10 pages, ~453 tokens — Get Started, Development, Build with AI and 7 more
+- [Mcp Server](mcp-server/llms.txt): 1 pages, ~86 tokens — MongoDB MCP Server
+- [Vector Search](vector-search/llms.txt): 1 pages, ~104 tokens — MongoDB Vector Search
+- [Search](search/llms.txt): 2 pages, ~131 tokens — MongoDB Search, Self-Managed MongoDB Search and Vector Search - (current)
+- [Voyageai](voyageai/llms.txt): 1 pages, ~87 tokens — Voyage AI by MongoDB
+- [Languages](languages/llms.txt): 9 pages, ~626 tokens — C Driver - (current), C++ Driver - (current), MongoDB Extension for Hibernate ORM - (current) and 6 more
+- [Drivers](drivers/llms.txt): 8 pages, ~497 tokens — .NET/C# Driver - (current), Go Driver - (current), Java Sync Driver - (current) and 5 more
+- [Entity Framework](entity-framework/llms.txt): 1 pages, ~110 tokens — EF Core Provider - (current)
+- [Php Library](php-library/llms.txt): 1 pages, ~104 tokens — PHP Library Manual - (current)
+- [Ruby Driver](ruby-driver/llms.txt): 1 pages, ~87 tokens — Ruby Driver - (current)
+- [Mongoid](mongoid/llms.txt): 1 pages, ~92 tokens — Mongoid - (current)
+- [Manual](manual/llms.txt): 9 pages, ~574 tokens — Database Manual - (manual) (Part 1 of 9), Database Manual - (manual) (Part 2 of 9), Database Manual - (manual) (Part 3 of 9) and 6 more
+- [Atlas](atlas/llms.txt): 11 pages, ~761 tokens — Atlas (Part 1 of 3), Atlas (Part 2 of 3), Atlas (Part 3 of 3) and 8 more
+- [Kubernetes](kubernetes/llms.txt): 1 pages, ~109 tokens — MongoDB Controllers for Kubernetes Operator - (current)
+- [Ops Manager](ops-manager/llms.txt): 5 pages, ~369 tokens — Ops Manager - (current) (Part 1 of 5), Ops Manager - (current) (Part 2 of 5), Ops Manager - (current) (Part 3 of 5) and 2 more
+- [Cloud Manager](cloud-manager/llms.txt): 4 pages, ~291 tokens — Cloud Manager (Part 1 of 4), Cloud Manager (Part 2 of 4), Cloud Manager (Part 3 of 4) and 1 more
+- [Mongocli](mongocli/llms.txt): 3 pages, ~226 tokens — MongoCLI - (current) (Part 1 of 3), MongoCLI - (current) (Part 2 of 3), MongoCLI - (current) (Part 3 of 3)
+- [Database Tools](database-tools/llms.txt): 1 pages, ~90 tokens — Database Tools
+- [Mongodb Shell](mongodb-shell/llms.txt): 1 pages, ~83 tokens — mongosh
+- [Bi Connector](bi-connector/llms.txt): 1 pages, ~94 tokens — BI Connector - (current)
+- [Kafka Connector](kafka-connector/llms.txt): 1 pages, ~106 tokens — Kafka Connector - (current)
+- [Spark Connector](spark-connector/llms.txt): 1 pages, ~98 tokens — Spark Connector - (current)
+- [Sql Interface](sql-interface/llms.txt): 1 pages, ~101 tokens — SQL Interface
+- [Mongodb Analyzer](mongodb-analyzer/llms.txt): 1 pages, ~104 tokens — C# Analyzer - (current)
+- [Mongodb Vscode](mongodb-vscode/llms.txt): 1 pages, ~94 tokens — VS Code Extension
+- [Mongodb Intellij](mongodb-intellij/llms.txt): 1 pages, ~100 tokens — IntelliJ Plugin
+- [Mongosync](mongosync/llms.txt): 1 pages, ~98 tokens — MongoDB Mongosync - (current)
+- [Relational Migrator](relational-migrator/llms.txt): 1 pages, ~108 tokens — Relational Migrator
+- [Charts](charts/llms.txt): 1 pages, ~95 tokens — Atlas Charts
+- [Compass](compass/llms.txt): 1 pages, ~88 tokens — Compass

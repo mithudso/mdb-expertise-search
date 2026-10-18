@@ -1,0 +1,7 @@
+# mongodb.com documentation — Mongodb Analyzer
+
+> 1 page(s) of mongodb.com documentation under Mongodb Analyzer. Part of the index one level up (../llms.txt).
+
+## Mongodb Analyzer
+
+- [C# Analyzer - (current)](https://www.mongodb.com/docs/mongodb-analyzer/current/llms.txt.md): > Explore how the C# Analyzer helps translate MongoDB .NET/C# Driver code into the MongoDB Query API and checks for unsupported expressions.

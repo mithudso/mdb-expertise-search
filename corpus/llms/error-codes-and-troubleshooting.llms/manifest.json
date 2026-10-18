@@ -1,0 +1,18 @@
+{
+  "concept": "Error Codes and Troubleshooting",
+  "slug": "error-codes-and-troubleshooting",
+  "parent": "MongoDB Developer Patterns",
+  "researched_at": "2026-10-05",
+  "files": [
+    "llms.txt",
+    "llms-full.txt",
+    "llms-small.txt",
+    "llms-facts.txt",
+    "llms-vocabulary.txt",
+    "concept-graph.json",
+    "manifest.json",
+    "units.jsonl"
+  ],
+  "sourcesCount": 2,
+  "claimsCount": 2
+}

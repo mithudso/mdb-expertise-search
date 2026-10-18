@@ -1,0 +1,6 @@
+# KB-Backed Troubleshooting — Quick Reference
+
+- **Parent**: Atlas Diagnostics Expert
+- **Summary**: Knowledge-base backed troubleshooting methodology matching crash signatures, server error codes, and known issues against MongoDB SERVER tickets and technical bulletins.
+- **Key Metric**: Verified on 2026-10-05
+- **Frontier Count**: 4 child concepts

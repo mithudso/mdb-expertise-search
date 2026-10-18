@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+data/
+.venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+
+# Private corpus: employer/customer-flavoured material. Indexed locally, never committed.
+corpus/llms/memory-central/
+corpus/llms/uber-mongodb-skill.md
+corpus/skills/atlas-diagnostics-expert/SKILL.md
+corpus/skills/atlas-diagnostics-expert/references/atlas-diagnostics-package.md
+corpus/skills/atlas-vector-search-pii-isolation/SKILL.md
+corpus/skills/mongodb-atlas-expert/SKILL.md
+corpus/skills/mongodb-atlas-expert/references/mongodb-atlas-managed-upgrades.md
+corpus/skills/mongodb-expert/SKILL.md
+corpus/skills/mongodb-expert/references/mongodb-developer.md
+corpus/skills/mongodb-expert/references/mongodb-expert-context.md
+corpus/skills/mongodb-operations-expert/SKILL.md
+corpus/skills/mongodb-operations-expert/references/mongodb-7.0-vs-8.0-differences.md
+corpus/skills/mongodb-operations-expert/references/mongodb-disaster-recovery.md
+corpus/skills/mongodb-operations-expert/references/mongodb-relational-migrator.md
+corpus/skills/mongodb-operations-expert/references/mongodb-upgrade-paths.md

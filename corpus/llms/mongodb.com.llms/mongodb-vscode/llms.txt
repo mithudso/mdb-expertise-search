@@ -1,0 +1,7 @@
+# mongodb.com documentation — Mongodb Vscode
+
+> 1 page(s) of mongodb.com documentation under Mongodb Vscode. Part of the index one level up (../llms.txt).
+
+## Mongodb Vscode
+
+- [VS Code Extension](https://www.mongodb.com/docs/mongodb-vscode/llms.txt.md): > Explore MongoDB data, prototype queries, and create Atlas clusters using the MongoDB extension for Visual Studio Code.

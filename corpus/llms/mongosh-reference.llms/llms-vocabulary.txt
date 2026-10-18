@@ -1,0 +1,6 @@
+# Vocabulary: mongosh Reference
+
+mongosh-reference: Primary concept identifier
+wiredtiger: MongoDB default storage engine supporting MVCC and document concurrency
+ftdc: Full Time Diagnostic Data Capture
+plan-cache: In-memory repository of query candidate solutions
