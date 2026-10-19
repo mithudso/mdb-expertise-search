@@ -1,0 +1,89 @@
+{
+  "kind": "concept",
+  "concept": "Atlas Query Insights, Performance Advisor and Compass explain",
+  "slug": "mongodb-atlas-and-compass-query-tooling",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "Performance Advisor is only available on M10+ clusters and Flex clusters; the Atlas-managed slow-query threshold is disabled on Free (M0) clusters and unsupported on clusters with MongoDB Search enabled. (from mongodb.com)",
+  "rights": "extractive",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45813,
+  "harvested_units": 760,
+  "kept_units": 760,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 750,
+    "mongodb.com": 7,
+    "jira.mongodb.org": 2,
+    "irf.fhnw.ch": 1
+  },
+  "facets": {
+    "definition": 14,
+    "structure": 29,
+    "mechanism": 51,
+    "how-to": 52,
+    "examples": 26,
+    "measures": 5,
+    "problems": 173,
+    "comparisons": 27,
+    "facts": 383
+  },
+  "relations": {
+    "about": 253,
+    "component": 507
+  },
+  "lexicon": {
+    "terms": 8,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1,
+      "part": 4,
+      "contrast": 1,
+      "related": 1,
+      "hypernym": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 4484,
+      "tokens": 1107
+    },
+    "llms-full.txt": {
+      "bytes": 305316,
+      "tokens": 75676
+    },
+    "llms-small.txt": {
+      "bytes": 33058,
+      "tokens": 8199
+    },
+    "llms-facts.txt": {
+      "bytes": 437530,
+      "tokens": 108763
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 3858,
+      "tokens": 955
+    },
+    "units.jsonl": {
+      "bytes": 671508,
+      "tokens": 167877
+    }
+  },
+  "parent": "mongodb-query-optimization-tooling",
+  "split_terms": [
+    "Performance Advisor",
+    "Query Insights",
+    "Compass explain"
+  ]
+}

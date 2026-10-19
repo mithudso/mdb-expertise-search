@@ -8,6 +8,7 @@ Run over stdio:  ``mql-lsp``.
 from __future__ import annotations
 
 import logging
+import os
 import sys
 
 from lsprotocol import types
@@ -16,6 +17,7 @@ from pygls.lsp.server import LanguageServer
 from .. import __version__
 from . import features
 from .analyze import Diag, Result, analyze
+from .optimize import optimize
 
 log = logging.getLogger("mql-lsp")
 
@@ -70,9 +72,26 @@ def to_diagnostic(text: str, d: Diag) -> types.Diagnostic:
         message=d.message,
         severity=_SEV[d.severity],
         code=d.code,
-        source="mql",
+        source="mql-optimizer" if d.code.startswith("opt/") else "mql",
         data={"fix": d.fix} if d.fix else None,
     )
+
+
+_OPT_SEV = {"blocking": "warning", "high": "warning", "medium": "info", "low": "hint"}
+
+
+def optimizer_diagnostics(text: str) -> list[Diag]:
+    """Static MQL optimizer findings as diagnostics (disable with MDBX_LSP_OPTIMIZE=0)."""
+    if os.environ.get("MDBX_LSP_OPTIMIZE", "1") == "0":
+        return []
+    try:
+        rep = optimize(text, apply=False)
+    except Exception:  # the optimizer must never take lint diagnostics down with it
+        log.warning("MQL optimizer failed; publishing lint diagnostics only", exc_info=True)
+        return []
+    return [Diag(f.start, f.end, _OPT_SEV[f.severity], "opt/" + f.code,
+                 f"[{f.severity} {f.pass_id}] {f.message}", f.fix)
+            for f in rep.findings if not f.code.endswith("-rewrite")]
 
 
 def make_expertise_lookup():
@@ -108,8 +127,9 @@ def build_server() -> LanguageServer:
         doc = server.workspace.get_text_document(uri)
         res = analyze(doc.source)
         results[uri] = res
+        diags = [*res.diagnostics, *optimizer_diagnostics(res.text)]
         server.text_document_publish_diagnostics(
-            types.PublishDiagnosticsParams(uri=uri, diagnostics=[to_diagnostic(res.text, d) for d in res.diagnostics])
+            types.PublishDiagnosticsParams(uri=uri, diagnostics=[to_diagnostic(res.text, d) for d in diags])
         )
         return res
 
@@ -190,7 +210,7 @@ def build_server() -> LanguageServer:
             if not fix:
                 continue
             actions.append(types.CodeAction(
-                title=f"Replace with {fix}",
+                title=f"Replace with {fix}" if len(fix) <= 60 and "\n" not in fix else "Apply optimizer rewrite",
                 kind=types.CodeActionKind.QuickFix,
                 diagnostics=[d],
                 is_preferred=True,

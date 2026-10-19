@@ -10,6 +10,7 @@ from . import recipes as rec
 from . import search as srch
 from .mql import operators as ops
 from .mql.analyze import analyze
+from .mql.optimize import optimize, to_dict
 
 MAX_SHOW_CHARS = 20_000
 
@@ -17,7 +18,8 @@ server = MCPServer(
     "mdbx",
     version=__version__,
     instructions=(
-        "Search a curated MongoDB / Atlas expertise corpus (skills + llms docs) and lint MQL. "
+        "Search a curated MongoDB / Atlas expertise corpus (skills + llms docs), lint MQL and "
+        "optimize MQL queries (mql_optimize). "
         "Use mdb_search first, then mdb_show with the returned path and line to read context."
     ),
 )
@@ -120,6 +122,18 @@ def mql_lint(text: str) -> list[dict]:
         out.append({"line": line, "column": col, "severity": d.severity, "code": d.code,
                     "message": d.message, "suggestion": d.fix})
     return out
+
+
+@server.tool()
+def mql_optimize(text: str, apply: bool = True) -> dict:
+    """Static MQL query optimizer for MQL (find, aggregate, count, updates, watch).
+
+    Returns findings (severity blocking/high/medium/low, optimizer pass P2-P8, corpus `ref` to read with
+    mdb_show), ESR-ordered index recommendations (recommend-only), and, when apply is true, the text
+    with result-preserving rewrites applied (same-field $or -> $in, degenerate range -> equality,
+    $match hoisting, countDocuments({}) -> estimatedDocumentCount). Confirm with explain() on a cluster.
+    """
+    return to_dict(optimize(text, apply=apply))
 
 
 @server.tool()

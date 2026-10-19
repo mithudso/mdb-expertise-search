@@ -1,0 +1,84 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB time-series working-set sizing and sharding",
+  "slug": "mongodb-time-series-sizing-and-sharding",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "Everything the scanned sources say about MongoDB time-series working-set sizing and sharding: 52 source-anchored units across 1 sources, grouped by facet.",
+  "rights": "extractive",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45813,
+  "harvested_units": 52,
+  "kept_units": 52,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 52
+  },
+  "facets": {
+    "definition": 1,
+    "structure": 6,
+    "mechanism": 7,
+    "how-to": 3,
+    "measures": 2,
+    "problems": 1,
+    "comparisons": 1,
+    "facts": 31
+  },
+  "relations": {
+    "measure": 52
+  },
+  "lexicon": {
+    "terms": 3,
+    "zero_hit": [
+      "MongoDB time-series working-set sizing and sharding",
+      "time series sharding"
+    ],
+    "by_relation": {
+      "self": 1,
+      "measure": 1,
+      "related": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 2537,
+      "tokens": 623
+    },
+    "llms-full.txt": {
+      "bytes": 21245,
+      "tokens": 5267
+    },
+    "llms-small.txt": {
+      "bytes": 19979,
+      "tokens": 4967
+    },
+    "llms-facts.txt": {
+      "bytes": 22662,
+      "tokens": 5625
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 1342,
+      "tokens": 332
+    },
+    "units.jsonl": {
+      "bytes": 34709,
+      "tokens": 8677
+    }
+  },
+  "parent": "mongodb-time-series-query-optimization",
+  "split_terms": [
+    "working set for time series",
+    "time series sharding"
+  ]
+}

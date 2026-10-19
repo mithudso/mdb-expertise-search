@@ -18,14 +18,21 @@ PURPOSE = {
     "mdbx/mql/parser.py": "Tolerant mongosh/MQL parser",
     "mdbx/mql/analyze.py": "Context-aware MQL lint + outline",
     "mdbx/mql/features.py": "LSP completion and hover logic",
-    "mdbx/mql/server.py": "mql-lsp language server",
+    "mdbx/mql/server.py": "mql-lsp language server (lint + optimizer diagnostics)",
+    "mdbx/mql/optimize.py": "Static MQL query optimizer",
     "scripts/redact_corpus.py": "Redact customer/internal references",
     "scripts/sweep_customers.py": "Customer-marker sweep",
+    "tests/test_optimize.py": "Static optimizer tests",
+    "tests/test_cdo_hardening.py": "Embed/index/search hardening tests",
     "tests/test_mql.py": "MQL parser/analyzer/feature tests",
     "tests/test_lsp_e2e.py": "LSP stdio end-to-end test",
     "tests/test_mcp.py": "MCP tool tests",
     "tests/test_core.py": "Core unit tests",
     "tests/test_tui.py": "TUI pilot test",
+    "scripts/rotate_workflow_logs.py": "Rotate memory.md/prompts.md into docs/archive/",
+    "scripts/watch_and_index.sh": "Reindex on corpus changes (fswatch/inotifywait)",
+    "examples/slow-queries.mql": "Sample queries for mdbx optimize",
+    ".vscode/mcp.json": "VS Code MCP registration",
     "scripts/sync_corpus.sh": "Rebuild corpus from local skills + reindex",
     "scripts/gen_file_index.py": "Regenerate this index",
     "scripts/check_doc_indexes.py": "Validate index paths",
@@ -35,7 +42,8 @@ PURPOSE = {
 
 
 def tracked() -> list[str]:
-    out = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True).stdout
+    # tracked plus untracked-but-not-ignored, so new files are indexed before they are committed
+    out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard"], cwd=ROOT, capture_output=True, text=True, check=True).stdout
     return [p for p in out.splitlines() if not p.startswith("corpus/")]
 
 

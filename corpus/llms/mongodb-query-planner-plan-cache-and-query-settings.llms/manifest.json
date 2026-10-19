@@ -1,0 +1,95 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB query planner, plan cache, query settings and hints",
+  "slug": "mongodb-query-planner-plan-cache-and-query-settings",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "Hidden indexes are not visible to the query planner and cannot be used to support a query. (from www.mongodb.com)",
+  "rights": "extractive",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45854,
+  "harvested_units": 428,
+  "kept_units": 428,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 416,
+    "jira.mongodb.org": 4,
+    "dev.to": 3,
+    "www.percona.com": 3,
+    "jira.mongodb.com": 1,
+    "oneuptime.com": 1
+  },
+  "facets": {
+    "definition": 6,
+    "structure": 22,
+    "mechanism": 34,
+    "how-to": 26,
+    "examples": 35,
+    "measures": 5,
+    "problems": 49,
+    "comparisons": 15,
+    "facts": 236
+  },
+  "relations": {
+    "component": 278,
+    "about": 150
+  },
+  "lexicon": {
+    "terms": 12,
+    "zero_hit": [
+      "MongoDB query planner, plan cache, query settings and hints"
+    ],
+    "by_relation": {
+      "self": 1,
+      "synonym": 1,
+      "part": 6,
+      "related": 2,
+      "hypernym": 2
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 5179,
+      "tokens": 1278
+    },
+    "llms-full.txt": {
+      "bytes": 153564,
+      "tokens": 38003
+    },
+    "llms-small.txt": {
+      "bytes": 32957,
+      "tokens": 8197
+    },
+    "llms-facts.txt": {
+      "bytes": 199279,
+      "tokens": 49479
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 4649,
+      "tokens": 1148
+    },
+    "units.jsonl": {
+      "bytes": 314174,
+      "tokens": 78543
+    }
+  },
+  "parent": "mongodb-explain-plans-and-query-planner",
+  "split_terms": [
+    "query planner",
+    "plan cache",
+    "query settings",
+    "hint",
+    "slot-based execution engine"
+  ]
+}

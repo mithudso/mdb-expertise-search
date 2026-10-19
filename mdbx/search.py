@@ -1,13 +1,17 @@
 """search — keyword (BM25), semantic (cosine) and hybrid (reciprocal-rank fusion) search."""
 from __future__ import annotations
 
+import logging
 import re
 import sqlite3
+from collections import Counter
 from dataclasses import dataclass, field
 
 import numpy as np
 
 from . import embed as embedmod
+
+log = logging.getLogger("mdbx.search")
 
 RRF_K = 60
 
@@ -97,6 +101,14 @@ class VectorStore:
         rows = con.execute(
             "SELECT c.id, v.dim, v.vec FROM chunks c JOIN vectors v ON v.digest = c.digest"
         ).fetchall()
+        # Skip corrupt blobs and vectors left over from a model with another dimension.
+        good = [r for r in rows if len(r["vec"]) == 4 * r["dim"]]
+        if good:
+            dim = Counter(r["dim"] for r in good).most_common(1)[0][0]
+            good = [r for r in good if r["dim"] == dim]
+        if len(good) != len(rows):
+            log.warning("ignored %d inconsistent vector(s); re-run `mdbx index`", len(rows) - len(good))
+        rows = good
         self.ids = np.array([r["id"] for r in rows], dtype=np.int64)
         self.matrix = (
             np.vstack([np.frombuffer(r["vec"], dtype=np.float32) for r in rows])
@@ -121,22 +133,30 @@ def semantic(
     if not len(store):
         raise embedmod.EmbedError("no vectors indexed — run `mdbx index`")
     qv = embedmod.embed_query(query)
+    if qv.shape[0] != store.matrix.shape[1]:
+        raise embedmod.EmbedError(
+            f"query embedding has {qv.shape[0]} dims but the index has {store.matrix.shape[1]} — "
+            "was the embed model changed? re-run `mdbx index`"
+        )
     sims = store.matrix @ qv
     order = np.argsort(-sims)
-    hits: list[Hit] = []
     extra, fparams = _filters(kind, source)
-    for idx in order[: max(limit * 8, 50)]:
-        row = con.execute(
-            f"SELECT c.* FROM chunks c WHERE c.id = ?{extra}", [int(store.ids[idx]), *fparams]
-        ).fetchone()
-        if row is None:
-            continue
-        hits.append(
-            Hit(row["id"], row["path"], row["source"], row["kind"], row["heading"], row["line"],
-                row["text"], float(sims[idx]), "semantic", _lead(row["text"]))
-        )
-        if len(hits) >= limit * 3:
-            break
+    if extra:  # restrict before ranking so a filter cannot be starved by unrelated top matches
+        allowed = [r[0] for r in con.execute(f"SELECT c.id FROM chunks c WHERE 1=1{extra}", fparams)]
+        order = order[np.isin(store.ids, allowed)[order]]
+    ranked = [(int(store.ids[i]), float(sims[i])) for i in order[: limit * 3]]
+    rows: dict[int, sqlite3.Row] = {}
+    for i in range(0, len(ranked), 500):  # stay under SQLite's bound-variable limit
+        ids = [rid for rid, _ in ranked[i : i + 500]]
+        marks = ",".join("?" * len(ids))
+        for row in con.execute(f"SELECT * FROM chunks WHERE id IN ({marks})", ids):
+            rows[row["id"]] = row
+    hits = [
+        Hit(row["id"], row["path"], row["source"], row["kind"], row["heading"], row["line"],
+            row["text"], sim, "semantic", _lead(row["text"]))
+        for rid, sim in ranked
+        if (row := rows.get(rid)) is not None
+    ]
     return _dedupe(hits, limit)
 
 

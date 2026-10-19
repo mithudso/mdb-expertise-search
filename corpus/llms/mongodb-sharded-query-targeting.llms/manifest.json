@@ -1,0 +1,89 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB sharded query targeting and scatter-gather",
+  "slug": "mongodb-sharded-query-targeting",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "Everything the scanned sources say about MongoDB sharded query targeting and scatter-gather: 361 source-anchored units across 1 sources, grouped by facet.",
+  "rights": "extractive",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45847,
+  "harvested_units": 361,
+  "kept_units": 361,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 361
+  },
+  "facets": {
+    "definition": 1,
+    "structure": 22,
+    "mechanism": 42,
+    "how-to": 18,
+    "examples": 28,
+    "measures": 1,
+    "problems": 45,
+    "comparisons": 11,
+    "facts": 193
+  },
+  "relations": {
+    "component": 309,
+    "context": 24,
+    "related": 28
+  },
+  "lexicon": {
+    "terms": 5,
+    "zero_hit": [
+      "MongoDB sharded query targeting and scatter-gather"
+    ],
+    "by_relation": {
+      "self": 1,
+      "part": 1,
+      "related": 2,
+      "hypernym": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 3271,
+      "tokens": 805
+    },
+    "llms-full.txt": {
+      "bytes": 158585,
+      "tokens": 39331
+    },
+    "llms-small.txt": {
+      "bytes": 32962,
+      "tokens": 8202
+    },
+    "llms-facts.txt": {
+      "bytes": 184715,
+      "tokens": 45896
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 1994,
+      "tokens": 493
+    },
+    "units.jsonl": {
+      "bytes": 277107,
+      "tokens": 69276
+    }
+  },
+  "parent": "mongodb-query-shape-optimization",
+  "split_terms": [
+    "sharded query targeting",
+    "query shape",
+    "index",
+    "query optimization"
+  ]
+}

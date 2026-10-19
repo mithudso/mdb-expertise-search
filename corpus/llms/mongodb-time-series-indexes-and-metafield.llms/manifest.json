@@ -1,0 +1,93 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB time-series indexes and metaField design",
+  "slug": "mongodb-time-series-indexes-and-metafield",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "Time series collections support [secondary indexes](https://www.mongodb.com/docs/manual/core/timeseries/timeseries-secondary-index.md#std-label-timeseries-add-secondary-index) on the field specified as the `metaField`. If the data model of your time series data does not have a designated field for your metadata, you can transform your data to create one. To transform the data in your existing coll (from www.mongodb.com)",
+  "rights": "extractive",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45813,
+  "harvested_units": 723,
+  "kept_units": 723,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 712,
+    "jira.mongodb.org": 5,
+    "oneuptime.com": 3,
+    "levelup.gitconnected.com": 1,
+    "mongodb.com": 1,
+    "blog.allegro.tech": 1
+  },
+  "facets": {
+    "definition": 21,
+    "structure": 42,
+    "mechanism": 93,
+    "how-to": 41,
+    "examples": 53,
+    "measures": 9,
+    "problems": 74,
+    "comparisons": 20,
+    "facts": 370
+  },
+  "relations": {
+    "about": 226,
+    "measure": 21,
+    "problem": 273,
+    "component": 203
+  },
+  "lexicon": {
+    "terms": 9,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1,
+      "part": 4,
+      "problem": 1,
+      "measure": 1,
+      "related": 2
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 5038,
+      "tokens": 1245
+    },
+    "llms-full.txt": {
+      "bytes": 307558,
+      "tokens": 76249
+    },
+    "llms-small.txt": {
+      "bytes": 33092,
+      "tokens": 8231
+    },
+    "llms-facts.txt": {
+      "bytes": 374715,
+      "tokens": 93098
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 4572,
+      "tokens": 1132
+    },
+    "units.jsonl": {
+      "bytes": 575683,
+      "tokens": 143911
+    }
+  },
+  "parent": "mongodb-time-series-query-optimization",
+  "split_terms": [
+    "secondary index on time series",
+    "metaField",
+    "metaField cardinality"
+  ]
+}

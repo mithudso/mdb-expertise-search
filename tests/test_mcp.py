@@ -26,7 +26,14 @@ def test_tools_registered():
 
     names = {t.name for t in asyncio.run(m.server.list_tools()).tools} if hasattr(
         asyncio.run(m.server.list_tools()), "tools") else {t.name for t in asyncio.run(m.server.list_tools())}
-    assert {"mdb_search", "mdb_show", "mdb_stats", "mql_lint", "mql_operator"} <= names
+    assert {"mdb_search", "mdb_show", "mdb_stats", "mql_lint", "mql_operator", "mql_optimize"} <= names
+
+
+def test_mql_optimize_tool():
+    out = m.mql_optimize("db.c.find({ $or: [{ a: 1 }, { a: 2 }] })")
+    assert out["applied"][0]["code"] == "or-to-in"
+    assert "$in" in out["rewritten"]
+    assert out["indexes"][0]["shell"] == "db.c.createIndex({ a: 1 })"
 
 
 def test_search_and_show(env):

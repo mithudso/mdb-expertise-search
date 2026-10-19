@@ -15,3 +15,10 @@
 ## 2026-10-17 (3)
 3. "Yes do that pass [full customer-info review]. 2. Yes [VS Code extension] also include a recipes section for the
    most common series of actions like sharding a collection and adding private link and upgrading, etc."
+
+## 2026-10-19
+4. "pull this repo to here: https://github.com/mithudso/mdb-expertise-search.git then run the repo-bootstrapper skill
+   on it, and then incorporate the mongodb query optimizer into it with the new skills and facts that were created
+   recently in another session."
+5. "Add more examples of what this can do and why someone should use it to the readme, and create a customer facing
+   demo doc showcasing this as a skill. Also would a chrome extension be helpful?"

@@ -1,6 +1,7 @@
 """index — build and open the SQLite store (FTS5 keyword index + embedding vectors)."""
 from __future__ import annotations
 
+import logging
 import os
 import sqlite3
 import time
@@ -37,6 +38,8 @@ CREATE TABLE IF NOT EXISTS vectors (
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 """
 
+log = logging.getLogger("mdbx.index")
+
 Progress = Callable[[str], None]
 
 
@@ -63,6 +66,8 @@ def connect(db: Path | None = None) -> sqlite3.Connection:
 
 def build_keyword(con: sqlite3.Connection, root: Path, say: Progress = lambda _: None) -> int:
     """Rebuild the chunk table and FTS5 index from ``root``. Returns chunk count."""
+    if not root.is_dir():  # a typo'd path would otherwise wipe the index and every embedding
+        raise FileNotFoundError(f"corpus directory not found: {root}")
     con.execute("DELETE FROM chunks")
     con.execute("INSERT INTO chunks_fts(chunks_fts) VALUES('delete-all')")
     rows = (
@@ -78,6 +83,8 @@ def build_keyword(con: sqlite3.Connection, root: Path, say: Progress = lambda _:
         "SELECT id, heading, text, source FROM chunks"
     )
     n = con.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+    if n == 0:
+        log.warning("no chunks found under %s; index is now empty", root)
     con.execute("DELETE FROM vectors WHERE digest NOT IN (SELECT digest FROM chunks)")
     con.execute("INSERT OR REPLACE INTO meta VALUES('built_at', ?)", (time.strftime("%Y-%m-%d %H:%M:%S"),))
     con.execute("INSERT OR REPLACE INTO meta VALUES('corpus', ?)", (str(root),))
@@ -90,12 +97,21 @@ def build_semantic(
     con: sqlite3.Connection, say: Progress = lambda _: None, *, batch: int = 24
 ) -> int:
     """Embed every chunk digest that has no vector yet. Returns number embedded."""
+    model = embedmod.model()
+    prev = con.execute("SELECT value FROM meta WHERE key = 'embed_model'").fetchone()
+    if prev and prev["value"] != model:
+        # Vectors from another model live in a different space (and maybe dimension); never mix them.
+        log.warning("embed model changed %s -> %s; discarding existing vectors", prev["value"], model)
+        say(f"embed model changed ({prev['value']} -> {model}); re-embedding everything")
+        con.execute("DELETE FROM vectors")
+        con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model', ?)", (model,))
+        con.commit()  # recorded now so a failed run does not re-purge vectors already embedded
     todo = con.execute(
         "SELECT digest, MIN(heading) AS h, MIN(text) AS t FROM chunks "
         "WHERE digest NOT IN (SELECT digest FROM vectors) GROUP BY digest"
     ).fetchall()
     total = len(todo)
-    say(f"semantic index: {total} chunks to embed with {embedmod.model()}")
+    say(f"semantic index: {total} chunks to embed with {model}")
     done = 0
     for i in range(0, total, batch):
         part = todo[i : i + batch]
@@ -108,7 +124,7 @@ def build_semantic(
         done += len(part)
         if (i // batch) % 10 == 0 or done == total:
             say(f"  embedded {done}/{total}")
-    con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model', ?)", (embedmod.model(),))
+    con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model', ?)", (model,))
     con.commit()
     return done
 

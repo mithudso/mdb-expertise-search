@@ -19,6 +19,12 @@ whenToUse:
 - how do I use mongosh to run admin scripts?
 - how do I configure connection string options for TLS or auth?
 - "why does my MongoDB driver keep timing out \u2014 how do connection pooling (CMAP) and server selection work?"
+- my plan cache keeps picking the wrong index, how do I pin one?
+- should I switch from skip/limit to keyset pagination?
+- is it safe to drop this index, or can I hide it first?
+- what field order should this compound index use for equality, sort, and range?
+- my time series query is slow even though metaField is indexed
+- optimize this aggregation pipeline and apply the fixes (MQL optimizer)
 whenNotToUse:
 - "Atlas cloud-platform / control-plane work (orgs, projects, deployments, Admin API, CLI, Terraform, AKO, Atlas Search/Vector Search, networking) \u2014 use mongodb-atlas-expert"
 - "Live cluster diagnostics, performance troubleshooting, benchmarking, monitoring, capacity planning \u2014 use atlas-diagnostics-expert"
@@ -57,7 +63,7 @@ effort: high
 # MongoDB Expert
 
 
-This skill consolidates 27 MongoDB data-plane/engine sub-skills as on-demand reference files under `references/`. It is the **primary, first-choice skill** for core MongoDB questions — not a fallback. Match the task to the **Sub-skill routing table** below and **Read the listed `references/…md` file before answering deep questions** — the table alone is not enough for depth. Route to a sibling hub (`mongodb-atlas-expert`, `atlas-diagnostics-expert`, `mongodb-operations-expert`, `misc-catch-all`) only when the question falls into one of those domains (see frontmatter `SKIP`).
+This skill consolidates the MongoDB data-plane/engine sub-skills as on-demand reference files under `references/`. It is the **primary, first-choice skill** for core MongoDB questions — not a fallback. Match the task to the **Sub-skill routing table** below and **Read the listed `references/…md` file before answering deep questions** — the table alone is not enough for depth. Route to a sibling hub (`mongodb-atlas-expert`, `atlas-diagnostics-expert`, `mongodb-operations-expert`, `misc-catch-all`) only when the question falls into one of those domains (see frontmatter `SKIP`).
 
 ## When to use this skill
 
@@ -65,15 +71,22 @@ Use this skill when the user needs help with core MongoDB data-plane or database
 
 ## Sub-skill routing table
 
-This hub absorbs 27 former standalone skills as on-demand reference files. When a task matches a row, **Read the listed `references/` file** before answering — do not rely on this table alone for depth. For domains not listed here (Atlas cloud platform, live diagnostics, ops/backup/migration/security, KB lookup), route to the sibling hub named in the frontmatter `SKIP` line.
+Each row below is a former standalone skill or a later-added research spoke, held as an on-demand reference file. When a task matches a row, **Read the listed `references/` file** before answering — do not rely on this table alone for depth. For domains not listed here (Atlas cloud platform, live diagnostics, ops/backup/migration/security, KB lookup), route to the sibling hub named in the frontmatter `SKIP` line.
 
 | Sub-topic | When to load | Reference file |
 | --- | --- | --- |
 | `mongodb-developer` | How to USE a driver — idiomatic API usage in any official driver (Node.js, Python, Java, Go, C#, Rust, …): CRUD calls, transactions API, bulk ops, cursors (how drivers WORK inside → `mongodb-driver-internals`) | `references/mongodb-developer.md` |
 | `mongodb-aggregation-pipeline` | Aggregation pipeline fundamentals — stage order, operators, materialization | `references/mongodb-aggregation-pipeline.md` |
 | `mongodb-aggregation-stages-deep` | Deep aggregation stages — `$lookup`, `$graphLookup`, `$facet`, `$bucket`/`$bucketAuto`, `$merge`/`$out`, `$setWindowFields`, `$densify`/`$fill`, `$unionWith` | `references/mongodb-aggregation-stages-deep.md` |
-| `mongodb-indexes-deep` | Every index type — single-field, compound, multikey, partial, wildcard, hidden, TTL, hashed | `references/mongodb-indexes-deep.md` |
-| `mongodb-query-performance` | Query optimization, explain plans, ESR rule, slow-query diagnosis, index hints | `references/mongodb-query-performance.md` |
+| `mongodb-indexes-deep` | Index-type catalogue — single-field, compound, multikey, partial, wildcard, hidden, TTL, hashed: syntax and limits per type (key-order design → `mongodb-compound-index-design`; wildcard, hidden, builds → `mongodb-special-indexes-and-index-builds`) | `references/mongodb-indexes-deep.md` |
+| `mongodb-query-performance` | Broad query-tuning handbook — optimization survey, aggregation tuning, WiredTiger caching, profiling, checklists; the first read for a general "queries are slow" ask (narrower spokes follow) | `references/mongodb-query-performance.md` |
+| `mongodb-explain-plans-and-query-planner` | Explain plans, query planner, plan cache, query shapes/$queryStats, 8.0 query settings vs index filters, hint()/$natural, $indexStats unused-index detection, profiler and slow-query log fields, index-effectiveness ratios | `references/mongodb-explain-plans-and-query-planner.md` |
+| `mongodb-advanced-explain-and-planner-changes` | Advanced explain — aggregation spill/memory stats, sharded explain (SHARD_MERGE, splitPipeline, mergeType), $sort+$group $first loose index scan (DISTINCT_SCAN), 8.3 cost-based ranker and 9.0 planner changes | `references/mongodb-advanced-explain-and-planner-changes.md` |
+| `mongodb-compound-index-design` | Compound index key order (ESR and ERS exception), prefixes, selectivity, covered queries, multikey bounds and $elemMatch, partial vs sparse eligibility, index intersection, index anti-patterns | `references/mongodb-compound-index-design.md` |
+| `mongodb-query-shape-optimization` | Query-shape rewrites — blocking vs index-backed sort, skip/limit vs keyset pagination, $regex/negation/$where/$expr anti-patterns, $in/$or union plans, projection and coverage, count/distinct/$sample, batchSize/maxTimeMS, sharded targeting vs scatter-gather | `references/mongodb-query-shape-optimization.md` |
+| `mongodb-special-indexes-and-index-builds` | Wildcard and compound wildcard indexes, hidden indexes (hide-before-drop), index build mechanics (hybrid builds, commit quorum, rolling builds, in-flight conflicts), per-index write/RAM overhead | `references/mongodb-special-indexes-and-index-builds.md` |
+| `mongodb-time-series-query-optimization` | Time-series query and index optimization — per-bucket indexing, default (metaField, timeField) index, metaField cardinality anti-patterns, bucket unpacking and $match pushdown, 8.0 block processing, last-point and bounded sorts, working-set sizing | `references/mongodb-time-series-query-optimization.md` |
+| `mongodb-time-series` | Time-series collections — `timeField`/`metaField`, granularity, bucketing, TTL, downsampling (query and index tuning → `mongodb-time-series-query-optimization`) | `references/mongodb-time-series.md` |
 | `mongodb-clustered-collections` | Clustered collections — documents stored in `_id` order in one WiredTiger file, no separate `_id` index | `references/mongodb-clustered-collections.md` |
 | `mongodb-collation` | Locale-aware string comparison/ordering, case-insensitive queries/indexes | `references/mongodb-collation/mongodb-collation.md` |
 | `mongodb-gridfs` | Storing files >16MB (files+chunks collections, default 255KiB chunks) | `references/mongodb-gridfs.md` |
@@ -82,7 +95,6 @@ This hub absorbs 27 former standalone skills as on-demand reference files. When 
 | `mongodb-schema-design` | Embedding vs referencing trade-offs, 12 canonical design patterns, tree structures, validation | `references/mongodb-schema-design.md` |
 | `mongodb-transactions` | Multi-document transactions — replica-set and sharded, callback API, retry, read/write concerns | `references/mongodb-transactions.md` |
 | `mongodb-change-streams` | Change streams — oplog architecture, resume tokens, pre/post images, split events | `references/mongodb-change-streams.md` |
-| `mongodb-time-series` | Time-series collections — `timeField`/`metaField`, granularity, bucketing, TTL, downsampling | `references/mongodb-time-series.md` |
 | `mongodb-geospatial` | Geospatial queries, indexes, and data model — 2dsphere, GeoJSON, near/within, polygons | `references/mongodb-geospatial.md` |
 | `mongodb-views-materialized-views` | Standard read-only views and on-demand `$merge`-backed materialized views | `references/mongodb-views-materialized-views.md` |
 | `mongodb-bson-types` | BSON type system — type table with codes/aliases, comparison order, edge cases | `references/mongodb-bson-types.md` |
@@ -98,8 +110,23 @@ This hub absorbs 27 former standalone skills as on-demand reference files. When 
 | `mongodb-sharding` | Sharding architecture, shard-key selection (ranged, hashed, compound), balancer, zones, resharding | `references/mongodb-sharding.md` |
 | `mongodb-replication` | Replica-set architecture — primaries/secondaries/arbiters/hidden/delayed, elections, oplog, failover | `references/mongodb-replication.md` |
 | `mongodb-compass` | Compass GUI — query builder, schema analysis, performance tab | `references/mongodb-compass.md` |
-| `deep-mongodb-mql-query-optimizer` | Multi-pass find/aggregation query review-and-fix optimizer that applies every Medium+ rewrite in place and verifies via explain (the MongoDB member of the deep-optimizer family) | `references/deep-mongodb-mql-query-optimizer.md` |
+| `deep-mongodb-mql-query-optimizer` | Multi-pass find/aggregation query review-and-fix optimizer that applies every Medium+ rewrite in place and verifies via explain (the MongoDB member of the deep-optimizer family); the fix-loop on ONE given query or pipeline, with the diagnostic spokes above as its evidence base | `references/deep-mongodb-mql-query-optimizer.md` |
 | `mongodb-docset-lookup` | Offline MongoDB Manual lookup via the local Dash docset — exact page/command lookup without a network call | `references/mongodb-docset-lookup.md` |
+
+### Performance and indexing: which reference first
+
+Several spokes share vocabulary (explain, ESR, compound, hidden). Load the first column's reference, then the second only when the first leaves a gap.
+
+| Ask | Load first | Then, if needed |
+| --- | --- | --- |
+| Optimize or fix one given query or pipeline (iterate, apply, verify) | `deep-mongodb-mql-query-optimizer` | the spoke its findings name |
+| Read explain output, bad plan, plan cache, hint or query settings, unused indexes | `mongodb-explain-plans-and-query-planner` | `mongodb-advanced-explain-and-planner-changes` (spill, sharded explain, DISTINCT_SCAN, 8.3 cost-based ranker) |
+| Which index, key order, covered query, partial vs sparse | `mongodb-compound-index-design` | `mongodb-indexes-deep` (other index types) |
+| Wildcard or hidden index, safe drop, stuck index build, index write or RAM cost | `mongodb-special-indexes-and-index-builds` | `mongodb-indexes-deep` |
+| Sort spill, deep pagination, `$regex`/`$or`/`$in` shapes, slow count, scatter-gather | `mongodb-query-shape-optimization` | `mongodb-compound-index-design` |
+| Slow time-series query, metaField index | `mongodb-time-series-query-optimization` | `mongodb-time-series` (collection setup) |
+| General "queries are slow", profiler, aggregation tuning | `mongodb-query-performance` | the narrower spoke above |
+| Slower after upgrading 7.0 to 8.0 | `mongodb-80-performance-changes` | `mongodb-query-performance` |
 
 ## Cross-hub routing (domains this hub does NOT own)
 

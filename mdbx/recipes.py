@@ -22,10 +22,12 @@ class Recipe:
     applies_to: list[str] = field(default_factory=list)
     sources: list[str] = field(default_factory=list)
     path: str = ""  # corpus-relative
+    root: Path | None = None  # corpus root this recipe was loaded from (default: the active corpus)
 
     @property
     def text(self) -> str:
-        return (idx.default_corpus() / self.path).read_text(encoding="utf-8", errors="replace")
+        base = self.root or idx.default_corpus()
+        return (base / self.path).read_text(encoding="utf-8", errors="replace")
 
 
 def _list_value(raw: str) -> list[str]:
@@ -62,6 +64,7 @@ def load(root: Path | None = None) -> list[Recipe]:
                 applies_to=_list_value(fm.get("applies_to", "")),
                 sources=_list_value(fm.get("sources", "")),
                 path=str(p.relative_to(root)),
+                root=root,
             )
         )
     return recipes

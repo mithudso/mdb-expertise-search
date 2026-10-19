@@ -2,6 +2,7 @@
 
 - `mdbx index` rebuilds the keyword index from scratch every run (fast) but does not drop vectors for
   changed text until the rebuild finishes; stale digests are pruned automatically.
+  Changing `MDBX_EMBED_MODEL` discards every vector on the next run (full re-embed).
 - Semantic search brute-forces all vectors; fine at ~10k chunks, would need an ANN index at 1M+.
 - Local-only corpus files (cannot be redacted): `uber-mongodb-skill.md`, memory-central rows, two internal
   Atlas-diagnostics skill files, the ts-diag skill/llms set and the kb-backed-troubleshooting stubs.
@@ -16,6 +17,17 @@
 - `mql-lsp` is static: no server connection, schema or index awareness; the operator table is not versioned
   per MongoDB release, so brand-new operators warn as "not in table". Completion offers operators by context but
   not field names. `$function`/`$where` JavaScript bodies are not parsed.
+- `mdbx optimize` / `mql_optimize` / the `opt/*` LSP diagnostics are static: no cardinality, no existing-index
+  list, no explain output. Index recommendations are ESR-ordered guesses (recommend-only), and impact claims are
+  unmeasured; confirm with `explain('executionStats')` on a cluster. Only result-preserving rewrites are applied;
+  everything else is reported. JavaScript is not evaluated.
+- The private redaction config is absent on the box that built this corpus, so the deep MQL query optimizer
+  reference (`corpus/skills/mongodb-expert/references/deep-mongodb-mql-query-optimizer.md`, v1.4) was redacted by a
+  one-off session script, not `scripts/redact_corpus.py`. Re-running `scripts/sync_corpus.sh` does not refresh it
+  (see the NOTE in the script); redo the redaction by hand and run `scripts/sweep_customers.py`.
+- The `mongodb-*.llms` fact families are copied from `MDBX_CONCEPTS_SRC`; only `llms.txt`, `llms-facts.txt`,
+  `llms-vocabulary.txt` and `manifest.json` are kept (not `llms-small.txt` or `llms-full.txt`).
+- `scripts/rotate_workflow_logs.py` splits on `## v` headings; a log with 3 or fewer such sections is never rotated.
 - The parser handles mongosh-style statements, not full JavaScript (no arrow functions, template expressions,
   spread, or loops).
 - MCP uses the v2 SDK (`mcp.server.mcpserver.MCPServer`); v1 `FastMCP` code does not run on it.

@@ -1,0 +1,92 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB 8.1–9.0 query-engine changes and AI-assisted optimization",
+  "slug": "mongodb-query-engine-releases-and-ai-tooling",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "Everything the scanned sources say about MongoDB 8.1–9.0 query-engine changes and AI-assisted optimization: 145 source-anchored units across 3 sources, grouped by facet.",
+  "rights": "extractive",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45813,
+  "harvested_units": 145,
+  "kept_units": 145,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 141,
+    "mongodb.com": 3,
+    "mongodb.com-docs-query-core.md": 1
+  },
+  "facets": {
+    "definition": 1,
+    "structure": 11,
+    "mechanism": 11,
+    "how-to": 12,
+    "examples": 16,
+    "measures": 1,
+    "problems": 14,
+    "comparisons": 6,
+    "facts": 73
+  },
+  "relations": {
+    "component": 19,
+    "contrast": 32,
+    "context": 94
+  },
+  "lexicon": {
+    "terms": 6,
+    "zero_hit": [
+      "MongoDB 8.1–9.0 query-engine changes and AI-assisted optimization"
+    ],
+    "by_relation": {
+      "self": 1,
+      "part": 2,
+      "contrast": 1,
+      "related": 1,
+      "hypernym": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 4101,
+      "tokens": 1007
+    },
+    "llms-full.txt": {
+      "bytes": 59888,
+      "tokens": 14833
+    },
+    "llms-small.txt": {
+      "bytes": 32679,
+      "tokens": 8113
+    },
+    "llms-facts.txt": {
+      "bytes": 80506,
+      "tokens": 20008
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 2510,
+      "tokens": 619
+    },
+    "units.jsonl": {
+      "bytes": 125841,
+      "tokens": 31454
+    }
+  },
+  "parent": "mongodb-query-optimization-tooling",
+  "split_terms": [
+    "release notes",
+    "AI-assisted query optimization",
+    "query optimization",
+    "index"
+  ]
+}

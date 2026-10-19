@@ -159,6 +159,21 @@ def cmd_lint(args) -> int:
     return 1 if any(d.severity == "error" for d in res.diagnostics) else 0
 
 
+def cmd_optimize(args) -> int:
+    from .mql.optimize import format_report, optimize, to_dict
+
+    text = sys.stdin.read() if args.file == "-" else Path(args.file).read_text(encoding="utf-8")
+    rep = optimize(text, apply=not args.read_only)
+    if args.json:
+        print(json.dumps(to_dict(rep), indent=2))
+    else:
+        print(format_report(rep, args.file))
+    if args.write and rep.changed and args.file != "-":
+        Path(args.file).write_text(rep.text, encoding="utf-8")
+        print(f"\nwrote rewritten queries to {args.file}", file=sys.stderr)
+    return 1 if any(f.severity in {"blocking", "high"} for f in rep.findings) else 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="mdbx", description=__doc__)
     p.add_argument("--version", action="version", version=f"mdbx {__version__}")
@@ -206,6 +221,14 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("lint", help="lint an MQL file (use - for stdin); exit 1 on errors")
     s.add_argument("file")
     s.set_defaults(fn=cmd_lint)
+
+    s = sub.add_parser("optimize", aliases=["opt"],
+                       help="static MQL query optimizer for an MQL file (- for stdin); exit 1 on high/blocking")
+    s.add_argument("file")
+    s.add_argument("--read-only", action="store_true", help="report findings; do not rewrite")
+    s.add_argument("--write", action="store_true", help="write the rewritten queries back to the file")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_optimize)
 
     s = sub.add_parser("tui", help="interactive MongoDB expertise browser")
     s.set_defaults(fn=cmd_tui)

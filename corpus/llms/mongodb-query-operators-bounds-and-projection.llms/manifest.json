@@ -1,0 +1,92 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB query operators, index bounds and projection",
+  "slug": "mongodb-query-operators-bounds-and-projection",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "Everything the scanned sources say about MongoDB query operators, index bounds and projection: 890 source-anchored units across 5 sources, grouped by facet.",
+  "rights": "extractive",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45847,
+  "harvested_units": 890,
+  "kept_units": 890,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 881,
+    "mongodb.com": 3,
+    "jira.mongodb.org": 3,
+    "oneuptime.com": 2,
+    "dev.to": 1
+  },
+  "facets": {
+    "definition": 11,
+    "structure": 58,
+    "mechanism": 32,
+    "how-to": 28,
+    "examples": 318,
+    "measures": 3,
+    "problems": 67,
+    "comparisons": 21,
+    "facts": 352
+  },
+  "relations": {
+    "problem": 328,
+    "component": 562
+  },
+  "lexicon": {
+    "terms": 11,
+    "zero_hit": [
+      "MongoDB query operators, index bounds and projection"
+    ],
+    "by_relation": {
+      "self": 1,
+      "problem": 1,
+      "part": 5,
+      "related": 3,
+      "hypernym": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 4836,
+      "tokens": 1193
+    },
+    "llms-full.txt": {
+      "bytes": 314077,
+      "tokens": 77481
+    },
+    "llms-small.txt": {
+      "bytes": 32900,
+      "tokens": 8196
+    },
+    "llms-facts.txt": {
+      "bytes": 391259,
+      "tokens": 97106
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 5047,
+      "tokens": 1248
+    },
+    "units.jsonl": {
+      "bytes": 697971,
+      "tokens": 174491
+    }
+  },
+  "parent": "mongodb-query-shape-optimization",
+  "split_terms": [
+    "query operator anti-pattern",
+    "$in",
+    "projection"
+  ]
+}

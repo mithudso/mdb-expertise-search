@@ -19,7 +19,8 @@ Files: `*.mql` (language id `mql`). The parser is tolerant, so features keep wor
 | Completion | Operators filtered by context (stages in a pipeline stage object, `$gt`… inside a field, `$set`… in an update, `$each`… in `$push`, accumulators in `$group`), `$$` system variables, collection methods after `db.coll.`, stage snippets inside a pipeline array |
 | Hover | Operator docs and argument kind; system variables; when an mdbx index exists, up to two related corpus passages (`path:line`) |
 | Document symbols | One symbol per statement with pipeline stages as children |
-| Code actions | Quick fix to replace a misspelled operator with the suggested one |
+| Optimizer diagnostics | The static optimizer (`mdbx/mql/optimize.py`) runs on every change and publishes its findings with source `mql-optimizer` and code `opt/<code>` (for example `opt/or-to-in`). Severity: blocking and high -> warning, medium -> information, low -> hint. Set `MDBX_LSP_OPTIMIZE=0` in the server's environment to turn them off. An optimizer failure never removes the lint diagnostics |
+| Code actions | Quick fix to replace a misspelled operator with the suggested one; quick fix for optimizer rewrites (titled `Apply optimizer rewrite` when the replacement is long or multi-line) |
 
 Severity: unknown operators with a close match are errors; unrecognised names with no close match are
 warnings (the built-in table may lag new server releases).
@@ -44,9 +45,10 @@ language-servers = ["mql-lsp"]
 Emacs (eglot): `(add-to-list 'eglot-server-programs '(mql-mode . ("/ABS/PATH/.venv/bin/mql-lsp")))`.
 Any editor with a generic LSP client works: point it at the `mql-lsp` command for `*.mql` files.
 
-CLI equivalent: `mdbx lint file.mql` prints the same diagnostics (exit 1 on errors); `-` reads stdin.
+CLI equivalent: `mdbx lint file.mql` prints the lint diagnostics (exit 1 on errors); `-` reads stdin.
+`mdbx optimize file.mql` prints the optimizer findings (exit 1 on high/blocking).
 
 ## Limits
-Static analysis only — no connection to a server, no schema or index awareness, no JavaScript evaluation
+Static analysis only — no connection to a server, no schema, cardinality or existing-index awareness (optimizer index advice is recommend-only), no JavaScript evaluation
 (`$function`/`$where` bodies are not parsed). Operator knowledge is a built-in table
 (`mdbx/mql/operators.py`), not tied to a server version.

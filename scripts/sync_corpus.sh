@@ -17,6 +17,27 @@ for n in atlas-cli atlas-triage-workflows diagnostic-tool-design error-codes-and
   [ -d "$LLMS_SRC/$n.llms" ] && rsync -a --exclude .DS_Store "$LLMS_SRC/$n.llms" corpus/llms/
 done
 [ -d "$DOCS_SRC" ] && rsync -a --exclude .DS_Store "$DOCS_SRC" corpus/llms/
+# MQL query-optimization fact families (source-anchored extracts of public MongoDB docs). llms-small and
+# llms-full are omitted: small is a subset of facts (duplicate hits), full repeats facts with context.
+CONCEPTS_SRC="${MDBX_CONCEPTS_SRC:-$HOME/.global-ai-hub/llms-concepts}"
+for n in advanced-explain-and-planner-changes atlas-and-compass-query-tooling \
+         atlas-slow-query-and-advisor-automation compound-index-design explain-output-and-stages \
+         explain-plans-and-query-planner query-engine-releases-and-ai-tooling \
+         query-operators-bounds-and-projection query-optimization-tooling \
+         query-planner-plan-cache-and-query-settings query-shape-optimization \
+         query-shapes-profiler-and-index-usage sharded-query-targeting special-indexes-and-index-builds \
+         time-series-indexes-and-metafield time-series-query-execution time-series-query-optimization \
+         time-series-sizing-and-sharding mql-query-optimization-family; do
+  d="$CONCEPTS_SRC/mongodb-$n.llms"
+  [ -d "$d" ] || continue
+  mkdir -p "corpus/llms/mongodb-$n.llms"
+  for f in llms.txt llms-facts.txt llms-vocabulary.txt manifest.json; do
+    [ -f "$d/$f" ] && cp "$d/$f" "corpus/llms/mongodb-$n.llms/"
+  done
+done
+# NOTE: the deep MQL optimizer skill ships only as the redacted mongodb-expert reference
+# (corpus/skills/mongodb-expert/references/deep-mongodb-mql-query-optimizer.md); re-redact it by hand
+# after a re-sync — its live SKILL.md cites workload analyses that must not be committed.
 python3 scripts/redact_corpus.py
 python3 scripts/sweep_customers.py
 .venv/bin/mdbx index

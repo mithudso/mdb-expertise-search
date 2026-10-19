@@ -60,3 +60,9 @@ Each recipe cites its corpus sources and marks anything the corpus could not con
 | [`enable-client-side-or-queryable-encryption`](../corpus/recipes/enable-client-side-or-queryable-encryption.md) | atlas, self-managed | Choose between CSFLE and Queryable Encryption, set up a KMS-backed key hierarchy and encrypted collection, verify that the server only sees ciphertext, and plan key rotation and limits. |
 | [`set-up-alerts-and-monitoring`](../corpus/recipes/set-up-alerts-and-monitoring.md) | atlas, self-managed | Configure a starter set of Atlas alerts with notification channels and thresholds, and set up basic self-managed monitoring with serverStatus, mongostat and FTDC. |
 | [`resize-and-autoscale-atlas-cluster`](../corpus/recipes/resize-and-autoscale-atlas-cluster.md) | atlas | Change an Atlas cluster tier or disk size, enable compute and storage autoscaling with explicit bounds, and run pre- and post-change checks around the rolling resize. |
+
+## Other
+
+| Recipe | Applies to | Summary |
+|---|---|---|
+| [`optimize-an-mql-query`](../corpus/recipes/optimize-an-mql-query.md) | atlas, self-managed | Run the static MQL optimizer on a find(), aggregation or write filter, apply its result-preserving rewrites, build the ESR index it recommends on non-prod, and confirm the gain with explain("executionStats"). |

@@ -1,0 +1,100 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB compound index design: ESR, selectivity, covering and multikey bounds",
+  "slug": "mongodb-compound-index-design",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "A compound index stores references ordered by several fields; key order (equality fields first, then sort, then range — the ESR guideline), selectivity, prefix rules, covered queries, multikey index bounds with $elemMatch and partial/sparse filter semantics decide whether a query can use the index and how many keys and documents it examines. Compiled from MongoDB manual and Atlas pages plus the run's verified claims.",
+  "rights": "extractive",
+  "budget_tokens": 16000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45826,
+  "harvested_units": 743,
+  "kept_units": 683,
+  "dropped_by_classification": 21,
+  "dropped_lead_ins": 39,
+  "sources": {
+    "www.mongodb.com": 651,
+    "mongodb.com": 12,
+    "web.archive.org": 5,
+    "dev.to": 4,
+    "oneuptime.com": 4,
+    "www.netdata.cloud": 3,
+    "jira.mongodb.org": 2,
+    "alexbevi.com": 1,
+    "www.pythian.com": 1
+  },
+  "facets": {
+    "definition": 13,
+    "structure": 62,
+    "mechanism": 56,
+    "how-to": 50,
+    "examples": 58,
+    "measures": 3,
+    "problems": 68,
+    "comparisons": 18,
+    "facts": 355
+  },
+  "relations": {
+    "about": 159,
+    "subtype": 171,
+    "component": 173,
+    "measure": 57,
+    "related": 76,
+    "contrast": 7,
+    "context": 22,
+    "problem": 18
+  },
+  "lexicon": {
+    "terms": 16,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1,
+      "part": 6,
+      "measure": 1,
+      "hyponym": 3,
+      "related": 2,
+      "problem": 1,
+      "contrast": 1,
+      "hypernym": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 55,
+    "scored": 55
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 7056,
+      "tokens": 1745
+    },
+    "llms-full.txt": {
+      "bytes": 257842,
+      "tokens": 63850
+    },
+    "llms-small.txt": {
+      "bytes": 65133,
+      "tokens": 16203
+    },
+    "llms-facts.txt": {
+      "bytes": 341663,
+      "tokens": 84866
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 7045,
+      "tokens": 1740
+    },
+    "units.jsonl": {
+      "bytes": 523344,
+      "tokens": 130831
+    }
+  },
+  "title": "MongoDB compound index design: ESR, selectivity, covering and multikey bounds",
+  "pages": 148,
+  "units": 683
+}

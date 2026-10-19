@@ -1,0 +1,94 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB explain output and plan stages",
+  "slug": "mongodb-explain-output-and-stages",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "Explain plan results for queries are subject to change between MongoDB versions. (from www.mongodb.com)",
+  "rights": "extractive",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45854,
+  "harvested_units": 578,
+  "kept_units": 578,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 571,
+    "www.netdata.cloud": 3,
+    "oneuptime.com": 2,
+    "www.slideshare.net": 1,
+    "www.percona.com": 1
+  },
+  "facets": {
+    "definition": 5,
+    "structure": 32,
+    "mechanism": 45,
+    "how-to": 45,
+    "examples": 70,
+    "measures": 2,
+    "problems": 37,
+    "comparisons": 15,
+    "facts": 327
+  },
+  "relations": {
+    "about": 249,
+    "component": 197,
+    "context": 79,
+    "related": 53
+  },
+  "lexicon": {
+    "terms": 16,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1,
+      "synonym": 1,
+      "part": 8,
+      "related": 3,
+      "measure": 1,
+      "hypernym": 2
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 5284,
+      "tokens": 1303
+    },
+    "llms-full.txt": {
+      "bytes": 217743,
+      "tokens": 53885
+    },
+    "llms-small.txt": {
+      "bytes": 32884,
+      "tokens": 8191
+    },
+    "llms-facts.txt": {
+      "bytes": 303682,
+      "tokens": 75454
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 5815,
+      "tokens": 1437
+    },
+    "units.jsonl": {
+      "bytes": 511696,
+      "tokens": 127923
+    }
+  },
+  "parent": "mongodb-explain-plans-and-query-planner",
+  "split_terms": [
+    "explain plan",
+    "executionStats",
+    "plan stage",
+    "index bounds"
+  ]
+}

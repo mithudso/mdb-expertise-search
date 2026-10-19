@@ -1,0 +1,37 @@
+{
+  "version": "1.0.0",
+  "kind": "family",
+  "generated": "2026-10-19",
+  "generator": "automated",
+  "members": [
+    "mongodb-explain-plans-and-query-planner",
+    "mongodb-compound-index-design",
+    "mongodb-special-indexes-and-index-builds",
+    "mongodb-query-shape-optimization",
+    "mongodb-time-series-query-optimization",
+    "mongodb-query-optimization-tooling",
+    "mongodb-advanced-explain-and-planner-changes",
+    "mongodb-atlas-slow-query-and-advisor-automation"
+  ],
+  "blocked": [
+    {
+      "id": "orphaned-child-packs",
+      "severity": "medium",
+      "what": "mongodb-explain-plans-and-query-planner and mongodb-query-shape-optimization were re-rendered at 01:03:57 without a '## Child packs' section; their 7 child packs (mongodb-explain-output-and-stages, mongodb-query-planner-plan-cache-and-query-settings, mongodb-query-shapes-profiler-and-index-usage, mongodb-sort-and-pagination-optimization, mongodb-query-operators-bounds-and-projection, mongodb-counts-cursors-and-read-path, mongodb-sharded-query-targeting) exist on disk but no parent or family index links them",
+      "action": "re-render the two parent packs with their child sections (member packs are out of scope for the family optimizer), then regenerate this family with the same command"
+    }
+  ],
+  "result": {
+    "out": "<local-path>",
+    "products": 8,
+    "tokens": 1213
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 4853,
+      "tokens": 1213
+    }
+  },
+  "scope": "8 concept packs from the 2026-10-19 research run; pages are distinct cited http(s) source URLs per pack; no extra research",
+  "index_policy": "navigation-only family; member fact layers indexed per pack, no duplicate embedding layer"
+}

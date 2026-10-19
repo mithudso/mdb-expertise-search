@@ -1,0 +1,118 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB query optimization tooling: Compass explain, Atlas Query Insights and Performance Advisor",
+  "slug": "mongodb-query-optimization-tooling",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "Compass Explain Plan, Atlas Query Insights (Query Shapes, Namespace Insights, Query Profiler), Performance Advisor index, drop-index and schema suggestions, the 8.1–9.0 release-note changes to query observability, LLM-assisted tooling (Compass assistant, MongoDB MCP Server) and the $regex versus $text versus Atlas Search decision are the tooling surfaces around MongoDB query optimization. Compiled from MongoDB manual, Atlas and Compass pages plus the run's verified claims.",
+  "rights": "extractive",
+  "budget_tokens": 16000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45813,
+  "harvested_units": 1033,
+  "kept_units": 927,
+  "dropped_by_classification": 45,
+  "dropped_lead_ins": 61,
+  "sources": {
+    "www.mongodb.com": 912,
+    "mongodb.com": 10,
+    "jira.mongodb.org": 2,
+    "arxiv.org": 1,
+    "mongodb.com-docs-query-core.md": 1,
+    "irf.fhnw.ch": 1
+  },
+  "facets": {
+    "definition": 15,
+    "structure": 40,
+    "mechanism": 66,
+    "how-to": 65,
+    "examples": 43,
+    "measures": 6,
+    "problems": 192,
+    "comparisons": 34,
+    "facts": 466
+  },
+  "relations": {
+    "about": 275,
+    "component": 526,
+    "contrast": 32,
+    "context": 94
+  },
+  "lexicon": {
+    "terms": 8,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1,
+      "part": 4,
+      "contrast": 1,
+      "related": 1,
+      "hypernym": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 22,
+    "scored": 22
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 6159,
+      "tokens": 1521
+    },
+    "llms-full.txt": {
+      "bytes": 371399,
+      "tokens": 92052
+    },
+    "llms-small.txt": {
+      "bytes": 65103,
+      "tokens": 16181
+    },
+    "llms-facts.txt": {
+      "bytes": 525890,
+      "tokens": 130721
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 4204,
+      "tokens": 1041
+    },
+    "units.jsonl": {
+      "bytes": 810477,
+      "tokens": 202613
+    }
+  },
+  "children": {
+    "mongodb-atlas-and-compass-query-tooling": {
+      "concept": "Atlas Query Insights, Performance Advisor and Compass explain",
+      "units": 760,
+      "terms": [
+        "Performance Advisor",
+        "Query Insights",
+        "Compass explain"
+      ],
+      "full_tokens": 75676,
+      "small_tokens": 8199,
+      "path": "mongodb-atlas-and-compass-query-tooling.llms"
+    },
+    "mongodb-query-engine-releases-and-ai-tooling": {
+      "concept": "MongoDB 8.1–9.0 query-engine changes and AI-assisted optimization",
+      "units": 145,
+      "terms": [
+        "release notes",
+        "AI-assisted query optimization",
+        "query optimization",
+        "index"
+      ],
+      "full_tokens": 14833,
+      "small_tokens": 8113,
+      "path": "mongodb-query-engine-releases-and-ai-tooling.llms"
+    }
+  },
+  "parent_only_units": 22,
+  "title": "MongoDB query optimization tooling: Compass explain, Atlas Query Insights and Performance Advisor",
+  "pages": 170,
+  "units": 927
+}

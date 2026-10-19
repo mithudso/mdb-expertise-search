@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import re
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
+
+log = logging.getLogger("mdbx.corpus")
 
 TEXT_SUFFIXES = {".md", ".txt"}
 MAX_CHUNK_CHARS = 1600
@@ -119,7 +122,8 @@ def iter_chunks(root: Path) -> Iterator[Chunk]:
         rel = path.relative_to(root)
         try:
             text = path.read_text(encoding="utf-8", errors="replace")
-        except OSError:
+        except OSError as exc:
+            log.warning("skipping unreadable corpus file %s: %s", path, exc)
             continue
         kind, source = classify(rel)
         for head, line, body in chunk_text(text):

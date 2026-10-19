@@ -1,0 +1,88 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB advanced explain: aggregation spills, sharded plans, loose index scans and the cost-based ranker",
+  "slug": "mongodb-advanced-explain-and-planner-changes",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "Advanced explain output covers spill statistics for blocking aggregation stages (usedDisk, spilledBytes and the per-stage memory limit), sharded plans (SHARD_MERGE, splitPipeline with shardsPart and mergerPart, mergeType), the $sort+$group $first loose index scan that explain reports as DISTINCT_SCAN, and the 8.3 cost-based ranker with its costEstimate and cardinalityEstimate fields. Compiled from MongoDB manual and JIRA pages plus the run's verified claims.",
+  "rights": "extractive",
+  "budget_tokens": 16000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45795,
+  "harvested_units": 272,
+  "kept_units": 269,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 3,
+  "sources": {
+    "www.mongodb.com": 252,
+    "jira.mongodb.org": 9,
+    "www.practical-mongodb-aggregations.com": 2,
+    "dev.to": 2,
+    "www.tenable.com": 1,
+    "www.percona.com": 1,
+    "www.netdata.cloud": 1,
+    "minervadb.com": 1
+  },
+  "facets": {
+    "definition": 2,
+    "structure": 17,
+    "mechanism": 26,
+    "how-to": 7,
+    "examples": 23,
+    "problems": 59,
+    "comparisons": 15,
+    "facts": 120
+  },
+  "relations": {
+    "component": 131,
+    "about": 137,
+    "related": 1
+  },
+  "lexicon": {
+    "terms": 7,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1,
+      "part": 4,
+      "related": 2
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 20,
+    "scored": 20
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 5658,
+      "tokens": 1401
+    },
+    "llms-full.txt": {
+      "bytes": 100763,
+      "tokens": 24946
+    },
+    "llms-small.txt": {
+      "bytes": 64914,
+      "tokens": 16169
+    },
+    "llms-facts.txt": {
+      "bytes": 167043,
+      "tokens": 41545
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 2718,
+      "tokens": 673
+    },
+    "units.jsonl": {
+      "bytes": 290049,
+      "tokens": 72512
+    }
+  },
+  "title": "MongoDB advanced explain: aggregation spills, sharded plans, loose index scans and the cost-based ranker",
+  "pages": 74,
+  "units": 269
+}

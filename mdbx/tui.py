@@ -6,6 +6,7 @@ the search. Modeled on the llms-explorer concept-tree browser, specialised for M
 """
 from __future__ import annotations
 
+import logging
 import sqlite3
 from pathlib import Path
 from typing import ClassVar
@@ -26,6 +27,8 @@ from . import embed as embedmod
 from . import index as idx
 from . import recipes as recipemod
 from . import search as srch
+
+log = logging.getLogger("mdbx.tui")
 
 MODES = ["hybrid", "keyword", "semantic"]
 KINDS = [None, "skill", "llms", "memory", "recipe"]
@@ -173,21 +176,27 @@ class MdbxApp(App):
         if not query.strip():
             return
         self.call_from_thread(self._status, "searching…")
-        con = idx.connect(self.db)  # sqlite connections are thread-bound
         mode = MODES[self.mode]
         note = ""
+        hits: list[srch.Hit] = []
         try:
-            if mode != "keyword" and self._store is None:
-                self._store = srch.VectorStore(con)
-            hits = srch.search(
-                con, query, mode, 40, kind=KINDS[self.kind], source=self.source,
-                **({"store": self._store} if mode != "keyword" else {}),
-            )
-        except embedmod.EmbedError as exc:
-            hits = srch.keyword(con, query, 40, kind=KINDS[self.kind], source=self.source)
-            note = f" (semantic unavailable: {exc}; showing keyword)"
-        finally:
-            con.close()
+            con = idx.connect(self.db)  # sqlite connections are thread-bound
+            try:
+                if mode != "keyword" and (self._store is None or not len(self._store)):
+                    self._store = srch.VectorStore(con)
+                hits = srch.search(
+                    con, query, mode, 40, kind=KINDS[self.kind], source=self.source,
+                    **({"store": self._store} if mode != "keyword" else {}),
+                )
+            except embedmod.EmbedError as exc:
+                log.warning("semantic search unavailable, using keyword: %s", exc)
+                hits = srch.keyword(con, query, 40, kind=KINDS[self.kind], source=self.source)
+                note = f" (semantic unavailable: {exc}; showing keyword)"
+            finally:
+                con.close()
+        except sqlite3.Error as exc:  # an unhandled worker error would tear down the whole TUI
+            log.exception("search failed")
+            note = f" (search failed: {exc})"
         self.call_from_thread(self._render_hits, hits, note)
 
     def _render_hits(self, hits: list[srch.Hit], note: str) -> None:

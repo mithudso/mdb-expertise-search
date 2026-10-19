@@ -36,8 +36,9 @@ PRIVATE_FILES = [
 
 #: (pattern, replacement) applied with re.sub to every text file.
 GENERIC_REGEX: list[tuple[re.Pattern, str]] = [
-    (re.compile(r"/Users/[A-Za-z0-9._-]+/\S*"), "<local-path>"),
-    (re.compile(r"~/\.(?:claude|global-ai-hub)/\S*"), "<local-path>"),
+    # stop at quotes/brackets so a path inside JSON or a markdown link keeps its closing delimiter
+    (re.compile(r"/Users/[A-Za-z0-9._-]+/[^\s\"'`)\]>,]*"), "<local-path>"),
+    (re.compile(r"~/\.(?:claude|global-ai-hub)/[^\s\"'`)\]>,]*"), "<local-path>"),
     (re.compile(r"\s*\(HELP-\d+\)"), ""),
     (re.compile(r"\bHELP-\d+\b"), "<ticket>"),
     (re.compile(r"\b[\w.-]*\.corp\.mongodb\.com\b"), "internal.example.com"),
@@ -83,6 +84,8 @@ def main() -> int:
             p.write_text(new, encoding="utf-8")
             changed += 1
             print(f"redacted {rel}", file=sys.stderr)
+    if patch and not Path(patch).is_file():
+        print(f"WARNING: PATCH {patch} not found; hand edits NOT applied", file=sys.stderr)
     if patch and Path(patch).is_file():
         cmd = ["patch", "-p1", "--forward", "-s", "-i", str(patch)]
         r = subprocess.run(cmd, check=False, cwd=ROOT, capture_output=True, text=True)

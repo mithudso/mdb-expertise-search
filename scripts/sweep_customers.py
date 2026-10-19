@@ -38,7 +38,13 @@ def load_patterns() -> list[re.Pattern]:
         pats += [ln.strip() for ln in path.read_text().splitlines() if ln.strip() and not ln.startswith("#")]
     else:
         print(f"note: no denylist at {path}; only built-in markers checked", file=sys.stderr)
-    return [re.compile(p, re.IGNORECASE if p not in BUILTIN else 0) for p in pats]
+    compiled = []
+    for p in pats:
+        try:
+            compiled.append(re.compile(p, re.IGNORECASE if p not in BUILTIN else 0))
+        except re.error as exc:
+            sys.exit(f"error: invalid denylist regex {p!r}: {exc}")
+    return compiled
 
 
 def main() -> int:
@@ -51,16 +57,21 @@ def main() -> int:
     ).stdout.splitlines()
     pats = load_patterns()
     hits = 0
+    scanned = 0
     for rel in sorted(set(files)):
         p = ROOT / rel
         if p.suffix not in {".md", ".txt", ".json", ".jsonl"} or not p.is_file():
             continue
+        scanned += 1
         for n, line in enumerate(p.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
             for pat in pats:
                 if pat.search(line):
                     print(f"{rel}:{n}: /{pat.pattern}/ {line.strip()[:120]}")
                     hits += 1
-    print(f"{hits} marker hit(s)")
+    print(f"{hits} marker hit(s) in {scanned} file(s)")
+    if not scanned:  # a gate that checked nothing must not report success
+        print("error: no corpus files scanned (wrong cwd, or corpus/ missing?)", file=sys.stderr)
+        return 2
     return 1 if hits else 0
 
 

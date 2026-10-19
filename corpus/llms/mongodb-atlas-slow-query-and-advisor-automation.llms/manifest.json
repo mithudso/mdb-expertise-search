@@ -1,0 +1,81 @@
+{
+  "kind": "concept",
+  "concept": "Atlas slow-query log and Performance Advisor automation",
+  "slug": "mongodb-atlas-slow-query-and-advisor-automation",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "Atlas exposes Performance Advisor suggestions and slow query logs through Admin API v2 endpoints and the Atlas CLI (atlas api performanceAdvisor and atlas performanceAdvisor), scoped by process id with a default 24-hour window; managedSlowMs toggles the Atlas-managed dynamic slow threshold against a fixed 100 ms, and Project Read Only versus Project Owner roles gate reads and toggles. Compiled from Atlas documentation plus the run's verified claims.",
+  "rights": "extractive",
+  "budget_tokens": 16000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45764,
+  "harvested_units": 782,
+  "kept_units": 744,
+  "dropped_by_classification": 4,
+  "dropped_lead_ins": 34,
+  "sources": {
+    "www.mongodb.com": 744
+  },
+  "facets": {
+    "definition": 10,
+    "structure": 21,
+    "mechanism": 63,
+    "how-to": 44,
+    "examples": 71,
+    "measures": 2,
+    "problems": 157,
+    "comparisons": 22,
+    "facts": 354
+  },
+  "relations": {
+    "about": 211,
+    "component": 533
+  },
+  "lexicon": {
+    "terms": 4,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1,
+      "part": 2,
+      "related": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 37,
+    "scored": 37
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 3616,
+      "tokens": 892
+    },
+    "llms-full.txt": {
+      "bytes": 310770,
+      "tokens": 77022
+    },
+    "llms-small.txt": {
+      "bytes": 64733,
+      "tokens": 16121
+    },
+    "llms-facts.txt": {
+      "bytes": 432285,
+      "tokens": 107466
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 2459,
+      "tokens": 607
+    },
+    "units.jsonl": {
+      "bytes": 665522,
+      "tokens": 166379
+    }
+  },
+  "title": "Atlas slow-query log and Performance Advisor automation",
+  "pages": 184,
+  "units": 744
+}

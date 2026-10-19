@@ -1,5 +1,33 @@
 # memory.md — operator log
 
+## v0.4.0 — 2026-10-19
+- Static MQL query optimizer `mdbx/mql/optimize.py` (offline subset of the deep MQL optimizer skill v1.4: passes
+  P2/P4/P5/P6/P7/P8, ~30 rule codes, ESR index recommender incl. per-$or-branch and $lookup indexes, covered-query
+  hints). Result-preserving rewrites auto-applied in a <=3-iteration loop (or->in, degenerate range->eq, $match
+  hoist, countDocuments({})->estimatedDocumentCount); blocking findings reported only. Surfaces: `mdbx optimize`
+  (alias `opt`, --read-only/--write/--json, exit 1 on high/blocking), MCP `mql_optimize`, mql-lsp diagnostics
+  (source mql-optimizer, codes opt/*, MDBX_LSP_OPTIMIZE=0 disables). 22 tests; examples/slow-queries.mql.
+- Corpus: 6 mongodb-expert + 2 atlas-diagnostics-expert MQL-optimization spokes, hub routing rows ported by hand
+  into the redacted SKILL.md, optimizer reference rebuilt from v1.4 with the earlier redaction transforms, 19
+  `corpus/llms/mongodb-*.llms` fact packs (llms.txt, llms-facts, vocabulary, manifest; ~6.4 MB). Private redaction
+  config (~/.config/mdbx) was NOT on this box: re-syncing existing skill dirs was reverted to keep earlier hand
+  redactions; a session denylist + an independent reviewer agent cleared all new files (0 sweep hits / 329 files).
+- Fact packs carry "private reading aid; never publish" provenance notes: fine for this PRIVATE repo, must be
+  excluded from any public release.
+- Fixed scripts/redact_corpus.py path regex eating JSON quotes / link parens (19 manifests were invalid JSON).
+- repo-bootstrapper: audit ledger docs/repo-bootstrap-audit-2026-10-19.md; added scripts/rotate_workflow_logs.py,
+  scripts/watch_and_index.sh, .vscode/mcp.json, CI rotation + optimizer smoke steps; version drift fixed (0.4.0).
+  cdo pass: 16 Medium+ fixes (Ollama error/log handling, semantic filter-before-rank, vector purge on model change,
+  TUI worker errors, sweep fails on zero files) + 9 tests.
+- README rewritten with why-use-it table and real examples; customer demo docs/DEMO-mql-optimizer.md; recipe
+  optimize-an-mql-query (25 recipes). 92 tests, ruff clean.
+
+### Next
+- Re-run `scripts/sync_corpus.sh` only on a box with ~/.config/mdbx (it overwrites hand-redacted skill files).
+- Semantic vectors for the new fact packs: run `mdbx index` with Ollama up.
+- Optional browser extension (proposed 2026-10-19, not built): right-click "optimize this MQL" on Atlas Data
+  Explorer / docs / tickets, backed by the local `mdbx` (native messaging) or a WASM/JS port of the rules.
+
 ## v0.3.0 — 2026-10-17
 - Full confidentiality pass: 9 reviewer agents read all 207 non-public-docs corpus files (3.4 MB); ~60 findings fixed
   (customer program names, an account's savings target, private ticket id, internal tools/hosts/paths, pricing

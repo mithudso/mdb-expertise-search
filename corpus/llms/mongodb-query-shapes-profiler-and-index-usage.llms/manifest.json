@@ -1,0 +1,98 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB query shapes, $queryStats, profiler and index usage",
+  "slug": "mongodb-query-shapes-profiler-and-index-usage",
+  "version": "1.4.1",
+  "generated": "2026-10-19",
+  "summary": "Everything the scanned sources say about MongoDB query shapes, $queryStats, profiler and index usage: 560 source-anchored units across 6 sources, grouped by facet.",
+  "rights": "extractive",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [
+    "<local-path>",
+    "<local-path>"
+  ],
+  "scanned_units": 45854,
+  "harvested_units": 560,
+  "kept_units": 560,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 551,
+    "www.percona.com": 4,
+    "www.netdata.cloud": 2,
+    "jira.mongodb.com": 1,
+    "www.pythian.com": 1,
+    "docs.datadoghq.com": 1
+  },
+  "facets": {
+    "definition": 11,
+    "structure": 24,
+    "mechanism": 39,
+    "how-to": 25,
+    "examples": 25,
+    "measures": 7,
+    "problems": 94,
+    "comparisons": 17,
+    "facts": 318
+  },
+  "relations": {
+    "component": 547,
+    "measure": 12,
+    "context": 1
+  },
+  "lexicon": {
+    "terms": 8,
+    "zero_hit": [
+      "MongoDB query shapes, $queryStats, profiler and index usage"
+    ],
+    "by_relation": {
+      "self": 1,
+      "part": 3,
+      "measure": 1,
+      "related": 1,
+      "hypernym": 2
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 4587,
+      "tokens": 1132
+    },
+    "llms-full.txt": {
+      "bytes": 212620,
+      "tokens": 52664
+    },
+    "llms-small.txt": {
+      "bytes": 33074,
+      "tokens": 8220
+    },
+    "llms-facts.txt": {
+      "bytes": 286928,
+      "tokens": 71275
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 3010,
+      "tokens": 742
+    },
+    "units.jsonl": {
+      "bytes": 437316,
+      "tokens": 109329
+    }
+  },
+  "parent": "mongodb-explain-plans-and-query-planner",
+  "split_terms": [
+    "query shape",
+    "database profiler",
+    "$indexStats",
+    "index effectiveness",
+    "$currentOp",
+    "query optimization",
+    "index"
+  ]
+}
