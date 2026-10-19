@@ -33,6 +33,27 @@ log = logging.getLogger("mdbx.tui")
 MODES = ["hybrid", "keyword", "semantic"]
 KINDS = [None, "skill", "llms", "memory", "recipe"]
 
+#: Facet sidebar sizing: fit the longest "source  (count)" label, but never take more than this share of
+#: the terminal (the results table keeps the rest). Labels that still do not fit end in "…", never wrap.
+SIDE_MAX_SHARE = 0.45
+SIDE_MIN = 24
+SIDE_CHROME = 10  # sidebar border/padding + option-list padding, border and scrollbar (measured)
+
+
+def facet_label(source: str, n: int, width: int | None = None) -> Text:
+    """ "source  (n)" with a dim count; if wider than ``width``, the source is cut to end in "…"."""
+    count = f"  ({n})"
+    if width is not None and len(source) + len(count) > width:
+        source = source[: max(1, width - len(count) - 1)] + "…"
+    return Text.assemble(source, (count, "dim"), no_wrap=True, overflow="ellipsis")
+
+
+def side_width(longest_label: int, terminal_width: int) -> int:
+    """Columns for the facet sidebar: the longest label plus chrome, capped at SIDE_MAX_SHARE."""
+    cap = max(SIDE_MIN, int(terminal_width * SIDE_MAX_SHARE))
+    return max(SIDE_MIN, min(longest_label + SIDE_CHROME, cap))
+
+
 #: Quick-jump queries for common MongoDB topics (digit keys 1-9).
 TOPICS = [
     ("1", "ESR compound index sort"),
@@ -50,7 +71,7 @@ TOPICS = [
 class MdbxApp(App):
     TITLE = "mdbx — MongoDB expertise"
     CSS = """
-    #side { width: 30; border-right: solid $primary-darken-2; }
+    #side { width: 30; min-width: 24; border-right: solid $primary-darken-2; }
     #side Static { padding: 0 1; color: $text-muted; }
     #main { width: 1fr; }
     #q { margin: 0 1; }
@@ -78,6 +99,9 @@ class MdbxApp(App):
         self.source: str | None = None
         self.hits: list[srch.Hit] = []
         self._store: srch.VectorStore | None = None
+        self._longest_facet = 0
+        self._facet_rows: list[tuple[str, int, str]] = []  # (source, count, option id)
+        self._facet_width: int | None = None
 
     # ---- layout
     def compose(self) -> ComposeResult:
@@ -96,15 +120,40 @@ class MdbxApp(App):
     def on_mount(self) -> None:
         table = self.query_one("#results", DataTable)
         table.add_columns("Score", "Kind", "Source", "Section")
-        facets = self.query_one("#facets", OptionList)
-        facets.add_option(Option("◉ all sources", id="__all__"))
-        for r in self.con.execute(
-            "SELECT source, kind, COUNT(*) n FROM chunks GROUP BY source, kind ORDER BY n DESC"
-        ):
-            facets.add_option(Option(f"{r['source']}  ({r['n']})", id=f"{r['kind']}|{r['source']}"))
+        self._facet_rows = [
+            (r["source"], r["n"], f"{r['kind']}|{r['source']}")
+            for r in self.con.execute(
+                "SELECT source, kind, COUNT(*) n FROM chunks GROUP BY source, kind ORDER BY n DESC"
+            )
+        ]
+        self._longest_facet = max([len("◉ all sources")] + [facet_label(s, n).cell_len for s, n, _ in self._facet_rows])
+        self._fill_facets(None)
+        self._fit_side()
         s = idx.stats(self.con)
         self._status(f"{s['chunks']} chunks · {s['vectors']} vectors · {s.get('embed_model', 'no embeddings')}")
         self.query_one("#q", Input).focus()
+
+    def _fill_facets(self, width: int | None) -> None:
+        facets = self.query_one("#facets", OptionList)
+        keep = facets.highlighted
+        facets.clear_options()
+        facets.add_option(Option(Text("◉ all sources", no_wrap=True), id="__all__"))
+        facets.add_options(Option(facet_label(s, n, width), id=oid) for s, n, oid in self._facet_rows)
+        self._facet_width = width
+        if keep is not None:
+            facets.highlighted = keep
+
+    def _fit_side(self) -> None:
+        width = side_width(self._longest_facet, self.size.width)
+        self.query_one("#side").styles.width = width
+        usable = width - SIDE_CHROME
+        target = usable if usable < self._longest_facet else None  # cut labels only when they cannot fit
+        if target != self._facet_width:
+            self._fill_facets(target)
+
+    def on_resize(self) -> None:
+        if self._longest_facet:
+            self._fit_side()
 
     # ---- status / actions
     def _status(self, extra: str = "") -> None:
