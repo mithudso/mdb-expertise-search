@@ -1,5 +1,14 @@
 # Security
 
+## Chrome extension (`editors/chrome/`)
+- Runs the optimizer entirely in the extension; no `fetch`/XHR, no remote code (MV3 CSP `script-src 'self'`).
+- Permissions: `activeTab` + `scripting` (read the selection only after a user click, shortcut or menu
+  item), `contextMenus`, `storage` (`chrome.storage.session` only: last input and right-click handoff,
+  memory-only). No host permissions, no content scripts.
+- Page text is rendered with `textContent` only; a unit test fails on `innerHTML`/`eval` in popup code.
+- The Markdown case note contains the highlighted query text (may include customer values); users review
+  it before pasting.
+
 - **Local only**: no network listener. The only outbound call is to the configured Ollama host
   (`/api/embed`), sending corpus chunk text and query text. Point it at a trusted host.
 - **Path safety**: `mdbx show` resolves the path and refuses anything outside the corpus root.

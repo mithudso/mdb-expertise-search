@@ -1,5 +1,22 @@
 # memory.md — operator log
 
+## v0.5.0 — 2026-10-19
+- Chrome extension `editors/chrome/` for the TSE team: highlight a query / log line, click (or Alt+Shift+O, or
+  right-click "Optimize selected MQL"), get findings, log evidence, safe rewrites, index advice and "Copy as
+  Markdown" case note. MV3, `activeTab`+`scripting`+`contextMenus`+`storage` only, no host permissions, no
+  network. Zip: `scripts/package_chrome_extension.py` (33 KB). Verified in real Chromium 156 via
+  `test/e2e.mjs` (Playwright 1.64 borrowed from ~/dev/mess-organizer; branded Chrome 137+ cannot --load-extension).
+- Optimizer input normalization `mdbx/mql/normalize.py`: slow-query log lines (getMore -> originatingCommand),
+  profiler entries (incl. update/delete {q,u} shape), command documents, bare filters/pipelines; EJSON to
+  mongosh literals. P9 evidence findings: log-collscan, log-scan-ratio, log-blocking-sort, log-spill,
+  log-replanned, log-timeout-bound. Index rationale no longer lists a sort key as a range key too.
+- JS port (`lib/parser.js`, `normalize.js`, `optimize.js`) pinned to Python by `tests/fixtures/optimizer/*.golden.json`
+  (`scripts/gen_optimizer_golden.py`, includes the text report) and `tests/test_js_parity.py` (395 inputs incl.
+  truncated prefixes, both modes): identical. 103 pytest + 37 node tests.
+- Docs links (28 public MongoDB URLs) verified 200 with `scripts/check_chrome_doc_links.py`.
+- ~/.config/mdbx copy: not on this box, chezmoi, or reachable peers (m5/5080 off this hotspot network);
+  background rsync retry ran for 2 h. Never route it through the mitchlists repo (denylist names customers).
+
 ## v0.4.0 — 2026-10-19
 - Static MQL query optimizer `mdbx/mql/optimize.py` (offline subset of the deep MQL optimizer skill v1.4: passes
   P2/P4/P5/P6/P7/P8, ~30 rule codes, ESR index recommender incl. per-$or-branch and $lookup indexes, covered-query

@@ -1,0 +1,87 @@
+:root {
+  --bg: #f7f9f8;
+  --surface: #ffffff;
+  --fg: #17211e;
+  --muted: #5a6762;
+  --line: #d8e0dd;
+  --accent: #0b6e5a;
+  --accent-fg: #ffffff;
+  --code-bg: #eef3f1;
+  --blocking: #b3261e;
+  --high: #b85600;
+  --medium: #7f6500;
+  --low: #3f6385;
+  color-scheme: light;
+  --mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1614; --surface: #16201d; --fg: #e2ebe7; --muted: #9aada6; --line: #283531;
+    --accent: #4fc4a1; --accent-fg: #062018; --code-bg: #0b1210;
+    --blocking: #ff8a80; --high: #ffb066; --medium: #e5c74c; --low: #9cc0e6;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  width: 580px; max-height: 600px; overflow-y: auto;
+  background: var(--bg); color: var(--fg); font: 13px/1.5 var(--sans);
+}
+body.tab { width: auto; max-width: 860px; max-height: none; margin: 0 auto; }
+.bar {
+  position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.bar h1 { font-size: 14px; margin: 0; flex: 1; }
+.local { font: 600 11px var(--mono); color: var(--accent); border: 1px solid currentColor; border-radius: 999px; padding: 1px 8px; }
+main { padding: 12px 14px; display: flex; flex-direction: column; gap: 14px; }
+.status { margin: 0; color: var(--muted); }
+.status.error { color: var(--blocking); }
+details { border-top: 1px solid var(--line); padding-top: 10px; }
+details summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
+textarea {
+  width: 100%; min-height: 120px; resize: vertical; padding: 8px 10px;
+  font: 12px/1.45 var(--mono); color: var(--fg); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 6px;
+}
+textarea:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+button {
+  font: 600 12px var(--sans); padding: 5px 12px; border-radius: 6px; cursor: pointer;
+  background: var(--surface); color: var(--accent); border: 1px solid var(--accent);
+}
+button.primary { background: var(--accent); color: var(--accent-fg); }
+button.small { padding: 2px 8px; font-size: 11px; }
+section { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 4px 0 0; }
+.summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.chip {
+  font: 700 11px var(--mono); text-transform: uppercase; letter-spacing: .03em;
+  border: 1px solid currentColor; border-radius: 999px; padding: 1px 8px;
+}
+.sev-blocking { color: var(--blocking); } .sev-high { color: var(--high); }
+.sev-medium { color: var(--medium); } .sev-low { color: var(--low); }
+.ok { color: var(--accent); }
+.kind { color: var(--muted); }
+pre {
+  margin: 0; padding: 8px 10px; background: var(--code-bg); border-radius: 6px; border: 1px solid var(--line);
+  font: 12px/1.45 var(--mono); white-space: pre-wrap; word-break: break-word; max-height: 180px; overflow: auto;
+}
+.evidence { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; }
+.metric { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+.metric b { display: block; font: 600 13px var(--mono); overflow-wrap: anywhere; }
+.metric span { color: var(--muted); font-size: 11px; }
+.finding { border-left: 4px solid currentColor; padding: 2px 0 2px 10px; }
+.finding .head { font: 600 11px var(--mono); display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.finding p { margin: 2px 0 0; color: var(--fg); }
+.finding a { font-size: 12px; color: var(--accent); }
+.index { display: flex; flex-direction: column; gap: 4px; }
+.index .line { display: flex; gap: 8px; align-items: flex-start; }
+.index pre { flex: 1; min-width: 0; }
+.index p { margin: 0; color: var(--muted); font-size: 12px; }
+.applied { margin: 0; padding-left: 18px; }
+.foot { padding: 8px 14px 12px; color: var(--muted); font-size: 11px; border-top: 1px solid var(--line); }
+code { font-family: var(--mono); }
+a { color: var(--accent); }

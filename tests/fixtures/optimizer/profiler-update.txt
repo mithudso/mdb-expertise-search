@@ -1,0 +1,16 @@
+{
+  "op": "update",
+  "ns": "inventory.products",
+  "command": {
+    "q": { "sku": { "$regex": "XL$" }, "price": { "$lt": "50" } },
+    "u": { "$set": { "onSale": true } },
+    "multi": true
+  },
+  "keysExamined": 0,
+  "docsExamined": 51200,
+  "nMatched": 12,
+  "nModified": 12,
+  "millis": 812,
+  "planSummary": "COLLSCAN",
+  "ts": { "$date": "2026-10-13T22:01:44.500Z" }
+}

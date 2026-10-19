@@ -1,0 +1,122 @@
+{
+  "apply": {
+    "applied": [
+      {
+        "code": "degenerate-range",
+        "message": "score: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans). Rewrite to an equality.",
+        "pass": "P4"
+      }
+    ],
+    "findings": [
+      {
+        "code": "or-branch-indexes",
+        "column": 35,
+        "line": 1,
+        "message": "The planner uses indexes for an $or only when EVERY branch has a usable index; one unindexed branch turns the whole query into a collection scan. See the per-branch index recommendations.",
+        "pass": "P2",
+        "ref": "skills/mongodb-expert/references/mongodb-compound-index-design.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "collection",
+        "keys": {
+          "qty": 1,
+          "score": 1,
+          "status": 1
+        },
+        "rationale": "[$or branch { qty: { $lt: 30 } }] ESR order: equality status, score -> range qty.",
+        "shell": "db.collection.createIndex({ status: 1, score: 1, qty: 1 })"
+      },
+      {
+        "collection": "collection",
+        "keys": {
+          "item": 1,
+          "score": 1,
+          "status": 1
+        },
+        "rationale": "[$or branch { item: /^p/ }] ESR order: equality status, score -> range item.",
+        "shell": "db.collection.createIndex({ status: 1, score: 1, item: 1 })"
+      }
+    ],
+    "input": {
+      "interpreted": "db.collection.find({ status: \"A\", $or: [ { qty: { $lt: 30 } }, { item: /^p/ } ], score: { $gte: 7, $lte: 7 } })\n",
+      "kind": "filter"
+    },
+    "iterations": 2,
+    "queries": [
+      {
+        "collection": "collection",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 1,
+        "method": "find"
+      }
+    ],
+    "rewritten": "db.collection.find({ status: \"A\", $or: [ { qty: { $lt: 30 } }, { item: /^p/ } ], score: 7 })\n"
+  },
+  "read_only": {
+    "applied": [],
+    "findings": [
+      {
+        "code": "degenerate-range",
+        "column": 89,
+        "line": 1,
+        "message": "score: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans). Rewrite to an equality.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "or-branch-indexes",
+        "column": 35,
+        "line": 1,
+        "message": "The planner uses indexes for an $or only when EVERY branch has a usable index; one unindexed branch turns the whole query into a collection scan. See the per-branch index recommendations.",
+        "pass": "P2",
+        "ref": "skills/mongodb-expert/references/mongodb-compound-index-design.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "collection",
+        "keys": {
+          "qty": 1,
+          "score": 1,
+          "status": 1
+        },
+        "rationale": "[$or branch { qty: { $lt: 30 } }] ESR order: equality status, score -> range qty.",
+        "shell": "db.collection.createIndex({ status: 1, score: 1, qty: 1 })"
+      },
+      {
+        "collection": "collection",
+        "keys": {
+          "item": 1,
+          "score": 1,
+          "status": 1
+        },
+        "rationale": "[$or branch { item: /^p/ }] ESR order: equality status, score -> range item.",
+        "shell": "db.collection.createIndex({ status: 1, score: 1, item: 1 })"
+      }
+    ],
+    "input": {
+      "interpreted": "db.collection.find({ status: \"A\", $or: [ { qty: { $lt: 30 } }, { item: /^p/ } ], score: { $gte: 7, $lte: 7 } })\n",
+      "kind": "filter"
+    },
+    "iterations": 1,
+    "queries": [
+      {
+        "collection": "collection",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 1,
+        "method": "find"
+      }
+    ],
+    "rewritten": null
+  },
+  "report": "MQL optimizer (static audit) — bare-filter.txt: 1 query, 1 low; 1 rewrite(s) applied in 1 iteration(s)\n\nInterpreted the input (bare filter (collection name unknown)) as:\ndb.collection.find({ status: \"A\", $or: [ { qty: { $lt: 30 } }, { item: /^p/ } ], score: { $gte: 7, $lte: 7 } })\n\nApplied rewrites (result-preserving):\n  ✓ [P4 degenerate-range] score: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans).\n\nFindings:\n  bare-filter.txt:1:35: LOW [P2 or-branch-indexes] The planner uses indexes for an $or only when EVERY branch has a usable index; one unindexed branch turns the whole query into a collection scan. See the per-branch index recommendations.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-compound-index-design.md\n\nRecommended indexes (recommend-only — build on non-prod first, check existing indexes):\n  db.collection.createIndex({ status: 1, score: 1, qty: 1 })\n      [$or branch { qty: { $lt: 30 } }] ESR order: equality status, score -> range qty.\n  db.collection.createIndex({ status: 1, score: 1, item: 1 })\n      [$or branch { item: /^p/ }] ESR order: equality status, score -> range item.\n\nRewritten query:\ndb.collection.find({ status: \"A\", $or: [ { qty: { $lt: 30 } }, { item: /^p/ } ], score: 7 })\n\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, totalDocsExamined/nReturned near 1, nReturned unchanged."
+}

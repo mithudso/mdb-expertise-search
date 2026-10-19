@@ -1,0 +1,35 @@
+// Run: mdbx optimize examples/slow-queries.mql
+// Each query below carries a common performance defect the static MQL optimizer catches.
+use shop
+
+// 1. Negation, unanchored case-insensitive regex, same-field $or, degenerate range,
+//    deep skip paging and a tiny batch size — in one find().
+db.orders.find({
+  status: { $ne: "cancelled" },
+  name: /smith/i,
+  $or: [{ region: "EU" }, { region: "US" }],
+  total: { $gte: 100, $lte: 100 }
+}).sort({ createdAt: -1 }).skip(5000).batchSize(2)
+
+// 2. A healthy query: the optimizer only recommends the ESR index that also covers the projection.
+db.orders.find(
+  { customerId: 42, createdAt: { $gt: ISODate("2026-01-01") } },
+  { customerId: 1, total: 1, createdAt: 1 }
+).sort({ total: -1 }).limit(20)
+
+// 3. Pipeline: $match buried after transparent stages, key/value attributes without $elemMatch,
+//    $push of whole documents then $slice, and an unindexed $lookup.
+db.events.aggregate([
+  { $addFields: { day: { $dateTrunc: { date: "$ts", unit: "day" } } } },
+  { $sort: { ts: -1 } },
+  { $match: { tenant: "t1", "attrs.k": "color", "attrs.v": "red" } },
+  { $group: { _id: "$day", docs: { $push: "$$ROOT" } } },
+  { $project: { top: { $slice: ["$docs", 5] } } },
+  { $lookup: { from: "users", localField: "uid", foreignField: "userId", as: "u" } }
+])
+
+// 4. Counting everything with a filter-based count.
+db.orders.countDocuments({})
+
+// 5. JavaScript predicate and a numeric value compared as a string.
+db.inventory.find({ $where: "this.qty > this.reorderLevel", qty: { $gte: "10" } })

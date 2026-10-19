@@ -1,0 +1,1 @@
+{ status: "A", $or: [ { qty: { $lt: 30 } }, { item: /^p/ } ], score: { $gte: 7, $lte: 7 } }

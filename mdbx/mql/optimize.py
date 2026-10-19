@@ -7,14 +7,18 @@ until no rewrite applies (cap 3), like the deep optimizer's convergence loop.
 
 Pass names follow the deep-mongodb-mql-query-optimizer skill:
 P2 index use & ESR, P3 selectivity & key order, P4 operator anti-patterns, P5 stage ordering,
-P6 sort/limit/cursor economics, P7 projection, P8 pagination. Explain-based verification (P9) needs
-a live cluster and is out of scope here; every impact claim is static and marked as such.
+P6 sort/limit/cursor economics, P7 projection, P8 pagination. Running explain (P9) needs a live
+cluster and is out of scope; when the input is a slow-query log line or profiler entry, its recorded
+measurements (planSummary, docsExamined vs nreturned, hasSortStage, usedDisk, replanned, maxTimeMS)
+become P9 evidence findings. Input normalization (log lines, command documents, bare filters and
+pipelines) lives in ``normalize.py``.
 """
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
 
+from .normalize import Normalized, normalize
 from .parser import Node, Prop, Statement, parse
 
 BLOCKING, HIGH, MEDIUM, LOW = "blocking", "high", "medium", "low"
@@ -98,6 +102,9 @@ class Report:
     indexes: list[IndexRec]
     iterations: int
     input_queries: int = 0  # queries found in the original text (a rewrite can retire one)
+    input_kind: str = "mongosh"  # mongosh | log | profile | command | filter | pipeline
+    interpreted: str | None = None  # the mongosh text the input was turned into, when it was not mongosh
+    evidence: list[dict] = field(default_factory=list)  # per query, from a log line / profiler entry
 
     @property
     def changed(self) -> bool:
@@ -593,6 +600,9 @@ class _Audit:
                 d = _num(p.value)
                 if d in {1, -1} and p.key not in eq:  # equality already fixes that key's order
                     srt.append((p.key, int(d)))
+        sort_keys = [f for f, _ in srt]
+        bounded = [f for f in rng if f in sort_keys]  # a sort key also carries its own range bounds
+        rng = [f for f in rng if f not in sort_keys]
         keys = [(f, 1) for f in eq] + [(f, d) for f, d in srt if f not in eq]
         keys += [(f, 1) for f in rng if f not in {k for k, _ in keys}]
         if not keys:
@@ -605,6 +615,8 @@ class _Audit:
         if rng:
             parts.append("range " + ", ".join(rng))
         rationale = "ESR order: " + " -> ".join(parts) + "."
+        if bounded:
+            rationale += f" The sort key {', '.join(bounded)} also serves its range predicate."
         if srt and rng:
             rationale += (" If the range is far more selective than the sort saves, test the ERS order (range "
                           "before sort) with explain() at representative values.")
@@ -754,9 +766,57 @@ def _apply(text: str, findings: list[Finding]) -> tuple[str, list[Finding]]:
     return text, chosen
 
 
+def _fmt(x) -> str:
+    """Number formatting shared with the JavaScript port: integers without a decimal point."""
+    return str(int(x)) if float(x).is_integer() else str(x)
+
+
+def _evidence_findings(ev: dict, start: int, end: int) -> list[Finding]:
+    """P9 findings from the measurements recorded with a logged / profiled query."""
+    out: list[Finding] = []
+
+    def add(sev: str, code: str, msg: str, ref: str = "explain") -> None:
+        out.append(Finding(start, max(end, start + 1), sev, code, "P9", msg, None, REFS[ref]))
+
+    def num(k):
+        v = ev.get(k)
+        return v if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+    plan = str(ev.get("planSummary", ""))
+    if "COLLSCAN" in plan:
+        add(HIGH, "log-collscan", f"The logged plan was {plan}: every document was read. The index "
+                                  "recommendations below target this query shape.")
+    docs, ret = num("docsExamined"), num("nreturned")
+    if docs is not None and ret is not None and docs >= 10 * max(ret, 1):
+        ratio = round(docs / max(ret, 1))
+        add(HIGH if docs >= 1000 else MEDIUM, "log-scan-ratio",
+            f"docsExamined {_fmt(docs)} vs nreturned {_fmt(ret)} (about {_fmt(ratio)}:1): the query reads far "
+            "more documents than it returns. The target is close to 1:1.")
+    if ev.get("hasSortStage") is True:
+        add(MEDIUM, "log-blocking-sort", "hasSortStage: the result was sorted in memory (blocking sort, 100 MB "
+                                        "limit). Put the sort keys in the index right after the equality keys.")
+    if ev.get("usedDisk") is True:
+        add(MEDIUM, "log-spill", "usedDisk: a blocking stage spilled to disk. Slim the stream ($match / $project "
+                                 "earlier) before the sort or group instead of raising memory limits.", "planner")
+    if ev.get("replanned") is True:
+        reason = f" ({ev['replanReason']})" if ev.get("replanReason") else ""
+        add(MEDIUM, "log-replanned", f"replanned{reason}: the cached plan stopped fitting, a sign of near-tied "
+                                     "indexes. Design one index that clearly wins for this shape.", "planner")
+    dur, cap = num("durationMillis"), num("maxTimeMS")
+    if dur is not None and cap is not None and cap > 0 and dur >= 0.95 * cap:
+        add(LOW, "log-timeout-bound", f"durationMillis {_fmt(dur)} is at the maxTimeMS {_fmt(cap)} cap: this is "
+                                      "a timeout-bounded baseline, not the query's real latency.")
+    return out
+
+
 def optimize(text: str, *, apply: bool = True, max_iters: int = 3) -> Report:
-    """Audit every query in ``text``; with ``apply`` rewrite in place until nothing changes (cap ``max_iters``)."""
-    current = text
+    """Audit every query in ``text``; with ``apply`` rewrite in place until nothing changes (cap ``max_iters``).
+
+    ``text`` may be mongosh calls, slow-query log lines, profiler entries, command documents, or a bare
+    filter / pipeline (see ``normalize``).
+    """
+    norm: Normalized = normalize(text)
+    current = norm.text
     applied: list[Finding] = []
     iters = 0
     while True:
@@ -772,8 +832,14 @@ def optimize(text: str, *, apply: bool = True, max_iters: int = 3) -> Report:
             break
         applied += chosen
         current = new
+    evidence = [q.evidence for q in norm.queries]
+    for i, ev in enumerate(evidence):
+        if ev:
+            t = audit.targets[i] if i < len(audit.targets) else None
+            audit.findings += _evidence_findings(ev, t.start if t else 0, t.end if t else 1)
     audit.findings.sort(key=lambda f: (SEVERITY_ORDER[f.severity], f.start))
-    return Report(text, current, audit.targets, audit.findings, applied, audit.indexes, iters, n_input)
+    return Report(norm.text, current, audit.targets, audit.findings, applied, audit.indexes, iters, n_input,
+                  norm.kind, norm.text if norm.changed else None, evidence)
 
 
 def format_report(rep: Report, name: str = "<input>") -> str:
@@ -784,6 +850,16 @@ def format_report(rep: Report, name: str = "<input>") -> str:
     out.append(f"MQL optimizer (static audit) — {name}: {rep.input_queries} quer{'y' if rep.input_queries == 1 else 'ies'}, "
                + (", ".join(f"{n} {s}" for s, n in counts.items() if n) or "no open findings")
                + (f"; {len(rep.applied)} rewrite(s) applied in {rep.iterations - 1} iteration(s)" if rep.applied else ""))
+    if rep.interpreted is not None:
+        label = {"log": "slow-query log line", "profile": "profiler entry", "command": "command document",
+                 "filter": "bare filter (collection name unknown)",
+                 "pipeline": "bare pipeline (collection name unknown)"}.get(rep.input_kind, rep.input_kind)
+        out.append(f"\nInterpreted the input ({label}) as:\n" + rep.interpreted.rstrip())
+        for i, ev in enumerate(rep.evidence):
+            if ev:
+                shown = ", ".join(f"{k}={ev[k]}" for k in ("planSummary", "durationMillis", "keysExamined",
+                                                            "docsExamined", "nreturned") if k in ev)
+                out.append(f"  query {i + 1} evidence: {shown}")
     if rep.applied:
         out.append("\nApplied rewrites (result-preserving):")
         for f in rep.applied:
@@ -816,8 +892,10 @@ def to_dict(rep: Report) -> dict:
         return {"line": t.count("\n", 0, off) + 1, "column": off - (t.rfind("\n", 0, off) + 1) + 1}
 
     return {
-        "queries": [{"kind": x.kind, "collection": x.collection, "method": x.method, **pos(x.start)}
-                    for x in rep.targets],
+        "input": {"kind": rep.input_kind, "interpreted": rep.interpreted},
+        "queries": [{"kind": x.kind, "collection": x.collection, "method": x.method, **pos(x.start),
+                     "evidence": rep.evidence[i] if i < len(rep.evidence) else {}}
+                    for i, x in enumerate(rep.targets)],
         "findings": [{"severity": f.severity, "code": f.code, "pass": f.pass_id, "message": f.message,
                       "ref": f.ref, **pos(f.start)} for f in rep.findings if not f.code.endswith("-rewrite")],
         "applied": [{"code": f.code, "pass": f.pass_id, "message": f.message} for f in rep.applied],

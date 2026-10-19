@@ -1,5 +1,13 @@
 # Known issues
 
+- The optimizer exists twice (Python reference, JS port for the Chrome extension). Goldens plus the
+  ~400-input parity test keep them identical; offsets differ only for astral-plane characters (Python
+  counts code points, JS counts UTF-16 units), which affects line/column of findings after such characters.
+- Chrome extension: toolbar clicks cannot be automated, so `test/e2e.mjs` opens the popup as a tab and
+  feeds the right-click handoff; the activeTab selection path is covered by running `grabSelection` in a
+  real page. Virtualized editors (Monaco) expose only visible text to `getSelection()`; paste instead.
+- `chrome.action.openPopup()` needs Chrome 127+; older versions open the report in a tab instead.
+
 - `mdbx index` rebuilds the keyword index from scratch every run (fast) but does not drop vectors for
   changed text until the rebuild finishes; stale digests are pruned automatically.
   Changing `MDBX_EMBED_MODEL` discards every vector on the next run (full re-embed).

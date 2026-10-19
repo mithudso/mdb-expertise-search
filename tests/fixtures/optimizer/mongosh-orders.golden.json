@@ -1,0 +1,99 @@
+{
+  "apply": {
+    "applied": [],
+    "findings": [
+      {
+        "code": "sort-no-limit",
+        "column": 3,
+        "line": 7,
+        "message": "$sort is a blocking stage (100 MB per stage, then spills). Unless an index supplies the order, follow it with $limit (top-k sort) or slim the stream first.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "orders",
+        "keys": {
+          "status": 1
+        },
+        "rationale": "[leading $match/$sort] ESR order: equality status.",
+        "shell": "db.orders.createIndex({ status: 1 })"
+      }
+    ],
+    "input": {
+      "interpreted": null,
+      "kind": "mongosh"
+    },
+    "iterations": 1,
+    "queries": [
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 12,
+        "method": "aggregate"
+      },
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {},
+        "kind": "write",
+        "line": 14,
+        "method": "updateOne"
+      }
+    ],
+    "rewritten": null
+  },
+  "read_only": {
+    "applied": [],
+    "findings": [
+      {
+        "code": "sort-no-limit",
+        "column": 3,
+        "line": 7,
+        "message": "$sort is a blocking stage (100 MB per stage, then spills). Unless an index supplies the order, follow it with $limit (top-k sort) or slim the stream first.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "orders",
+        "keys": {
+          "status": 1
+        },
+        "rationale": "[leading $match/$sort] ESR order: equality status.",
+        "shell": "db.orders.createIndex({ status: 1 })"
+      }
+    ],
+    "input": {
+      "interpreted": null,
+      "kind": "mongosh"
+    },
+    "iterations": 1,
+    "queries": [
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 12,
+        "method": "aggregate"
+      },
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {},
+        "kind": "write",
+        "line": 14,
+        "method": "updateOne"
+      }
+    ],
+    "rewritten": null
+  },
+  "report": "MQL optimizer (static audit) — mongosh-orders.txt: 2 queries, 1 low\n\nFindings:\n  mongosh-orders.txt:7:3: LOW [P6 sort-no-limit] $sort is a blocking stage (100 MB per stage, then spills). Unless an index supplies the order, follow it with $limit (top-k sort) or slim the stream first.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n\nRecommended indexes (recommend-only — build on non-prod first, check existing indexes):\n  db.orders.createIndex({ status: 1 })\n      [leading $match/$sort] ESR order: equality status.\n\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, totalDocsExamined/nReturned near 1, nReturned unchanged."
+}

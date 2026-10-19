@@ -128,7 +128,10 @@ def mql_lint(text: str) -> list[dict]:
 def mql_optimize(text: str, apply: bool = True) -> dict:
     """Static MQL query optimizer for MQL (find, aggregate, count, updates, watch).
 
-    Returns findings (severity blocking/high/medium/low, optimizer pass P2-P8, corpus `ref` to read with
+    text may also be slow-query log lines (JSON, one or more), profiler entries, command documents
+    ({ find: ..., filter: ... }) or a bare filter / pipeline; `input` in the result says how it was read,
+    and log measurements become P9 evidence findings (COLLSCAN, docsExamined vs nreturned, spills, ...).
+    Returns findings (severity blocking/high/medium/low, optimizer pass P2-P9, corpus `ref` to read with
     mdb_show), ESR-ordered index recommendations (recommend-only), and, when apply is true, the text
     with result-preserving rewrites applied (same-field $or -> $in, degenerate range -> equality,
     $match hoisting, countDocuments({}) -> estimatedDocumentCount). Confirm with explain() on a cluster.

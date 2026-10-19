@@ -1,0 +1,221 @@
+{
+  "apply": {
+    "applied": [],
+    "findings": [
+      {
+        "code": "log-collscan",
+        "column": 1,
+        "line": 1,
+        "message": "The logged plan was COLLSCAN: every document was read. The index recommendations below target this query shape.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "high"
+      },
+      {
+        "code": "log-scan-ratio",
+        "column": 1,
+        "line": 1,
+        "message": "docsExamined 1843220 vs nreturned 20 (about 92161:1): the query reads far more documents than it returns. The target is close to 1:1.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "high"
+      },
+      {
+        "code": "deep-skip",
+        "column": 1,
+        "line": 1,
+        "message": "skip(2000) walks and discards 2000 index keys or documents on every page, and on a sharded collection mongos asks each shard for limit+skip. Use keyset pagination: sort on a unique key and filter { _id: { $gt: lastSeenId } } with limit().",
+        "pass": "P8",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "log-blocking-sort",
+        "column": 1,
+        "line": 1,
+        "message": "hasSortStage: the result was sorted in memory (blocking sort, 100 MB limit). Put the sort keys in the index right after the equality keys.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "medium"
+      },
+      {
+        "code": "log-spill",
+        "column": 1,
+        "line": 1,
+        "message": "usedDisk: a blocking stage spilled to disk. Slim the stream ($match / $project earlier) before the sort or group instead of raising memory limits.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md",
+        "severity": "medium"
+      },
+      {
+        "code": "negation",
+        "column": 45,
+        "line": 1,
+        "message": "status: $ne cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "log-timeout-bound",
+        "column": 1,
+        "line": 1,
+        "message": "durationMillis 4981 is at the maxTimeMS 5000 cap: this is a timeout-bounded baseline, not the query's real latency.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "orders",
+        "keys": {
+          "createdAt": -1,
+          "customerId": 1
+        },
+        "rationale": "ESR order: equality customerId -> sort createdAt. The sort key createdAt also serves its range predicate.",
+        "shell": "db.orders.createIndex({ customerId: 1, createdAt: -1 })"
+      }
+    ],
+    "input": {
+      "interpreted": "db.orders.find({\"customerId\":4711,\"status\":{\"$ne\":\"cancelled\"},\"createdAt\":{\"$gte\":ISODate(\"2026-01-01T00:00:00.000Z\")}}).sort({\"createdAt\":-1}).skip(2000).limit(20)\n",
+      "kind": "log"
+    },
+    "iterations": 1,
+    "queries": [
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {
+          "docsExamined": 1843220,
+          "durationMillis": 4981,
+          "fromMultiPlanner": false,
+          "hasSortStage": true,
+          "keysExamined": 0,
+          "maxTimeMS": 5000,
+          "nreturned": 20,
+          "planCacheShapeHash": "9C21A7F0",
+          "planSummary": "COLLSCAN",
+          "queryFramework": "classic",
+          "queryShapeHash": "4B1D0E0F2A",
+          "replanned": false,
+          "usedDisk": true
+        },
+        "kind": "find",
+        "line": 1,
+        "method": "find"
+      }
+    ],
+    "rewritten": null
+  },
+  "read_only": {
+    "applied": [],
+    "findings": [
+      {
+        "code": "log-collscan",
+        "column": 1,
+        "line": 1,
+        "message": "The logged plan was COLLSCAN: every document was read. The index recommendations below target this query shape.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "high"
+      },
+      {
+        "code": "log-scan-ratio",
+        "column": 1,
+        "line": 1,
+        "message": "docsExamined 1843220 vs nreturned 20 (about 92161:1): the query reads far more documents than it returns. The target is close to 1:1.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "high"
+      },
+      {
+        "code": "deep-skip",
+        "column": 1,
+        "line": 1,
+        "message": "skip(2000) walks and discards 2000 index keys or documents on every page, and on a sharded collection mongos asks each shard for limit+skip. Use keyset pagination: sort on a unique key and filter { _id: { $gt: lastSeenId } } with limit().",
+        "pass": "P8",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "log-blocking-sort",
+        "column": 1,
+        "line": 1,
+        "message": "hasSortStage: the result was sorted in memory (blocking sort, 100 MB limit). Put the sort keys in the index right after the equality keys.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "medium"
+      },
+      {
+        "code": "log-spill",
+        "column": 1,
+        "line": 1,
+        "message": "usedDisk: a blocking stage spilled to disk. Slim the stream ($match / $project earlier) before the sort or group instead of raising memory limits.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md",
+        "severity": "medium"
+      },
+      {
+        "code": "negation",
+        "column": 45,
+        "line": 1,
+        "message": "status: $ne cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "log-timeout-bound",
+        "column": 1,
+        "line": 1,
+        "message": "durationMillis 4981 is at the maxTimeMS 5000 cap: this is a timeout-bounded baseline, not the query's real latency.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "orders",
+        "keys": {
+          "createdAt": -1,
+          "customerId": 1
+        },
+        "rationale": "ESR order: equality customerId -> sort createdAt. The sort key createdAt also serves its range predicate.",
+        "shell": "db.orders.createIndex({ customerId: 1, createdAt: -1 })"
+      }
+    ],
+    "input": {
+      "interpreted": "db.orders.find({\"customerId\":4711,\"status\":{\"$ne\":\"cancelled\"},\"createdAt\":{\"$gte\":ISODate(\"2026-01-01T00:00:00.000Z\")}}).sort({\"createdAt\":-1}).skip(2000).limit(20)\n",
+      "kind": "log"
+    },
+    "iterations": 1,
+    "queries": [
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {
+          "docsExamined": 1843220,
+          "durationMillis": 4981,
+          "fromMultiPlanner": false,
+          "hasSortStage": true,
+          "keysExamined": 0,
+          "maxTimeMS": 5000,
+          "nreturned": 20,
+          "planCacheShapeHash": "9C21A7F0",
+          "planSummary": "COLLSCAN",
+          "queryFramework": "classic",
+          "queryShapeHash": "4B1D0E0F2A",
+          "replanned": false,
+          "usedDisk": true
+        },
+        "kind": "find",
+        "line": 1,
+        "method": "find"
+      }
+    ],
+    "rewritten": null
+  },
+  "report": "MQL optimizer (static audit) — slowlog-find.txt: 1 query, 2 high, 4 medium, 1 low\n\nInterpreted the input (slow-query log line) as:\ndb.orders.find({\"customerId\":4711,\"status\":{\"$ne\":\"cancelled\"},\"createdAt\":{\"$gte\":ISODate(\"2026-01-01T00:00:00.000Z\")}}).sort({\"createdAt\":-1}).skip(2000).limit(20)\n  query 1 evidence: planSummary=COLLSCAN, durationMillis=4981, keysExamined=0, docsExamined=1843220, nreturned=20\n\nFindings:\n  slowlog-find.txt:1:1: HIGH [P9 log-collscan] The logged plan was COLLSCAN: every document was read. The index recommendations below target this query shape.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md\n  slowlog-find.txt:1:1: HIGH [P9 log-scan-ratio] docsExamined 1843220 vs nreturned 20 (about 92161:1): the query reads far more documents than it returns. The target is close to 1:1.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md\n  slowlog-find.txt:1:1: MEDIUM [P8 deep-skip] skip(2000) walks and discards 2000 index keys or documents on every page, and on a sharded collection mongos asks each shard for limit+skip. Use keyset pagination: sort on a unique key and filter { _id: { $gt: lastSeenId } } with limit().\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n  slowlog-find.txt:1:1: MEDIUM [P9 log-blocking-sort] hasSortStage: the result was sorted in memory (blocking sort, 100 MB limit). Put the sort keys in the index right after the equality keys.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md\n  slowlog-find.txt:1:1: MEDIUM [P9 log-spill] usedDisk: a blocking stage spilled to disk. Slim the stream ($match / $project earlier) before the sort or group instead of raising memory limits.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md\n  slowlog-find.txt:1:45: MEDIUM [P4 negation] status: $ne cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  slowlog-find.txt:1:1: LOW [P9 log-timeout-bound] durationMillis 4981 is at the maxTimeMS 5000 cap: this is a timeout-bounded baseline, not the query's real latency.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md\n\nRecommended indexes (recommend-only — build on non-prod first, check existing indexes):\n  db.orders.createIndex({ customerId: 1, createdAt: -1 })\n      ESR order: equality customerId -> sort createdAt. The sort key createdAt also serves its range predicate.\n\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, totalDocsExamined/nReturned near 1, nReturned unchanged."
+}

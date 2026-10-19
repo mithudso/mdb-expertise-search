@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MQL Query Optimizer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="bar">
+    <img src="icons/icon32.png" alt="" width="20" height="20">
+    <h1>MQL Query Optimizer</h1>
+    <span class="local" title="The optimizer runs inside the extension. Nothing is sent anywhere.">runs locally</span>
+  </header>
+
+  <main id="app">
+    <p class="status" id="status" role="status">Reading your selection…</p>
+
+    <section id="result" hidden aria-live="polite"></section>
+
+    <details id="input-section" hidden>
+      <summary id="input-label">Paste a query, pipeline or slow-query log line</summary>
+      <textarea id="input" spellcheck="false" aria-labelledby="input-label" placeholder='db.orders.find({ status: "A" }).sort({ createdAt: -1 })&#10;or paste a slow-query log line, a profiler entry, a { find: … } command, a filter or a pipeline'></textarea>
+      <div class="row">
+        <button id="run" class="primary" type="button">Optimize</button>
+        <button id="example" type="button">Try an example</button>
+        <span class="kind">Ctrl/⌘+Enter runs it</span>
+      </div>
+    </details>
+  </main>
+
+  <footer class="foot">
+    Static analysis. Confirm with <code>explain("executionStats")</code> before changing production.
+  </footer>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

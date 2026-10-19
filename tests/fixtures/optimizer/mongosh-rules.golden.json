@@ -1,0 +1,1909 @@
+{
+  "apply": {
+    "applied": [
+      {
+        "code": "or-to-in",
+        "message": "$or of equalities on one field (a) is an $in: one index scan with point bounds instead of a subplan per branch, and sort-compatible.",
+        "pass": "P4"
+      },
+      {
+        "code": "degenerate-range",
+        "message": "t: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans). Rewrite to an equality.",
+        "pass": "P4"
+      },
+      {
+        "code": "count-all",
+        "message": "countDocuments({}) scans the collection or the _id index. For a whole-collection total use estimatedDocumentCount(), which reads collection metadata.",
+        "pass": "P6"
+      },
+      {
+        "code": "match-not-early-rewrite",
+        "message": "Move $match ahead of $addFields, $sort.",
+        "pass": "P5"
+      },
+      {
+        "code": "match-not-early-rewrite",
+        "message": "Move $match ahead of $unwind, $project.",
+        "pass": "P5"
+      },
+      {
+        "code": "match-not-early-rewrite",
+        "message": "Move $match ahead of $sort.",
+        "pass": "P5"
+      }
+    ],
+    "findings": [
+      {
+        "code": "string-numeric-compare",
+        "column": 48,
+        "line": 3,
+        "message": "qty $gte \"10\" compares strings lexicographically (\"10\" < \"2\"). If the field holds numbers as strings, results are wrong; store numbers as numbers. Reported, not applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "blocking"
+      },
+      {
+        "code": "kv-without-elemmatch",
+        "column": 13,
+        "line": 9,
+        "message": "Separate predicates on a.k and a.v can be satisfied by different elements of the a array, so an element k=a,v=1 next to k=b,v=2 matches k=a,v=2. Put both inside { a: { $elemMatch: { k: …, v: … } } } and index { \"a.k\": 1, \"a.v\": 1 }. Reported, not applied: it changes the result set.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "blocking"
+      },
+      {
+        "code": "where",
+        "column": 13,
+        "line": 3,
+        "message": "$where runs JavaScript per document, cannot use an index, and is deprecated from 8.0. Rewrite with native query operators or $expr.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "high"
+      },
+      {
+        "code": "group-root",
+        "column": 48,
+        "line": 37,
+        "message": "$push: \"$$ROOT\" carries whole documents into $group memory (100 MB per stage). $project only the fields you need first.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "high"
+      },
+      {
+        "code": "push-then-slice",
+        "column": 48,
+        "line": 37,
+        "message": "docs builds an unbounded array with $push and a later stage slices it. Use a bounded accumulator ($firstN / $lastN / $topN / $bottomN, 5.2+) so the discarded elements are never held in memory.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "high"
+      },
+      {
+        "code": "unanchored-regex",
+        "column": 19,
+        "line": 4,
+        "message": "/smith/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "case-insensitive-regex",
+        "column": 19,
+        "line": 5,
+        "message": "/^smith/i: a case-insensitive regex cannot use tight index bounds even when anchored. Store a normalized lower-case copy, or query with a strength-2 collation that matches an index built with the same collation.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-compound-index-design.md",
+        "severity": "medium"
+      },
+      {
+        "code": "unanchored-regex",
+        "column": 29,
+        "line": 6,
+        "message": "/smith/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "case-insensitive-regex",
+        "column": 29,
+        "line": 7,
+        "message": "/^ab/i: a case-insensitive regex cannot use tight index bounds even when anchored. Store a normalized lower-case copy, or query with a strength-2 collation that matches an index built with the same collation.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-compound-index-design.md",
+        "severity": "medium"
+      },
+      {
+        "code": "negation",
+        "column": 18,
+        "line": 8,
+        "message": "s: $ne cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "negation",
+        "column": 35,
+        "line": 8,
+        "message": "t: $nin cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "negation",
+        "column": 56,
+        "line": 8,
+        "message": "u: $exists: false cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "negation",
+        "column": 79,
+        "line": 8,
+        "message": "w: $not cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "in-blocks-sort",
+        "column": 18,
+        "line": 10,
+        "message": "$in with 203 values (>= 201) is planned like a range, so a following sort cannot use SORT_MERGE over the index and becomes a blocking sort. Split the list or keep it under 201 values.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "or-to-in",
+        "column": 28,
+        "line": 12,
+        "message": "$or of equalities on one field (a) is an $in: one index scan with point bounds instead of a subplan per branch, and sort-compatible.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "rooted-or-sort",
+        "column": 13,
+        "line": 13,
+        "message": "A top-level $or combined with a sort can pick a blocking SORT instead of merging sorted branch scans (SERVER-19114). Prefer $in where the branches share a field, or give each branch an index whose order matches the sort.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "degenerate-range",
+        "column": 16,
+        "line": 15,
+        "message": "t: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans). Rewrite to an equality.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "expr-unindexable",
+        "column": 13,
+        "line": 16,
+        "message": "$expr with $gt is evaluated per document and cannot use index bounds (only a plain $eq/$lt/$lte/$gt/$gte of one field against a constant can). Rewrite with query operators where equivalent, or precompute the value into a field at write time.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "deep-skip",
+        "column": 1,
+        "line": 18,
+        "message": "skip(5000) walks and discards 5000 index keys or documents on every page, and on a sharded collection mongos asks each shard for limit+skip. Use keyset pagination: sort on a unique key and filter { _id: { $gt: lastSeenId } } with limit().",
+        "pass": "P8",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "tiny-batch",
+        "column": 1,
+        "line": 18,
+        "message": "batchSize(2) multiplies getMore round-trips; on a change stream each getMore re-scans the oplog window. Use the default (101 first batch, then up to 16 MiB) or a larger value.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "sample-not-first",
+        "column": 39,
+        "line": 39,
+        "message": "$sample uses a random cursor only as the first stage; later it reads and sorts the whole input randomly.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "sort-after-search",
+        "column": 44,
+        "line": 40,
+        "message": "$sort after $search materializes every search hit before sorting. Use the $search `sort` option instead.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "search-overfetch",
+        "column": 44,
+        "line": 41,
+        "message": "$limit 5000 after $search over-fetches; size it to the page and use $searchMeta for counts.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "deep-skip",
+        "column": 39,
+        "line": 42,
+        "message": "$skip 2000 still produces and discards 2000 documents per page; use keyset pagination ($match on the last seen sort key).",
+        "pass": "P8",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "changestream-match-first",
+        "column": 13,
+        "line": 45,
+        "message": "Put the event-narrowing $match (operationType, ns, fields) first so it is pushed into the oplog scan; otherwise every event flows through the later stages.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "unanchored-regex",
+        "column": 27,
+        "line": 47,
+        "message": "/x/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 1,
+        "line": 13,
+        "message": "sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      },
+      {
+        "code": "or-branch-indexes",
+        "column": 13,
+        "line": 13,
+        "message": "The planner uses indexes for an $or only when EVERY branch has a usable index; one unindexed branch turns the whole query into a collection scan. See the per-branch index recommendations.",
+        "pass": "P2",
+        "ref": "skills/mongodb-expert/references/mongodb-compound-index-design.md",
+        "severity": "low"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 1,
+        "line": 18,
+        "message": "sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      },
+      {
+        "code": "pinned-hint",
+        "column": 1,
+        "line": 18,
+        "message": "hint() pins a plan in application code. Compare explain() with and without it; on 8.0+ prefer setQuerySettings (persistent, per query shape) for an intentional pin.",
+        "pass": "P2",
+        "ref": "skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md",
+        "severity": "low"
+      },
+      {
+        "code": "legacy-count",
+        "column": 1,
+        "line": 19,
+        "message": "count() is deprecated and can be inaccurate on sharded clusters: use countDocuments(filter), or estimatedDocumentCount() for an unfiltered total (reads metadata only).",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      },
+      {
+        "code": "distinct-16mb",
+        "column": 1,
+        "line": 21,
+        "message": "distinct() returns one document capped at 16 MB and can use DISTINCT_SCAN only with an index led by the field. For large or sharded results use $group.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 1,
+        "line": 26,
+        "message": "sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 65,
+        "line": 28,
+        "message": "$sort is a blocking stage (100 MB per stage, then spills). Unless an index supplies the order, follow it with $limit (top-k sort) or slim the stream first.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "low"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 3,
+        "line": 35,
+        "message": "$sort is a blocking stage (100 MB per stage, then spills). Unless an index supplies the order, follow it with $limit (top-k sort) or slim the stream first.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "low"
+      },
+      {
+        "code": "group-whole-collection",
+        "column": 17,
+        "line": 37,
+        "message": "$group as the first stage reads the whole collection on every run. If this is a recurring report, maintain a summary collection ($merge or on-write upsert).",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "low"
+      },
+      {
+        "code": "distinct-scan-eligible",
+        "column": 45,
+        "line": 38,
+        "message": "$sort + $group with only $first/$last can run as a DISTINCT_SCAN (one index seek per group) when an index matches the sort and group key — keep this shape and confirm with explain().",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md",
+        "severity": "low"
+      },
+      {
+        "code": "lookup-pipeline",
+        "column": 17,
+        "line": 44,
+        "message": "Correlated $lookup pipeline: make sure its $match uses $expr $eq on an indexed field of the foreign collection (or use localField/foreignField with pipeline, 5.0+).",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "c",
+        "keys": {
+          "qty": 1
+        },
+        "rationale": "ESR order: range qty.",
+        "shell": "db.c.createIndex({ qty: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "a.k": 1,
+          "a.v": 1,
+          "addr.city": 1,
+          "addr.zip": 1
+        },
+        "rationale": "ESR order: equality a.k, a.v, addr.city, addr.zip.",
+        "shell": "db.c.createIndex({ \"a.k\": 1, \"a.v\": 1, \"addr.city\": 1, \"addr.zip\": 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "a": 1,
+          "b": 1
+        },
+        "rationale": "ESR order: sort b -> range a. If the range is far more selective than the sort saves, test the ERS order (range before sort) with explain() at representative values.",
+        "shell": "db.c.createIndex({ b: 1, a: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "a": 1
+        },
+        "rationale": "ESR order: equality a.",
+        "shell": "db.c.createIndex({ a: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "a": 1,
+          "c": 1
+        },
+        "rationale": "[$or branch { a: 1 }] ESR order: equality a -> sort c.",
+        "shell": "db.c.createIndex({ a: 1, c: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "b": 1,
+          "c": 1
+        },
+        "rationale": "[$or branch { b: 2 }] ESR order: equality b -> sort c.",
+        "shell": "db.c.createIndex({ b: 1, c: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "c": 1
+        },
+        "rationale": "ESR order: sort c.",
+        "shell": "db.c.createIndex({ c: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "t": 1
+        },
+        "rationale": "ESR order: equality t.",
+        "shell": "db.c.createIndex({ t: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "a": 1,
+          "b": 1
+        },
+        "rationale": "ESR order: equality a -> sort b.",
+        "shell": "db.c.createIndex({ a: 1, b: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "a": 1,
+          "t": -1
+        },
+        "rationale": "ESR order: equality a -> sort t. Covers the projection if you add _id: 0 (PROJECTION_COVERED, 0 documents examined).",
+        "shell": "db.c.createIndex({ a: 1, t: -1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "state": 1,
+          "tenant": 1
+        },
+        "rationale": "ESR order: equality tenant, state.",
+        "shell": "db.c.createIndex({ tenant: 1, state: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "createdAt": 1
+        },
+        "rationale": "ESR order: range createdAt.",
+        "shell": "db.c.createIndex({ createdAt: 1 })"
+      },
+      {
+        "collection": "o",
+        "keys": {
+          "c": 1,
+          "s": -1,
+          "t": 1
+        },
+        "rationale": "ESR order: equality c -> sort s -> range t. If the range is far more selective than the sort saves, test the ERS order (range before sort) with explain() at representative values. Covers the projection (PROJECTION_COVERED, 0 documents examined).",
+        "shell": "db.o.createIndex({ c: 1, s: -1, t: 1 })"
+      },
+      {
+        "collection": "o",
+        "keys": {
+          "c": 1
+        },
+        "rationale": "ESR order: equality c. Covers the projection if you add _id: 0 (PROJECTION_COVERED, 0 documents examined).",
+        "shell": "db.o.createIndex({ c: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "x": 1
+        },
+        "rationale": "[leading $match/$sort] ESR order: equality x.",
+        "shell": "db.c.createIndex({ x: 1 })"
+      },
+      {
+        "collection": "u",
+        "keys": {
+          "b": 1
+        },
+        "rationale": "$lookup from c probes u.b once per input document; without this index each probe is a collection scan.",
+        "shell": "db.u.createIndex({ b: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "status": 1
+        },
+        "rationale": "[leading $match/$sort] ESR order: equality status.",
+        "shell": "db.c.createIndex({ status: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "t": 1,
+          "x": 1
+        },
+        "rationale": "[leading $match/$sort] ESR order: equality x -> sort t.",
+        "shell": "db.c.createIndex({ x: 1, t: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "k": 1,
+          "t": -1
+        },
+        "rationale": "[leading $match/$sort] ESR order: sort k, t.",
+        "shell": "db.c.createIndex({ k: 1, t: -1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "operationType": 1
+        },
+        "rationale": "[leading $match/$sort] ESR order: equality operationType.",
+        "shell": "db.c.createIndex({ operationType: 1 })"
+      },
+      {
+        "collection": "my-orders",
+        "keys": {
+          "b": -1
+        },
+        "rationale": "[leading $match/$sort] ESR order: sort b.",
+        "shell": "db.my-orders.createIndex({ b: -1 })"
+      },
+      {
+        "collection": "weird coll",
+        "keys": {
+          "dotted key": 1,
+          "x.y": 1,
+          "z": -1
+        },
+        "rationale": "ESR order: equality x.y -> sort z -> range dotted key. If the range is far more selective than the sort saves, test the ERS order (range before sort) with explain() at representative values.",
+        "shell": "db.weird coll.createIndex({ \"x.y\": 1, z: -1, \"dotted key\": 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "d": 1,
+          "e": 1,
+          "n": 1,
+          "o": 1
+        },
+        "rationale": "ESR order: equality o, n, d, e.",
+        "shell": "db.c.createIndex({ o: 1, n: 1, d: 1, e: 1 })"
+      }
+    ],
+    "input": {
+      "interpreted": null,
+      "kind": "mongosh"
+    },
+    "iterations": 2,
+    "queries": [
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 3,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 4,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 5,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 6,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 7,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 8,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 9,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 10,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 11,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 12,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 13,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 14,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 15,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 16,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 17,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 18,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "count",
+        "line": 19,
+        "method": "count"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "distinct",
+        "line": 21,
+        "method": "distinct"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "write",
+        "line": 22,
+        "method": "findOneAndUpdate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "write",
+        "line": 23,
+        "method": "updateMany"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "write",
+        "line": 24,
+        "method": "deleteMany"
+      },
+      {
+        "collection": "o",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 25,
+        "method": "find"
+      },
+      {
+        "collection": "o",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 26,
+        "method": "find"
+      },
+      {
+        "collection": "o",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 27,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 28,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 29,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 30,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 31,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 32,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 33,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 37,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 38,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 39,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 40,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 41,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 42,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 43,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 44,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "watch",
+        "line": 45,
+        "method": "watch"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "watch",
+        "line": 46,
+        "method": "watch"
+      },
+      {
+        "collection": "my-orders",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 48,
+        "method": "aggregate"
+      },
+      {
+        "collection": "weird coll",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 49,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 50,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 51,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 52,
+        "method": "find"
+      }
+    ],
+    "rewritten": "// One statement per optimizer rule, so the JS port is checked against every rule code.\nuse shop\ndb.c.find({ $where: \"this.a > 1\", qty: { $gte: \"10\" } })\ndb.c.find({ name: /smith/ })\ndb.c.find({ name: /^smith/i })\ndb.c.find({ name: { $regex: \"smith\", $options: \"i\" } })\ndb.c.find({ name: { $regex: /^ab/i } })\ndb.c.find({ s: { $ne: \"x\" }, t: { $nin: [1, 2] }, u: { $exists: false }, w: { $not: /x/ } })\ndb.c.find({ \"a.k\": \"c\", \"a.v\": 1, \"addr.city\": \"x\", \"addr.zip\": 1 })\ndb.c.find({ a: { $in: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202] } }).sort({ b: 1 }).limit(5)\ndb.c.find({ a: { $in: [1, 2, \"x\"] } })\ndb.c.find({ a: { $gt: 0 }, $or: [{ a: 1 }, { a: 2 }] })\ndb.c.find({ $or: [{ a: 1 }, { b: 2 }] }).sort({ c: 1 })\ndb.c.find({ t: 5 })\ndb.c.find({ t: { $gte: 5, $lte: 5, $ne: 3 } })\ndb.c.find({ $expr: { $gt: [\"$a\", \"$b\"] } })\ndb.c.find({ $expr: { $gt: [\"$a\", 5] } })\ndb.c.find({ a: 1 }).sort({ b: 1 }).skip(5000).batchSize(2).hint({ a: 1 })\ndb.c.count({ a: 1 })\ndb.c.estimatedDocumentCount()\ndb.c.distinct(\"k\", { a: 1 })\ndb.c.findOneAndUpdate({ a: 1 }, { $set: { b: 2 } }, { sort: { t: -1 }, projection: { a: 1 } })\ndb.c.updateMany({ tenant: \"t1\", state: { $in: [\"a\", \"b\"] } }, { $set: { x: 1 } })\ndb.c.deleteMany({ createdAt: { $lt: ISODate(\"2025-01-01\") } })\ndb.o.find({ c: 1, t: { $gt: 5 } }, { c: 1, s: 1, t: 1, _id: 0 }).sort({ s: -1 }).limit(5)\ndb.o.find({ c: 1 }, { c: 1 }).sort({ c: 1 })\ndb.o.find({ _id: 5 })\ndb.c.aggregate([{ $match: { x: 1 } }, { $addFields: { d: 1 } }, { $sort: { t: 1 } }])\ndb.c.aggregate([{ $addFields: { d: 1 } }, { $match: { d: 1 } }])\ndb.c.aggregate([{ $lookup: { from: \"u\", localField: \"a\", foreignField: \"b\", as: \"u\" } }, { $match: { \"u.x\": 1 } }])\ndb.c.aggregate([{ $unwind: \"$items\" }, { $match: { \"items.sku\": \"x\" } }])\ndb.c.aggregate([{ $match: { status: \"A\" } }, { $unwind: \"$items\" }, { $project: { a: 1, total: { $sum: \"$x\" } } }])\ndb.c.aggregate([\n  { $match: { x: 1 } },\n  { $sort: { t: 1 } }\n])\ndb.c.aggregate([{ $group: { _id: \"$k\", docs: { $push: \"$$ROOT\" } } }, { $project: { top: { $slice: [\"$docs\", 3] } } }])\ndb.c.aggregate([{ $sort: { k: 1, t: -1 } }, { $group: { _id: \"$k\", last: { $first: \"$v\" } } }])\ndb.c.aggregate([{ $match: { a: 1 } }, { $sample: { size: 5 } }])\ndb.c.aggregate([{ $search: { text: {} } }, { $sort: { a: 1 } }])\ndb.c.aggregate([{ $search: { text: {} } }, { $limit: 5000 }])\ndb.c.aggregate([{ $match: { a: 1 } }, { $skip: 2000 }, { $limit: 10 }])\ndb.c.aggregate([{ $lookup: { from: \"s\", localField: \"a\", foreignField: \"_id\", as: \"x\" } }])\ndb.c.aggregate([{ $lookup: { from: \"s\", let: { a: \"$a\" }, pipeline: [{ $match: { $expr: { $eq: [\"$b\", \"$$a\"] } } }], as: \"x\" } }])\ndb.c.watch([{ $project: { a: 1 } }])\ndb.c.watch([{ $match: { operationType: \"insert\" } }])\nconst p = [{ $match: { a: /x/ } }, { $sort: { b: -1 } }, { $limit: 10 }]\ndb.getCollection(\"my-orders\").aggregate(p)\ndb[\"weird coll\"].find({ \"x.y\": 1, \"dotted key\": { $lt: 5 } }).sort({ z: -1 }).limit(1)\ndb.c.find({ $and: [{ a: 1 }, { b: { $gt: 2 } }], $nor: [{ c: 3 }] })\ndb.c.find({ arr: { $elemMatch: { k: \"a\", v: 1 } }, $text: { $search: \"x\" } })\ndb.c.find({ o: { x: 1, y: 2 }, n: null, d: ObjectId(\"64b0c0ffee\"), e: [1, 2] })\n"
+  },
+  "read_only": {
+    "applied": [],
+    "findings": [
+      {
+        "code": "string-numeric-compare",
+        "column": 48,
+        "line": 3,
+        "message": "qty $gte \"10\" compares strings lexicographically (\"10\" < \"2\"). If the field holds numbers as strings, results are wrong; store numbers as numbers. Reported, not applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "blocking"
+      },
+      {
+        "code": "kv-without-elemmatch",
+        "column": 13,
+        "line": 9,
+        "message": "Separate predicates on a.k and a.v can be satisfied by different elements of the a array, so an element k=a,v=1 next to k=b,v=2 matches k=a,v=2. Put both inside { a: { $elemMatch: { k: …, v: … } } } and index { \"a.k\": 1, \"a.v\": 1 }. Reported, not applied: it changes the result set.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "blocking"
+      },
+      {
+        "code": "where",
+        "column": 13,
+        "line": 3,
+        "message": "$where runs JavaScript per document, cannot use an index, and is deprecated from 8.0. Rewrite with native query operators or $expr.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "high"
+      },
+      {
+        "code": "group-root",
+        "column": 48,
+        "line": 37,
+        "message": "$push: \"$$ROOT\" carries whole documents into $group memory (100 MB per stage). $project only the fields you need first.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "high"
+      },
+      {
+        "code": "push-then-slice",
+        "column": 48,
+        "line": 37,
+        "message": "docs builds an unbounded array with $push and a later stage slices it. Use a bounded accumulator ($firstN / $lastN / $topN / $bottomN, 5.2+) so the discarded elements are never held in memory.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "high"
+      },
+      {
+        "code": "unanchored-regex",
+        "column": 19,
+        "line": 4,
+        "message": "/smith/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "case-insensitive-regex",
+        "column": 19,
+        "line": 5,
+        "message": "/^smith/i: a case-insensitive regex cannot use tight index bounds even when anchored. Store a normalized lower-case copy, or query with a strength-2 collation that matches an index built with the same collation.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-compound-index-design.md",
+        "severity": "medium"
+      },
+      {
+        "code": "unanchored-regex",
+        "column": 29,
+        "line": 6,
+        "message": "/smith/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "case-insensitive-regex",
+        "column": 29,
+        "line": 7,
+        "message": "/^ab/i: a case-insensitive regex cannot use tight index bounds even when anchored. Store a normalized lower-case copy, or query with a strength-2 collation that matches an index built with the same collation.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-compound-index-design.md",
+        "severity": "medium"
+      },
+      {
+        "code": "negation",
+        "column": 18,
+        "line": 8,
+        "message": "s: $ne cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "negation",
+        "column": 35,
+        "line": 8,
+        "message": "t: $nin cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "negation",
+        "column": 56,
+        "line": 8,
+        "message": "u: $exists: false cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "negation",
+        "column": 79,
+        "line": 8,
+        "message": "w: $not cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "in-blocks-sort",
+        "column": 18,
+        "line": 10,
+        "message": "$in with 203 values (>= 201) is planned like a range, so a following sort cannot use SORT_MERGE over the index and becomes a blocking sort. Split the list or keep it under 201 values.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "or-to-in",
+        "column": 13,
+        "line": 11,
+        "message": "$or of equalities on one field (a) is an $in: one index scan with point bounds instead of a subplan per branch, and sort-compatible.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "or-to-in",
+        "column": 28,
+        "line": 12,
+        "message": "$or of equalities on one field (a) is an $in: one index scan with point bounds instead of a subplan per branch, and sort-compatible.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "rooted-or-sort",
+        "column": 13,
+        "line": 13,
+        "message": "A top-level $or combined with a sort can pick a blocking SORT instead of merging sorted branch scans (SERVER-19114). Prefer $in where the branches share a field, or give each branch an index whose order matches the sort.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "degenerate-range",
+        "column": 16,
+        "line": 14,
+        "message": "t: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans). Rewrite to an equality.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "degenerate-range",
+        "column": 16,
+        "line": 15,
+        "message": "t: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans). Rewrite to an equality.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "expr-unindexable",
+        "column": 13,
+        "line": 16,
+        "message": "$expr with $gt is evaluated per document and cannot use index bounds (only a plain $eq/$lt/$lte/$gt/$gte of one field against a constant can). Rewrite with query operators where equivalent, or precompute the value into a field at write time.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "deep-skip",
+        "column": 1,
+        "line": 18,
+        "message": "skip(5000) walks and discards 5000 index keys or documents on every page, and on a sharded collection mongos asks each shard for limit+skip. Use keyset pagination: sort on a unique key and filter { _id: { $gt: lastSeenId } } with limit().",
+        "pass": "P8",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "tiny-batch",
+        "column": 1,
+        "line": 18,
+        "message": "batchSize(2) multiplies getMore round-trips; on a change stream each getMore re-scans the oplog window. Use the default (101 first batch, then up to 16 MiB) or a larger value.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "count-all",
+        "column": 1,
+        "line": 20,
+        "message": "countDocuments({}) scans the collection or the _id index. For a whole-collection total use estimatedDocumentCount(), which reads collection metadata.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "match-not-early",
+        "column": 64,
+        "line": 28,
+        "message": "This $match reads none of the fields produced by $addFields, $sort, so it can run before them: fewer documents flow through the pipeline and, at the front, it can use an index.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "match-not-early",
+        "column": 87,
+        "line": 32,
+        "message": "This $match reads none of the fields produced by $unwind, $project, so it can run before them: fewer documents flow through the pipeline and, at the front, it can use an index.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "match-not-early",
+        "column": 3,
+        "line": 35,
+        "message": "This $match reads none of the fields produced by $sort, so it can run before them: fewer documents flow through the pipeline and, at the front, it can use an index.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "sample-not-first",
+        "column": 39,
+        "line": 39,
+        "message": "$sample uses a random cursor only as the first stage; later it reads and sorts the whole input randomly.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "sort-after-search",
+        "column": 44,
+        "line": 40,
+        "message": "$sort after $search materializes every search hit before sorting. Use the $search `sort` option instead.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "search-overfetch",
+        "column": 44,
+        "line": 41,
+        "message": "$limit 5000 after $search over-fetches; size it to the page and use $searchMeta for counts.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "deep-skip",
+        "column": 39,
+        "line": 42,
+        "message": "$skip 2000 still produces and discards 2000 documents per page; use keyset pagination ($match on the last seen sort key).",
+        "pass": "P8",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "changestream-match-first",
+        "column": 13,
+        "line": 45,
+        "message": "Put the event-narrowing $match (operationType, ns, fields) first so it is pushed into the oplog scan; otherwise every event flows through the later stages.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "unanchored-regex",
+        "column": 27,
+        "line": 47,
+        "message": "/x/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 1,
+        "line": 13,
+        "message": "sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      },
+      {
+        "code": "or-branch-indexes",
+        "column": 13,
+        "line": 13,
+        "message": "The planner uses indexes for an $or only when EVERY branch has a usable index; one unindexed branch turns the whole query into a collection scan. See the per-branch index recommendations.",
+        "pass": "P2",
+        "ref": "skills/mongodb-expert/references/mongodb-compound-index-design.md",
+        "severity": "low"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 1,
+        "line": 18,
+        "message": "sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      },
+      {
+        "code": "pinned-hint",
+        "column": 1,
+        "line": 18,
+        "message": "hint() pins a plan in application code. Compare explain() with and without it; on 8.0+ prefer setQuerySettings (persistent, per query shape) for an intentional pin.",
+        "pass": "P2",
+        "ref": "skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md",
+        "severity": "low"
+      },
+      {
+        "code": "legacy-count",
+        "column": 1,
+        "line": 19,
+        "message": "count() is deprecated and can be inaccurate on sharded clusters: use countDocuments(filter), or estimatedDocumentCount() for an unfiltered total (reads metadata only).",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      },
+      {
+        "code": "distinct-16mb",
+        "column": 1,
+        "line": 21,
+        "message": "distinct() returns one document capped at 16 MB and can use DISTINCT_SCAN only with an index led by the field. For large or sharded results use $group.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 1,
+        "line": 26,
+        "message": "sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 43,
+        "line": 28,
+        "message": "$sort is a blocking stage (100 MB per stage, then spills). Unless an index supplies the order, follow it with $limit (top-k sort) or slim the stream first.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "low"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 3,
+        "line": 34,
+        "message": "$sort is a blocking stage (100 MB per stage, then spills). Unless an index supplies the order, follow it with $limit (top-k sort) or slim the stream first.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "low"
+      },
+      {
+        "code": "group-whole-collection",
+        "column": 17,
+        "line": 37,
+        "message": "$group as the first stage reads the whole collection on every run. If this is a recurring report, maintain a summary collection ($merge or on-write upsert).",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "low"
+      },
+      {
+        "code": "distinct-scan-eligible",
+        "column": 45,
+        "line": 38,
+        "message": "$sort + $group with only $first/$last can run as a DISTINCT_SCAN (one index seek per group) when an index matches the sort and group key — keep this shape and confirm with explain().",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md",
+        "severity": "low"
+      },
+      {
+        "code": "lookup-pipeline",
+        "column": 17,
+        "line": 44,
+        "message": "Correlated $lookup pipeline: make sure its $match uses $expr $eq on an indexed field of the foreign collection (or use localField/foreignField with pipeline, 5.0+).",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "c",
+        "keys": {
+          "qty": 1
+        },
+        "rationale": "ESR order: range qty.",
+        "shell": "db.c.createIndex({ qty: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "a.k": 1,
+          "a.v": 1,
+          "addr.city": 1,
+          "addr.zip": 1
+        },
+        "rationale": "ESR order: equality a.k, a.v, addr.city, addr.zip.",
+        "shell": "db.c.createIndex({ \"a.k\": 1, \"a.v\": 1, \"addr.city\": 1, \"addr.zip\": 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "a": 1,
+          "b": 1
+        },
+        "rationale": "ESR order: sort b -> range a. If the range is far more selective than the sort saves, test the ERS order (range before sort) with explain() at representative values.",
+        "shell": "db.c.createIndex({ b: 1, a: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "a": 1
+        },
+        "rationale": "ESR order: range a.",
+        "shell": "db.c.createIndex({ a: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "a": 1,
+          "c": 1
+        },
+        "rationale": "[$or branch { a: 1 }] ESR order: equality a -> sort c.",
+        "shell": "db.c.createIndex({ a: 1, c: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "b": 1,
+          "c": 1
+        },
+        "rationale": "[$or branch { b: 2 }] ESR order: equality b -> sort c.",
+        "shell": "db.c.createIndex({ b: 1, c: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "c": 1
+        },
+        "rationale": "ESR order: sort c.",
+        "shell": "db.c.createIndex({ c: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "t": 1
+        },
+        "rationale": "ESR order: equality t.",
+        "shell": "db.c.createIndex({ t: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "a": 1,
+          "b": 1
+        },
+        "rationale": "ESR order: equality a -> sort b.",
+        "shell": "db.c.createIndex({ a: 1, b: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "a": 1,
+          "t": -1
+        },
+        "rationale": "ESR order: equality a -> sort t. Covers the projection if you add _id: 0 (PROJECTION_COVERED, 0 documents examined).",
+        "shell": "db.c.createIndex({ a: 1, t: -1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "state": 1,
+          "tenant": 1
+        },
+        "rationale": "ESR order: equality tenant, state.",
+        "shell": "db.c.createIndex({ tenant: 1, state: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "createdAt": 1
+        },
+        "rationale": "ESR order: range createdAt.",
+        "shell": "db.c.createIndex({ createdAt: 1 })"
+      },
+      {
+        "collection": "o",
+        "keys": {
+          "c": 1,
+          "s": -1,
+          "t": 1
+        },
+        "rationale": "ESR order: equality c -> sort s -> range t. If the range is far more selective than the sort saves, test the ERS order (range before sort) with explain() at representative values. Covers the projection (PROJECTION_COVERED, 0 documents examined).",
+        "shell": "db.o.createIndex({ c: 1, s: -1, t: 1 })"
+      },
+      {
+        "collection": "o",
+        "keys": {
+          "c": 1
+        },
+        "rationale": "ESR order: equality c. Covers the projection if you add _id: 0 (PROJECTION_COVERED, 0 documents examined).",
+        "shell": "db.o.createIndex({ c: 1 })"
+      },
+      {
+        "collection": "u",
+        "keys": {
+          "b": 1
+        },
+        "rationale": "$lookup from c probes u.b once per input document; without this index each probe is a collection scan.",
+        "shell": "db.u.createIndex({ b: 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "k": 1,
+          "t": -1
+        },
+        "rationale": "[leading $match/$sort] ESR order: sort k, t.",
+        "shell": "db.c.createIndex({ k: 1, t: -1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "operationType": 1
+        },
+        "rationale": "[leading $match/$sort] ESR order: equality operationType.",
+        "shell": "db.c.createIndex({ operationType: 1 })"
+      },
+      {
+        "collection": "my-orders",
+        "keys": {
+          "b": -1
+        },
+        "rationale": "[leading $match/$sort] ESR order: sort b.",
+        "shell": "db.my-orders.createIndex({ b: -1 })"
+      },
+      {
+        "collection": "weird coll",
+        "keys": {
+          "dotted key": 1,
+          "x.y": 1,
+          "z": -1
+        },
+        "rationale": "ESR order: equality x.y -> sort z -> range dotted key. If the range is far more selective than the sort saves, test the ERS order (range before sort) with explain() at representative values.",
+        "shell": "db.weird coll.createIndex({ \"x.y\": 1, z: -1, \"dotted key\": 1 })"
+      },
+      {
+        "collection": "c",
+        "keys": {
+          "d": 1,
+          "e": 1,
+          "n": 1,
+          "o": 1
+        },
+        "rationale": "ESR order: equality o, n, d, e.",
+        "shell": "db.c.createIndex({ o: 1, n: 1, d: 1, e: 1 })"
+      }
+    ],
+    "input": {
+      "interpreted": null,
+      "kind": "mongosh"
+    },
+    "iterations": 1,
+    "queries": [
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 3,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 4,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 5,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 6,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 7,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 8,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 9,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 10,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 11,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 12,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 13,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 14,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 15,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 16,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 17,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 18,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "count",
+        "line": 19,
+        "method": "count"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "count",
+        "line": 20,
+        "method": "countDocuments"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "distinct",
+        "line": 21,
+        "method": "distinct"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "write",
+        "line": 22,
+        "method": "findOneAndUpdate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "write",
+        "line": 23,
+        "method": "updateMany"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "write",
+        "line": 24,
+        "method": "deleteMany"
+      },
+      {
+        "collection": "o",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 25,
+        "method": "find"
+      },
+      {
+        "collection": "o",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 26,
+        "method": "find"
+      },
+      {
+        "collection": "o",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 27,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 28,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 29,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 30,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 31,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 32,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 33,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 37,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 38,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 39,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 40,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 41,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 42,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 43,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 44,
+        "method": "aggregate"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "watch",
+        "line": 45,
+        "method": "watch"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "watch",
+        "line": 46,
+        "method": "watch"
+      },
+      {
+        "collection": "my-orders",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 48,
+        "method": "aggregate"
+      },
+      {
+        "collection": "weird coll",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 49,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 50,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 51,
+        "method": "find"
+      },
+      {
+        "collection": "c",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 52,
+        "method": "find"
+      }
+    ],
+    "rewritten": null
+  },
+  "report": "MQL optimizer (static audit) — mongosh-rules.txt: 46 queries, 2 blocking, 3 high, 21 medium, 12 low; 6 rewrite(s) applied in 1 iteration(s)\n\nApplied rewrites (result-preserving):\n  ✓ [P4 or-to-in] $or of equalities on one field (a) is an $in: one index scan with point bounds instead of a subplan per branch, and sort-compatible.\n  ✓ [P4 degenerate-range] t: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans).\n  ✓ [P6 count-all] countDocuments({}) scans the collection or the _id index.\n  ✓ [P5 match-not-early-rewrite] Move $match ahead of $addFields, $sort.\n  ✓ [P5 match-not-early-rewrite] Move $match ahead of $unwind, $project.\n  ✓ [P5 match-not-early-rewrite] Move $match ahead of $sort.\n\nFindings:\n  mongosh-rules.txt:3:48: BLOCKING [P4 string-numeric-compare] qty $gte \"10\" compares strings lexicographically (\"10\" < \"2\"). If the field holds numbers as strings, results are wrong; store numbers as numbers. Reported, not applied.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:9:13: BLOCKING [P4 kv-without-elemmatch] Separate predicates on a.k and a.v can be satisfied by different elements of the a array, so an element k=a,v=1 next to k=b,v=2 matches k=a,v=2. Put both inside { a: { $elemMatch: { k: …, v: … } } } and index { \"a.k\": 1, \"a.v\": 1 }. Reported, not applied: it changes the result set.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:3:13: HIGH [P4 where] $where runs JavaScript per document, cannot use an index, and is deprecated from 8.0. Rewrite with native query operators or $expr.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:37:48: HIGH [P5 group-root] $push: \"$$ROOT\" carries whole documents into $group memory (100 MB per stage). $project only the fields you need first.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  mongosh-rules.txt:37:48: HIGH [P5 push-then-slice] docs builds an unbounded array with $push and a later stage slices it. Use a bounded accumulator ($firstN / $lastN / $topN / $bottomN, 5.2+) so the discarded elements are never held in memory.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  mongosh-rules.txt:4:19: MEDIUM [P4 unanchored-regex] /smith/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:5:19: MEDIUM [P4 case-insensitive-regex] /^smith/i: a case-insensitive regex cannot use tight index bounds even when anchored. Store a normalized lower-case copy, or query with a strength-2 collation that matches an index built with the same collation.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-compound-index-design.md\n  mongosh-rules.txt:6:29: MEDIUM [P4 unanchored-regex] /smith/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:7:29: MEDIUM [P4 case-insensitive-regex] /^ab/i: a case-insensitive regex cannot use tight index bounds even when anchored. Store a normalized lower-case copy, or query with a strength-2 collation that matches an index built with the same collation.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-compound-index-design.md\n  mongosh-rules.txt:8:18: MEDIUM [P4 negation] s: $ne cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:8:35: MEDIUM [P4 negation] t: $nin cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:8:56: MEDIUM [P4 negation] u: $exists: false cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:8:79: MEDIUM [P4 negation] w: $not cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:10:18: MEDIUM [P4 in-blocks-sort] $in with 203 values (>= 201) is planned like a range, so a following sort cannot use SORT_MERGE over the index and becomes a blocking sort. Split the list or keep it under 201 values.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:12:28: MEDIUM [P4 or-to-in] $or of equalities on one field (a) is an $in: one index scan with point bounds instead of a subplan per branch, and sort-compatible.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:13:13: MEDIUM [P4 rooted-or-sort] A top-level $or combined with a sort can pick a blocking SORT instead of merging sorted branch scans (SERVER-19114). Prefer $in where the branches share a field, or give each branch an index whose order matches the sort.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:15:16: MEDIUM [P4 degenerate-range] t: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans). Rewrite to an equality.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:16:13: MEDIUM [P4 expr-unindexable] $expr with $gt is evaluated per document and cannot use index bounds (only a plain $eq/$lt/$lte/$gt/$gte of one field against a constant can). Rewrite with query operators where equivalent, or precompute the value into a field at write time.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:18:1: MEDIUM [P8 deep-skip] skip(5000) walks and discards 5000 index keys or documents on every page, and on a sharded collection mongos asks each shard for limit+skip. Use keyset pagination: sort on a unique key and filter { _id: { $gt: lastSeenId } } with limit().\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n  mongosh-rules.txt:18:1: MEDIUM [P6 tiny-batch] batchSize(2) multiplies getMore round-trips; on a change stream each getMore re-scans the oplog window. Use the default (101 first batch, then up to 16 MiB) or a larger value.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n  mongosh-rules.txt:39:39: MEDIUM [P5 sample-not-first] $sample uses a random cursor only as the first stage; later it reads and sorts the whole input randomly.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  mongosh-rules.txt:40:44: MEDIUM [P5 sort-after-search] $sort after $search materializes every search hit before sorting. Use the $search `sort` option instead.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  mongosh-rules.txt:41:44: MEDIUM [P5 search-overfetch] $limit 5000 after $search over-fetches; size it to the page and use $searchMeta for counts.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  mongosh-rules.txt:42:39: MEDIUM [P8 deep-skip] $skip 2000 still produces and discards 2000 documents per page; use keyset pagination ($match on the last seen sort key).\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n  mongosh-rules.txt:45:13: MEDIUM [P5 changestream-match-first] Put the event-narrowing $match (operationType, ns, fields) first so it is pushed into the oplog scan; otherwise every event flows through the later stages.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  mongosh-rules.txt:47:27: MEDIUM [P4 unanchored-regex] /x/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-rules.txt:13:1: LOW [P6 sort-no-limit] sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n  mongosh-rules.txt:13:13: LOW [P2 or-branch-indexes] The planner uses indexes for an $or only when EVERY branch has a usable index; one unindexed branch turns the whole query into a collection scan. See the per-branch index recommendations.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-compound-index-design.md\n  mongosh-rules.txt:18:1: LOW [P6 sort-no-limit] sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n  mongosh-rules.txt:18:1: LOW [P2 pinned-hint] hint() pins a plan in application code. Compare explain() with and without it; on 8.0+ prefer setQuerySettings (persistent, per query shape) for an intentional pin.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md\n  mongosh-rules.txt:19:1: LOW [P6 legacy-count] count() is deprecated and can be inaccurate on sharded clusters: use countDocuments(filter), or estimatedDocumentCount() for an unfiltered total (reads metadata only).\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n  mongosh-rules.txt:21:1: LOW [P6 distinct-16mb] distinct() returns one document capped at 16 MB and can use DISTINCT_SCAN only with an index led by the field. For large or sharded results use $group.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n  mongosh-rules.txt:26:1: LOW [P6 sort-no-limit] sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n  mongosh-rules.txt:28:65: LOW [P6 sort-no-limit] $sort is a blocking stage (100 MB per stage, then spills). Unless an index supplies the order, follow it with $limit (top-k sort) or slim the stream first.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  mongosh-rules.txt:35:3: LOW [P6 sort-no-limit] $sort is a blocking stage (100 MB per stage, then spills). Unless an index supplies the order, follow it with $limit (top-k sort) or slim the stream first.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  mongosh-rules.txt:37:17: LOW [P5 group-whole-collection] $group as the first stage reads the whole collection on every run. If this is a recurring report, maintain a summary collection ($merge or on-write upsert).\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  mongosh-rules.txt:38:45: LOW [P5 distinct-scan-eligible] $sort + $group with only $first/$last can run as a DISTINCT_SCAN (one index seek per group) when an index matches the sort and group key — keep this shape and confirm with explain().\n      read more: mdbx show skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md\n  mongosh-rules.txt:44:17: LOW [P5 lookup-pipeline] Correlated $lookup pipeline: make sure its $match uses $expr $eq on an indexed field of the foreign collection (or use localField/foreignField with pipeline, 5.0+).\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n\nRecommended indexes (recommend-only — build on non-prod first, check existing indexes):\n  db.c.createIndex({ qty: 1 })\n      ESR order: range qty.\n  db.c.createIndex({ \"a.k\": 1, \"a.v\": 1, \"addr.city\": 1, \"addr.zip\": 1 })\n      ESR order: equality a.k, a.v, addr.city, addr.zip.\n  db.c.createIndex({ b: 1, a: 1 })\n      ESR order: sort b -> range a. If the range is far more selective than the sort saves, test the ERS order (range before sort) with explain() at representative values.\n  db.c.createIndex({ a: 1 })\n      ESR order: equality a.\n  db.c.createIndex({ a: 1, c: 1 })\n      [$or branch { a: 1 }] ESR order: equality a -> sort c.\n  db.c.createIndex({ b: 1, c: 1 })\n      [$or branch { b: 2 }] ESR order: equality b -> sort c.\n  db.c.createIndex({ c: 1 })\n      ESR order: sort c.\n  db.c.createIndex({ t: 1 })\n      ESR order: equality t.\n  db.c.createIndex({ a: 1, b: 1 })\n      ESR order: equality a -> sort b.\n  db.c.createIndex({ a: 1, t: -1 })\n      ESR order: equality a -> sort t. Covers the projection if you add _id: 0 (PROJECTION_COVERED, 0 documents examined).\n  db.c.createIndex({ tenant: 1, state: 1 })\n      ESR order: equality tenant, state.\n  db.c.createIndex({ createdAt: 1 })\n      ESR order: range createdAt.\n  db.o.createIndex({ c: 1, s: -1, t: 1 })\n      ESR order: equality c -> sort s -> range t. If the range is far more selective than the sort saves, test the ERS order (range before sort) with explain() at representative values. Covers the projection (PROJECTION_COVERED, 0 documents examined).\n  db.o.createIndex({ c: 1 })\n      ESR order: equality c. Covers the projection if you add _id: 0 (PROJECTION_COVERED, 0 documents examined).\n  db.c.createIndex({ x: 1 })\n      [leading $match/$sort] ESR order: equality x.\n  db.u.createIndex({ b: 1 })\n      $lookup from c probes u.b once per input document; without this index each probe is a collection scan.\n  db.c.createIndex({ status: 1 })\n      [leading $match/$sort] ESR order: equality status.\n  db.c.createIndex({ x: 1, t: 1 })\n      [leading $match/$sort] ESR order: equality x -> sort t.\n  db.c.createIndex({ k: 1, t: -1 })\n      [leading $match/$sort] ESR order: sort k, t.\n  db.c.createIndex({ operationType: 1 })\n      [leading $match/$sort] ESR order: equality operationType.\n  db.my-orders.createIndex({ b: -1 })\n      [leading $match/$sort] ESR order: sort b.\n  db.weird coll.createIndex({ \"x.y\": 1, z: -1, \"dotted key\": 1 })\n      ESR order: equality x.y -> sort z -> range dotted key. If the range is far more selective than the sort saves, test the ERS order (range before sort) with explain() at representative values.\n  db.c.createIndex({ o: 1, n: 1, d: 1, e: 1 })\n      ESR order: equality o, n, d, e.\n\nRewritten query:\n// One statement per optimizer rule, so the JS port is checked against every rule code.\nuse shop\ndb.c.find({ $where: \"this.a > 1\", qty: { $gte: \"10\" } })\ndb.c.find({ name: /smith/ })\ndb.c.find({ name: /^smith/i })\ndb.c.find({ name: { $regex: \"smith\", $options: \"i\" } })\ndb.c.find({ name: { $regex: /^ab/i } })\ndb.c.find({ s: { $ne: \"x\" }, t: { $nin: [1, 2] }, u: { $exists: false }, w: { $not: /x/ } })\ndb.c.find({ \"a.k\": \"c\", \"a.v\": 1, \"addr.city\": \"x\", \"addr.zip\": 1 })\ndb.c.find({ a: { $in: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202] } }).sort({ b: 1 }).limit(5)\ndb.c.find({ a: { $in: [1, 2, \"x\"] } })\ndb.c.find({ a: { $gt: 0 }, $or: [{ a: 1 }, { a: 2 }] })\ndb.c.find({ $or: [{ a: 1 }, { b: 2 }] }).sort({ c: 1 })\ndb.c.find({ t: 5 })\ndb.c.find({ t: { $gte: 5, $lte: 5, $ne: 3 } })\ndb.c.find({ $expr: { $gt: [\"$a\", \"$b\"] } })\ndb.c.find({ $expr: { $gt: [\"$a\", 5] } })\ndb.c.find({ a: 1 }).sort({ b: 1 }).skip(5000).batchSize(2).hint({ a: 1 })\ndb.c.count({ a: 1 })\ndb.c.estimatedDocumentCount()\ndb.c.distinct(\"k\", { a: 1 })\ndb.c.findOneAndUpdate({ a: 1 }, { $set: { b: 2 } }, { sort: { t: -1 }, projection: { a: 1 } })\ndb.c.updateMany({ tenant: \"t1\", state: { $in: [\"a\", \"b\"] } }, { $set: { x: 1 } })\ndb.c.deleteMany({ createdAt: { $lt: ISODate(\"2025-01-01\") } })\ndb.o.find({ c: 1, t: { $gt: 5 } }, { c: 1, s: 1, t: 1, _id: 0 }).sort({ s: -1 }).limit(5)\ndb.o.find({ c: 1 }, { c: 1 }).sort({ c: 1 })\ndb.o.find({ _id: 5 })\ndb.c.aggregate([{ $match: { x: 1 } }, { $addFields: { d: 1 } }, { $sort: { t: 1 } }])\ndb.c.aggregate([{ $addFields: { d: 1 } }, { $match: { d: 1 } }])\ndb.c.aggregate([{ $lookup: { from: \"u\", localField: \"a\", foreignField: \"b\", as: \"u\" } }, { $match: { \"u.x\": 1 } }])\ndb.c.aggregate([{ $unwind: \"$items\" }, { $match: { \"items.sku\": \"x\" } }])\ndb.c.aggregate([{ $match: { status: \"A\" } }, { $unwind: \"$items\" }, { $project: { a: 1, total: { $sum: \"$x\" } } }])\ndb.c.aggregate([\n  { $match: { x: 1 } },\n  { $sort: { t: 1 } }\n])\ndb.c.aggregate([{ $group: { _id: \"$k\", docs: { $push: \"$$ROOT\" } } }, { $project: { top: { $slice: [\"$docs\", 3] } } }])\ndb.c.aggregate([{ $sort: { k: 1, t: -1 } }, { $group: { _id: \"$k\", last: { $first: \"$v\" } } }])\ndb.c.aggregate([{ $match: { a: 1 } }, { $sample: { size: 5 } }])\ndb.c.aggregate([{ $search: { text: {} } }, { $sort: { a: 1 } }])\ndb.c.aggregate([{ $search: { text: {} } }, { $limit: 5000 }])\ndb.c.aggregate([{ $match: { a: 1 } }, { $skip: 2000 }, { $limit: 10 }])\ndb.c.aggregate([{ $lookup: { from: \"s\", localField: \"a\", foreignField: \"_id\", as: \"x\" } }])\ndb.c.aggregate([{ $lookup: { from: \"s\", let: { a: \"$a\" }, pipeline: [{ $match: { $expr: { $eq: [\"$b\", \"$$a\"] } } }], as: \"x\" } }])\ndb.c.watch([{ $project: { a: 1 } }])\ndb.c.watch([{ $match: { operationType: \"insert\" } }])\nconst p = [{ $match: { a: /x/ } }, { $sort: { b: -1 } }, { $limit: 10 }]\ndb.getCollection(\"my-orders\").aggregate(p)\ndb[\"weird coll\"].find({ \"x.y\": 1, \"dotted key\": { $lt: 5 } }).sort({ z: -1 }).limit(1)\ndb.c.find({ $and: [{ a: 1 }, { b: { $gt: 2 } }], $nor: [{ c: 3 }] })\ndb.c.find({ arr: { $elemMatch: { k: \"a\", v: 1 } }, $text: { $search: \"x\" } })\ndb.c.find({ o: { x: 1, y: 2 }, n: null, d: ObjectId(\"64b0c0ffee\"), e: [1, 2] })\n\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, totalDocsExamined/nReturned near 1, nReturned unchanged."
+}

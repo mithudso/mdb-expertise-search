@@ -1,0 +1,432 @@
+{
+  "apply": {
+    "applied": [
+      {
+        "code": "or-to-in",
+        "message": "$or of equalities on one field (region) is an $in: one index scan with point bounds instead of a subplan per branch, and sort-compatible.",
+        "pass": "P4"
+      },
+      {
+        "code": "degenerate-range",
+        "message": "total: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans). Rewrite to an equality.",
+        "pass": "P4"
+      },
+      {
+        "code": "match-not-early-rewrite",
+        "message": "Move $match ahead of $addFields, $sort.",
+        "pass": "P5"
+      },
+      {
+        "code": "count-all",
+        "message": "countDocuments({}) scans the collection or the _id index. For a whole-collection total use estimatedDocumentCount(), which reads collection metadata.",
+        "pass": "P6"
+      }
+    ],
+    "findings": [
+      {
+        "code": "kv-without-elemmatch",
+        "column": 29,
+        "line": 23,
+        "message": "Separate predicates on attrs.k and attrs.v can be satisfied by different elements of the attrs array, so an element k=a,v=1 next to k=b,v=2 matches k=a,v=2. Put both inside { attrs: { $elemMatch: { k: …, v: … } } } and index { \"attrs.k\": 1, \"attrs.v\": 1 }. Reported, not applied: it changes the result set.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "blocking"
+      },
+      {
+        "code": "string-numeric-compare",
+        "column": 74,
+        "line": 35,
+        "message": "qty $gte \"10\" compares strings lexicographically (\"10\" < \"2\"). If the field holds numbers as strings, results are wrong; store numbers as numbers. Reported, not applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "blocking"
+      },
+      {
+        "code": "group-root",
+        "column": 36,
+        "line": 26,
+        "message": "$push: \"$$ROOT\" carries whole documents into $group memory (100 MB per stage). $project only the fields you need first.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "high"
+      },
+      {
+        "code": "push-then-slice",
+        "column": 36,
+        "line": 26,
+        "message": "docs builds an unbounded array with $push and a later stage slices it. Use a bounded accumulator ($firstN / $lastN / $topN / $bottomN, 5.2+) so the discarded elements are never held in memory.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "high"
+      },
+      {
+        "code": "where",
+        "column": 21,
+        "line": 35,
+        "message": "$where runs JavaScript per document, cannot use an index, and is deprecated from 8.0. Rewrite with native query operators or $expr.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "high"
+      },
+      {
+        "code": "deep-skip",
+        "column": 1,
+        "line": 7,
+        "message": "skip(5000) walks and discards 5000 index keys or documents on every page, and on a sharded collection mongos asks each shard for limit+skip. Use keyset pagination: sort on a unique key and filter { _id: { $gt: lastSeenId } } with limit().",
+        "pass": "P8",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "tiny-batch",
+        "column": 1,
+        "line": 7,
+        "message": "batchSize(2) multiplies getMore round-trips; on a change stream each getMore re-scans the oplog window. Use the default (101 first batch, then up to 16 MiB) or a larger value.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "negation",
+        "column": 13,
+        "line": 8,
+        "message": "status: $ne cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "unanchored-regex",
+        "column": 9,
+        "line": 9,
+        "message": "/smith/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 1,
+        "line": 7,
+        "message": "sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "orders",
+        "keys": {
+          "createdAt": -1,
+          "region": 1,
+          "total": 1
+        },
+        "rationale": "ESR order: equality region, total -> sort createdAt. $in under 201 values keeps the sort index-backed via SORT_MERGE.",
+        "shell": "db.orders.createIndex({ region: 1, total: 1, createdAt: -1 })"
+      },
+      {
+        "collection": "orders",
+        "keys": {
+          "createdAt": 1,
+          "customerId": 1,
+          "total": -1
+        },
+        "rationale": "ESR order: equality customerId -> sort total -> range createdAt. If the range is far more selective than the sort saves, test the ERS order (range before sort) with explain() at representative values. Covers the projection if you add _id: 0 (PROJECTION_COVERED, 0 documents examined).",
+        "shell": "db.orders.createIndex({ customerId: 1, total: -1, createdAt: 1 })"
+      },
+      {
+        "collection": "users",
+        "keys": {
+          "userId": 1
+        },
+        "rationale": "$lookup from events probes users.userId once per input document; without this index each probe is a collection scan.",
+        "shell": "db.users.createIndex({ userId: 1 })"
+      },
+      {
+        "collection": "events",
+        "keys": {
+          "attrs.k": 1,
+          "attrs.v": 1,
+          "tenant": 1
+        },
+        "rationale": "[leading $match/$sort] ESR order: equality tenant, attrs.k, attrs.v.",
+        "shell": "db.events.createIndex({ tenant: 1, \"attrs.k\": 1, \"attrs.v\": 1 })"
+      },
+      {
+        "collection": "inventory",
+        "keys": {
+          "qty": 1
+        },
+        "rationale": "ESR order: range qty.",
+        "shell": "db.inventory.createIndex({ qty: 1 })"
+      }
+    ],
+    "input": {
+      "interpreted": null,
+      "kind": "mongosh"
+    },
+    "iterations": 2,
+    "queries": [
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 7,
+        "method": "find"
+      },
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 15,
+        "method": "find"
+      },
+      {
+        "collection": "events",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 22,
+        "method": "aggregate"
+      },
+      {
+        "collection": "inventory",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 35,
+        "method": "find"
+      }
+    ],
+    "rewritten": "// Run: mdbx optimize examples/slow-queries.mql\n// Each query below carries a common performance defect the static MQL optimizer catches.\nuse shop\n\n// 1. Negation, unanchored case-insensitive regex, same-field $or, degenerate range,\n//    deep skip paging and a tiny batch size — in one find().\ndb.orders.find({\n  status: { $ne: \"cancelled\" },\n  name: /smith/i,\n  region: { $in: [\"EU\", \"US\"] },\n  total: 100\n}).sort({ createdAt: -1 }).skip(5000).batchSize(2)\n\n// 2. A healthy query: the optimizer only recommends the ESR index that also covers the projection.\ndb.orders.find(\n  { customerId: 42, createdAt: { $gt: ISODate(\"2026-01-01\") } },\n  { customerId: 1, total: 1, createdAt: 1 }\n).sort({ total: -1 }).limit(20)\n\n// 3. Pipeline: $match buried after transparent stages, key/value attributes without $elemMatch,\n//    $push of whole documents then $slice, and an unindexed $lookup.\ndb.events.aggregate([\n  { $match: { tenant: \"t1\", \"attrs.k\": \"color\", \"attrs.v\": \"red\" } },\n  { $addFields: { day: { $dateTrunc: { date: \"$ts\", unit: \"day\" } } } },\n  { $sort: { ts: -1 } },\n  { $group: { _id: \"$day\", docs: { $push: \"$$ROOT\" } } },\n  { $project: { top: { $slice: [\"$docs\", 5] } } },\n  { $lookup: { from: \"users\", localField: \"uid\", foreignField: \"userId\", as: \"u\" } }\n])\n\n// 4. Counting everything with a filter-based count.\ndb.orders.estimatedDocumentCount()\n\n// 5. JavaScript predicate and a numeric value compared as a string.\ndb.inventory.find({ $where: \"this.qty > this.reorderLevel\", qty: { $gte: \"10\" } })\n"
+  },
+  "read_only": {
+    "applied": [],
+    "findings": [
+      {
+        "code": "kv-without-elemmatch",
+        "column": 29,
+        "line": 25,
+        "message": "Separate predicates on attrs.k and attrs.v can be satisfied by different elements of the attrs array, so an element k=a,v=1 next to k=b,v=2 matches k=a,v=2. Put both inside { attrs: { $elemMatch: { k: …, v: … } } } and index { \"attrs.k\": 1, \"attrs.v\": 1 }. Reported, not applied: it changes the result set.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "blocking"
+      },
+      {
+        "code": "string-numeric-compare",
+        "column": 74,
+        "line": 35,
+        "message": "qty $gte \"10\" compares strings lexicographically (\"10\" < \"2\"). If the field holds numbers as strings, results are wrong; store numbers as numbers. Reported, not applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "blocking"
+      },
+      {
+        "code": "group-root",
+        "column": 36,
+        "line": 26,
+        "message": "$push: \"$$ROOT\" carries whole documents into $group memory (100 MB per stage). $project only the fields you need first.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "high"
+      },
+      {
+        "code": "push-then-slice",
+        "column": 36,
+        "line": 26,
+        "message": "docs builds an unbounded array with $push and a later stage slices it. Use a bounded accumulator ($firstN / $lastN / $topN / $bottomN, 5.2+) so the discarded elements are never held in memory.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "high"
+      },
+      {
+        "code": "where",
+        "column": 21,
+        "line": 35,
+        "message": "$where runs JavaScript per document, cannot use an index, and is deprecated from 8.0. Rewrite with native query operators or $expr.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "high"
+      },
+      {
+        "code": "deep-skip",
+        "column": 1,
+        "line": 7,
+        "message": "skip(5000) walks and discards 5000 index keys or documents on every page, and on a sharded collection mongos asks each shard for limit+skip. Use keyset pagination: sort on a unique key and filter { _id: { $gt: lastSeenId } } with limit().",
+        "pass": "P8",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "tiny-batch",
+        "column": 1,
+        "line": 7,
+        "message": "batchSize(2) multiplies getMore round-trips; on a change stream each getMore re-scans the oplog window. Use the default (101 first batch, then up to 16 MiB) or a larger value.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "negation",
+        "column": 13,
+        "line": 8,
+        "message": "status: $ne cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "unanchored-regex",
+        "column": 9,
+        "line": 9,
+        "message": "/smith/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "or-to-in",
+        "column": 3,
+        "line": 10,
+        "message": "$or of equalities on one field (region) is an $in: one index scan with point bounds instead of a subplan per branch, and sort-compatible.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "degenerate-range",
+        "column": 10,
+        "line": 11,
+        "message": "total: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans). Rewrite to an equality.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "match-not-early",
+        "column": 3,
+        "line": 25,
+        "message": "This $match reads none of the fields produced by $addFields, $sort, so it can run before them: fewer documents flow through the pipeline and, at the front, it can use an index.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "count-all",
+        "column": 1,
+        "line": 32,
+        "message": "countDocuments({}) scans the collection or the _id index. For a whole-collection total use estimatedDocumentCount(), which reads collection metadata.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 1,
+        "line": 7,
+        "message": "sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 3,
+        "line": 24,
+        "message": "$sort is a blocking stage (100 MB per stage, then spills). Unless an index supplies the order, follow it with $limit (top-k sort) or slim the stream first.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "orders",
+        "keys": {
+          "createdAt": -1,
+          "total": 1
+        },
+        "rationale": "ESR order: equality total -> sort createdAt.",
+        "shell": "db.orders.createIndex({ total: 1, createdAt: -1 })"
+      },
+      {
+        "collection": "orders",
+        "keys": {
+          "createdAt": 1,
+          "customerId": 1,
+          "total": -1
+        },
+        "rationale": "ESR order: equality customerId -> sort total -> range createdAt. If the range is far more selective than the sort saves, test the ERS order (range before sort) with explain() at representative values. Covers the projection if you add _id: 0 (PROJECTION_COVERED, 0 documents examined).",
+        "shell": "db.orders.createIndex({ customerId: 1, total: -1, createdAt: 1 })"
+      },
+      {
+        "collection": "users",
+        "keys": {
+          "userId": 1
+        },
+        "rationale": "$lookup from events probes users.userId once per input document; without this index each probe is a collection scan.",
+        "shell": "db.users.createIndex({ userId: 1 })"
+      },
+      {
+        "collection": "inventory",
+        "keys": {
+          "qty": 1
+        },
+        "rationale": "ESR order: range qty.",
+        "shell": "db.inventory.createIndex({ qty: 1 })"
+      }
+    ],
+    "input": {
+      "interpreted": null,
+      "kind": "mongosh"
+    },
+    "iterations": 1,
+    "queries": [
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 7,
+        "method": "find"
+      },
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 15,
+        "method": "find"
+      },
+      {
+        "collection": "events",
+        "column": 1,
+        "evidence": {},
+        "kind": "aggregate",
+        "line": 22,
+        "method": "aggregate"
+      },
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {},
+        "kind": "count",
+        "line": 32,
+        "method": "countDocuments"
+      },
+      {
+        "collection": "inventory",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 35,
+        "method": "find"
+      }
+    ],
+    "rewritten": null
+  },
+  "report": "MQL optimizer (static audit) — mongosh-examples.txt: 5 queries, 2 blocking, 3 high, 4 medium, 1 low; 4 rewrite(s) applied in 1 iteration(s)\n\nApplied rewrites (result-preserving):\n  ✓ [P4 or-to-in] $or of equalities on one field (region) is an $in: one index scan with point bounds instead of a subplan per branch, and sort-compatible.\n  ✓ [P4 degenerate-range] total: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans).\n  ✓ [P5 match-not-early-rewrite] Move $match ahead of $addFields, $sort.\n  ✓ [P6 count-all] countDocuments({}) scans the collection or the _id index.\n\nFindings:\n  mongosh-examples.txt:23:29: BLOCKING [P4 kv-without-elemmatch] Separate predicates on attrs.k and attrs.v can be satisfied by different elements of the attrs array, so an element k=a,v=1 next to k=b,v=2 matches k=a,v=2. Put both inside { attrs: { $elemMatch: { k: …, v: … } } } and index { \"attrs.k\": 1, \"attrs.v\": 1 }. Reported, not applied: it changes the result set.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-examples.txt:35:74: BLOCKING [P4 string-numeric-compare] qty $gte \"10\" compares strings lexicographically (\"10\" < \"2\"). If the field holds numbers as strings, results are wrong; store numbers as numbers. Reported, not applied.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-examples.txt:26:36: HIGH [P5 group-root] $push: \"$$ROOT\" carries whole documents into $group memory (100 MB per stage). $project only the fields you need first.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  mongosh-examples.txt:26:36: HIGH [P5 push-then-slice] docs builds an unbounded array with $push and a later stage slices it. Use a bounded accumulator ($firstN / $lastN / $topN / $bottomN, 5.2+) so the discarded elements are never held in memory.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  mongosh-examples.txt:35:21: HIGH [P4 where] $where runs JavaScript per document, cannot use an index, and is deprecated from 8.0. Rewrite with native query operators or $expr.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-examples.txt:7:1: MEDIUM [P8 deep-skip] skip(5000) walks and discards 5000 index keys or documents on every page, and on a sharded collection mongos asks each shard for limit+skip. Use keyset pagination: sort on a unique key and filter { _id: { $gt: lastSeenId } } with limit().\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n  mongosh-examples.txt:7:1: MEDIUM [P6 tiny-batch] batchSize(2) multiplies getMore round-trips; on a change stream each getMore re-scans the oplog window. Use the default (101 first batch, then up to 16 MiB) or a larger value.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n  mongosh-examples.txt:8:13: MEDIUM [P4 negation] status: $ne cannot use selective index bounds and also matches documents missing the field. Where the domain is known, match the wanted values positively ($in / equality) — this changes results unless the field is always present, so it is not auto-applied.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-examples.txt:9:9: MEDIUM [P4 unanchored-regex] /smith/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  mongosh-examples.txt:7:1: LOW [P6 sort-no-limit] sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n\nRecommended indexes (recommend-only — build on non-prod first, check existing indexes):\n  db.orders.createIndex({ region: 1, total: 1, createdAt: -1 })\n      ESR order: equality region, total -> sort createdAt. $in under 201 values keeps the sort index-backed via SORT_MERGE.\n  db.orders.createIndex({ customerId: 1, total: -1, createdAt: 1 })\n      ESR order: equality customerId -> sort total -> range createdAt. If the range is far more selective than the sort saves, test the ERS order (range before sort) with explain() at representative values. Covers the projection if you add _id: 0 (PROJECTION_COVERED, 0 documents examined).\n  db.users.createIndex({ userId: 1 })\n      $lookup from events probes users.userId once per input document; without this index each probe is a collection scan.\n  db.events.createIndex({ tenant: 1, \"attrs.k\": 1, \"attrs.v\": 1 })\n      [leading $match/$sort] ESR order: equality tenant, attrs.k, attrs.v.\n  db.inventory.createIndex({ qty: 1 })\n      ESR order: range qty.\n\nRewritten query:\n// Run: mdbx optimize examples/slow-queries.mql\n// Each query below carries a common performance defect the static MQL optimizer catches.\nuse shop\n\n// 1. Negation, unanchored case-insensitive regex, same-field $or, degenerate range,\n//    deep skip paging and a tiny batch size — in one find().\ndb.orders.find({\n  status: { $ne: \"cancelled\" },\n  name: /smith/i,\n  region: { $in: [\"EU\", \"US\"] },\n  total: 100\n}).sort({ createdAt: -1 }).skip(5000).batchSize(2)\n\n// 2. A healthy query: the optimizer only recommends the ESR index that also covers the projection.\ndb.orders.find(\n  { customerId: 42, createdAt: { $gt: ISODate(\"2026-01-01\") } },\n  { customerId: 1, total: 1, createdAt: 1 }\n).sort({ total: -1 }).limit(20)\n\n// 3. Pipeline: $match buried after transparent stages, key/value attributes without $elemMatch,\n//    $push of whole documents then $slice, and an unindexed $lookup.\ndb.events.aggregate([\n  { $match: { tenant: \"t1\", \"attrs.k\": \"color\", \"attrs.v\": \"red\" } },\n  { $addFields: { day: { $dateTrunc: { date: \"$ts\", unit: \"day\" } } } },\n  { $sort: { ts: -1 } },\n  { $group: { _id: \"$day\", docs: { $push: \"$$ROOT\" } } },\n  { $project: { top: { $slice: [\"$docs\", 5] } } },\n  { $lookup: { from: \"users\", localField: \"uid\", foreignField: \"userId\", as: \"u\" } }\n])\n\n// 4. Counting everything with a filter-based count.\ndb.orders.estimatedDocumentCount()\n\n// 5. JavaScript predicate and a numeric value compared as a string.\ndb.inventory.find({ $where: \"this.qty > this.reorderLevel\", qty: { $gte: \"10\" } })\n\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, totalDocsExamined/nReturned near 1, nReturned unchanged."
+}

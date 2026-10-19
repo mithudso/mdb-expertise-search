@@ -22,3 +22,5 @@
    recently in another session."
 5. "Add more examples of what this can do and why someone should use it to the readme, and create a customer facing
    demo doc showcasing this as a skill. Also would a chrome extension be helpful?"
+6. "1. Yes, I would like the TSE team to be able to use it with cases. Make it so you can highlight a query and
+   then click the extension and it'll run the optimizer on it . 2. yes copy it [~/.config/mdbx redaction config]"

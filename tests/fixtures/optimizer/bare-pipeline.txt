@@ -1,0 +1,8 @@
+[
+  { "$lookup": { "from": "stores", "localField": "storeId", "foreignField": "storeId", "as": "store" } },
+  { "$match": { "region": "EMEA" } },
+  { "$sort": { "amount": -1 } },
+  { "$group": { "_id": "$storeId", "sales": { "$push": "$$ROOT" } } },
+  { "$project": { "top": { "$slice": ["$sales", 3] } } },
+  { "$sample": { "size": 5 } }
+]

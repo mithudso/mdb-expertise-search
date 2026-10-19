@@ -1,0 +1,259 @@
+{
+  "apply": {
+    "applied": [
+      {
+        "code": "match-not-early-rewrite",
+        "message": "Move $match ahead of $addFields.",
+        "pass": "P5"
+      },
+      {
+        "code": "degenerate-range",
+        "message": "total: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans). Rewrite to an equality.",
+        "pass": "P4"
+      }
+    ],
+    "findings": [
+      {
+        "code": "log-collscan",
+        "column": 1,
+        "line": 1,
+        "message": "The logged plan was COLLSCAN: every document was read. The index recommendations below target this query shape.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "high"
+      },
+      {
+        "code": "log-scan-ratio",
+        "column": 1,
+        "line": 1,
+        "message": "docsExamined 920114 vs nreturned 31 (about 29681:1): the query reads far more documents than it returns. The target is close to 1:1.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "high"
+      },
+      {
+        "code": "log-scan-ratio",
+        "column": 1,
+        "line": 2,
+        "message": "docsExamined 40211 vs nreturned 2 (about 20106:1): the query reads far more documents than it returns. The target is close to 1:1.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "high"
+      },
+      {
+        "code": "log-replanned",
+        "column": 1,
+        "line": 1,
+        "message": "replanned (cached plan was less efficient than expected): the cached plan stopped fitting, a sign of near-tied indexes. Design one index that clearly wins for this shape.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md",
+        "severity": "medium"
+      },
+      {
+        "code": "tiny-batch",
+        "column": 1,
+        "line": 2,
+        "message": "batchSize(2) multiplies getMore round-trips; on a change stream each getMore re-scans the oplog window. Use the default (101 first batch, then up to 16 MiB) or a larger value.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 1,
+        "line": 2,
+        "message": "sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "events",
+        "keys": {
+          "tenant": 1,
+          "type": 1
+        },
+        "rationale": "[leading $match/$sort] ESR order: equality tenant, type.",
+        "shell": "db.events.createIndex({ tenant: 1, type: 1 })"
+      },
+      {
+        "collection": "orders",
+        "keys": {
+          "createdAt": -1,
+          "region": 1,
+          "total": 1
+        },
+        "rationale": "ESR order: equality region, total -> sort createdAt. $in under 201 values keeps the sort index-backed via SORT_MERGE.",
+        "shell": "db.orders.createIndex({ region: 1, total: 1, createdAt: -1 })"
+      }
+    ],
+    "input": {
+      "interpreted": "db.events.aggregate([{\"$addFields\":{\"day\":{\"$dateTrunc\":{\"date\":\"$ts\",\"unit\":\"day\"}}}},{\"$match\":{\"tenant\":\"t-42\",\"type\":{\"$in\":[\"click\",\"view\"]}}},{\"$group\":{\"_id\":\"$day\",\"n\":{\"$sum\":1}}}])\ndb.orders.find({\"region\":{\"$in\":[\"EU\",\"US\"]},\"total\":{\"$gte\":100,\"$lte\":100}}).sort({\"createdAt\":-1}).batchSize(2)\n",
+      "kind": "log"
+    },
+    "iterations": 2,
+    "queries": [
+      {
+        "collection": "events",
+        "column": 1,
+        "evidence": {
+          "docsExamined": 920114,
+          "durationMillis": 2210,
+          "keysExamined": 0,
+          "nreturned": 31,
+          "planSummary": "COLLSCAN",
+          "replanReason": "cached plan was less efficient than expected",
+          "replanned": true
+        },
+        "kind": "aggregate",
+        "line": 1,
+        "method": "aggregate"
+      },
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {
+          "docsExamined": 40211,
+          "durationMillis": 640,
+          "keysExamined": 40211,
+          "nreturned": 2,
+          "planSummary": "IXSCAN { region: 1 }"
+        },
+        "kind": "find",
+        "line": 2,
+        "method": "find"
+      }
+    ],
+    "rewritten": "db.events.aggregate([{\"$match\":{\"tenant\":\"t-42\",\"type\":{\"$in\":[\"click\",\"view\"]}}}, {\"$addFields\":{\"day\":{\"$dateTrunc\":{\"date\":\"$ts\",\"unit\":\"day\"}}}}, {\"$group\":{\"_id\":\"$day\",\"n\":{\"$sum\":1}}}])\ndb.orders.find({\"region\":{\"$in\":[\"EU\",\"US\"]},\"total\":100}).sort({\"createdAt\":-1}).batchSize(2)\n"
+  },
+  "read_only": {
+    "applied": [],
+    "findings": [
+      {
+        "code": "log-collscan",
+        "column": 1,
+        "line": 1,
+        "message": "The logged plan was COLLSCAN: every document was read. The index recommendations below target this query shape.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "high"
+      },
+      {
+        "code": "log-scan-ratio",
+        "column": 1,
+        "line": 1,
+        "message": "docsExamined 920114 vs nreturned 31 (about 29681:1): the query reads far more documents than it returns. The target is close to 1:1.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "high"
+      },
+      {
+        "code": "log-scan-ratio",
+        "column": 1,
+        "line": 2,
+        "message": "docsExamined 40211 vs nreturned 2 (about 20106:1): the query reads far more documents than it returns. The target is close to 1:1.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "high"
+      },
+      {
+        "code": "log-replanned",
+        "column": 1,
+        "line": 1,
+        "message": "replanned (cached plan was less efficient than expected): the cached plan stopped fitting, a sign of near-tied indexes. Design one index that clearly wins for this shape.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md",
+        "severity": "medium"
+      },
+      {
+        "code": "match-not-early",
+        "column": 88,
+        "line": 1,
+        "message": "This $match reads none of the fields produced by $addFields, so it can run before them: fewer documents flow through the pipeline and, at the front, it can use an index.",
+        "pass": "P5",
+        "ref": "skills/mongodb-expert/references/mongodb-aggregation-pipeline.md",
+        "severity": "medium"
+      },
+      {
+        "code": "tiny-batch",
+        "column": 1,
+        "line": 2,
+        "message": "batchSize(2) multiplies getMore round-trips; on a change stream each getMore re-scans the oplog window. Use the default (101 first batch, then up to 16 MiB) or a larger value.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "medium"
+      },
+      {
+        "code": "degenerate-range",
+        "column": 54,
+        "line": 2,
+        "message": "total: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans). Rewrite to an equality.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      },
+      {
+        "code": "sort-no-limit",
+        "column": 1,
+        "line": 2,
+        "message": "sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.",
+        "pass": "P6",
+        "ref": "skills/mongodb-expert/references/mongodb-query-performance.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "orders",
+        "keys": {
+          "createdAt": -1,
+          "region": 1,
+          "total": 1
+        },
+        "rationale": "ESR order: equality region, total -> sort createdAt. $in under 201 values keeps the sort index-backed via SORT_MERGE.",
+        "shell": "db.orders.createIndex({ region: 1, total: 1, createdAt: -1 })"
+      }
+    ],
+    "input": {
+      "interpreted": "db.events.aggregate([{\"$addFields\":{\"day\":{\"$dateTrunc\":{\"date\":\"$ts\",\"unit\":\"day\"}}}},{\"$match\":{\"tenant\":\"t-42\",\"type\":{\"$in\":[\"click\",\"view\"]}}},{\"$group\":{\"_id\":\"$day\",\"n\":{\"$sum\":1}}}])\ndb.orders.find({\"region\":{\"$in\":[\"EU\",\"US\"]},\"total\":{\"$gte\":100,\"$lte\":100}}).sort({\"createdAt\":-1}).batchSize(2)\n",
+      "kind": "log"
+    },
+    "iterations": 1,
+    "queries": [
+      {
+        "collection": "events",
+        "column": 1,
+        "evidence": {
+          "docsExamined": 920114,
+          "durationMillis": 2210,
+          "keysExamined": 0,
+          "nreturned": 31,
+          "planSummary": "COLLSCAN",
+          "replanReason": "cached plan was less efficient than expected",
+          "replanned": true
+        },
+        "kind": "aggregate",
+        "line": 1,
+        "method": "aggregate"
+      },
+      {
+        "collection": "orders",
+        "column": 1,
+        "evidence": {
+          "docsExamined": 40211,
+          "durationMillis": 640,
+          "keysExamined": 40211,
+          "nreturned": 2,
+          "planSummary": "IXSCAN { region: 1 }"
+        },
+        "kind": "find",
+        "line": 2,
+        "method": "find"
+      }
+    ],
+    "rewritten": null
+  },
+  "report": "MQL optimizer (static audit) — slowlog-multi.txt: 2 queries, 3 high, 2 medium, 1 low; 2 rewrite(s) applied in 1 iteration(s)\n\nInterpreted the input (slow-query log line) as:\ndb.events.aggregate([{\"$addFields\":{\"day\":{\"$dateTrunc\":{\"date\":\"$ts\",\"unit\":\"day\"}}}},{\"$match\":{\"tenant\":\"t-42\",\"type\":{\"$in\":[\"click\",\"view\"]}}},{\"$group\":{\"_id\":\"$day\",\"n\":{\"$sum\":1}}}])\ndb.orders.find({\"region\":{\"$in\":[\"EU\",\"US\"]},\"total\":{\"$gte\":100,\"$lte\":100}}).sort({\"createdAt\":-1}).batchSize(2)\n  query 1 evidence: planSummary=COLLSCAN, durationMillis=2210, keysExamined=0, docsExamined=920114, nreturned=31\n  query 2 evidence: planSummary=IXSCAN { region: 1 }, durationMillis=640, keysExamined=40211, docsExamined=40211, nreturned=2\n\nApplied rewrites (result-preserving):\n  ✓ [P5 match-not-early-rewrite] Move $match ahead of $addFields.\n  ✓ [P4 degenerate-range] total: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans).\n\nFindings:\n  slowlog-multi.txt:1:1: HIGH [P9 log-collscan] The logged plan was COLLSCAN: every document was read. The index recommendations below target this query shape.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md\n  slowlog-multi.txt:1:1: HIGH [P9 log-scan-ratio] docsExamined 920114 vs nreturned 31 (about 29681:1): the query reads far more documents than it returns. The target is close to 1:1.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md\n  slowlog-multi.txt:2:1: HIGH [P9 log-scan-ratio] docsExamined 40211 vs nreturned 2 (about 20106:1): the query reads far more documents than it returns. The target is close to 1:1.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md\n  slowlog-multi.txt:1:1: MEDIUM [P9 log-replanned] replanned (cached plan was less efficient than expected): the cached plan stopped fitting, a sign of near-tied indexes. Design one index that clearly wins for this shape.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md\n  slowlog-multi.txt:2:1: MEDIUM [P6 tiny-batch] batchSize(2) multiplies getMore round-trips; on a change stream each getMore re-scans the oplog window. Use the default (101 first batch, then up to 16 MiB) or a larger value.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n  slowlog-multi.txt:2:1: LOW [P6 sort-no-limit] sort() without limit(): if no index supplies this order, the whole result is sorted in memory (100 MB blocking-sort cap; spills or fails). Back the sort with an index or add a limit.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-performance.md\n\nRecommended indexes (recommend-only — build on non-prod first, check existing indexes):\n  db.events.createIndex({ tenant: 1, type: 1 })\n      [leading $match/$sort] ESR order: equality tenant, type.\n  db.orders.createIndex({ region: 1, total: 1, createdAt: -1 })\n      ESR order: equality region, total -> sort createdAt. $in under 201 values keeps the sort index-backed via SORT_MERGE.\n\nRewritten query:\ndb.events.aggregate([{\"$match\":{\"tenant\":\"t-42\",\"type\":{\"$in\":[\"click\",\"view\"]}}}, {\"$addFields\":{\"day\":{\"$dateTrunc\":{\"date\":\"$ts\",\"unit\":\"day\"}}}}, {\"$group\":{\"_id\":\"$day\",\"n\":{\"$sum\":1}}}])\ndb.orders.find({\"region\":{\"$in\":[\"EU\",\"US\"]},\"total\":100}).sort({\"createdAt\":-1}).batchSize(2)\n\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, totalDocsExamined/nReturned near 1, nReturned unchanged."
+}

@@ -25,5 +25,8 @@ jobs:
       - name: Optimizer smoke test on the example file
         run: mdbx optimize --read-only examples/slow-queries.mql || test $? -eq 1
       - run: cd editors/vscode && npm install --ignore-scripts && npm test
+      - name: Chrome extension (JS optimizer parity with Python goldens + UI units)
+        run: cd editors/chrome && npm test
+      - run: python scripts/package_chrome_extension.py
       - name: Index doc paths exist
         run: python scripts/check_doc_indexes.py

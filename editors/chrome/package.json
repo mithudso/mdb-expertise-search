@@ -1,0 +1,11 @@
+{
+  "name": "mql-optimizer-chrome",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chrome extension: highlight a MongoDB query, slow-query log line or pipeline and run the static MQL optimizer on it, entirely in the browser.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

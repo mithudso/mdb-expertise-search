@@ -1,0 +1,129 @@
+{
+  "apply": {
+    "applied": [],
+    "findings": [
+      {
+        "code": "string-numeric-compare",
+        "column": 72,
+        "line": 1,
+        "message": "price $lt \"50\" compares strings lexicographically (\"10\" < \"2\"). If the field holds numbers as strings, results are wrong; store numbers as numbers. Reported, not applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "blocking"
+      },
+      {
+        "code": "log-collscan",
+        "column": 1,
+        "line": 1,
+        "message": "The logged plan was COLLSCAN: every document was read. The index recommendations below target this query shape.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "high"
+      },
+      {
+        "code": "unanchored-regex",
+        "column": 45,
+        "line": 1,
+        "message": "/XL$/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "products",
+        "keys": {
+          "price": 1
+        },
+        "rationale": "ESR order: range price.",
+        "shell": "db.products.createIndex({ price: 1 })"
+      }
+    ],
+    "input": {
+      "interpreted": "db.products.updateMany({ \"sku\": { \"$regex\": \"XL$\" }, \"price\": { \"$lt\": \"50\" } }, { \"$set\": { \"onSale\": true } })\n",
+      "kind": "profile"
+    },
+    "iterations": 1,
+    "queries": [
+      {
+        "collection": "products",
+        "column": 1,
+        "evidence": {
+          "docsExamined": 51200,
+          "durationMillis": 812,
+          "keysExamined": 0,
+          "planSummary": "COLLSCAN"
+        },
+        "kind": "write",
+        "line": 1,
+        "method": "updateMany"
+      }
+    ],
+    "rewritten": null
+  },
+  "read_only": {
+    "applied": [],
+    "findings": [
+      {
+        "code": "string-numeric-compare",
+        "column": 72,
+        "line": 1,
+        "message": "price $lt \"50\" compares strings lexicographically (\"10\" < \"2\"). If the field holds numbers as strings, results are wrong; store numbers as numbers. Reported, not applied.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "blocking"
+      },
+      {
+        "code": "log-collscan",
+        "column": 1,
+        "line": 1,
+        "message": "The logged plan was COLLSCAN: every document was read. The index recommendations below target this query shape.",
+        "pass": "P9",
+        "ref": "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md",
+        "severity": "high"
+      },
+      {
+        "code": "unanchored-regex",
+        "column": 45,
+        "line": 1,
+        "message": "/XL$/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "medium"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "products",
+        "keys": {
+          "price": 1
+        },
+        "rationale": "ESR order: range price.",
+        "shell": "db.products.createIndex({ price: 1 })"
+      }
+    ],
+    "input": {
+      "interpreted": "db.products.updateMany({ \"sku\": { \"$regex\": \"XL$\" }, \"price\": { \"$lt\": \"50\" } }, { \"$set\": { \"onSale\": true } })\n",
+      "kind": "profile"
+    },
+    "iterations": 1,
+    "queries": [
+      {
+        "collection": "products",
+        "column": 1,
+        "evidence": {
+          "docsExamined": 51200,
+          "durationMillis": 812,
+          "keysExamined": 0,
+          "planSummary": "COLLSCAN"
+        },
+        "kind": "write",
+        "line": 1,
+        "method": "updateMany"
+      }
+    ],
+    "rewritten": null
+  },
+  "report": "MQL optimizer (static audit) — profiler-update.txt: 1 query, 1 blocking, 1 high, 1 medium\n\nInterpreted the input (profiler entry) as:\ndb.products.updateMany({ \"sku\": { \"$regex\": \"XL$\" }, \"price\": { \"$lt\": \"50\" } }, { \"$set\": { \"onSale\": true } })\n  query 1 evidence: planSummary=COLLSCAN, durationMillis=812, keysExamined=0, docsExamined=51200\n\nFindings:\n  profiler-update.txt:1:72: BLOCKING [P4 string-numeric-compare] price $lt \"50\" compares strings lexicographically (\"10\" < \"2\"). If the field holds numbers as strings, results are wrong; store numbers as numbers. Reported, not applied.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  profiler-update.txt:1:1: HIGH [P9 log-collscan] The logged plan was COLLSCAN: every document was read. The index recommendations below target this query shape.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md\n  profiler-update.txt:1:45: MEDIUM [P4 unanchored-regex] /XL$/ is not anchored, so it scans every index key (or document). Anchor it with ^ if the value is a prefix, or use Atlas Search for substring / full-text matching.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n\nRecommended indexes (recommend-only — build on non-prod first, check existing indexes):\n  db.products.createIndex({ price: 1 })\n      ESR order: range price.\n\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, totalDocsExamined/nReturned near 1, nReturned unchanged."
+}

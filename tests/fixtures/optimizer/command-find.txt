@@ -1,0 +1,1 @@
+{ find: "users", filter: { "attrs.name": "plan", "attrs.value": "gold", lastLogin: { $lt: ISODate("2026-01-01") } }, projection: { email: 1, lastLogin: 1, _id: 0 }, sort: { lastLogin: -1 }, limit: 100, hint: { lastLogin: 1 } }

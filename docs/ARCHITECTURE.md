@@ -29,6 +29,13 @@ MQL text ──parser.py──▶ analyze.py (lint) ────────┐
    `mdbx show`. The CLI, the MCP tool and the language server call the same `optimize()`.
 
 ## Decisions
+
+- **Optimizer input normalization (0.5.0).** Case text is mostly log lines, profiler entries and command
+  documents, so `normalize.py` turns them into mongosh calls before the audit, copying values from the
+  source text (relaxed JSON and mongosh literals survive) and keeping log measurements as P9 evidence.
+- **Chrome extension as a JS port, not Pyodide (0.5.0).** A ~70 KB dependency-free port loads instantly
+  and needs no `wasm-unsafe-eval`; drift is prevented by golden files and a cross-implementation test
+  rather than by sharing one runtime.
 - **One SQLite file** holds text, FTS and vectors: no server, trivially portable.
 - **Vectors keyed by text digest**: identical text copied across skills is embedded once.
 - **NumPy brute-force cosine**: ~7k vectors × 768 dims fits in memory (~20 MB); no ANN index needed.

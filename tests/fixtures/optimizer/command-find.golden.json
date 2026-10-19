@@ -1,0 +1,105 @@
+{
+  "apply": {
+    "applied": [],
+    "findings": [
+      {
+        "code": "kv-without-elemmatch",
+        "column": 17,
+        "line": 1,
+        "message": "Separate predicates on attrs.name and attrs.value can be satisfied by different elements of the attrs array, so an element name=a,value=1 next to name=b,value=2 matches name=a,value=2. Put both inside { attrs: { $elemMatch: { name: …, value: … } } } and index { \"attrs.name\": 1, \"attrs.value\": 1 }. Reported, not applied: it changes the result set.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "blocking"
+      },
+      {
+        "code": "pinned-hint",
+        "column": 1,
+        "line": 1,
+        "message": "hint() pins a plan in application code. Compare explain() with and without it; on 8.0+ prefer setQuerySettings (persistent, per query shape) for an intentional pin.",
+        "pass": "P2",
+        "ref": "skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "users",
+        "keys": {
+          "attrs.name": 1,
+          "attrs.value": 1,
+          "lastLogin": -1
+        },
+        "rationale": "ESR order: equality attrs.name, attrs.value -> sort lastLogin. The sort key lastLogin also serves its range predicate.",
+        "shell": "db.users.createIndex({ \"attrs.name\": 1, \"attrs.value\": 1, lastLogin: -1 })"
+      }
+    ],
+    "input": {
+      "interpreted": "db.users.find({ \"attrs.name\": \"plan\", \"attrs.value\": \"gold\", lastLogin: { $lt: ISODate(\"2026-01-01\") } }, { email: 1, lastLogin: 1, _id: 0 }).sort({ lastLogin: -1 }).limit(100).hint({ lastLogin: 1 })\n",
+      "kind": "command"
+    },
+    "iterations": 1,
+    "queries": [
+      {
+        "collection": "users",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 1,
+        "method": "find"
+      }
+    ],
+    "rewritten": null
+  },
+  "read_only": {
+    "applied": [],
+    "findings": [
+      {
+        "code": "kv-without-elemmatch",
+        "column": 17,
+        "line": 1,
+        "message": "Separate predicates on attrs.name and attrs.value can be satisfied by different elements of the attrs array, so an element name=a,value=1 next to name=b,value=2 matches name=a,value=2. Put both inside { attrs: { $elemMatch: { name: …, value: … } } } and index { \"attrs.name\": 1, \"attrs.value\": 1 }. Reported, not applied: it changes the result set.",
+        "pass": "P4",
+        "ref": "skills/mongodb-expert/references/mongodb-query-shape-optimization.md",
+        "severity": "blocking"
+      },
+      {
+        "code": "pinned-hint",
+        "column": 1,
+        "line": 1,
+        "message": "hint() pins a plan in application code. Compare explain() with and without it; on 8.0+ prefer setQuerySettings (persistent, per query shape) for an intentional pin.",
+        "pass": "P2",
+        "ref": "skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md",
+        "severity": "low"
+      }
+    ],
+    "indexes": [
+      {
+        "collection": "users",
+        "keys": {
+          "attrs.name": 1,
+          "attrs.value": 1,
+          "lastLogin": -1
+        },
+        "rationale": "ESR order: equality attrs.name, attrs.value -> sort lastLogin. The sort key lastLogin also serves its range predicate.",
+        "shell": "db.users.createIndex({ \"attrs.name\": 1, \"attrs.value\": 1, lastLogin: -1 })"
+      }
+    ],
+    "input": {
+      "interpreted": "db.users.find({ \"attrs.name\": \"plan\", \"attrs.value\": \"gold\", lastLogin: { $lt: ISODate(\"2026-01-01\") } }, { email: 1, lastLogin: 1, _id: 0 }).sort({ lastLogin: -1 }).limit(100).hint({ lastLogin: 1 })\n",
+      "kind": "command"
+    },
+    "iterations": 1,
+    "queries": [
+      {
+        "collection": "users",
+        "column": 1,
+        "evidence": {},
+        "kind": "find",
+        "line": 1,
+        "method": "find"
+      }
+    ],
+    "rewritten": null
+  },
+  "report": "MQL optimizer (static audit) — command-find.txt: 1 query, 1 blocking, 1 low\n\nInterpreted the input (command document) as:\ndb.users.find({ \"attrs.name\": \"plan\", \"attrs.value\": \"gold\", lastLogin: { $lt: ISODate(\"2026-01-01\") } }, { email: 1, lastLogin: 1, _id: 0 }).sort({ lastLogin: -1 }).limit(100).hint({ lastLogin: 1 })\n\nFindings:\n  command-find.txt:1:17: BLOCKING [P4 kv-without-elemmatch] Separate predicates on attrs.name and attrs.value can be satisfied by different elements of the attrs array, so an element name=a,value=1 next to name=b,value=2 matches name=a,value=2. Put both inside { attrs: { $elemMatch: { name: …, value: … } } } and index { \"attrs.name\": 1, \"attrs.value\": 1 }. Reported, not applied: it changes the result set.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-query-shape-optimization.md\n  command-find.txt:1:1: LOW [P2 pinned-hint] hint() pins a plan in application code. Compare explain() with and without it; on 8.0+ prefer setQuerySettings (persistent, per query shape) for an intentional pin.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-advanced-explain-and-planner-changes.md\n\nRecommended indexes (recommend-only — build on non-prod first, check existing indexes):\n  db.users.createIndex({ \"attrs.name\": 1, \"attrs.value\": 1, lastLogin: -1 })\n      ESR order: equality attrs.name, attrs.value -> sort lastLogin. The sort key lastLogin also serves its range predicate.\n\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, totalDocsExamined/nReturned near 1, nReturned unchanged."
+}

@@ -41,7 +41,11 @@ db.events.find({ type: { $in: ["click", "view"] }, ts: 5 }).sort({ ts: -1 }).lim
 ```
 
 It audits `find`, `aggregate`, `count`/`countDocuments`, `distinct`, update/delete filters and change-stream
-pipelines, including pipelines stored in `const` variables. Rules come from the deep MQL query optimizer skill
+pipelines, including pipelines stored in `const` variables. It also reads what you paste from a case:
+**slow-query log lines** (several at once; `getMore` lines use `originatingCommand`), **profiler entries**,
+**command documents** (`{ find: …, filter: …, sort: … }`) and bare filters or pipelines — and turns the
+logged measurements into evidence findings (COLLSCAN, `docsExamined` ≫ `nreturned`, in-memory sort, disk
+spill, replanning, duration pinned at `maxTimeMS`). Rules come from the deep MQL query optimizer skill
 (passes P2 index use, P4 operator anti-patterns, P5 stage order, P6 sort/cursor cost, P7 projection,
 P8 pagination). Among them:
 
@@ -127,6 +131,13 @@ diagnosis and query optimization. See [docs/RECIPES.md](docs/RECIPES.md).
 
 `mdbx tui` — search with mode/kind cycling, MongoDB-area facets, topic hotkeys and a recipe browser.
 
+### 7. Optimize from any web page (Chrome extension)
+
+Highlight a query or slow-query log line in a case, ticket or chat, then click the toolbar icon (or
+**Alt+Shift+O**, or right-click → **Optimize selected MQL**). The popup shows findings, log evidence,
+safe rewrites and index recommendations, with **Copy as Markdown** for the case note. Runs locally,
+no network access, `activeTab` only. Install and team rollout: [editors/chrome/README.md](editors/chrome/README.md).
+
 ## Quick start
 
 ```bash
@@ -145,7 +156,7 @@ ollama pull nomic-embed-text            # optional; enables semantic search
 |---|---|
 | `mdbx index [--skip-semantic]` | Build the FTS5 index and embed any new chunks (resumable) |
 | `mdbx search QUERY [-m hybrid\|keyword\|semantic] [-k skill\|llms\|memory\|recipe] [-s SOURCE] [-n N] [--full] [--json]` | Search |
-| `mdbx optimize FILE [--read-only] [--write] [--json]` | Static MQL query optimizer (`-` for stdin; alias `opt`); exit 1 on high/blocking |
+| `mdbx optimize FILE [--read-only] [--write] [--json]` | Static MQL query optimizer for mongosh, log lines, profiler entries, commands (`-` for stdin; alias `opt`); exit 1 on high/blocking |
 | `mdbx lint FILE` | Lint MQL (`-` for stdin); exit 1 on errors |
 | `mdbx show PATH` | Print a corpus file (path as shown in results) |
 | `mdbx stats [--sources]` | Index statistics |
@@ -181,7 +192,7 @@ Point `MDBX_CORPUS` at any directory of `.md` / `.txt` files to index your own m
 
 ## Docs
 
-[Optimizer demo](docs/DEMO-mql-optimizer.md) · [Recipes](docs/RECIPES.md) · [LSP](docs/LSP.md) · [VS Code](editors/vscode/README.md) · [MCP](docs/MCP.md) · [Architecture](docs/ARCHITECTURE.md) · [Development](docs/DEVELOPMENT.md) ·
+[Optimizer demo](docs/DEMO-mql-optimizer.md) · [Chrome extension](editors/chrome/README.md) · [Recipes](docs/RECIPES.md) · [LSP](docs/LSP.md) · [VS Code](editors/vscode/README.md) · [MCP](docs/MCP.md) · [Architecture](docs/ARCHITECTURE.md) · [Development](docs/DEVELOPMENT.md) ·
 [Components](docs/COMPONENTS.md) · [Testing](docs/TESTING.md) · [Installation](docs/INSTALLATION.md) ·
 [Security](docs/SECURITY.md) · [Known issues](docs/known-issues.md) · [Onboarding](docs/onboarding.md)
 
