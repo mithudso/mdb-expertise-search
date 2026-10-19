@@ -24,3 +24,4 @@
    demo doc showcasing this as a skill. Also would a chrome extension be helpful?"
 6. "1. Yes, I would like the TSE team to be able to use it with cases. Make it so you can highlight a query and
    then click the extension and it'll run the optimizer on it . 2. yes copy it [~/.config/mdbx redaction config]"
+7. "mdbx tui -> zsh: command not found: mdbx" (installed as uv tool; README global-install section)

@@ -150,6 +150,14 @@ ollama pull nomic-embed-text            # optional; enables semantic search
 .venv/bin/mdbx tui
 ```
 
+To get `mdbx` (and `mql-lsp`) on your PATH everywhere, install it as an editable tool instead; it still
+reads this checkout's `corpus/` and `data/`, and picks up `git pull` changes without reinstalling:
+
+```bash
+uv tool install --editable '.[all]'     # or: pipx install --editable '.[all]'  -> ~/.local/bin/mdbx
+mdbx index && mdbx tui
+```
+
 ## Commands
 
 | Command | Purpose |
