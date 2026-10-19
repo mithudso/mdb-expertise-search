@@ -85,3 +85,12 @@ pre {
 .foot { padding: 8px 14px 12px; color: var(--muted); font-size: 11px; border-top: 1px solid var(--line); }
 code { font-family: var(--mono); }
 a { color: var(--accent); }
+.ask { display: flex; gap: 6px; padding: 8px 14px 0; }
+.ask input { flex: 1; min-width: 0; font: 13px var(--sans); padding: 5px 8px; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.hits { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
+.hits a { font-weight: 600; }
+.snip { font-size: 12px; overflow-wrap: anywhere; }
+mark { background: #fff1a8; color: inherit; border-radius: 2px; }
+@media (prefers-color-scheme: dark) { mark { background: #5a4b00; } }
+.finding .links { display: flex; gap: 12px; font-size: 12px; }
+.index p { margin: 0; }

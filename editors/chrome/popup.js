@@ -1,8 +1,9 @@
-// popup — capture the highlighted query, run the optimizer locally and render the report.
+// popup — capture the highlighted text; optimize it when it is a query, otherwise search the corpus for it.
 import { clamp, freshPending, grabSelection, pickSelection } from "./lib/capture.js";
-import { docFor, ESR_DOC } from "./lib/docs.js";
 import { optimize } from "./lib/optimize.js";
-import { kindLabel, scanRatio, severityCounts, toMarkdown } from "./lib/report.js";
+import { getIndex } from "./lib/store.js";
+import { snippet } from "./lib/textsearch.js";
+import { h, renderReport } from "./lib/ui.js";
 
 const EXAMPLE = '{"t":{"$date":"2026-10-14T09:12:44.118+00:00"},"s":"I","c":"COMMAND","id":51803,"msg":"Slow query",' +
   '"attr":{"ns":"shop.orders","command":{"find":"orders","filter":{"customerId":4711,"status":{"$ne":"cancelled"}},' +
@@ -11,22 +12,6 @@ const EXAMPLE = '{"t":{"$date":"2026-10-14T09:12:44.118+00:00"},"s":"I","c":"COM
 
 const $ = (id) => document.getElementById(id);
 
-/** Build a DOM element. Children are nodes or strings (always inserted as text, never as HTML). */
-function h(tag, attrs = {}, ...children) {
-  const el = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v === null || v === undefined || v === false) continue;
-    if (k === "class") el.className = v;
-    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
-    else el.setAttribute(k, v === true ? "" : String(v));
-  }
-  for (const c of children.flat()) {
-    if (c === null || c === undefined || c === false) continue;
-    el.append(c instanceof Node ? c : document.createTextNode(String(c)));
-  }
-  return el;
-}
-
 function setStatus(text, error = false) {
   const s = $("status");
   s.textContent = text;
@@ -34,21 +19,14 @@ function setStatus(text, error = false) {
   s.hidden = !text;
 }
 
-async function copy(text, btn) {
-  const label = btn.textContent;
-  try {
-    await navigator.clipboard.writeText(text);
-    btn.textContent = "Copied";
-  } catch {
-    btn.textContent = "Copy failed";
-  }
-  setTimeout(() => { btn.textContent = label; }, 1500);
+function openApp(hash = "#search") {
+  chrome.tabs.create({ url: chrome.runtime.getURL(`app.html${hash}`) });
+  window.close();
 }
 
-function copyButton(getText, label = "Copy") {
-  const b = h("button", { type: "button", class: "small" }, label);
-  b.addEventListener("click", () => copy(getText(), b));
-  return b;
+function refLink(ref) {
+  return h("a", { href: "#", onclick: (e) => { e.preventDefault(); openApp(`#doc?path=${encodeURIComponent(ref)}`); } },
+    "Read more in the corpus");
 }
 
 async function readSelection() {
@@ -80,89 +58,34 @@ async function readSelection() {
   return { text: "", from: null };
 }
 
-function renderEvidence(rep) {
-  const blocks = [];
-  rep.evidence.forEach((ev, i) => {
-    if (!Object.keys(ev).length) return;
-    const metric = (value, label) => (value === undefined || value === null ? null :
-      h("div", { class: "metric" }, h("b", {}, String(value)), h("span", {}, label)));
-    blocks.push(h("div", {},
-      rep.evidence.length > 1 ? h("h2", {}, `Logged evidence — query ${i + 1}`) : h("h2", {}, "Logged evidence"),
-      h("div", { class: "evidence" },
-        metric(ev.planSummary, "plan"),
-        metric(ev.durationMillis !== undefined ? `${ev.durationMillis} ms` : undefined, "duration"),
-        metric(ev.docsExamined, "docsExamined"),
-        metric(ev.keysExamined, "keysExamined"),
-        metric(ev.nreturned, "nreturned"),
-        metric(scanRatio(ev), "scanned : returned"))));
-  });
-  return blocks;
-}
-
-function renderFinding(f) {
-  const doc = docFor(f.code);
-  return h("div", { class: `finding sev-${f.severity}` },
-    h("div", { class: "head" }, h("span", {}, f.severity.toUpperCase()), h("span", { class: "kind" }, `${f.pass} · ${f.code}`)),
-    h("p", {}, f.message),
-    doc ? h("a", { href: doc, target: "_blank", rel: "noopener noreferrer" }, "MongoDB docs") : null);
-}
-
-function render(rep) {
+/** The selection was not a query: show the best corpus passages for it instead. */
+async function renderCorpusHits(text) {
   const root = $("result");
-  root.replaceChildren();
-  const counts = severityCounts(rep);
-  const findings = rep.findings.filter((f) => !f.code.endsWith("-rewrite"));
-
-  if (!rep.inputQueries) {
-    root.append(h("p", { class: "status error" },
-      "No query found. Highlight a mongosh query (db.coll.find(…), aggregate([…])), a slow-query log line, " +
-      "a profiler entry, a { find: … } command, a filter or a pipeline — or paste one below."));
-    root.hidden = false;
+  const q = text.replace(/\s+/g, " ").trim().slice(0, 300);
+  root.replaceChildren(h("p", { class: "status" }, "Not a query — searching MongoDB expertise for it…"));
+  root.hidden = false;
+  const idx = await getIndex().catch(() => null);
+  if (!idx) {
+    root.replaceChildren(h("p", { class: "status error" }, "No query found, and this build has no search data."));
     return;
   }
-
-  root.append(h("div", { class: "summary" },
-    h("strong", {}, `${rep.inputQueries} quer${rep.inputQueries === 1 ? "y" : "ies"}`),
-    counts.length ? counts.map(([s, n]) => h("span", { class: `chip sev-${s}` }, `${n} ${s}`))
-      : h("span", { class: "chip ok" }, "no open findings"),
-    rep.applied.length ? h("span", { class: "chip ok" }, `${rep.applied.length} safe rewrite${rep.applied.length > 1 ? "s" : ""}`) : null,
-    h("span", { class: "kind" }, `· ${kindLabel(rep.inputKind)}`)));
-
-  root.append(h("div", { class: "row" },
-    copyButton(() => toMarkdown(rep), "Copy as Markdown for the case"),
-    rep.changed ? copyButton(() => rep.text, "Copy rewritten query") : null));
-
-  if (rep.interpreted !== null) {
-    root.append(h("h2", {}, `Read the ${kindLabel(rep.inputKind)} as`), h("pre", {}, rep.interpreted.trimEnd()));
-  }
-  root.append(...renderEvidence(rep));
-
-  if (findings.length) {
-    root.append(h("h2", {}, "Findings"), ...findings.map(renderFinding));
-  }
-
-  if (rep.applied.length) {
-    root.append(h("h2", {}, "Safe rewrites applied (same results)"),
-      h("ul", { class: "applied" }, rep.applied.map((f) => h("li", {}, `${f.message.split(". ")[0].replace(/\.+$/, "")}.`))),
-      h("pre", {}, rep.text.trimEnd()));
-  }
-
-  if (rep.indexes.length) {
-    root.append(h("h2", {}, "Index recommendations"),
-      h("p", { class: "kind" }, "Recommend-only: check existing indexes and build on non-production first. ",
-        h("a", { href: ESR_DOC, target: "_blank", rel: "noopener noreferrer" }, "ESR guideline")),
-      ...rep.indexes.map((r) => h("div", { class: "index" },
-        h("div", { class: "line" }, h("pre", {}, r.shell()), copyButton(() => r.shell())),
-        h("p", {}, r.rationale))));
-  }
-  root.hidden = false;
+  const hits = idx.keyword(q, 5);
+  root.replaceChildren(
+    h("div", { class: "summary" }, h("strong", {}, "MongoDB expertise"), h("span", { class: "kind" }, `· top ${hits.length} for your selection`)),
+    hits.length ? h("ol", { class: "hits" }, hits.map((hit) => h("li", {},
+      h("a", { href: "#", onclick: (e) => { e.preventDefault(); openApp(`#doc?path=${encodeURIComponent(hit.path)}&line=${hit.line}&q=${encodeURIComponent(q)}`); } },
+        hit.heading.split(" > ").slice(-1)[0]),
+      h("div", { class: "kind" }, `${hit.source} · ${hit.kind}`),
+      h("div", { class: "snip" }, snippet(hit.text, q).map((s) => (s.hit ? h("mark", {}, s.text) : s.text))))))
+      : h("p", { class: "status" }, "No matches in the corpus."),
+    h("div", { class: "row" }, h("button", { type: "button", class: "small primary", onclick: () => openApp(`#search?q=${encodeURIComponent(q)}`) }, "Open all results in the app")));
 }
 
 function run(text, from) {
   const { text: input, truncated } = clamp(text);
   $("input").value = input;
   if (!input.trim()) {
-    setStatus("Highlight a query on the page and click the extension again, or paste one below.");
+    setStatus("Highlight a query or a question on the page and click the extension again, or paste below.");
     $("input-section").hidden = false;
     $("input-section").open = true;
     $("result").hidden = true;
@@ -181,8 +104,14 @@ function run(text, from) {
   setStatus(from ? `Checked ${from}${truncated ? " (first 200,000 characters)" : ""}.` : "");
   $("input-label").textContent = "Edit the input or paste another query";
   $("input-section").hidden = false;
-  $("input-section").open = !rep.inputQueries; // keep the editor open when nothing was recognised
-  render(rep);
+  $("input-section").open = false;
+  if (!rep.inputQueries) {
+    renderCorpusHits(input);
+  } else {
+    const root = $("result");
+    root.replaceChildren(renderReport(rep, { refLink }));
+    root.hidden = false;
+  }
   chrome.storage?.session?.set({ last: input }).catch(() => {});
 }
 
@@ -192,6 +121,12 @@ async function main() {
   $("example").addEventListener("click", () => run(EXAMPLE, "the example slow-query log line"));
   $("input").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) run($("input").value, "the edited input");
+  });
+  $("open-app").addEventListener("click", () => openApp());
+  $("ask").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const q = $("ask-q").value.trim();
+    if (q) openApp(`#search?q=${encodeURIComponent(q)}`);
   });
   const { text, from } = await readSelection();
   run(text, from);

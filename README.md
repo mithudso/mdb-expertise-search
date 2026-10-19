@@ -131,12 +131,20 @@ diagnosis and query optimization. See [docs/RECIPES.md](docs/RECIPES.md).
 
 `mdbx tui` — search with mode/kind cycling, MongoDB-area facets, topic hotkeys and a recipe browser.
 
-### 7. Optimize from any web page (Chrome extension)
+### 7. All of it in Chrome (extension)
 
-Highlight a query or slow-query log line in a case, ticket or chat, then click the toolbar icon (or
-**Alt+Shift+O**, or right-click → **Optimize selected MQL**). The popup shows findings, log evidence,
-safe rewrites and index recommendations, with **Copy as Markdown** for the case note. Runs locally,
-no network access, `activeTab` only. Install and team rollout: [editors/chrome/README.md](editors/chrome/README.md).
+The **MongoDB Expertise** extension packages the corpus and its search index (~10 MB zip) with the optimizer,
+linter, recipes and operator reference, so a TSE needs nothing but Chrome:
+
+- Highlight a query or slow-query log line in a case, ticket or chat → click the icon (or **Alt+Shift+O**) →
+  findings, log evidence, safe rewrites, index advice, **Copy as Markdown** for the case note.
+- Highlight an error message or a question → the popup shows the best corpus passages.
+- Type `mdb <question>` in the address bar, or open the app: Search (same BM25 ranking as `mdbx search`, area
+  facets, document view; optional hybrid search with a local Ollama), Recipes, Optimize, Lint, Operators.
+- Runs locally: no network access, `activeTab` only; only committed (redacted) corpus files are packaged.
+
+Build it with `python scripts/package_chrome_extension.py`; install and team rollout:
+[editors/chrome/README.md](editors/chrome/README.md).
 
 ## Quick start
 
@@ -166,6 +174,7 @@ mdbx index && mdbx tui
 | `mdbx search QUERY [-m hybrid\|keyword\|semantic] [-k skill\|llms\|memory\|recipe] [-s SOURCE] [-n N] [--full] [--json]` | Search |
 | `mdbx optimize FILE [--read-only] [--write] [--json]` | Static MQL query optimizer for mongosh, log lines, profiler entries, commands (`-` for stdin; alias `opt`); exit 1 on high/blocking |
 | `mdbx lint FILE` | Lint MQL (`-` for stdin); exit 1 on errors |
+| `mdbx export-web OUT [--no-vectors]` | Write the corpus + search index as static files for the Chrome extension (committed files only) |
 | `mdbx show PATH` | Print a corpus file (path as shown in results) |
 | `mdbx stats [--sources]` | Index statistics |
 | `mdbx recipes [WORDS]` / `mdbx recipe NAME` | List / print step-by-step recipes |

@@ -1,0 +1,2429 @@
+{
+ "operators": [
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Adds new fields to documents; synonym of $set.",
+   "name": "$addFields"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Groups documents into buckets by explicit boundaries.",
+   "name": "$bucket"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Groups documents into a requested number of automatically sized buckets.",
+   "name": "$bucketAuto"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Opens a change stream (must be the first stage).",
+   "name": "$changeStream"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Splits change events larger than 16 MiB into fragments.",
+   "name": "$changeStreamSplitLargeEvent"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Returns collection statistics (must be the first stage).",
+   "name": "$collStats"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "acc",
+    "stage"
+   ],
+   "doc": "Stage: counts documents into a named field. Accumulator: counts documents in a group.",
+   "name": "$count"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Returns active operations (must be the first stage, run on admin).",
+   "name": "$currentOp"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Creates missing documents in a sequence of values.",
+   "name": "$densify"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Returns literal documents as the pipeline input (first stage).",
+   "name": "$documents"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Runs several sub-pipelines on the same input, one output field each.",
+   "name": "$facet"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Fills null or missing field values.",
+   "name": "$fill"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Returns documents ordered by proximity to a point (must be the first stage).",
+   "name": "$geoNear"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Recursive search of a collection (graph traversal).",
+   "name": "$graphLookup"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Groups documents by _id and computes accumulators.",
+   "name": "$group"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Returns index usage statistics (must be the first stage).",
+   "name": "$indexStats"
+  },
+  {
+   "arg": "posint",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Passes only the first N documents.",
+   "name": "$limit"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Lists sessions cached in memory on the current mongod/mongos.",
+   "name": "$listLocalSessions"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Lists sampled queries for analyzeShardKey.",
+   "name": "$listSampledQueries"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Returns the Atlas Search / Vector Search indexes of a collection.",
+   "name": "$listSearchIndexes"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Lists sessions in system.sessions.",
+   "name": "$listSessions"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Left outer join with another collection (localField/foreignField or pipeline).",
+   "name": "$lookup"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Filters documents with query syntax.",
+   "name": "$match"
+  },
+  {
+   "arg": "string|object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Writes pipeline output into a collection, merging with existing documents (last stage).",
+   "name": "$merge"
+  },
+  {
+   "arg": "string|object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Writes pipeline output to a collection, replacing it (last stage).",
+   "name": "$out"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Returns plan cache information (must be the first stage).",
+   "name": "$planCacheStats"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Includes, excludes or computes fields.",
+   "name": "$project"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Returns runtime statistics for recorded query shapes.",
+   "name": "$queryStats"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Combines several ranked pipelines with reciprocal rank fusion.",
+   "name": "$rankFusion"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Restricts document content based on stored access levels ($$PRUNE/$$KEEP/$$DESCEND).",
+   "name": "$redact"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Replaces the document with the given embedded document.",
+   "name": "$replaceRoot"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Replaces the document with the given document; alias for $replaceRoot.",
+   "name": "$replaceWith"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Randomly selects N documents.",
+   "name": "$sample"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Assigns a relevance score to documents.",
+   "name": "$score"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Combines several scored pipelines into one ranking.",
+   "name": "$scoreFusion"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage",
+    "sub"
+   ],
+   "doc": "Atlas Search full-text query (must be the first stage).",
+   "name": "$search"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Returns Atlas Search metadata (counts, facets) instead of documents.",
+   "name": "$searchMeta"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage",
+    "update"
+   ],
+   "doc": "Stage: adds or overwrites fields. Update operator: sets field values.",
+   "name": "$set"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Sets document metadata such as score.",
+   "name": "$setMetadata"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Computes window-function output over partitions of documents.",
+   "name": "$setWindowFields"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Returns data distribution information for sharded collections.",
+   "name": "$shardedDataDistribution"
+  },
+  {
+   "arg": "nonneg",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Skips the first N documents.",
+   "name": "$skip"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "mod",
+    "stage"
+   ],
+   "doc": "Stage: sorts documents. Update modifier: sorts array elements inside $push.",
+   "name": "$sort"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Groups by an expression and counts, sorted descending.",
+   "name": "$sortByCount"
+  },
+  {
+   "arg": "string|object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Appends the results of another collection or pipeline.",
+   "name": "$unionWith"
+  },
+  {
+   "arg": "string|array",
+   "cats": [
+    "stage",
+    "update"
+   ],
+   "doc": "Stage: removes fields. Update operator: removes fields from documents.",
+   "name": "$unset"
+  },
+  {
+   "arg": "string|object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Deconstructs an array field into one document per element.",
+   "name": "$unwind"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "stage"
+   ],
+   "doc": "Atlas Vector Search approximate nearest-neighbour query (must be the first stage).",
+   "name": "$vectorSearch"
+  },
+  {
+   "arg": "array+",
+   "cats": [
+    "expr",
+    "qtop"
+   ],
+   "doc": "Logical AND over a non-empty array of conditions.",
+   "name": "$and"
+  },
+  {
+   "arg": "array+",
+   "cats": [
+    "expr",
+    "qtop"
+   ],
+   "doc": "Logical OR over a non-empty array of conditions.",
+   "name": "$or"
+  },
+  {
+   "arg": "array+",
+   "cats": [
+    "qtop"
+   ],
+   "doc": "Matches documents that fail all conditions.",
+   "name": "$nor"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "qtop"
+   ],
+   "doc": "Attaches a comment to a query for logs and profiler.",
+   "name": "$comment"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "qtop"
+   ],
+   "doc": "Uses aggregation expressions inside a query (can compare fields).",
+   "name": "$expr"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "qtop"
+   ],
+   "doc": "Matches documents that validate against a JSON Schema.",
+   "name": "$jsonSchema"
+  },
+  {
+   "arg": "number",
+   "cats": [
+    "expr",
+    "qtop"
+   ],
+   "doc": "Matches a random fraction (0-1) of documents.",
+   "name": "$sampleRate"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "qtop"
+   ],
+   "doc": "Text search on a text index; needs $search; must be the first $match in a pipeline.",
+   "name": "$text"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "qtop"
+   ],
+   "doc": "Matches using a JavaScript expression (slow; avoid, not allowed in $match).",
+   "name": "$where"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr",
+    "query"
+   ],
+   "doc": "Equals (query) / equality comparison (expression).",
+   "name": "$eq"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr",
+    "query"
+   ],
+   "doc": "Greater than.",
+   "name": "$gt"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr",
+    "query"
+   ],
+   "doc": "Greater than or equal.",
+   "name": "$gte"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr",
+    "query"
+   ],
+   "doc": "Less than.",
+   "name": "$lt"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr",
+    "query"
+   ],
+   "doc": "Less than or equal.",
+   "name": "$lte"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr",
+    "query"
+   ],
+   "doc": "Not equal.",
+   "name": "$ne"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr",
+    "query"
+   ],
+   "doc": "Matches any value in the array (query) / tests array membership (expression).",
+   "name": "$in"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "query"
+   ],
+   "doc": "Matches none of the values in the array.",
+   "name": "$nin"
+  },
+  {
+   "arg": "bool",
+   "cats": [
+    "query"
+   ],
+   "doc": "Matches documents that have (true) or lack (false) the field.",
+   "name": "$exists"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr",
+    "query"
+   ],
+   "doc": "Matches by BSON type (query) / returns the BSON type name (expression).",
+   "name": "$type"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "query",
+    "sub"
+   ],
+   "doc": "Regular-expression match; optional $options sibling.",
+   "name": "$regex"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "query",
+    "sub"
+   ],
+   "doc": "Regex flags (i, m, x, s) for $regex.",
+   "name": "$options"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "expr",
+    "query"
+   ],
+   "doc": "Modulo: [divisor, remainder] (query) / remainder of division (expression).",
+   "name": "$mod"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "query"
+   ],
+   "doc": "Matches arrays containing all listed elements.",
+   "name": "$all"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "proj",
+    "query"
+   ],
+   "doc": "Matches arrays with an element satisfying all conditions; also a projection operator.",
+   "name": "$elemMatch"
+  },
+  {
+   "arg": "int",
+   "cats": [
+    "expr",
+    "query"
+   ],
+   "doc": "Matches arrays of the given length (query) / returns array length (expression).",
+   "name": "$size"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr",
+    "query"
+   ],
+   "doc": "Inverts an operator expression (query) / boolean NOT (expression).",
+   "name": "$not"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "query"
+   ],
+   "doc": "Matches if all given bit positions are 0.",
+   "name": "$bitsAllClear"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "query"
+   ],
+   "doc": "Matches if all given bit positions are 1.",
+   "name": "$bitsAllSet"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "query"
+   ],
+   "doc": "Matches if any given bit position is 0.",
+   "name": "$bitsAnyClear"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "query"
+   ],
+   "doc": "Matches if any given bit position is 1.",
+   "name": "$bitsAnySet"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "query"
+   ],
+   "doc": "Matches geometries that intersect a GeoJSON geometry.",
+   "name": "$geoIntersects"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "query"
+   ],
+   "doc": "Matches geometries inside a shape.",
+   "name": "$geoWithin"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "query"
+   ],
+   "doc": "Returns documents near a point, sorted by distance (needs geospatial index).",
+   "name": "$near"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "query"
+   ],
+   "doc": "Like $near on a sphere (meters for GeoJSON).",
+   "name": "$nearSphere"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "sub"
+   ],
+   "doc": "GeoJSON geometry for geo operators.",
+   "name": "$geometry"
+  },
+  {
+   "arg": "number",
+   "cats": [
+    "sub"
+   ],
+   "doc": "Maximum distance for $near/$nearSphere.",
+   "name": "$maxDistance"
+  },
+  {
+   "arg": "number",
+   "cats": [
+    "sub"
+   ],
+   "doc": "Minimum distance for $near/$nearSphere.",
+   "name": "$minDistance"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "sub"
+   ],
+   "doc": "Bottom-left and top-right corners for $geoWithin.",
+   "name": "$box"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "sub"
+   ],
+   "doc": "Polygon vertices for $geoWithin.",
+   "name": "$polygon"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "sub"
+   ],
+   "doc": "Circle [center, radius] for $geoWithin (flat).",
+   "name": "$center"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "sub"
+   ],
+   "doc": "Circle [center, radians] for $geoWithin (spherical).",
+   "name": "$centerSphere"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "sub"
+   ],
+   "doc": "Language for $text.",
+   "name": "$language"
+  },
+  {
+   "arg": "bool",
+   "cats": [
+    "sub"
+   ],
+   "doc": "Case-sensitive $text search.",
+   "name": "$caseSensitive"
+  },
+  {
+   "arg": "bool",
+   "cats": [
+    "sub"
+   ],
+   "doc": "Diacritic-sensitive $text search.",
+   "name": "$diacriticSensitive"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr",
+    "mod",
+    "proj"
+   ],
+   "doc": "Projection/expression: subset of an array. Update modifier: caps array length in $push.",
+   "name": "$slice"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "expr",
+    "proj",
+    "sub"
+   ],
+   "doc": "Metadata such as textScore, indexKey, searchScore.",
+   "name": "$meta"
+  },
+  {
+   "arg": "int",
+   "cats": [
+    "sub"
+   ],
+   "doc": "Natural (on-disk) order for sort() or hint().",
+   "name": "$natural"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Absolute value.",
+   "name": "$abs"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Adds numbers or dates.",
+   "name": "$add"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Smallest integer greater than or equal.",
+   "name": "$ceil"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Divides the first number by the second.",
+   "name": "$divide"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Raises e to a power.",
+   "name": "$exp"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Largest integer less than or equal.",
+   "name": "$floor"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Natural logarithm.",
+   "name": "$ln"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Logarithm in a given base.",
+   "name": "$log"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Base-10 logarithm.",
+   "name": "$log10"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Multiplies numbers.",
+   "name": "$multiply"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Raises a number to an exponent.",
+   "name": "$pow"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Rounds to an integer or decimal place.",
+   "name": "$round"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Square root.",
+   "name": "$sqrt"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Subtracts numbers or dates.",
+   "name": "$subtract"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Truncates to an integer or decimal place.",
+   "name": "$trunc"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Sine.",
+   "name": "$sin"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Cosine.",
+   "name": "$cos"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Tangent.",
+   "name": "$tan"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Inverse sine.",
+   "name": "$asin"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Inverse cosine.",
+   "name": "$acos"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Inverse tangent.",
+   "name": "$atan"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Inverse tangent of y/x.",
+   "name": "$atan2"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Hyperbolic sine.",
+   "name": "$sinh"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Hyperbolic cosine.",
+   "name": "$cosh"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Hyperbolic tangent.",
+   "name": "$tanh"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Inverse hyperbolic sine.",
+   "name": "$asinh"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Inverse hyperbolic cosine.",
+   "name": "$acosh"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Inverse hyperbolic tangent.",
+   "name": "$atanh"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts degrees to radians.",
+   "name": "$degreesToRadians"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts radians to degrees.",
+   "name": "$radiansToDegrees"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Element at an array index (negative counts from the end).",
+   "name": "$arrayElemAt"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts an array of key/value pairs to an object.",
+   "name": "$arrayToObject"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Concatenates arrays.",
+   "name": "$concatArrays"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Selects array elements matching a condition.",
+   "name": "$filter"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Accumulator: first value in a group. Expression: first array element.",
+   "name": "$first"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "First N elements/values.",
+   "name": "$firstN"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Index of a value in an array, or -1.",
+   "name": "$indexOfArray"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "True if the value is an array.",
+   "name": "$isArray"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Accumulator: last value in a group. Expression: last array element.",
+   "name": "$last"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Last N elements/values.",
+   "name": "$lastN"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Applies an expression to each array element.",
+   "name": "$map"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Largest N values.",
+   "name": "$maxN"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Smallest N values.",
+   "name": "$minN"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts an object to an array of {k, v} pairs.",
+   "name": "$objectToArray"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Generates a number sequence.",
+   "name": "$range"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Folds an array to a single value.",
+   "name": "$reduce"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Reverses an array.",
+   "name": "$reverseArray"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Sorts an array by elements or fields.",
+   "name": "$sortArray"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Transposes arrays into an array of arrays.",
+   "name": "$zip"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Compares two values: -1, 0 or 1.",
+   "name": "$cmp"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "If/then/else; array [if, then, else] or {if, then, else}.",
+   "name": "$cond"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "First non-null value.",
+   "name": "$ifNull"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Multi-branch conditional with branches and default.",
+   "name": "$switch"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Custom JavaScript accumulator.",
+   "name": "$accumulator"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Custom JavaScript function (not allowed on Atlas free/shared tiers).",
+   "name": "$function"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Size in bytes of a string or binary value.",
+   "name": "$binarySize"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Size in bytes of a document as BSON.",
+   "name": "$bsonSize"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Adds a time unit to a date.",
+   "name": "$dateAdd"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Difference between two dates in a unit.",
+   "name": "$dateDiff"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Builds a date from components.",
+   "name": "$dateFromParts"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Parses a date string.",
+   "name": "$dateFromString"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Subtracts a time unit from a date.",
+   "name": "$dateSubtract"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Splits a date into components.",
+   "name": "$dateToParts"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Formats a date as a string.",
+   "name": "$dateToString"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Truncates a date to a unit.",
+   "name": "$dateTrunc"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Day of month (1-31).",
+   "name": "$dayOfMonth"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Day of week (1-7, Sunday = 1).",
+   "name": "$dayOfWeek"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Day of year (1-366).",
+   "name": "$dayOfYear"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Hour (0-23).",
+   "name": "$hour"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "ISO day of week (1-7, Monday = 1).",
+   "name": "$isoDayOfWeek"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "ISO week number.",
+   "name": "$isoWeek"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "ISO week-numbering year.",
+   "name": "$isoWeekYear"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Milliseconds (0-999).",
+   "name": "$millisecond"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Minute (0-59).",
+   "name": "$minute"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Month (1-12).",
+   "name": "$month"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Second (0-59).",
+   "name": "$second"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Week of year (0-53).",
+   "name": "$week"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Year.",
+   "name": "$year"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Seconds of a timestamp.",
+   "name": "$tsSecond"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Increment ordinal of a timestamp.",
+   "name": "$tsIncrement"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Returns the value without evaluating it.",
+   "name": "$literal"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Reads a field value (supports names with $ or .).",
+   "name": "$getField"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Sets a field on an object.",
+   "name": "$setField"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Removes a field from an object.",
+   "name": "$unsetField"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Random float in [0, 1).",
+   "name": "$rand"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Merges documents.",
+   "name": "$mergeObjects"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "True if all array elements are true.",
+   "name": "$allElementsTrue"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "True if any array element is true.",
+   "name": "$anyElementTrue"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Elements in the first set not in the second.",
+   "name": "$setDifference"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "True if sets are equal.",
+   "name": "$setEquals"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Elements common to all sets.",
+   "name": "$setIntersection"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "expr"
+   ],
+   "doc": "True if the first set is a subset of the second.",
+   "name": "$setIsSubset"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Union of sets.",
+   "name": "$setUnion"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Concatenates strings.",
+   "name": "$concat"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "UTF-8 byte index of a substring.",
+   "name": "$indexOfBytes"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Code-point index of a substring.",
+   "name": "$indexOfCP"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Trims leading characters.",
+   "name": "$ltrim"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "First regex match in a string.",
+   "name": "$regexFind"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "All regex matches in a string.",
+   "name": "$regexFindAll"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "True if the string matches the regex.",
+   "name": "$regexMatch"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Replaces the first occurrence of a string.",
+   "name": "$replaceOne"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Replaces all occurrences of a string.",
+   "name": "$replaceAll"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Trims trailing characters.",
+   "name": "$rtrim"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Splits a string by a delimiter.",
+   "name": "$split"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "String length in UTF-8 bytes.",
+   "name": "$strLenBytes"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "String length in code points.",
+   "name": "$strLenCP"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Case-insensitive string comparison.",
+   "name": "$strcasecmp"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Deprecated alias of $substrBytes.",
+   "name": "$substr"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Substring by UTF-8 bytes.",
+   "name": "$substrBytes"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Substring by code points.",
+   "name": "$substrCP"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Lowercases a string.",
+   "name": "$toLower"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Uppercases a string.",
+   "name": "$toUpper"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Trims leading and trailing characters.",
+   "name": "$trim"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts a value to a type with error handling.",
+   "name": "$convert"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "True if the value is numeric.",
+   "name": "$isNumber"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts to boolean.",
+   "name": "$toBool"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts to date.",
+   "name": "$toDate"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts to Decimal128.",
+   "name": "$toDecimal"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts to double.",
+   "name": "$toDouble"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts to 32-bit integer.",
+   "name": "$toInt"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts to 64-bit integer.",
+   "name": "$toLong"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts to ObjectId.",
+   "name": "$toObjectId"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Converts to string.",
+   "name": "$toString"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Defines variables for use in an expression.",
+   "name": "$let"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Bitwise AND.",
+   "name": "$bitAnd"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Bitwise NOT.",
+   "name": "$bitNot"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Bitwise OR.",
+   "name": "$bitOr"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Bitwise XOR.",
+   "name": "$bitXor"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "expr"
+   ],
+   "doc": "Computes the hashed index key of a value.",
+   "name": "$toHashedIndexKey"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc",
+    "update"
+   ],
+   "doc": "Accumulator: set of distinct values. Update: adds to an array if absent.",
+   "name": "$addToSet"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Average of numeric values.",
+   "name": "$avg"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Bottom element of a group by sortBy.",
+   "name": "$bottom"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Bottom N elements of a group by sortBy.",
+   "name": "$bottomN"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Population covariance (window).",
+   "name": "$covariancePop"
+  },
+  {
+   "arg": "array2",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Sample covariance (window).",
+   "name": "$covarianceSamp"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Dense rank in a window (no gaps).",
+   "name": "$denseRank"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Derivative over a window.",
+   "name": "$derivative"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Position of a document in its partition.",
+   "name": "$documentNumber"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Exponential moving average (window).",
+   "name": "$expMovingAvg"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Integral over a window.",
+   "name": "$integral"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Fills nulls by linear interpolation (window).",
+   "name": "$linearFill"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Last observation carried forward (window).",
+   "name": "$locf"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc",
+    "expr",
+    "update"
+   ],
+   "doc": "Largest value (accumulator/expression) or update-if-greater.",
+   "name": "$max"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Approximate median.",
+   "name": "$median"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc",
+    "expr",
+    "update"
+   ],
+   "doc": "Smallest value (accumulator/expression) or update-if-smaller.",
+   "name": "$min"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Approximate percentiles.",
+   "name": "$percentile"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc",
+    "update"
+   ],
+   "doc": "Accumulator: array of values. Update: appends to an array.",
+   "name": "$push"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Rank in a window (gaps for ties).",
+   "name": "$rank"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Value from another position in the window.",
+   "name": "$shift"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Population standard deviation.",
+   "name": "$stdDevPop"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Sample standard deviation.",
+   "name": "$stdDevSamp"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "acc",
+    "expr"
+   ],
+   "doc": "Sum of numeric values.",
+   "name": "$sum"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Top element of a group by sortBy.",
+   "name": "$top"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "acc"
+   ],
+   "doc": "Top N elements of a group by sortBy.",
+   "name": "$topN"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "update"
+   ],
+   "doc": "Sets a field to the current date or timestamp.",
+   "name": "$currentDate"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "update"
+   ],
+   "doc": "Increments numeric fields.",
+   "name": "$inc"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "update"
+   ],
+   "doc": "Multiplies numeric fields.",
+   "name": "$mul"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "update"
+   ],
+   "doc": "Renames fields.",
+   "name": "$rename"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "update"
+   ],
+   "doc": "Sets fields only when an upsert inserts.",
+   "name": "$setOnInsert"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "update"
+   ],
+   "doc": "Removes the first (-1) or last (1) array element.",
+   "name": "$pop"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "update"
+   ],
+   "doc": "Removes array elements matching a condition.",
+   "name": "$pull"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "update"
+   ],
+   "doc": "Removes all listed values from an array.",
+   "name": "$pullAll"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "update"
+   ],
+   "doc": "Bitwise and/or/xor update of an integer field.",
+   "name": "$bit"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "mod"
+   ],
+   "doc": "Modifier for $push/$addToSet: append several elements.",
+   "name": "$each"
+  },
+  {
+   "arg": "int",
+   "cats": [
+    "mod"
+   ],
+   "doc": "Modifier for $push: insert position.",
+   "name": "$position"
+  },
+  {
+   "arg": "array",
+   "cats": [
+    "removed"
+   ],
+   "doc": "Removed in MongoDB 3.6; use $push with $each.",
+   "name": "$pushAll"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "removed"
+   ],
+   "doc": "Removed in MongoDB 4.0; use transactions.",
+   "name": "$isolated"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON ObjectId.",
+   "name": "$oid"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON date.",
+   "name": "$date"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON int32.",
+   "name": "$numberInt"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON int64.",
+   "name": "$numberLong"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON double.",
+   "name": "$numberDouble"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON Decimal128.",
+   "name": "$numberDecimal"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON binary.",
+   "name": "$binary"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON UUID.",
+   "name": "$uuid"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON timestamp.",
+   "name": "$timestamp"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON regex.",
+   "name": "$regularExpression"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON MinKey.",
+   "name": "$minKey"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON MaxKey.",
+   "name": "$maxKey"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON undefined.",
+   "name": "$undefined"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON symbol.",
+   "name": "$symbol"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON JavaScript code.",
+   "name": "$code"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Scope for Extended JSON code.",
+   "name": "$scope"
+  },
+  {
+   "arg": "object",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "Extended JSON DBPointer.",
+   "name": "$dbPointer"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "DBRef collection.",
+   "name": "$ref"
+  },
+  {
+   "arg": "any",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "DBRef id.",
+   "name": "$id"
+  },
+  {
+   "arg": "string",
+   "cats": [
+    "ejson"
+   ],
+   "doc": "DBRef database.",
+   "name": "$db"
+  }
+ ],
+ "sets": {
+  "FIRST_STAGE_ONLY": [
+   "$changeStream",
+   "$collStats",
+   "$currentOp",
+   "$documents",
+   "$geoNear",
+   "$indexStats",
+   "$listLocalSessions",
+   "$listSampledQueries",
+   "$listSearchIndexes",
+   "$listSessions",
+   "$planCacheStats",
+   "$queryStats",
+   "$search",
+   "$searchMeta",
+   "$shardedDataDistribution",
+   "$vectorSearch"
+  ],
+  "LAST_STAGE_ONLY": [
+   "$merge",
+   "$out"
+  ],
+  "NOT_IN_FACET": [
+   "$collStats",
+   "$facet",
+   "$geoNear",
+   "$indexStats",
+   "$merge",
+   "$out",
+   "$planCacheStats",
+   "$search",
+   "$searchMeta",
+   "$vectorSearch"
+  ],
+  "STAGES": [
+   "$addFields",
+   "$bucket",
+   "$bucketAuto",
+   "$changeStream",
+   "$changeStreamSplitLargeEvent",
+   "$collStats",
+   "$count",
+   "$currentOp",
+   "$densify",
+   "$documents",
+   "$facet",
+   "$fill",
+   "$geoNear",
+   "$graphLookup",
+   "$group",
+   "$indexStats",
+   "$limit",
+   "$listLocalSessions",
+   "$listSampledQueries",
+   "$listSearchIndexes",
+   "$listSessions",
+   "$lookup",
+   "$match",
+   "$merge",
+   "$out",
+   "$planCacheStats",
+   "$project",
+   "$queryStats",
+   "$rankFusion",
+   "$redact",
+   "$replaceRoot",
+   "$replaceWith",
+   "$sample",
+   "$score",
+   "$scoreFusion",
+   "$search",
+   "$searchMeta",
+   "$set",
+   "$setMetadata",
+   "$setWindowFields",
+   "$shardedDataDistribution",
+   "$skip",
+   "$sort",
+   "$sortByCount",
+   "$unionWith",
+   "$unset",
+   "$unwind",
+   "$vectorSearch"
+  ],
+  "UPDATE_OPS": [
+   "$addToSet",
+   "$bit",
+   "$currentDate",
+   "$inc",
+   "$max",
+   "$min",
+   "$mul",
+   "$pop",
+   "$pull",
+   "$pullAll",
+   "$push",
+   "$rename",
+   "$set",
+   "$setOnInsert",
+   "$unset"
+  ],
+  "UPDATE_PIPELINE_STAGES": [
+   "$addFields",
+   "$project",
+   "$replaceRoot",
+   "$replaceWith",
+   "$set",
+   "$unset"
+  ]
+ },
+ "variables": {
+  "CLUSTER_TIME": "Current timestamp (replica sets and sharded clusters only).",
+  "CURRENT": "The current path/document; defaults to ROOT.",
+  "DESCEND": "$redact: keep this level and examine embedded documents.",
+  "KEEP": "$redact: keep this document and everything under it.",
+  "NOW": "Current datetime, constant across the whole operation.",
+  "PRUNE": "$redact: drop this document and everything under it.",
+  "REMOVE": "Removes a field from the output when used as its value.",
+  "ROOT": "The top-level document currently being processed.",
+  "SEARCH_META": "Atlas Search metadata returned by $search.",
+  "USER_ROLES": "Roles of the current user (for $redact access control)."
+ }
+}

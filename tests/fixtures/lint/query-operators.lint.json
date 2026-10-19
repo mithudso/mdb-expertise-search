@@ -1,0 +1,1343 @@
+{
+  "diagnostics": [
+    {
+      "code": "bad-argument",
+      "column": 17,
+      "end": 830,
+      "fix": null,
+      "line": 12,
+      "message": "$or requires a non-empty array.",
+      "severity": "error",
+      "start": 828
+    },
+    {
+      "code": "bad-argument",
+      "column": 19,
+      "end": 854,
+      "fix": null,
+      "line": 13,
+      "message": "Each $and element must be an object.",
+      "severity": "error",
+      "start": 853
+    },
+    {
+      "code": "bad-argument",
+      "column": 22,
+      "end": 859,
+      "fix": null,
+      "line": 13,
+      "message": "Each $and element must be an object.",
+      "severity": "error",
+      "start": 856
+    },
+    {
+      "code": "bad-argument",
+      "column": 18,
+      "end": 900,
+      "fix": null,
+      "line": 14,
+      "message": "$nor expects a non-empty array.",
+      "severity": "error",
+      "start": 892
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 20,
+      "end": 927,
+      "fix": null,
+      "line": 15,
+      "message": "$gt is a field operator; put it inside a field: { field: { $gt: … } }.",
+      "severity": "warning",
+      "start": 924
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 12,
+      "end": 976,
+      "fix": null,
+      "line": 18,
+      "message": "$gt is a field operator; put it inside a field: { field: { $gt: … } }.",
+      "severity": "warning",
+      "start": 973
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 12,
+      "end": 999,
+      "fix": null,
+      "line": 19,
+      "message": "$sum is not a query operator here.",
+      "severity": "warning",
+      "start": 995
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 12,
+      "end": 1024,
+      "fix": null,
+      "line": 20,
+      "message": "$match is not a query operator here.",
+      "severity": "warning",
+      "start": 1018
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 17,
+      "end": 1060,
+      "fix": null,
+      "line": 21,
+      "message": "$text must be at the top level of the query, not inside a field.",
+      "severity": "error",
+      "start": 1055
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 17,
+      "end": 1107,
+      "fix": null,
+      "line": 22,
+      "message": "$group is not a field query operator.",
+      "severity": "warning",
+      "start": 1101
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 17,
+      "end": 1146,
+      "fix": null,
+      "line": 23,
+      "message": "$and must be at the top level of the query, not inside a field.",
+      "severity": "error",
+      "start": 1142
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 17,
+      "end": 1187,
+      "fix": null,
+      "line": 24,
+      "message": "$where must be at the top level of the query, not inside a field.",
+      "severity": "error",
+      "start": 1181
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 17,
+      "end": 1219,
+      "fix": null,
+      "line": 25,
+      "message": "$add is not a field query operator.",
+      "severity": "warning",
+      "start": 1215
+    },
+    {
+      "code": "mixed-keys",
+      "column": 25,
+      "end": 1306,
+      "fix": null,
+      "line": 28,
+      "message": "'b' is a field name inside an operator expression; operators and field names cannot be mixed.",
+      "severity": "error",
+      "start": 1305
+    },
+    {
+      "code": "mixed-keys",
+      "column": 25,
+      "end": 1345,
+      "fix": null,
+      "line": 29,
+      "message": "'x.y' is a field name inside an operator expression; operators and field names cannot be mixed.",
+      "severity": "error",
+      "start": 1340
+    },
+    {
+      "code": "mixed-keys",
+      "column": 35,
+      "end": 1351,
+      "fix": null,
+      "line": 29,
+      "message": "'z' is a field name inside an operator expression; operators and field names cannot be mixed.",
+      "severity": "error",
+      "start": 1350
+    },
+    {
+      "code": "duplicate-key",
+      "column": 18,
+      "end": 1379,
+      "fix": null,
+      "line": 30,
+      "message": "Duplicate key 'a': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 1378
+    },
+    {
+      "code": "duplicate-key",
+      "column": 24,
+      "end": 1385,
+      "fix": null,
+      "line": 30,
+      "message": "Duplicate key 'a': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 1384
+    },
+    {
+      "code": "duplicate-key",
+      "column": 25,
+      "end": 1420,
+      "fix": null,
+      "line": 31,
+      "message": "Duplicate key '$gt': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 1417
+    },
+    {
+      "code": "unknown-operator",
+      "column": 17,
+      "end": 1505,
+      "fix": "$gt",
+      "line": 35,
+      "message": "Unknown operator $gtt. Did you mean $gt?",
+      "severity": "error",
+      "start": 1501
+    },
+    {
+      "code": "unknown-operator",
+      "column": 12,
+      "end": 1530,
+      "fix": "$or",
+      "line": 36,
+      "message": "Unknown operator $orr. Did you mean $or?",
+      "severity": "error",
+      "start": 1526
+    },
+    {
+      "code": "unknown-operator",
+      "column": 17,
+      "end": 1569,
+      "fix": "$regex",
+      "line": 37,
+      "message": "Unknown operator $regxe. Did you mean $regex?",
+      "severity": "error",
+      "start": 1563
+    },
+    {
+      "code": "unknown-operator",
+      "column": 17,
+      "end": 1601,
+      "fix": "$in",
+      "line": 38,
+      "message": "Unknown operator $inn. Did you mean $in?",
+      "severity": "error",
+      "start": 1597
+    },
+    {
+      "code": "unknown-operator",
+      "column": 35,
+      "end": 1623,
+      "fix": "$exists",
+      "line": 38,
+      "message": "Unknown operator $existss. Did you mean $exists?",
+      "severity": "error",
+      "start": 1615
+    },
+    {
+      "code": "unknown-operator",
+      "column": 17,
+      "end": 1659,
+      "fix": null,
+      "line": 39,
+      "message": "$zzzqqq is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 1652
+    },
+    {
+      "code": "bad-argument",
+      "column": 22,
+      "end": 1710,
+      "fix": null,
+      "line": 42,
+      "message": "$in expects an array, got number.",
+      "severity": "error",
+      "start": 1709
+    },
+    {
+      "code": "bad-argument",
+      "column": 23,
+      "end": 1742,
+      "fix": null,
+      "line": 43,
+      "message": "$nin expects an array, got string.",
+      "severity": "error",
+      "start": 1739
+    },
+    {
+      "code": "bad-argument",
+      "column": 41,
+      "end": 1759,
+      "fix": null,
+      "line": 43,
+      "message": "$all expects an array, got object.",
+      "severity": "error",
+      "start": 1757
+    },
+    {
+      "code": "bad-argument",
+      "column": 26,
+      "end": 1796,
+      "fix": null,
+      "line": 44,
+      "message": "$exists expects a boolean, got string.",
+      "severity": "error",
+      "start": 1791
+    },
+    {
+      "code": "bad-argument",
+      "column": 24,
+      "end": 1862,
+      "fix": null,
+      "line": 46,
+      "message": "$size expects an integer, got string.",
+      "severity": "error",
+      "start": 1859
+    },
+    {
+      "code": "bad-argument",
+      "column": 43,
+      "end": 1881,
+      "fix": null,
+      "line": 46,
+      "message": "$size expects an integer, got number.",
+      "severity": "error",
+      "start": 1878
+    },
+    {
+      "code": "bad-argument",
+      "column": 23,
+      "end": 1931,
+      "fix": null,
+      "line": 47,
+      "message": "$mod expects an array of exactly 2 elements, got array.",
+      "severity": "error",
+      "start": 1928
+    },
+    {
+      "code": "bad-argument",
+      "column": 23,
+      "end": 1982,
+      "fix": null,
+      "line": 48,
+      "message": "$not expects an operator expression or a regex.",
+      "severity": "error",
+      "start": 1981
+    },
+    {
+      "code": "bad-argument",
+      "column": 39,
+      "end": 2000,
+      "fix": null,
+      "line": 48,
+      "message": "$not expects an operator expression or a regex.",
+      "severity": "error",
+      "start": 1997
+    },
+    {
+      "code": "bad-argument",
+      "column": 29,
+      "end": 2036,
+      "fix": null,
+      "line": 49,
+      "message": "$elemMatch expects an object.",
+      "severity": "error",
+      "start": 2035
+    },
+    {
+      "code": "bad-argument",
+      "column": 51,
+      "end": 2059,
+      "fix": null,
+      "line": 49,
+      "message": "$elemMatch expects an object.",
+      "severity": "error",
+      "start": 2057
+    },
+    {
+      "code": "bad-argument",
+      "column": 25,
+      "end": 2091,
+      "fix": null,
+      "line": 50,
+      "message": "$regex expects a string or regex.",
+      "severity": "error",
+      "start": 2090
+    },
+    {
+      "code": "bad-argument",
+      "column": 63,
+      "end": 2130,
+      "fix": null,
+      "line": 50,
+      "message": "$regex expects a string or regex.",
+      "severity": "error",
+      "start": 2128
+    },
+    {
+      "code": "bad-argument",
+      "column": 96,
+      "end": 2234,
+      "fix": null,
+      "line": 51,
+      "message": "$type expects a type name, number or array.",
+      "severity": "error",
+      "start": 2232
+    },
+    {
+      "code": "missing-field",
+      "column": 17,
+      "end": 2265,
+      "fix": null,
+      "line": 52,
+      "message": "$options has no effect without a $regex sibling.",
+      "severity": "warning",
+      "start": 2257
+    },
+    {
+      "code": "bad-argument",
+      "column": 84,
+      "end": 2325,
+      "fix": null,
+      "line": 52,
+      "message": "$options expects a string, got number.",
+      "severity": "error",
+      "start": 2324
+    },
+    {
+      "code": "bad-argument",
+      "column": 31,
+      "end": 2380,
+      "fix": null,
+      "line": 53,
+      "message": "$maxDistance expects a number, got string.",
+      "severity": "error",
+      "start": 2375
+    },
+    {
+      "code": "bad-argument",
+      "column": 56,
+      "end": 2401,
+      "fix": null,
+      "line": 53,
+      "message": "$language expects a string, got number.",
+      "severity": "error",
+      "start": 2400
+    },
+    {
+      "code": "bad-argument",
+      "column": 82,
+      "end": 2430,
+      "fix": null,
+      "line": 53,
+      "message": "$caseSensitive expects a boolean, got string.",
+      "severity": "error",
+      "start": 2426
+    },
+    {
+      "code": "missing-field",
+      "column": 19,
+      "end": 2651,
+      "fix": null,
+      "line": 58,
+      "message": "$text requires a $search string.",
+      "severity": "error",
+      "start": 2632
+    },
+    {
+      "code": "unknown-operator",
+      "column": 35,
+      "end": 2696,
+      "fix": null,
+      "line": 59,
+      "message": "$fuzzy is not a $text option.",
+      "severity": "warning",
+      "start": 2690
+    },
+    {
+      "code": "bad-argument",
+      "column": 19,
+      "end": 2732,
+      "fix": null,
+      "line": 60,
+      "message": "$text expects an object with $search.",
+      "severity": "error",
+      "start": 2724
+    },
+    {
+      "code": "bad-argument",
+      "column": 19,
+      "end": 2757,
+      "fix": null,
+      "line": 61,
+      "message": "$text expects an object with $search.",
+      "severity": "error",
+      "start": 2755
+    },
+    {
+      "code": "stage-position",
+      "column": 73,
+      "end": 2839,
+      "fix": null,
+      "line": 62,
+      "message": "$text is only allowed in the first stage of a pipeline.",
+      "severity": "error",
+      "start": 2834
+    },
+    {
+      "code": "stage-position",
+      "column": 49,
+      "end": 2923,
+      "fix": null,
+      "line": 63,
+      "message": "$text is only allowed in the first stage of a pipeline.",
+      "severity": "error",
+      "start": 2918
+    },
+    {
+      "code": "perf",
+      "column": 12,
+      "end": 3063,
+      "fix": null,
+      "line": 67,
+      "message": "$where runs JavaScript per document, cannot use indexes and is an injection risk; prefer $expr or regular operators.",
+      "severity": "warning",
+      "start": 3057
+    },
+    {
+      "code": "perf",
+      "column": 12,
+      "end": 3104,
+      "fix": null,
+      "line": 68,
+      "message": "$where runs JavaScript per document, cannot use indexes and is an injection risk; prefer $expr or regular operators.",
+      "severity": "warning",
+      "start": 3098
+    },
+    {
+      "code": "syntax",
+      "column": 32,
+      "end": 3119,
+      "fix": null,
+      "line": 68,
+      "message": "expected a property name",
+      "severity": "error",
+      "start": 3118
+    },
+    {
+      "code": "syntax",
+      "column": 32,
+      "end": 3141,
+      "fix": null,
+      "line": 68,
+      "message": "unexpected tokens",
+      "severity": "error",
+      "start": 3118
+    },
+    {
+      "code": "perf",
+      "column": 28,
+      "end": 3178,
+      "fix": null,
+      "line": 69,
+      "message": "$where runs JavaScript per document, cannot use indexes and is an injection risk; prefer $expr or regular operators.",
+      "severity": "warning",
+      "start": 3172
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 28,
+      "end": 3178,
+      "fix": null,
+      "line": 69,
+      "message": "$where is not allowed in a $match stage.",
+      "severity": "error",
+      "start": 3172
+    },
+    {
+      "code": "perf",
+      "column": 34,
+      "end": 3230,
+      "fix": null,
+      "line": 70,
+      "message": "$where runs JavaScript per document, cannot use indexes and is an injection risk; prefer $expr or regular operators.",
+      "severity": "warning",
+      "start": 3224
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 34,
+      "end": 3230,
+      "fix": null,
+      "line": 70,
+      "message": "$where is not allowed in a $match stage.",
+      "severity": "error",
+      "start": 3224
+    },
+    {
+      "code": "bad-argument",
+      "column": 25,
+      "end": 3321,
+      "fix": null,
+      "line": 74,
+      "message": "$sampleRate must be between 0 and 1.",
+      "severity": "error",
+      "start": 3320
+    },
+    {
+      "code": "bad-argument",
+      "column": 25,
+      "end": 3354,
+      "fix": null,
+      "line": 75,
+      "message": "$sampleRate must be between 0 and 1.",
+      "severity": "error",
+      "start": 3350
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 52,
+      "end": 3476,
+      "fix": null,
+      "line": 79,
+      "message": "$nearSphere is a field operator; put it inside a field: { field: { $nearSphere: … } }.",
+      "severity": "warning",
+      "start": 3465
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 52,
+      "end": 3476,
+      "fix": null,
+      "line": 79,
+      "message": "$nearSphere is not allowed in $match; use $geoNear.",
+      "severity": "error",
+      "start": 3465
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 28,
+      "end": 3530,
+      "fix": null,
+      "line": 80,
+      "message": "$nearSphere is a field operator; put it inside a field: { field: { $nearSphere: … } }.",
+      "severity": "warning",
+      "start": 3519
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 28,
+      "end": 3530,
+      "fix": null,
+      "line": 80,
+      "message": "$nearSphere is not allowed in $match; use $geoNear.",
+      "severity": "error",
+      "start": 3519
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 49,
+      "end": 3545,
+      "fix": null,
+      "line": 80,
+      "message": "$near is a field operator; put it inside a field: { field: { $near: … } }.",
+      "severity": "warning",
+      "start": 3540
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 49,
+      "end": 3545,
+      "fix": null,
+      "line": 80,
+      "message": "$near is not allowed in $match; use $geoNear.",
+      "severity": "error",
+      "start": 3540
+    },
+    {
+      "code": "stage-shape",
+      "column": 19,
+      "end": 3721,
+      "fix": null,
+      "line": 85,
+      "message": "An expression object must contain exactly one operator key; found 2 keys.",
+      "severity": "error",
+      "start": 3720
+    },
+    {
+      "code": "unknown-operator",
+      "column": 21,
+      "end": 3776,
+      "fix": null,
+      "line": 86,
+      "message": "$bogusOp is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 3768
+    },
+    {
+      "code": "bad-argument",
+      "column": 10,
+      "end": 3945,
+      "fix": null,
+      "line": 91,
+      "message": "Expected a query document, got string.",
+      "severity": "error",
+      "start": 3930
+    },
+    {
+      "code": "bad-argument",
+      "column": 10,
+      "end": 3958,
+      "fix": null,
+      "line": 92,
+      "message": "Expected a query document, got number.",
+      "severity": "error",
+      "start": 3957
+    },
+    {
+      "code": "unknown-operator",
+      "column": 27,
+      "end": 4001,
+      "fix": "$gt",
+      "line": 93,
+      "message": "Unknown operator $gtt. Did you mean $gt?",
+      "severity": "error",
+      "start": 3997
+    },
+    {
+      "code": "unknown-operator",
+      "column": 26,
+      "end": 4040,
+      "fix": "$ne",
+      "line": 94,
+      "message": "Unknown operator $nee. Did you mean $ne?",
+      "severity": "error",
+      "start": 4036
+    },
+    {
+      "code": "bad-argument",
+      "column": 23,
+      "end": 4074,
+      "fix": null,
+      "line": 95,
+      "message": "$or requires a non-empty array.",
+      "severity": "error",
+      "start": 4072
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 24,
+      "end": 4105,
+      "fix": null,
+      "line": 96,
+      "message": "$gt is a field operator; put it inside a field: { field: { $gt: … } }.",
+      "severity": "warning",
+      "start": 4102
+    }
+  ],
+  "source": "tests/fixtures/lint/query-operators.txt",
+  "symbols": [
+    {
+      "children": [],
+      "end": 220,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 107
+    },
+    {
+      "children": [],
+      "end": 315,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 221
+    },
+    {
+      "children": [],
+      "end": 403,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 316
+    },
+    {
+      "children": [],
+      "end": 506,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 404
+    },
+    {
+      "children": [],
+      "end": 583,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 507
+    },
+    {
+      "children": [],
+      "end": 687,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 584
+    },
+    {
+      "children": [],
+      "end": 774,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 688
+    },
+    {
+      "children": [],
+      "end": 833,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 811
+    },
+    {
+      "children": [],
+      "end": 873,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 834
+    },
+    {
+      "children": [],
+      "end": 903,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 874
+    },
+    {
+      "children": [],
+      "end": 936,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 904
+    },
+    {
+      "children": [],
+      "end": 982,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 961
+    },
+    {
+      "children": [],
+      "end": 1005,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 983
+    },
+    {
+      "children": [],
+      "end": 1037,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1006
+    },
+    {
+      "children": [],
+      "end": 1083,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1038
+    },
+    {
+      "children": [],
+      "end": 1124,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1084
+    },
+    {
+      "children": [],
+      "end": 1163,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1125
+    },
+    {
+      "children": [],
+      "end": 1197,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1164
+    },
+    {
+      "children": [],
+      "end": 1232,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1198
+    },
+    {
+      "children": [],
+      "end": 1314,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1280
+    },
+    {
+      "children": [],
+      "end": 1359,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1315
+    },
+    {
+      "children": [],
+      "end": 1391,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1360
+    },
+    {
+      "children": [],
+      "end": 1428,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1392
+    },
+    {
+      "children": [],
+      "end": 1461,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1429
+    },
+    {
+      "children": [],
+      "end": 1513,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1484
+    },
+    {
+      "children": [],
+      "end": 1545,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1514
+    },
+    {
+      "children": [],
+      "end": 1579,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1546
+    },
+    {
+      "children": [],
+      "end": 1634,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1580
+    },
+    {
+      "children": [],
+      "end": 1667,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1635
+    },
+    {
+      "children": [],
+      "end": 1715,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1687
+    },
+    {
+      "children": [],
+      "end": 1764,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1716
+    },
+    {
+      "children": [],
+      "end": 1801,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1765
+    },
+    {
+      "children": [],
+      "end": 1834,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1802
+    },
+    {
+      "children": [],
+      "end": 1904,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1835
+    },
+    {
+      "children": [],
+      "end": 1957,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1905
+    },
+    {
+      "children": [],
+      "end": 2005,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1958
+    },
+    {
+      "children": [],
+      "end": 2064,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 2006
+    },
+    {
+      "children": [],
+      "end": 2135,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 2065
+    },
+    {
+      "children": [],
+      "end": 2239,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 2136
+    },
+    {
+      "children": [],
+      "end": 2343,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 2240
+    },
+    {
+      "children": [],
+      "end": 2435,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 2344
+    },
+    {
+      "children": [],
+      "end": 2519,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 2436
+    },
+    {
+      "children": [],
+      "end": 2612,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 2530
+    },
+    {
+      "children": [],
+      "end": 2654,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 2613
+    },
+    {
+      "children": [],
+      "end": 2704,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 2655
+    },
+    {
+      "children": [],
+      "end": 2735,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 2705
+    },
+    {
+      "children": [],
+      "end": 2760,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 2736
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2820,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2777
+        },
+        {
+          "children": [],
+          "end": 2866,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2822
+        }
+      ],
+      "end": 2868,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2761
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2904,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 2885
+        },
+        {
+          "children": [],
+          "end": 2948,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2906
+        }
+      ],
+      "end": 2950,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2869
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3031,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2967
+        }
+      ],
+      "end": 3033,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2951
+    },
+    {
+      "children": [],
+      "end": 3085,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3045
+    },
+    {
+      "children": [],
+      "end": 3143,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3086
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3187,
+          "kind": "stage",
+          "name": "$match",
+          "start": 3160
+        }
+      ],
+      "end": 3189,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3144
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3244,
+          "kind": "stage",
+          "name": "$match",
+          "start": 3206
+        }
+      ],
+      "end": 3246,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3190
+    },
+    {
+      "children": [],
+      "end": 3294,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3263
+    },
+    {
+      "children": [],
+      "end": 3324,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3295
+    },
+    {
+      "children": [],
+      "end": 3357,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3325
+    },
+    {
+      "children": [],
+      "end": 3392,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3358
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3488,
+          "kind": "stage",
+          "name": "$match",
+          "start": 3429
+        }
+      ],
+      "end": 3490,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3413
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3557,
+          "kind": "stage",
+          "name": "$match",
+          "start": 3507
+        }
+      ],
+      "end": 3559,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3491
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3625,
+          "kind": "stage",
+          "name": "$match",
+          "start": 3576
+        }
+      ],
+      "end": 3627,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3560
+    },
+    {
+      "children": [],
+      "end": 3700,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3657
+    },
+    {
+      "children": [],
+      "end": 3746,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3701
+    },
+    {
+      "children": [],
+      "end": 3784,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3747
+    },
+    {
+      "children": [],
+      "end": 3848,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3785
+    },
+    {
+      "children": [],
+      "end": 3869,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3849
+    },
+    {
+      "children": [],
+      "end": 3881,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3870
+    },
+    {
+      "children": [],
+      "end": 3919,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3882
+    },
+    {
+      "children": [],
+      "end": 3946,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3920
+    },
+    {
+      "children": [],
+      "end": 3969,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3947
+    },
+    {
+      "children": [],
+      "end": 4009,
+      "kind": "method",
+      "name": "db.c.countDocuments",
+      "start": 3970
+    },
+    {
+      "children": [],
+      "end": 4048,
+      "kind": "method",
+      "name": "db.c.distinct",
+      "start": 4010
+    },
+    {
+      "children": [],
+      "end": 4077,
+      "kind": "method",
+      "name": "db.c.deleteMany",
+      "start": 4049
+    },
+    {
+      "children": [],
+      "end": 4111,
+      "kind": "method",
+      "name": "db.c.findOneAndDelete",
+      "start": 4078
+    }
+  ]
+}

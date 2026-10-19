@@ -1,0 +1,511 @@
+{
+  "diagnostics": [
+    {
+      "code": "missing-field",
+      "column": 24,
+      "end": 134,
+      "fix": null,
+      "line": 3,
+      "message": "$group requires an _id field (use _id: null to aggregate all documents).",
+      "severity": "error",
+      "start": 133
+    },
+    {
+      "code": "stage-position",
+      "column": 48,
+      "end": 161,
+      "fix": null,
+      "line": 3,
+      "message": "$out must be the last stage of the pipeline.",
+      "severity": "error",
+      "start": 157
+    },
+    {
+      "code": "bad-argument",
+      "column": 22,
+      "end": 209,
+      "fix": null,
+      "line": 4,
+      "message": "$or requires a non-empty array.",
+      "severity": "error",
+      "start": 207
+    },
+    {
+      "code": "projection-mix",
+      "column": 19,
+      "end": 232,
+      "fix": null,
+      "line": 5,
+      "message": "Cannot mix exclusion with inclusion in one projection (only _id may differ).",
+      "severity": "error",
+      "start": 231
+    },
+    {
+      "code": "update-shape",
+      "column": 10,
+      "end": 249,
+      "fix": null,
+      "line": 6,
+      "message": "Update document requires atomic operators such as $set; a plain document is only valid for replaceOne/findOneAndReplace.",
+      "severity": "error",
+      "start": 248
+    },
+    {
+      "code": "bad-argument",
+      "column": 22,
+      "end": 284,
+      "fix": null,
+      "line": 7,
+      "message": "Sort order for 'a' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 283
+    },
+    {
+      "code": "stage-position",
+      "column": 21,
+      "end": 312,
+      "fix": null,
+      "line": 8,
+      "message": "$out must be the last stage of the pipeline.",
+      "severity": "error",
+      "start": 308
+    },
+    {
+      "code": "unknown-operator",
+      "column": 26,
+      "end": 366,
+      "fix": "$gt",
+      "line": 9,
+      "message": "Unknown operator $gtt. Did you mean $gt?",
+      "severity": "error",
+      "start": 362
+    },
+    {
+      "code": "stage-position",
+      "column": 25,
+      "end": 657,
+      "fix": null,
+      "line": 20,
+      "message": "$out must be the last stage of the pipeline.",
+      "severity": "error",
+      "start": 653
+    },
+    {
+      "code": "unknown-operator",
+      "column": 17,
+      "end": 805,
+      "fix": "$gt",
+      "line": 26,
+      "message": "Unknown operator $gtt. Did you mean $gt?",
+      "severity": "error",
+      "start": 801
+    },
+    {
+      "code": "bad-argument",
+      "column": 10,
+      "end": 826,
+      "fix": null,
+      "line": 27,
+      "message": "$limit expects a positive integer, got number.",
+      "severity": "error",
+      "start": 825
+    },
+    {
+      "code": "missing-field",
+      "column": 10,
+      "end": 840,
+      "fix": null,
+      "line": 28,
+      "message": "$group requires an _id field (use _id: null to aggregate all documents).",
+      "severity": "error",
+      "start": 839
+    },
+    {
+      "code": "stage-shape",
+      "column": 12,
+      "end": 842,
+      "fix": null,
+      "line": 28,
+      "message": "Field 'n' must be an accumulator expression such as { $sum: 1 }.",
+      "severity": "error",
+      "start": 841
+    },
+    {
+      "code": "bad-argument",
+      "column": 29,
+      "end": 910,
+      "fix": null,
+      "line": 31,
+      "message": "$inc requires a numeric value for 'n'.",
+      "severity": "error",
+      "start": 907
+    },
+    {
+      "code": "removed-operator",
+      "column": 2,
+      "end": 925,
+      "fix": null,
+      "line": 32,
+      "message": "$pushAll: Removed in MongoDB 3.6; use $push with $each.",
+      "severity": "error",
+      "start": 917
+    },
+    {
+      "code": "unknown-operator",
+      "column": 20,
+      "end": 965,
+      "fix": "$set",
+      "line": 33,
+      "message": "Unknown operator $setx. Did you mean $set?",
+      "severity": "error",
+      "start": 960
+    },
+    {
+      "code": "duplicate-key",
+      "column": 8,
+      "end": 1056,
+      "fix": null,
+      "line": 36,
+      "message": "Duplicate key 'a': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 1055
+    },
+    {
+      "code": "bad-argument",
+      "column": 12,
+      "end": 1165,
+      "fix": null,
+      "line": 42,
+      "message": "$in expects an array, got number.",
+      "severity": "error",
+      "start": 1164
+    },
+    {
+      "code": "unknown-operator",
+      "column": 26,
+      "end": 1228,
+      "fix": "$ne",
+      "line": 45,
+      "message": "Unknown operator $nee. Did you mean $ne?",
+      "severity": "error",
+      "start": 1224
+    },
+    {
+      "code": "stage-position",
+      "column": 35,
+      "end": 1276,
+      "fix": null,
+      "line": 46,
+      "message": "$out must be the last stage of the pipeline.",
+      "severity": "error",
+      "start": 1272
+    },
+    {
+      "code": "unknown-operator",
+      "column": 22,
+      "end": 1327,
+      "fix": "$gt",
+      "line": 47,
+      "message": "Unknown operator $gtt. Did you mean $gt?",
+      "severity": "error",
+      "start": 1323
+    },
+    {
+      "code": "bad-argument",
+      "column": 45,
+      "end": 1347,
+      "fix": null,
+      "line": 47,
+      "message": "Sort order for 'a' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 1346
+    },
+    {
+      "code": "bad-argument",
+      "column": 31,
+      "end": 1454,
+      "fix": null,
+      "line": 49,
+      "message": "$limit expects a positive integer, got number.",
+      "severity": "error",
+      "start": 1453
+    },
+    {
+      "code": "bad-argument",
+      "column": 48,
+      "end": 1528,
+      "fix": null,
+      "line": 50,
+      "message": "$or requires a non-empty array.",
+      "severity": "error",
+      "start": 1526
+    }
+  ],
+  "source": "tests/fixtures/lint/variables-and-bare.txt",
+  "symbols": [
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 153,
+          "kind": "stage",
+          "name": "$group",
+          "start": 123
+        },
+        {
+          "children": [],
+          "end": 168,
+          "kind": "stage",
+          "name": "$out",
+          "start": 155
+        },
+        {
+          "children": [],
+          "end": 183,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 170
+        }
+      ],
+      "end": 184,
+      "kind": "variable",
+      "name": "pipe",
+      "start": 109
+    },
+    {
+      "children": [],
+      "end": 211,
+      "kind": "variable",
+      "name": "filter",
+      "start": 185
+    },
+    {
+      "children": [],
+      "end": 237,
+      "kind": "variable",
+      "name": "proj",
+      "start": 212
+    },
+    {
+      "children": [],
+      "end": 260,
+      "kind": "variable",
+      "name": "upd",
+      "start": 238
+    },
+    {
+      "children": [],
+      "end": 286,
+      "kind": "variable",
+      "name": "sortSpec",
+      "start": 261
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 319,
+          "kind": "stage",
+          "name": "$out",
+          "start": 306
+        },
+        {
+          "children": [],
+          "end": 334,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 321
+        }
+      ],
+      "end": 335,
+      "kind": "variable",
+      "name": "unusedVar",
+      "start": 287
+    },
+    {
+      "children": [],
+      "end": 373,
+      "kind": "variable",
+      "name": "objectOnly",
+      "start": 336
+    },
+    {
+      "children": [],
+      "end": 400,
+      "kind": "method",
+      "name": "db.orders.aggregate",
+      "start": 375
+    },
+    {
+      "children": [],
+      "end": 429,
+      "kind": "method",
+      "name": "db.orders.find",
+      "start": 401
+    },
+    {
+      "children": [],
+      "end": 466,
+      "kind": "method",
+      "name": "db.orders.updateOne",
+      "start": 430
+    },
+    {
+      "children": [],
+      "end": 500,
+      "kind": "method",
+      "name": "db.orders.find",
+      "start": 467
+    },
+    {
+      "children": [],
+      "end": 533,
+      "kind": "method",
+      "name": "db.orders.countDocuments",
+      "start": 501
+    },
+    {
+      "children": [],
+      "end": 559,
+      "kind": "method",
+      "name": "db.orders.aggregate",
+      "start": 534
+    },
+    {
+      "children": [],
+      "end": 602,
+      "kind": "method",
+      "name": "db.orders.find",
+      "start": 560
+    },
+    {
+      "children": [],
+      "end": 1236,
+      "kind": "method",
+      "name": "db.my-coll.find",
+      "start": 1198
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1283,
+          "kind": "stage",
+          "name": "$out",
+          "start": 1270
+        },
+        {
+          "children": [],
+          "end": 1298,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 1285
+        }
+      ],
+      "end": 1300,
+      "kind": "method",
+      "name": "db.getCollection",
+      "start": 1237
+    },
+    {
+      "children": [],
+      "end": 1367,
+      "kind": "method",
+      "name": "db.orders.find",
+      "start": 1301
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1409,
+          "kind": "stage",
+          "name": "$match",
+          "start": 1389
+        }
+      ],
+      "end": 1421,
+      "kind": "method",
+      "name": "db.orders.aggregate",
+      "start": 1368
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1456,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 1443
+        }
+      ],
+      "end": 1477,
+      "kind": "method",
+      "name": "db.orders.aggregate",
+      "start": 1422
+    },
+    {
+      "children": [],
+      "end": 1531,
+      "kind": "method",
+      "name": "db.orders.explain",
+      "start": 1478
+    },
+    {
+      "children": [],
+      "end": 1566,
+      "kind": "method",
+      "name": "db.orders.estimatedDocumentCount",
+      "start": 1532
+    },
+    {
+      "children": [],
+      "end": 1595,
+      "kind": "method",
+      "name": "db.adminCommand",
+      "start": 1567
+    },
+    {
+      "children": [],
+      "end": 1607,
+      "kind": "method",
+      "name": "sh.status",
+      "start": 1596
+    },
+    {
+      "children": [],
+      "end": 1622,
+      "kind": "method",
+      "name": "print",
+      "start": 1608
+    },
+    {
+      "children": [],
+      "end": 1676,
+      "kind": "method",
+      "name": "ObjectId",
+      "start": 1640
+    },
+    {
+      "children": [],
+      "end": 1698,
+      "kind": "method",
+      "name": "ISODate",
+      "start": 1677
+    },
+    {
+      "children": [],
+      "end": 1808,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1699
+    },
+    {
+      "children": [],
+      "end": 1870,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1809
+    }
+  ]
+}

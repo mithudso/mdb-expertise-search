@@ -1,0 +1,43 @@
+// $sort orders, $group accumulators, window and bucket outputs.
+
+// sort in find().sort(), strict (stage) vs lenient (cursor) strings
+db.c.find({}).sort({ a: 1, b: -1 })
+db.c.find({}).sort({ a: "asc", b: "desc", c: "ascending", d: "descending" })
+db.c.find({}).sort({ a: "up" })
+db.c.find({}).sort({ score: { $meta: "textScore" } })
+db.c.find({}).sort({ a: 2 })
+db.c.find({}).sort({ a: 0, b: 1.5, c: true, d: null })
+db.c.find({}).sort({ a: { $meta: "x", other: 1 } })
+db.c.find({}).sort({ a: 1, a: -1 })
+db.c.find({}).sort(orderVar)
+db.c.aggregate([{ $sort: { a: 1, b: -1, s: { $meta: "textScore" } } }])
+db.c.aggregate([{ $sort: { a: "asc" } }])
+db.c.aggregate([{ $sort: { a: 2, b: [1] } }])
+db.c.aggregate([{ $sort: { a: dir, b: someCall() } }])
+db.c.aggregate([{ $sort: [] }])
+db.c.aggregate([{ $sort: { "weird key": 3, 'it\'s': 4 } }])
+
+// $group
+db.c.aggregate([{ $group: { _id: "$k", n: { $sum: 1 }, avg: { $avg: "$v" }, all: { $push: "$$ROOT" } } }])
+db.c.aggregate([{ $group: { _id: null, total: { $sum: "$x" } } }])
+db.c.aggregate([{ $group: { n: { $sum: 1 } } }])
+db.c.aggregate([{ $group: {} }])
+db.c.aggregate([{ $group: { _id: "$k", bad: 5, worse: { a: 1 }, multi: { $sum: 1, $avg: 2 } } }])
+db.c.aggregate([{ $group: { _id: "$k", 'quote"d': 1 } }])
+db.c.aggregate([{ $group: { _id: { y: { $year: "$d" }, m: { $month: "$d" } }, c: { $count: {} } } }])
+db.c.aggregate([{ $group: { _id: "$k", x: { $sumz: 1 }, y: { $match: {} }, z: { $inc: 1 } } }])
+db.c.aggregate([{ $group: { _id: "$k", x: { $eq: ["$a", 1] }, y: { $accumulator: { init: "f", accumulate: "g" } } } }])
+db.c.aggregate([{ $group: { _id: "$k", dyn: someVar, call: fn(), nested: { $sum: { $add: [1, { $bogusExpr: 1 }] } } } }])
+db.c.aggregate([{ $group: { _id: "$k", a: { $first: "$a" }, a: { $last: "$b" } } }])
+db.c.aggregate([{ $group: { _id: { $bogusId: 1 }, top: { $top: { sortBy: { a: 1 }, output: "$a" } } } }])
+db.c.aggregate([{ $group: { _id: "$k", items: { $addToSet: "$x" }, mx: { $max: "$x" }, st: { $stdDevPop: "$x" } } }])
+
+// $setWindowFields, $bucket, $bucketAuto
+db.c.aggregate([{ $setWindowFields: { partitionBy: "$k", sortBy: { t: 1 }, output: { run: { $sum: "$v", window: { documents: ["unbounded", "current"] } } } } }])
+db.c.aggregate([{ $setWindowFields: { output: { bad: 1, worse: { $nonsense: 1 }, ranked: { $rank: {} } } } }])
+db.c.aggregate([{ $setWindowFields: { output: 5 } }])
+db.c.aggregate([{ $bucket: { groupBy: "$price", boundaries: [0, 100, 200], default: "other", output: { n: { $sum: 1 } } } }])
+db.c.aggregate([{ $bucket: { groupBy: { $bogusKey: 1 }, output: { n: 5, m: { $zzz: 1 } } } }])
+db.c.aggregate([{ $bucketAuto: { groupBy: "$price", buckets: 4, output: { n: { $sum: 1 } } } }])
+db.c.aggregate([{ $bucketAuto: { groupBy: { $add: [1, { $nopeExpr: 1 }] } } }])
+db.c.aggregate([{ $bucket: 5 }])

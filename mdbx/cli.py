@@ -159,6 +159,21 @@ def cmd_lint(args) -> int:
     return 1 if any(d.severity == "error" for d in res.diagnostics) else 0
 
 
+def cmd_export_web(args) -> int:
+    from .webexport import export
+
+    root = Path(args.corpus) if args.corpus else idx.default_corpus()
+    db = Path(args.db) if args.db else idx.default_db()
+    try:
+        r = export(root, Path(args.out), db=db, vectors=not args.no_vectors, allow_untracked=args.allow_untracked)
+    except RuntimeError as exc:
+        print(f"mdbx export-web: {exc}", file=sys.stderr)
+        return 2
+    print(f"wrote {r.out}: {r.chunks} chunks from {r.files} files, {r.terms} terms, {r.postings} postings, "
+          f"{r.vectors} vectors" + (f"; skipped {r.skipped_untracked} untracked (private) files" if r.skipped_untracked else ""))
+    return 0
+
+
 def cmd_optimize(args) -> int:
     from .mql.optimize import format_report, optimize, to_dict
 
@@ -229,6 +244,14 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--write", action="store_true", help="write the rewritten queries back to the file")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_optimize)
+
+    s = sub.add_parser("export-web", help="write the corpus + search index as static files for the Chrome extension")
+    s.add_argument("out", help="output directory (e.g. editors/chrome/data)")
+    s.add_argument("--corpus", help="corpus directory (env MDBX_CORPUS)")
+    s.add_argument("--no-vectors", action="store_true", help="omit embeddings (keyword search only)")
+    s.add_argument("--allow-untracked", action="store_true",
+                   help="export a corpus outside git (only when every file in it may be shared)")
+    s.set_defaults(fn=cmd_export_web)
 
     s = sub.add_parser("tui", help="interactive MongoDB expertise browser")
     s.set_defaults(fn=cmd_tui)

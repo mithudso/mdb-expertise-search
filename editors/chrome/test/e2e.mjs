@@ -97,6 +97,77 @@ try {
     await popup.screenshot({ path: shot });
     console.log(`screenshot: ${shot}`);
   }
+
+  // 5. popup: a selection that is not a query searches the corpus instead (needs packaged data/)
+  const hasData = await sw.evaluate(async () => (await fetch(chrome.runtime.getURL("data/meta.json"))).ok).catch(() => false);
+  if (!hasData) {
+    console.log("skip app checks: no data/ packaged (run scripts/package_chrome_extension.py)");
+  } else {
+    await sw.evaluate(async () => chrome.storage.session.set({ pending: { text: "shard key jumbo chunks balancer", ts: Date.now() } }));
+    const pop2 = await ctx.newPage();
+    await pop2.goto(`chrome-extension://${extId}/popup.html#tab`);
+    await pop2.waitForSelector(".hits li", { timeout: 15000 });
+    assert.ok((await pop2.locator(".hits li").count()) >= 1);
+    assert.match(await pop2.textContent("#result"), /MongoDB expertise/);
+    console.log("ok  popup: non-query selection shows corpus passages");
+
+    // 6. app search, facets, document view
+    const app = await ctx.newPage();
+    await app.setViewportSize({ width: 1400, height: 900 });
+    await app.goto(`chrome-extension://${extId}/app.html#search?q=${encodeURIComponent("shard key jumbo chunks")}`);
+    await app.waitForSelector("#results li", { timeout: 20000 });
+    const n = await app.locator("#results li").count();
+    assert.ok(n >= 5, `results: ${n}`);
+    assert.match(await app.textContent("#search-status"), /results? in \d+ ms/);
+    assert.ok((await app.locator("#detail .md").count()) === 1, "detail pane shows the first passage");
+    assert.ok((await app.locator("#sources li").count()) > 20, "area facets listed");
+    await app.locator("#sources li").first().click();
+    await app.waitForFunction(() => /area /.test(document.getElementById("search-status").textContent));
+    console.log(`ok  app search: ${n} results, detail pane, ${await app.locator("#sources li").count()} area facets, facet narrowing`);
+    await app.click("text=Open document");
+    await app.waitForSelector("#tab-doc:not([hidden]) .chunk.target", { timeout: 10000 });
+    assert.match(await app.textContent("#doc-title"), /\.(md|txt) · /);
+    console.log("ok  document view opens at the passage");
+
+    // 7. recipes, lint, operators, about
+    await app.goto(`chrome-extension://${extId}/app.html#recipes`);
+    await app.waitForSelector("#recipes li");
+    const recipes = await app.locator("#recipes li").count();
+    assert.ok(recipes >= 20, `recipes: ${recipes}`);
+    await app.goto(`chrome-extension://${extId}/app.html#lint`);
+    await app.click("#lint-run");
+    await app.waitForSelector("#lint-out .diag");
+    assert.match(await app.textContent("#lint-out"), /unknown-operator/);
+    await app.goto(`chrome-extension://${extId}/app.html#operators`);
+    await app.fill("#op-filter", "$lookup");
+    assert.match(await app.textContent("#ops"), /\$lookup/);
+    await app.goto(`chrome-extension://${extId}/app.html#about`);
+    await app.waitForFunction(() => /Passages/.test(document.getElementById("stats").textContent));
+    console.log(`ok  recipes (${recipes}), lint diagnostics, operator lookup, about stats`);
+
+    // 8. optimizer "read more" opens the corpus page; right-click lint handoff
+    await app.goto(`chrome-extension://${extId}/app.html#optimize`);
+    await app.click("#opt-example");
+    await app.click("text=Read more in the corpus >> nth=0");
+    await app.waitForSelector("#tab-doc:not([hidden]) .chunk", { timeout: 10000 });
+    console.log("ok  optimizer 'Read more in the corpus' opens the reference in the app");
+    await sw.evaluate(async () => chrome.storage.session.set({ appPending: { tab: "lint", text: "db.c.find({ a: { $gtt: 1 } })", ts: Date.now() } }));
+    const app2 = await ctx.newPage();
+    await app2.goto(`chrome-extension://${extId}/app.html#lint`);
+    await app2.waitForSelector("#lint-out .diag");
+    assert.match(await app2.inputValue("#lint-input"), /\$gtt/);
+    console.log("ok  right-click lint handoff");
+
+    if (shot) {
+      await app.goto(`chrome-extension://${extId}/app.html#search?q=${encodeURIComponent("why is my compound index not used for sort")}`);
+      await app.waitForSelector("#results li");
+      const appShot = shot.replace(/\.png$/, "-app.png");
+      await app.screenshot({ path: appShot });
+      await pop2.setViewportSize({ width: 600, height: 760 });
+      await pop2.screenshot({ path: shot.replace(/\.png$/, "-popup-search.png") });
+      console.log(`screenshot: ${appShot}`);
+    }
+  }
   ok = true;
 } finally {
   await ctx.close();

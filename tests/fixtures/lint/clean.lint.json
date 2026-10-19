@@ -1,0 +1,113 @@
+{
+  "diagnostics": [],
+  "source": "tests/fixtures/lint/clean.txt",
+  "symbols": [
+    {
+      "children": [],
+      "end": 200,
+      "kind": "method",
+      "name": "db.orders.find",
+      "start": 64
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 288,
+          "kind": "stage",
+          "name": "$match",
+          "start": 226
+        },
+        {
+          "children": [],
+          "end": 389,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 292
+        },
+        {
+          "children": [],
+          "end": 417,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 393
+        },
+        {
+          "children": [],
+          "end": 513,
+          "kind": "stage",
+          "name": "$group",
+          "start": 421
+        },
+        {
+          "children": [],
+          "end": 543,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 517
+        },
+        {
+          "children": [],
+          "end": 560,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 547
+        },
+        {
+          "children": [],
+          "end": 627,
+          "kind": "stage",
+          "name": "$project",
+          "start": 564
+        },
+        {
+          "children": [],
+          "end": 692,
+          "kind": "stage",
+          "name": "$merge",
+          "start": 631
+        }
+      ],
+      "end": 695,
+      "kind": "method",
+      "name": "db.orders.aggregate",
+      "start": 202
+    },
+    {
+      "children": [],
+      "end": 865,
+      "kind": "method",
+      "name": "db.orders.updateMany",
+      "start": 697
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 952,
+          "kind": "stage",
+          "name": "$set",
+          "start": 900
+        },
+        {
+          "children": [],
+          "end": 975,
+          "kind": "stage",
+          "name": "$unset",
+          "start": 954
+        }
+      ],
+      "end": 977,
+      "kind": "method",
+      "name": "db.orders.updateOne",
+      "start": 867
+    },
+    {
+      "children": [],
+      "end": 1066,
+      "kind": "method",
+      "name": "db.orders.deleteMany",
+      "start": 978
+    }
+  ]
+}

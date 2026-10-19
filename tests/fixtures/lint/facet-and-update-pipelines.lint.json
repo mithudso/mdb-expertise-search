@@ -1,0 +1,550 @@
+{
+  "diagnostics": [
+    {
+      "code": "stage-position",
+      "column": 34,
+      "end": 295,
+      "fix": null,
+      "line": 11,
+      "message": "$out is not allowed inside $facet.",
+      "severity": "error",
+      "start": 291
+    },
+    {
+      "code": "stage-position",
+      "column": 54,
+      "end": 317,
+      "fix": null,
+      "line": 11,
+      "message": "$merge is not allowed inside $facet.",
+      "severity": "error",
+      "start": 311
+    },
+    {
+      "code": "stage-position",
+      "column": 34,
+      "end": 372,
+      "fix": null,
+      "line": 12,
+      "message": "$facet is not allowed inside $facet.",
+      "severity": "error",
+      "start": 366
+    },
+    {
+      "code": "stage-position",
+      "column": 34,
+      "end": 435,
+      "fix": null,
+      "line": 13,
+      "message": "$geoNear is not allowed inside $facet.",
+      "severity": "error",
+      "start": 427
+    },
+    {
+      "code": "stage-position",
+      "column": 34,
+      "end": 527,
+      "fix": null,
+      "line": 14,
+      "message": "$collStats is not allowed inside $facet.",
+      "severity": "error",
+      "start": 517
+    },
+    {
+      "code": "stage-position",
+      "column": 54,
+      "end": 548,
+      "fix": null,
+      "line": 14,
+      "message": "$indexStats must be the first stage of the pipeline.",
+      "severity": "error",
+      "start": 537
+    },
+    {
+      "code": "stage-position",
+      "column": 54,
+      "end": 548,
+      "fix": null,
+      "line": 14,
+      "message": "$indexStats is not allowed inside $facet.",
+      "severity": "error",
+      "start": 537
+    },
+    {
+      "code": "stage-position",
+      "column": 34,
+      "end": 603,
+      "fix": null,
+      "line": 15,
+      "message": "$search is not allowed inside $facet.",
+      "severity": "error",
+      "start": 596
+    },
+    {
+      "code": "stage-position",
+      "column": 49,
+      "end": 712,
+      "fix": null,
+      "line": 16,
+      "message": "$vectorSearch must be the first stage of the pipeline.",
+      "severity": "error",
+      "start": 699
+    },
+    {
+      "code": "stage-position",
+      "column": 49,
+      "end": 712,
+      "fix": null,
+      "line": 16,
+      "message": "$vectorSearch is not allowed inside $facet.",
+      "severity": "error",
+      "start": 699
+    },
+    {
+      "code": "bad-argument",
+      "column": 43,
+      "end": 852,
+      "fix": null,
+      "line": 17,
+      "message": "A pipeline must be an array of stages, not an object.",
+      "severity": "error",
+      "start": 838
+    },
+    {
+      "code": "bad-argument",
+      "column": 26,
+      "end": 897,
+      "fix": null,
+      "line": 18,
+      "message": "$facet expects an object, got number.",
+      "severity": "error",
+      "start": 896
+    },
+    {
+      "code": "stage-position",
+      "column": 60,
+      "end": 1004,
+      "fix": null,
+      "line": 21,
+      "message": "$out must be the last stage of the pipeline.",
+      "severity": "error",
+      "start": 1000
+    },
+    {
+      "code": "stage-position",
+      "column": 22,
+      "end": 1488,
+      "fix": null,
+      "line": 29,
+      "message": "$match is not allowed in an update pipeline (use $addFields/$set, $project/$unset, $replaceRoot/$replaceWith).",
+      "severity": "error",
+      "start": 1482
+    },
+    {
+      "code": "stage-position",
+      "column": 22,
+      "end": 1531,
+      "fix": null,
+      "line": 30,
+      "message": "$group is not allowed in an update pipeline (use $addFields/$set, $project/$unset, $replaceRoot/$replaceWith).",
+      "severity": "error",
+      "start": 1525
+    },
+    {
+      "code": "stage-position",
+      "column": 49,
+      "end": 1557,
+      "fix": null,
+      "line": 30,
+      "message": "$sort is not allowed in an update pipeline (use $addFields/$set, $project/$unset, $replaceRoot/$replaceWith).",
+      "severity": "error",
+      "start": 1552
+    },
+    {
+      "code": "stage-position",
+      "column": 70,
+      "end": 1580,
+      "fix": null,
+      "line": 30,
+      "message": "$lookup is not allowed in an update pipeline (use $addFields/$set, $project/$unset, $replaceRoot/$replaceWith).",
+      "severity": "error",
+      "start": 1573
+    },
+    {
+      "code": "stage-position",
+      "column": 29,
+      "end": 1680,
+      "fix": null,
+      "line": 31,
+      "message": "$limit is not allowed in an update pipeline (use $addFields/$set, $project/$unset, $replaceRoot/$replaceWith).",
+      "severity": "error",
+      "start": 1674
+    },
+    {
+      "code": "stage-position",
+      "column": 44,
+      "end": 1693,
+      "fix": null,
+      "line": 31,
+      "message": "$out must be the last stage of the pipeline.",
+      "severity": "error",
+      "start": 1689
+    },
+    {
+      "code": "stage-position",
+      "column": 44,
+      "end": 1693,
+      "fix": null,
+      "line": 31,
+      "message": "$out is not allowed in an update pipeline (use $addFields/$set, $project/$unset, $replaceRoot/$replaceWith).",
+      "severity": "error",
+      "start": 1689
+    },
+    {
+      "code": "stage-position",
+      "column": 35,
+      "end": 1768,
+      "fix": null,
+      "line": 32,
+      "message": "$count is not allowed in an update pipeline (use $addFields/$set, $project/$unset, $replaceRoot/$replaceWith).",
+      "severity": "error",
+      "start": 1762
+    }
+  ],
+  "source": "tests/fixtures/lint/facet-and-update-pipelines.txt",
+  "symbols": [
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 212,
+          "kind": "stage",
+          "name": "$facet",
+          "start": 100
+        }
+      ],
+      "end": 215,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 81
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 329,
+          "kind": "stage",
+          "name": "$facet",
+          "start": 273
+        }
+      ],
+      "end": 331,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 257
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 390,
+          "kind": "stage",
+          "name": "$facet",
+          "start": 348
+        }
+      ],
+      "end": 392,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 332
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 480,
+          "kind": "stage",
+          "name": "$facet",
+          "start": 409
+        }
+      ],
+      "end": 482,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 393
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 559,
+          "kind": "stage",
+          "name": "$facet",
+          "start": 499
+        }
+      ],
+      "end": 561,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 483
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 647,
+          "kind": "stage",
+          "name": "$facet",
+          "start": 578
+        }
+      ],
+      "end": 649,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 562
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 792,
+          "kind": "stage",
+          "name": "$facet",
+          "start": 666
+        }
+      ],
+      "end": 794,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 650
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 867,
+          "kind": "stage",
+          "name": "$facet",
+          "start": 811
+        }
+      ],
+      "end": 869,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 795
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 899,
+          "kind": "stage",
+          "name": "$facet",
+          "start": 886
+        }
+      ],
+      "end": 901,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 870
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1031,
+          "kind": "stage",
+          "name": "$unionWith",
+          "start": 956
+        }
+      ],
+      "end": 1033,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 940
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1073,
+          "kind": "stage",
+          "name": "$unionWith",
+          "start": 1050
+        },
+        {
+          "children": [],
+          "end": 1139,
+          "kind": "stage",
+          "name": "$unionWith",
+          "start": 1075
+        }
+      ],
+      "end": 1141,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1034
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1175,
+          "kind": "stage",
+          "name": "$unionWith",
+          "start": 1158
+        }
+      ],
+      "end": 1177,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1142
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1261,
+          "kind": "stage",
+          "name": "$set",
+          "start": 1243
+        },
+        {
+          "children": [],
+          "end": 1278,
+          "kind": "stage",
+          "name": "$unset",
+          "start": 1263
+        },
+        {
+          "children": [],
+          "end": 1304,
+          "kind": "stage",
+          "name": "$replaceWith",
+          "start": 1280
+        }
+      ],
+      "end": 1306,
+      "kind": "method",
+      "name": "db.c.updateOne",
+      "start": 1215
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1358,
+          "kind": "stage",
+          "name": "$addFields",
+          "start": 1328
+        },
+        {
+          "children": [],
+          "end": 1382,
+          "kind": "stage",
+          "name": "$project",
+          "start": 1360
+        },
+        {
+          "children": [],
+          "end": 1419,
+          "kind": "stage",
+          "name": "$replaceRoot",
+          "start": 1384
+        }
+      ],
+      "end": 1421,
+      "kind": "method",
+      "name": "db.c.updateMany",
+      "start": 1307
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1500,
+          "kind": "stage",
+          "name": "$match",
+          "start": 1480
+        }
+      ],
+      "end": 1502,
+      "kind": "method",
+      "name": "db.c.updateOne",
+      "start": 1460
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1548,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1523
+        },
+        {
+          "children": [],
+          "end": 1569,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 1550
+        },
+        {
+          "children": [],
+          "end": 1642,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 1571
+        }
+      ],
+      "end": 1644,
+      "kind": "method",
+      "name": "db.c.updateOne",
+      "start": 1503
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1685,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 1672
+        },
+        {
+          "children": [],
+          "end": 1700,
+          "kind": "stage",
+          "name": "$out",
+          "start": 1687
+        },
+        {
+          "children": [],
+          "end": 1724,
+          "kind": "stage",
+          "name": "$set",
+          "start": 1702
+        }
+      ],
+      "end": 1726,
+      "kind": "method",
+      "name": "db.c.updateMany",
+      "start": 1645
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1775,
+          "kind": "stage",
+          "name": "$count",
+          "start": 1760
+        }
+      ],
+      "end": 1777,
+      "kind": "method",
+      "name": "db.c.findOneAndUpdate",
+      "start": 1727
+    }
+  ]
+}

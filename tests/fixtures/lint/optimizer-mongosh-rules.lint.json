@@ -1,0 +1,601 @@
+{
+  "diagnostics": [
+    {
+      "code": "perf",
+      "column": 12,
+      "end": 115,
+      "fix": null,
+      "line": 2,
+      "message": "$where runs JavaScript per document, cannot use indexes and is an injection risk; prefer $expr or regular operators.",
+      "severity": "warning",
+      "start": 109
+    }
+  ],
+  "source": "tests/fixtures/optimizer/mongosh-rules.txt",
+  "symbols": [
+    {
+      "children": [],
+      "end": 153,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 97
+    },
+    {
+      "children": [],
+      "end": 182,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 154
+    },
+    {
+      "children": [],
+      "end": 213,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 183
+    },
+    {
+      "children": [],
+      "end": 269,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 214
+    },
+    {
+      "children": [],
+      "end": 309,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 270
+    },
+    {
+      "children": [],
+      "end": 402,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 310
+    },
+    {
+      "children": [],
+      "end": 471,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 403
+    },
+    {
+      "children": [],
+      "end": 1428,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 472
+    },
+    {
+      "children": [],
+      "end": 1481,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1429
+    },
+    {
+      "children": [],
+      "end": 1537,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1482
+    },
+    {
+      "children": [],
+      "end": 1593,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1538
+    },
+    {
+      "children": [],
+      "end": 1632,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1594
+    },
+    {
+      "children": [],
+      "end": 1679,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1633
+    },
+    {
+      "children": [],
+      "end": 1723,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1680
+    },
+    {
+      "children": [],
+      "end": 1764,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1724
+    },
+    {
+      "children": [],
+      "end": 1838,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1765
+    },
+    {
+      "children": [],
+      "end": 1859,
+      "kind": "method",
+      "name": "db.c.count",
+      "start": 1839
+    },
+    {
+      "children": [],
+      "end": 1883,
+      "kind": "method",
+      "name": "db.c.countDocuments",
+      "start": 1860
+    },
+    {
+      "children": [],
+      "end": 1912,
+      "kind": "method",
+      "name": "db.c.distinct",
+      "start": 1884
+    },
+    {
+      "children": [],
+      "end": 2007,
+      "kind": "method",
+      "name": "db.c.findOneAndUpdate",
+      "start": 1913
+    },
+    {
+      "children": [],
+      "end": 2089,
+      "kind": "method",
+      "name": "db.c.updateMany",
+      "start": 2008
+    },
+    {
+      "children": [],
+      "end": 2152,
+      "kind": "method",
+      "name": "db.c.deleteMany",
+      "start": 2090
+    },
+    {
+      "children": [],
+      "end": 2242,
+      "kind": "method",
+      "name": "db.o.find",
+      "start": 2153
+    },
+    {
+      "children": [],
+      "end": 2287,
+      "kind": "method",
+      "name": "db.o.find",
+      "start": 2243
+    },
+    {
+      "children": [],
+      "end": 2309,
+      "kind": "method",
+      "name": "db.o.find",
+      "start": 2288
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2350,
+          "kind": "stage",
+          "name": "$addFields",
+          "start": 2326
+        },
+        {
+          "children": [],
+          "end": 2371,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 2352
+        },
+        {
+          "children": [],
+          "end": 2393,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2373
+        }
+      ],
+      "end": 2395,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2310
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2436,
+          "kind": "stage",
+          "name": "$addFields",
+          "start": 2412
+        },
+        {
+          "children": [],
+          "end": 2458,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2438
+        }
+      ],
+      "end": 2460,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2396
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2548,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 2477
+        },
+        {
+          "children": [],
+          "end": 2574,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2550
+        }
+      ],
+      "end": 2576,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2461
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2614,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 2593
+        },
+        {
+          "children": [],
+          "end": 2648,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2616
+        }
+      ],
+      "end": 2650,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2577
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2688,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 2667
+        },
+        {
+          "children": [],
+          "end": 2735,
+          "kind": "stage",
+          "name": "$project",
+          "start": 2690
+        },
+        {
+          "children": [],
+          "end": 2764,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2737
+        }
+      ],
+      "end": 2766,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2651
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2805,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 2786
+        },
+        {
+          "children": [],
+          "end": 2829,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2809
+        }
+      ],
+      "end": 2832,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2767
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2901,
+          "kind": "stage",
+          "name": "$group",
+          "start": 2849
+        },
+        {
+          "children": [],
+          "end": 2950,
+          "kind": "stage",
+          "name": "$project",
+          "start": 2903
+        }
+      ],
+      "end": 2952,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2833
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2995,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 2969
+        },
+        {
+          "children": [],
+          "end": 3046,
+          "kind": "stage",
+          "name": "$group",
+          "start": 2997
+        }
+      ],
+      "end": 3048,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2953
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3085,
+          "kind": "stage",
+          "name": "$match",
+          "start": 3065
+        },
+        {
+          "children": [],
+          "end": 3111,
+          "kind": "stage",
+          "name": "$sample",
+          "start": 3087
+        }
+      ],
+      "end": 3113,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3049
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3155,
+          "kind": "stage",
+          "name": "$search",
+          "start": 3130
+        },
+        {
+          "children": [],
+          "end": 3176,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 3157
+        }
+      ],
+      "end": 3178,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3114
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3220,
+          "kind": "stage",
+          "name": "$search",
+          "start": 3195
+        },
+        {
+          "children": [],
+          "end": 3238,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 3222
+        }
+      ],
+      "end": 3240,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3179
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3277,
+          "kind": "stage",
+          "name": "$match",
+          "start": 3257
+        },
+        {
+          "children": [],
+          "end": 3294,
+          "kind": "stage",
+          "name": "$skip",
+          "start": 3279
+        },
+        {
+          "children": [],
+          "end": 3310,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 3296
+        }
+      ],
+      "end": 3312,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3241
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3402,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 3329
+        }
+      ],
+      "end": 3404,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3313
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3533,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 3421
+        }
+      ],
+      "end": 3535,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3405
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3570,
+          "kind": "stage",
+          "name": "$project",
+          "start": 3548
+        }
+      ],
+      "end": 3572,
+      "kind": "method",
+      "name": "db.c.watch",
+      "start": 3536
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3624,
+          "kind": "stage",
+          "name": "$match",
+          "start": 3585
+        }
+      ],
+      "end": 3626,
+      "kind": "method",
+      "name": "db.c.watch",
+      "start": 3573
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3660,
+          "kind": "stage",
+          "name": "$match",
+          "start": 3638
+        },
+        {
+          "children": [],
+          "end": 3682,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 3662
+        },
+        {
+          "children": [],
+          "end": 3698,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 3684
+        }
+      ],
+      "end": 3699,
+      "kind": "variable",
+      "name": "p",
+      "start": 3627
+    },
+    {
+      "children": [],
+      "end": 3742,
+      "kind": "method",
+      "name": "db.getCollection",
+      "start": 3700
+    },
+    {
+      "children": [],
+      "end": 3829,
+      "kind": "method",
+      "name": "db.weird coll.find",
+      "start": 3743
+    },
+    {
+      "children": [],
+      "end": 3898,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3830
+    },
+    {
+      "children": [],
+      "end": 3976,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3899
+    },
+    {
+      "children": [],
+      "end": 4056,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 3977
+    }
+  ]
+}

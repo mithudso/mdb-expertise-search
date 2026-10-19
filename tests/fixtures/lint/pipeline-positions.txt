@@ -1,0 +1,55 @@
+// Stage positions: first-only, last-only, shape and misplaced operators.
+
+// valid: $geoNear first, $out last
+db.places.aggregate([
+  { $geoNear: { near: { type: "Point", coordinates: [0, 0] }, distanceField: "dist", query: { open: true } } },
+  { $match: { kind: "cafe" } },
+  { $limit: 10 },
+  { $out: "nearby" }
+])
+
+// $out and $merge not last
+db.c.aggregate([{ $out: "x" }, { $limit: 1 }])
+db.c.aggregate([{ $merge: { into: "y", whenMatched: "replace" } }, { $sort: { a: 1 } }])
+db.c.aggregate([{ $match: {} }, { $merge: "z" }])
+
+// first-stage-only stages in later positions
+db.c.aggregate([{ $limit: 1 }, { $geoNear: { near: [0, 0], distanceField: "d" } }])
+db.c.aggregate([{ $match: { a: 1 } }, { $collStats: { count: {} } }])
+db.c.aggregate([{ $match: { a: 1 } }, { $indexStats: {} }])
+db.c.aggregate([{ $project: { a: 1 } }, { $search: { text: { query: "x", path: "t" } } }])
+db.c.aggregate([{ $limit: 3 }, { $searchMeta: { count: { type: "total" } } }])
+db.c.aggregate([{ $limit: 3 }, { $vectorSearch: { index: "i", path: "e", queryVector: [1], limit: 1, exact: true } }])
+db.c.aggregate([{ $sort: { a: 1 } }, { $changeStream: {} }])
+db.c.aggregate([{ $limit: 1 }, { $documents: [{ a: 1 }] }])
+db.c.aggregate([{ $limit: 1 }, { $listSearchIndexes: {} }])
+
+// stage shape
+db.c.aggregate([{ $match: { a: 1 }, $limit: 1 }])
+db.c.aggregate([{}])
+db.c.aggregate([{ $match: { a: 1 } }, 5, "text", { $limit: 2 }])
+db.c.aggregate([{ $match: { a: 1 }, $project: { a: 1 }, $limit: 3 }])
+
+// operators that are not stages
+db.c.aggregate([{ $gt: 1 }])
+db.c.aggregate([{ $eq: ["$a", 1] }])
+db.c.aggregate([{ $sum: "$a" }])
+db.c.aggregate([{ $inc: { a: 1 } }])
+db.c.aggregate([{ $oid: "507f1f77bcf86cd799439011" }])
+
+// argument kinds
+db.c.aggregate([{ $limit: "ten" }])
+db.c.aggregate([{ $limit: 0 }])
+db.c.aggregate([{ $limit: 2.5 }])
+db.c.aggregate([{ $skip: -1 }])
+db.c.aggregate([{ $skip: 0 }])
+db.c.aggregate([{ $count: 5 }])
+db.c.aggregate([{ $match: [] }])
+db.c.aggregate([{ $documents: {} }])
+db.c.aggregate([{ $out: 7 }])
+
+// a pipeline must be an array
+db.c.aggregate({ $match: {} })
+db.c.aggregate("nope")
+db.c.aggregate([{ $match: { a: 1 } }, { $sort: { a: 1 } }, { $limit: 2 }, { $skip: 1 }, { $count: "n" }])
+db.c.watch([{ $match: { operationType: "insert" } }])

@@ -1,0 +1,815 @@
+{
+  "diagnostics": [
+    {
+      "code": "bad-argument",
+      "column": 24,
+      "end": 276,
+      "fix": null,
+      "line": 5,
+      "message": "Sort order for 'a' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 272
+    },
+    {
+      "code": "bad-argument",
+      "column": 24,
+      "end": 359,
+      "fix": null,
+      "line": 7,
+      "message": "Sort order for 'a' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 358
+    },
+    {
+      "code": "bad-argument",
+      "column": 24,
+      "end": 388,
+      "fix": null,
+      "line": 8,
+      "message": "Sort order for 'a' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 387
+    },
+    {
+      "code": "bad-argument",
+      "column": 30,
+      "end": 396,
+      "fix": null,
+      "line": 8,
+      "message": "Sort order for 'b' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 393
+    },
+    {
+      "code": "bad-argument",
+      "column": 38,
+      "end": 405,
+      "fix": null,
+      "line": 8,
+      "message": "Sort order for 'c' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 401
+    },
+    {
+      "code": "bad-argument",
+      "column": 47,
+      "end": 414,
+      "fix": null,
+      "line": 8,
+      "message": "Sort order for 'd' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 410
+    },
+    {
+      "code": "bad-argument",
+      "column": 24,
+      "end": 466,
+      "fix": null,
+      "line": 9,
+      "message": "Sort order for 'a' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 442
+    },
+    {
+      "code": "duplicate-key",
+      "column": 27,
+      "end": 498,
+      "fix": null,
+      "line": 10,
+      "message": "Duplicate key 'a': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 497
+    },
+    {
+      "code": "bad-argument",
+      "column": 30,
+      "end": 642,
+      "fix": null,
+      "line": 13,
+      "message": "Sort order for 'a' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 637
+    },
+    {
+      "code": "bad-argument",
+      "column": 30,
+      "end": 680,
+      "fix": null,
+      "line": 14,
+      "message": "Sort order for 'a' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 679
+    },
+    {
+      "code": "bad-argument",
+      "column": 36,
+      "end": 688,
+      "fix": null,
+      "line": 14,
+      "message": "Sort order for 'b' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 685
+    },
+    {
+      "code": "bad-argument",
+      "column": 25,
+      "end": 777,
+      "fix": null,
+      "line": 16,
+      "message": "$sort expects an object, got array.",
+      "severity": "error",
+      "start": 775
+    },
+    {
+      "code": "bad-argument",
+      "column": 40,
+      "end": 823,
+      "fix": null,
+      "line": 17,
+      "message": "Sort order for 'weird key' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 822
+    },
+    {
+      "code": "bad-argument",
+      "column": 52,
+      "end": 835,
+      "fix": null,
+      "line": 17,
+      "message": "Sort order for \"it's\" must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 834
+    },
+    {
+      "code": "missing-field",
+      "column": 26,
+      "end": 1054,
+      "fix": null,
+      "line": 22,
+      "message": "$group requires an _id field (use _id: null to aggregate all documents).",
+      "severity": "error",
+      "start": 1053
+    },
+    {
+      "code": "missing-field",
+      "column": 26,
+      "end": 1103,
+      "fix": null,
+      "line": 23,
+      "message": "$group requires an _id field (use _id: null to aggregate all documents).",
+      "severity": "error",
+      "start": 1102
+    },
+    {
+      "code": "stage-shape",
+      "column": 39,
+      "end": 1151,
+      "fix": null,
+      "line": 24,
+      "message": "Field 'bad' must be an accumulator expression such as { $sum: 1 }.",
+      "severity": "error",
+      "start": 1148
+    },
+    {
+      "code": "stage-shape",
+      "column": 47,
+      "end": 1161,
+      "fix": null,
+      "line": 24,
+      "message": "Field 'worse' must be an accumulator expression such as { $sum: 1 }.",
+      "severity": "error",
+      "start": 1156
+    },
+    {
+      "code": "stage-shape",
+      "column": 64,
+      "end": 1178,
+      "fix": null,
+      "line": 24,
+      "message": "Field 'multi' must be an accumulator expression such as { $sum: 1 }.",
+      "severity": "error",
+      "start": 1173
+    },
+    {
+      "code": "stage-shape",
+      "column": 39,
+      "end": 1255,
+      "fix": null,
+      "line": 25,
+      "message": "Field 'quote\"d' must be an accumulator expression such as { $sum: 1 }.",
+      "severity": "error",
+      "start": 1246
+    },
+    {
+      "code": "unknown-operator",
+      "column": 44,
+      "end": 1416,
+      "fix": "$sum",
+      "line": 27,
+      "message": "Unknown accumulator $sumz. Did you mean $sum?",
+      "severity": "error",
+      "start": 1411
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 61,
+      "end": 1434,
+      "fix": null,
+      "line": 27,
+      "message": "$match is not an accumulator.",
+      "severity": "error",
+      "start": 1428
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 80,
+      "end": 1451,
+      "fix": null,
+      "line": 27,
+      "message": "$inc is not an accumulator.",
+      "severity": "error",
+      "start": 1447
+    },
+    {
+      "code": "unknown-operator",
+      "column": 95,
+      "end": 1688,
+      "fix": null,
+      "line": 29,
+      "message": "$bogusExpr is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 1678
+    },
+    {
+      "code": "duplicate-key",
+      "column": 60,
+      "end": 1766,
+      "fix": null,
+      "line": 30,
+      "message": "Duplicate key 'a': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 1765
+    },
+    {
+      "code": "unknown-operator",
+      "column": 35,
+      "end": 1833,
+      "fix": null,
+      "line": 31,
+      "message": "$bogusId is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 1825
+    },
+    {
+      "code": "stage-shape",
+      "column": 85,
+      "end": 2145,
+      "fix": null,
+      "line": 35,
+      "message": "Field 'run' must be an accumulator expression such as { $sum: 1 }.",
+      "severity": "error",
+      "start": 2142
+    },
+    {
+      "code": "stage-shape",
+      "column": 48,
+      "end": 2270,
+      "fix": null,
+      "line": 36,
+      "message": "Field 'bad' must be an accumulator expression such as { $sum: 1 }.",
+      "severity": "error",
+      "start": 2267
+    },
+    {
+      "code": "unknown-operator",
+      "column": 65,
+      "end": 2293,
+      "fix": null,
+      "line": 36,
+      "message": "$nonsense is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 2284
+    },
+    {
+      "code": "unknown-operator",
+      "column": 40,
+      "end": 2559,
+      "fix": null,
+      "line": 39,
+      "message": "$bogusKey is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 2550
+    },
+    {
+      "code": "stage-shape",
+      "column": 66,
+      "end": 2577,
+      "fix": null,
+      "line": 39,
+      "message": "Field 'n' must be an accumulator expression such as { $sum: 1 }.",
+      "severity": "error",
+      "start": 2576
+    },
+    {
+      "code": "unknown-operator",
+      "column": 77,
+      "end": 2591,
+      "fix": null,
+      "line": 39,
+      "message": "$zzz is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 2587
+    },
+    {
+      "code": "unknown-operator",
+      "column": 56,
+      "end": 2767,
+      "fix": null,
+      "line": 41,
+      "message": "$nopeExpr is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 2758
+    },
+    {
+      "code": "bad-argument",
+      "column": 27,
+      "end": 2810,
+      "fix": null,
+      "line": 42,
+      "message": "$bucket expects an object, got number.",
+      "severity": "error",
+      "start": 2809
+    }
+  ],
+  "source": "tests/fixtures/lint/sort-and-accumulators.txt",
+  "symbols": [
+    {
+      "children": [],
+      "end": 170,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 135
+    },
+    {
+      "children": [],
+      "end": 247,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 171
+    },
+    {
+      "children": [],
+      "end": 279,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 248
+    },
+    {
+      "children": [],
+      "end": 333,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 280
+    },
+    {
+      "children": [],
+      "end": 362,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 334
+    },
+    {
+      "children": [],
+      "end": 417,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 363
+    },
+    {
+      "children": [],
+      "end": 469,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 418
+    },
+    {
+      "children": [],
+      "end": 505,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 470
+    },
+    {
+      "children": [],
+      "end": 534,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 506
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 604,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 551
+        }
+      ],
+      "end": 606,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 535
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 646,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 623
+        }
+      ],
+      "end": 648,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 607
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 692,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 665
+        }
+      ],
+      "end": 694,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 649
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 747,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 711
+        }
+      ],
+      "end": 749,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 695
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 779,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 766
+        }
+      ],
+      "end": 781,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 750
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 839,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 798
+        }
+      ],
+      "end": 841,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 782
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 957,
+          "kind": "stage",
+          "name": "$group",
+          "start": 869
+        }
+      ],
+      "end": 959,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 853
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1024,
+          "kind": "stage",
+          "name": "$group",
+          "start": 976
+        }
+      ],
+      "end": 1026,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 960
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1073,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1043
+        }
+      ],
+      "end": 1075,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1027
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1106,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1092
+        }
+      ],
+      "end": 1108,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1076
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1204,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1125
+        }
+      ],
+      "end": 1206,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1109
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1262,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1223
+        }
+      ],
+      "end": 1264,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1207
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1364,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1281
+        }
+      ],
+      "end": 1366,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1265
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1460,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1383
+        }
+      ],
+      "end": 1462,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1367
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1580,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1479
+        }
+      ],
+      "end": 1582,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1463
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1702,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1599
+        }
+      ],
+      "end": 1704,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1583
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1787,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1721
+        }
+      ],
+      "end": 1789,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1705
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1893,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1806
+        }
+      ],
+      "end": 1895,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1790
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2011,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1912
+        }
+      ],
+      "end": 2013,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1896
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2216,
+          "kind": "stage",
+          "name": "$setWindowFields",
+          "start": 2073
+        }
+      ],
+      "end": 2218,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2057
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2327,
+          "kind": "stage",
+          "name": "$setWindowFields",
+          "start": 2235
+        }
+      ],
+      "end": 2329,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2219
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2381,
+          "kind": "stage",
+          "name": "$setWindowFields",
+          "start": 2346
+        }
+      ],
+      "end": 2383,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2330
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2507,
+          "kind": "stage",
+          "name": "$bucket",
+          "start": 2400
+        }
+      ],
+      "end": 2509,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2384
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2602,
+          "kind": "stage",
+          "name": "$bucket",
+          "start": 2526
+        }
+      ],
+      "end": 2604,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2510
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2699,
+          "kind": "stage",
+          "name": "$bucketAuto",
+          "start": 2621
+        }
+      ],
+      "end": 2701,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2605
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2779,
+          "kind": "stage",
+          "name": "$bucketAuto",
+          "start": 2718
+        }
+      ],
+      "end": 2781,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2702
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2812,
+          "kind": "stage",
+          "name": "$bucket",
+          "start": 2798
+        }
+      ],
+      "end": 2814,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2782
+    }
+  ]
+}

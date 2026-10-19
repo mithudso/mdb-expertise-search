@@ -1,13 +1,578 @@
 [
   {
+    "path": "editors/chrome/app.css",
+    "purpose": "docs/config",
+    "bytes": 10211
+  },
+  {
+    "path": "editors/chrome/app.html",
+    "purpose": "docs/config",
+    "bytes": 6130
+  },
+  {
+    "path": "editors/chrome/app.js",
+    "purpose": "docs/config",
+    "bytes": 20513
+  },
+  {
+    "path": "editors/chrome/lib/analyze.js",
+    "purpose": "docs/config",
+    "bytes": 36824
+  },
+  {
+    "path": "editors/chrome/lib/operators-data.js",
+    "purpose": "docs/config",
+    "bytes": 40345
+  },
+  {
+    "path": "editors/chrome/lib/operators.js",
+    "purpose": "docs/config",
+    "bytes": 4758
+  },
+  {
+    "path": "editors/chrome/lib/operators.json",
+    "purpose": "docs/config",
+    "bytes": 40237
+  },
+  {
+    "path": "editors/chrome/lib/store.js",
+    "purpose": "docs/config",
+    "bytes": 1702
+  },
+  {
+    "path": "editors/chrome/lib/textsearch.js",
+    "purpose": "docs/config",
+    "bytes": 13562
+  },
+  {
+    "path": "editors/chrome/lib/ui.js",
+    "purpose": "docs/config",
+    "bytes": 8593
+  },
+  {
+    "path": "editors/chrome/screenshot-app.png",
+    "purpose": "docs/config",
+    "bytes": 403938
+  },
+  {
+    "path": "editors/chrome/screenshot-popup-search.png",
+    "purpose": "docs/config",
+    "bytes": 112521
+  },
+  {
+    "path": "editors/chrome/test/debug-app.mjs",
+    "purpose": "docs/config",
+    "bytes": 1622
+  },
+  {
+    "path": "editors/chrome/test/lint-batch.mjs",
+    "purpose": "docs/config",
+    "bytes": 727
+  },
+  {
+    "path": "editors/chrome/test/lint-parity.test.mjs",
+    "purpose": "docs/config",
+    "bytes": 2824
+  },
+  {
+    "path": "editors/chrome/test/search-batch.mjs",
+    "purpose": "docs/config",
+    "bytes": 1032
+  },
+  {
+    "path": "editors/chrome/test/search-parity.test.mjs",
+    "purpose": "docs/config",
+    "bytes": 3935
+  },
+  {
+    "path": "mdbx/webexport.py",
+    "purpose": "docs/config",
+    "bytes": 19568
+  },
+  {
+    "path": "scripts/gen_chrome_operators.py",
+    "purpose": "docs/config",
+    "bytes": 2609
+  },
+  {
+    "path": "scripts/gen_lint_golden.py",
+    "purpose": "docs/config",
+    "bytes": 3867
+  },
+  {
+    "path": "scripts/gen_search_golden.py",
+    "purpose": "docs/config",
+    "bytes": 4944
+  },
+  {
+    "path": "tests/fixtures/lint/clean.lint.json",
+    "purpose": "docs/config",
+    "bytes": 2233
+  },
+  {
+    "path": "tests/fixtures/lint/clean.txt",
+    "purpose": "docs/config",
+    "bytes": 1067
+  },
+  {
+    "path": "tests/fixtures/lint/facet-and-update-pipelines.lint.json",
+    "purpose": "docs/config",
+    "bytes": 11878
+  },
+  {
+    "path": "tests/fixtures/lint/facet-and-update-pipelines.txt",
+    "purpose": "docs/config",
+    "bytes": 1778
+  },
+  {
+    "path": "tests/fixtures/lint/garbage.lint.json",
+    "purpose": "docs/config",
+    "bytes": 1716
+  },
+  {
+    "path": "tests/fixtures/lint/garbage.txt",
+    "purpose": "docs/config",
+    "bytes": 520
+  },
+  {
+    "path": "tests/fixtures/lint/lookup-graph-vector.lint.json",
+    "purpose": "docs/config",
+    "bytes": 30798
+  },
+  {
+    "path": "tests/fixtures/lint/lookup-graph-vector.txt",
+    "purpose": "docs/config",
+    "bytes": 4481
+  },
+  {
+    "path": "tests/fixtures/lint/optimizer-bare-filter.lint.json",
+    "purpose": "docs/config",
+    "bytes": 97
+  },
+  {
+    "path": "tests/fixtures/lint/optimizer-bare-pipeline.lint.json",
+    "purpose": "docs/config",
+    "bytes": 99
+  },
+  {
+    "path": "tests/fixtures/lint/optimizer-command-find.lint.json",
+    "purpose": "docs/config",
+    "bytes": 98
+  },
+  {
+    "path": "tests/fixtures/lint/optimizer-mongosh-examples.lint.json",
+    "purpose": "docs/config",
+    "bytes": 1971
+  },
+  {
+    "path": "tests/fixtures/lint/optimizer-mongosh-orders.lint.json",
+    "purpose": "docs/config",
+    "bytes": 2819
+  },
+  {
+    "path": "tests/fixtures/lint/optimizer-mongosh-rules.lint.json",
+    "purpose": "docs/config",
+    "bytes": 11561
+  },
+  {
+    "path": "tests/fixtures/lint/optimizer-profiler-update.lint.json",
+    "purpose": "docs/config",
+    "bytes": 101
+  },
+  {
+    "path": "tests/fixtures/lint/optimizer-slowlog-find.lint.json",
+    "purpose": "docs/config",
+    "bytes": 98
+  },
+  {
+    "path": "tests/fixtures/lint/optimizer-slowlog-multi.lint.json",
+    "purpose": "docs/config",
+    "bytes": 99
+  },
+  {
+    "path": "tests/fixtures/lint/pipeline-positions.lint.json",
+    "purpose": "docs/config",
+    "bytes": 19470
+  },
+  {
+    "path": "tests/fixtures/lint/pipeline-positions.txt",
+    "purpose": "docs/config",
+    "bytes": 2274
+  },
+  {
+    "path": "tests/fixtures/lint/projections.lint.json",
+    "purpose": "docs/config",
+    "bytes": 13997
+  },
+  {
+    "path": "tests/fixtures/lint/projections.txt",
+    "purpose": "docs/config",
+    "bytes": 2310
+  },
+  {
+    "path": "tests/fixtures/lint/query-operators.lint.json",
+    "purpose": "docs/config",
+    "bytes": 28772
+  },
+  {
+    "path": "tests/fixtures/lint/query-operators.txt",
+    "purpose": "docs/config",
+    "bytes": 4112
+  },
+  {
+    "path": "tests/fixtures/lint/repr-keys.lint.json",
+    "purpose": "docs/config",
+    "bytes": 9745
+  },
+  {
+    "path": "tests/fixtures/lint/repr-keys.txt",
+    "purpose": "docs/config",
+    "bytes": 1109
+  },
+  {
+    "path": "tests/fixtures/lint/sort-and-accumulators.lint.json",
+    "purpose": "docs/config",
+    "bytes": 17336
+  },
+  {
+    "path": "tests/fixtures/lint/sort-and-accumulators.txt",
+    "purpose": "docs/config",
+    "bytes": 2815
+  },
+  {
+    "path": "tests/fixtures/lint/update-docs.lint.json",
+    "purpose": "docs/config",
+    "bytes": 9240
+  },
+  {
+    "path": "tests/fixtures/lint/update-docs.txt",
+    "purpose": "docs/config",
+    "bytes": 2413
+  },
+  {
+    "path": "tests/fixtures/lint/variables-and-bare.lint.json",
+    "purpose": "docs/config",
+    "bytes": 10776
+  },
+  {
+    "path": "tests/fixtures/lint/variables-and-bare.txt",
+    "purpose": "docs/config",
+    "bytes": 1871
+  },
+  {
+    "path": "tests/fixtures/search/corpus/llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+    "purpose": "docs/config",
+    "bytes": 1265
+  },
+  {
+    "path": "tests/fixtures/search/corpus/recipes/shard-a-collection.md",
+    "purpose": "docs/config",
+    "bytes": 575
+  },
+  {
+    "path": "tests/fixtures/search/corpus/skills/mongodb-atlas-expert/SKILL.md",
+    "purpose": "docs/config",
+    "bytes": 672
+  },
+  {
+    "path": "tests/fixtures/search/corpus/skills/mongodb-expert/references/indexes.md",
+    "purpose": "docs/config",
+    "bytes": 913
+  },
+  {
+    "path": "tests/fixtures/search/corpus/skills/mongodb-expert/references/sharding.md",
+    "purpose": "docs/config",
+    "bytes": 666
+  },
+  {
+    "path": "tests/fixtures/search/golden.json",
+    "purpose": "docs/config",
+    "bytes": 69535
+  },
+  {
+    "path": "tests/fixtures/search/index/chunks.json",
+    "purpose": "docs/config",
+    "bytes": 5327
+  },
+  {
+    "path": "tests/fixtures/search/index/doclen.bin",
+    "purpose": "docs/config",
+    "bytes": 56
+  },
+  {
+    "path": "tests/fixtures/search/index/meta.json",
+    "purpose": "docs/config",
+    "bytes": 1048
+  },
+  {
+    "path": "tests/fixtures/search/index/postings.bin",
+    "purpose": "docs/config",
+    "bytes": 1784
+  },
+  {
+    "path": "tests/fixtures/search/index/terms.json",
+    "purpose": "docs/config",
+    "bytes": 4018
+  },
+  {
+    "path": "tests/fixtures/search/index/vectors.bin",
+    "purpose": "docs/config",
+    "bytes": 448
+  },
+  {
+    "path": "tests/fixtures/search/index/weights.bin",
+    "purpose": "docs/config",
+    "bytes": 892
+  },
+  {
+    "path": "tests/test_js_lint_parity.py",
+    "purpose": "docs/config",
+    "bytes": 4140
+  },
+  {
+    "path": "tests/test_web_search.py",
+    "purpose": "docs/config",
+    "bytes": 6873
+  },
+  {
+    "path": ".editorconfig",
+    "purpose": "docs/config",
+    "bytes": 220
+  },
+  {
+    "path": ".env.example",
+    "purpose": "docs/config",
+    "bytes": 368
+  },
+  {
+    "path": ".gitattributes",
+    "purpose": "docs/config",
+    "bytes": 48
+  },
+  {
+    "path": ".github/CODEOWNERS",
+    "purpose": "docs/config",
+    "bytes": 12
+  },
+  {
+    "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+    "purpose": "docs/config",
+    "bytes": 136
+  },
+  {
+    "path": ".github/ISSUE_TEMPLATE/feature_request.md",
+    "purpose": "docs/config",
+    "bytes": 86
+  },
+  {
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "purpose": "docs/config",
+    "bytes": 160
+  },
+  {
+    "path": ".github/SECURITY.md",
+    "purpose": "docs/config",
+    "bytes": 238
+  },
+  {
+    "path": ".github/copilot-instructions.md",
+    "purpose": "docs/config",
+    "bytes": 285
+  },
+  {
+    "path": ".github/dependabot.yml",
+    "purpose": "docs/config",
+    "bytes": 189
+  },
+  {
+    "path": ".github/workflows/ci.yml",
+    "purpose": "docs/config",
+    "bytes": 1078
+  },
+  {
+    "path": ".gitignore",
+    "purpose": "docs/config",
+    "bytes": 882
+  },
+  {
+    "path": ".mcp.json",
+    "purpose": "docs/config",
+    "bytes": 103
+  },
+  {
+    "path": ".vscode/extensions.json",
+    "purpose": "docs/config",
+    "bytes": 95
+  },
+  {
+    "path": ".vscode/launch.json",
+    "purpose": "docs/config",
+    "bytes": 300
+  },
+  {
+    "path": ".vscode/mcp.json",
+    "purpose": "VS Code MCP registration",
+    "bytes": 142
+  },
+  {
+    "path": ".vscode/settings.json",
+    "purpose": "docs/config",
+    "bytes": 166
+  },
+  {
+    "path": "AGENTS.md",
+    "purpose": "docs/config",
+    "bytes": 308
+  },
+  {
+    "path": "CLAUDE.md",
+    "purpose": "docs/config",
+    "bytes": 2727
+  },
+  {
+    "path": "CODE_OF_CONDUCT.md",
+    "purpose": "docs/config",
+    "bytes": 299
+  },
+  {
+    "path": "CONTRIBUTING.md",
+    "purpose": "docs/config",
+    "bytes": 262
+  },
+  {
+    "path": "GEMINI.md",
+    "purpose": "docs/config",
+    "bytes": 86
+  },
+  {
+    "path": "LICENSE",
+    "purpose": "docs/config",
+    "bytes": 1090
+  },
+  {
+    "path": "README.md",
+    "purpose": "Overview and quick start",
+    "bytes": 13908
+  },
+  {
+    "path": "docs/ARCHITECTURE.md",
+    "purpose": "docs/config",
+    "bytes": 3921
+  },
+  {
+    "path": "docs/COMPONENTS.md",
+    "purpose": "docs/config",
+    "bytes": 5064
+  },
+  {
+    "path": "docs/DEMO-mql-optimizer.md",
+    "purpose": "docs/config",
+    "bytes": 13108
+  },
+  {
+    "path": "docs/DEVELOPMENT.md",
+    "purpose": "docs/config",
+    "bytes": 3213
+  },
+  {
+    "path": "docs/INSTALLATION.md",
+    "purpose": "docs/config",
+    "bytes": 478
+  },
+  {
+    "path": "docs/LSP.md",
+    "purpose": "docs/config",
+    "bytes": 3952
+  },
+  {
+    "path": "docs/MCP.md",
+    "purpose": "docs/config",
+    "bytes": 2318
+  },
+  {
+    "path": "docs/RECIPES.md",
+    "purpose": "docs/config",
+    "bytes": 8093
+  },
+  {
+    "path": "docs/SECURITY.md",
+    "purpose": "docs/config",
+    "bytes": 2175
+  },
+  {
+    "path": "docs/TESTING.md",
+    "purpose": "docs/config",
+    "bytes": 4215
+  },
+  {
+    "path": "docs/archive/.gitkeep",
+    "purpose": "docs/config",
+    "bytes": 0
+  },
+  {
+    "path": "docs/caching-and-optimization.md",
+    "purpose": "docs/config",
+    "bytes": 353
+  },
+  {
+    "path": "docs/codebase-overview.md",
+    "purpose": "docs/config",
+    "bytes": 7701
+  },
+  {
+    "path": "docs/external-calls.md",
+    "purpose": "docs/config",
+    "bytes": 837
+  },
+  {
+    "path": "docs/high_signal_file_index.json",
+    "purpose": "docs/config",
+    "bytes": 14593
+  },
+  {
+    "path": "docs/integrations-and-assumptions.md",
+    "purpose": "docs/config",
+    "bytes": 437
+  },
+  {
+    "path": "docs/known-issues.md",
+    "purpose": "docs/config",
+    "bytes": 4391
+  },
+  {
+    "path": "docs/logging.md",
+    "purpose": "docs/config",
+    "bytes": 1308
+  },
+  {
+    "path": "docs/onboarding.md",
+    "purpose": "docs/config",
+    "bytes": 447
+  },
+  {
+    "path": "docs/repo-bootstrap-audit-2026-10-19.md",
+    "purpose": "docs/config",
+    "bytes": 5126
+  },
+  {
+    "path": "docs/requirements.md",
+    "purpose": "docs/config",
+    "bytes": 703
+  },
+  {
+    "path": "docs/runbooks/rebuild-index.md",
+    "purpose": "docs/config",
+    "bytes": 390
+  },
+  {
     "path": "editors/chrome/README.md",
     "purpose": "docs/config",
-    "bytes": 5359
+    "bytes": 7872
   },
   {
     "path": "editors/chrome/background.js",
     "purpose": "docs/config",
-    "bytes": 829
+    "bytes": 1898
   },
   {
     "path": "editors/chrome/icons/icon128.png",
@@ -52,7 +617,7 @@
   {
     "path": "editors/chrome/lib/parser.js",
     "purpose": "docs/config",
-    "bytes": 12656
+    "bytes": 13457
   },
   {
     "path": "editors/chrome/lib/report.js",
@@ -62,7 +627,7 @@
   {
     "path": "editors/chrome/manifest.json",
     "purpose": "docs/config",
-    "bytes": 1065
+    "bytes": 1197
   },
   {
     "path": "editors/chrome/package.json",
@@ -72,22 +637,22 @@
   {
     "path": "editors/chrome/popup.css",
     "purpose": "docs/config",
-    "bytes": 4370
+    "bytes": 4997
   },
   {
     "path": "editors/chrome/popup.html",
     "purpose": "docs/config",
-    "bytes": 1493
+    "bytes": 1917
   },
   {
     "path": "editors/chrome/popup.js",
     "purpose": "docs/config",
-    "bytes": 8652
+    "bytes": 6163
   },
   {
     "path": "editors/chrome/screenshot.png",
     "purpose": "docs/config",
-    "bytes": 140204
+    "bytes": 157137
   },
   {
     "path": "editors/chrome/test/batch.mjs",
@@ -97,7 +662,7 @@
   {
     "path": "editors/chrome/test/e2e.mjs",
     "purpose": "docs/config",
-    "bytes": 5171
+    "bytes": 9577
   },
   {
     "path": "editors/chrome/test/parity.test.mjs",
@@ -107,7 +672,122 @@
   {
     "path": "editors/chrome/test/ui.test.mjs",
     "purpose": "docs/config",
-    "bytes": 5066
+    "bytes": 6586
+  },
+  {
+    "path": "editors/helix-languages.toml",
+    "purpose": "docs/config",
+    "bytes": 248
+  },
+  {
+    "path": "editors/neovim.lua",
+    "purpose": "docs/config",
+    "bytes": 253
+  },
+  {
+    "path": "editors/vscode/.vscodeignore",
+    "purpose": "docs/config",
+    "bytes": 44
+  },
+  {
+    "path": "editors/vscode/LICENSE",
+    "purpose": "docs/config",
+    "bytes": 1090
+  },
+  {
+    "path": "editors/vscode/README.md",
+    "purpose": "docs/config",
+    "bytes": 1202
+  },
+  {
+    "path": "editors/vscode/extension.js",
+    "purpose": "docs/config",
+    "bytes": 1478
+  },
+  {
+    "path": "editors/vscode/language-configuration.json",
+    "purpose": "docs/config",
+    "bytes": 546
+  },
+  {
+    "path": "editors/vscode/package-lock.json",
+    "purpose": "docs/config",
+    "bytes": 139327
+  },
+  {
+    "path": "editors/vscode/package.json",
+    "purpose": "docs/config",
+    "bytes": 1884
+  },
+  {
+    "path": "editors/vscode/server-path.js",
+    "purpose": "docs/config",
+    "bytes": 745
+  },
+  {
+    "path": "editors/vscode/syntaxes/mql.tmLanguage.json",
+    "purpose": "docs/config",
+    "bytes": 2860
+  },
+  {
+    "path": "editors/vscode/test/server-path.test.js",
+    "purpose": "docs/config",
+    "bytes": 1455
+  },
+  {
+    "path": "examples/orders.mql",
+    "purpose": "docs/config",
+    "bytes": 672
+  },
+  {
+    "path": "examples/slow-queries.mql",
+    "purpose": "Sample queries for mdbx optimize",
+    "bytes": 1543
+  },
+  {
+    "path": "mdbx/__init__.py",
+    "purpose": "Package version",
+    "bytes": 106
+  },
+  {
+    "path": "mdbx/cli.py",
+    "purpose": "mdbx command entry point",
+    "bytes": 9693
+  },
+  {
+    "path": "mdbx/corpus.py",
+    "purpose": "Corpus discovery, classification, chunking",
+    "bytes": 4290
+  },
+  {
+    "path": "mdbx/embed.py",
+    "purpose": "Ollama embedding client",
+    "bytes": 2771
+  },
+  {
+    "path": "mdbx/index.py",
+    "purpose": "SQLite schema + keyword/semantic index builds",
+    "bytes": 5413
+  },
+  {
+    "path": "mdbx/mcp_server.py",
+    "purpose": "MCP server (stdio)",
+    "bytes": 5883
+  },
+  {
+    "path": "mdbx/mql/__init__.py",
+    "purpose": "docs/config",
+    "bytes": 86
+  },
+  {
+    "path": "mdbx/mql/analyze.py",
+    "purpose": "Context-aware MQL lint + outline",
+    "bytes": 39336
+  },
+  {
+    "path": "mdbx/mql/features.py",
+    "purpose": "LSP completion and hover logic",
+    "bytes": 6724
   },
   {
     "path": "mdbx/mql/normalize.py",
@@ -115,14 +795,79 @@
     "bytes": 11767
   },
   {
+    "path": "mdbx/mql/operators.py",
+    "purpose": "MQL operator table",
+    "bytes": 20783
+  },
+  {
+    "path": "mdbx/mql/optimize.py",
+    "purpose": "Static MQL query optimizer",
+    "bytes": 47435
+  },
+  {
+    "path": "mdbx/mql/parser.py",
+    "purpose": "Tolerant mongosh/MQL parser",
+    "bytes": 13947
+  },
+  {
+    "path": "mdbx/mql/server.py",
+    "purpose": "mql-lsp language server (lint + optimizer diagnostics)",
+    "bytes": 8647
+  },
+  {
+    "path": "mdbx/recipes.py",
+    "purpose": "docs/config",
+    "bytes": 2757
+  },
+  {
+    "path": "mdbx/search.py",
+    "purpose": "Keyword, semantic, hybrid ranking",
+    "bytes": 7107
+  },
+  {
+    "path": "mdbx/tui.py",
+    "purpose": "Textual TUI",
+    "bytes": 11060
+  },
+  {
+    "path": "memory.md",
+    "purpose": "docs/config",
+    "bytes": 6404
+  },
+  {
+    "path": "prompts.md",
+    "purpose": "docs/config",
+    "bytes": 1956
+  },
+  {
+    "path": "pyproject.toml",
+    "purpose": "Packaging, deps, tool config",
+    "bytes": 943
+  },
+  {
     "path": "scripts/check_chrome_doc_links.py",
     "purpose": "docs/config",
-    "bytes": 1344
+    "bytes": 1333
+  },
+  {
+    "path": "scripts/check_doc_indexes.py",
+    "purpose": "Validate index paths",
+    "bytes": 453
+  },
+  {
+    "path": "scripts/gen_file_index.py",
+    "purpose": "Regenerate this index",
+    "bytes": 3400
   },
   {
     "path": "scripts/gen_optimizer_golden.py",
     "purpose": "docs/config",
     "bytes": 2263
+  },
+  {
+    "path": "scripts/gen_recipes_index.py",
+    "purpose": "docs/config",
+    "bytes": 3078
   },
   {
     "path": "scripts/make_chrome_icons.py",
@@ -132,7 +877,37 @@
   {
     "path": "scripts/package_chrome_extension.py",
     "purpose": "docs/config",
-    "bytes": 2036
+    "bytes": 3859
+  },
+  {
+    "path": "scripts/redact_corpus.py",
+    "purpose": "Redact customer/internal references",
+    "bytes": 4215
+  },
+  {
+    "path": "scripts/rotate_workflow_logs.py",
+    "purpose": "Rotate memory.md/prompts.md into docs/archive/",
+    "bytes": 2606
+  },
+  {
+    "path": "scripts/sweep_customers.py",
+    "purpose": "Customer-marker sweep",
+    "bytes": 2791
+  },
+  {
+    "path": "scripts/sync_corpus.sh",
+    "purpose": "Rebuild corpus from local skills + reindex",
+    "bytes": 2698
+  },
+  {
+    "path": "scripts/watch_and_index.sh",
+    "purpose": "Reindex on corpus changes (fswatch/inotifywait)",
+    "bytes": 849
+  },
+  {
+    "path": "tests/__init__.py",
+    "purpose": "docs/config",
+    "bytes": 0
   },
   {
     "path": "tests/fixtures/optimizer/bare-filter.golden.json",
@@ -225,456 +1000,6 @@
     "bytes": 1151
   },
   {
-    "path": "tests/test_js_parity.py",
-    "purpose": "docs/config",
-    "bytes": 1537
-  },
-  {
-    "path": "tests/test_normalize.py",
-    "purpose": "docs/config",
-    "bytes": 4406
-  },
-  {
-    "path": ".editorconfig",
-    "purpose": "docs/config",
-    "bytes": 220
-  },
-  {
-    "path": ".env.example",
-    "purpose": "docs/config",
-    "bytes": 368
-  },
-  {
-    "path": ".gitattributes",
-    "purpose": "docs/config",
-    "bytes": 48
-  },
-  {
-    "path": ".github/CODEOWNERS",
-    "purpose": "docs/config",
-    "bytes": 12
-  },
-  {
-    "path": ".github/ISSUE_TEMPLATE/bug_report.md",
-    "purpose": "docs/config",
-    "bytes": 136
-  },
-  {
-    "path": ".github/ISSUE_TEMPLATE/feature_request.md",
-    "purpose": "docs/config",
-    "bytes": 86
-  },
-  {
-    "path": ".github/PULL_REQUEST_TEMPLATE.md",
-    "purpose": "docs/config",
-    "bytes": 160
-  },
-  {
-    "path": ".github/SECURITY.md",
-    "purpose": "docs/config",
-    "bytes": 238
-  },
-  {
-    "path": ".github/copilot-instructions.md",
-    "purpose": "docs/config",
-    "bytes": 285
-  },
-  {
-    "path": ".github/dependabot.yml",
-    "purpose": "docs/config",
-    "bytes": 189
-  },
-  {
-    "path": ".github/workflows/ci.yml",
-    "purpose": "docs/config",
-    "bytes": 1064
-  },
-  {
-    "path": ".gitignore",
-    "purpose": "docs/config",
-    "bytes": 782
-  },
-  {
-    "path": ".mcp.json",
-    "purpose": "docs/config",
-    "bytes": 103
-  },
-  {
-    "path": ".vscode/extensions.json",
-    "purpose": "docs/config",
-    "bytes": 95
-  },
-  {
-    "path": ".vscode/launch.json",
-    "purpose": "docs/config",
-    "bytes": 300
-  },
-  {
-    "path": ".vscode/mcp.json",
-    "purpose": "VS Code MCP registration",
-    "bytes": 142
-  },
-  {
-    "path": ".vscode/settings.json",
-    "purpose": "docs/config",
-    "bytes": 166
-  },
-  {
-    "path": "AGENTS.md",
-    "purpose": "docs/config",
-    "bytes": 308
-  },
-  {
-    "path": "CLAUDE.md",
-    "purpose": "docs/config",
-    "bytes": 2215
-  },
-  {
-    "path": "CODE_OF_CONDUCT.md",
-    "purpose": "docs/config",
-    "bytes": 299
-  },
-  {
-    "path": "CONTRIBUTING.md",
-    "purpose": "docs/config",
-    "bytes": 262
-  },
-  {
-    "path": "GEMINI.md",
-    "purpose": "docs/config",
-    "bytes": 86
-  },
-  {
-    "path": "LICENSE",
-    "purpose": "docs/config",
-    "bytes": 1090
-  },
-  {
-    "path": "README.md",
-    "purpose": "Overview and quick start",
-    "bytes": 12917
-  },
-  {
-    "path": "docs/ARCHITECTURE.md",
-    "purpose": "docs/config",
-    "bytes": 3450
-  },
-  {
-    "path": "docs/COMPONENTS.md",
-    "purpose": "docs/config",
-    "bytes": 4150
-  },
-  {
-    "path": "docs/DEMO-mql-optimizer.md",
-    "purpose": "docs/config",
-    "bytes": 13108
-  },
-  {
-    "path": "docs/DEVELOPMENT.md",
-    "purpose": "docs/config",
-    "bytes": 3213
-  },
-  {
-    "path": "docs/INSTALLATION.md",
-    "purpose": "docs/config",
-    "bytes": 478
-  },
-  {
-    "path": "docs/LSP.md",
-    "purpose": "docs/config",
-    "bytes": 3952
-  },
-  {
-    "path": "docs/MCP.md",
-    "purpose": "docs/config",
-    "bytes": 2318
-  },
-  {
-    "path": "docs/RECIPES.md",
-    "purpose": "docs/config",
-    "bytes": 8093
-  },
-  {
-    "path": "docs/SECURITY.md",
-    "purpose": "docs/config",
-    "bytes": 1580
-  },
-  {
-    "path": "docs/TESTING.md",
-    "purpose": "docs/config",
-    "bytes": 3303
-  },
-  {
-    "path": "docs/archive/.gitkeep",
-    "purpose": "docs/config",
-    "bytes": 0
-  },
-  {
-    "path": "docs/caching-and-optimization.md",
-    "purpose": "docs/config",
-    "bytes": 353
-  },
-  {
-    "path": "docs/codebase-overview.md",
-    "purpose": "docs/config",
-    "bytes": 4936
-  },
-  {
-    "path": "docs/external-calls.md",
-    "purpose": "docs/config",
-    "bytes": 837
-  },
-  {
-    "path": "docs/high_signal_file_index.json",
-    "purpose": "docs/config",
-    "bytes": 9510
-  },
-  {
-    "path": "docs/integrations-and-assumptions.md",
-    "purpose": "docs/config",
-    "bytes": 437
-  },
-  {
-    "path": "docs/known-issues.md",
-    "purpose": "docs/config",
-    "bytes": 3997
-  },
-  {
-    "path": "docs/logging.md",
-    "purpose": "docs/config",
-    "bytes": 1308
-  },
-  {
-    "path": "docs/onboarding.md",
-    "purpose": "docs/config",
-    "bytes": 447
-  },
-  {
-    "path": "docs/repo-bootstrap-audit-2026-10-19.md",
-    "purpose": "docs/config",
-    "bytes": 5126
-  },
-  {
-    "path": "docs/requirements.md",
-    "purpose": "docs/config",
-    "bytes": 703
-  },
-  {
-    "path": "docs/runbooks/rebuild-index.md",
-    "purpose": "docs/config",
-    "bytes": 390
-  },
-  {
-    "path": "editors/helix-languages.toml",
-    "purpose": "docs/config",
-    "bytes": 248
-  },
-  {
-    "path": "editors/neovim.lua",
-    "purpose": "docs/config",
-    "bytes": 253
-  },
-  {
-    "path": "editors/vscode/.vscodeignore",
-    "purpose": "docs/config",
-    "bytes": 44
-  },
-  {
-    "path": "editors/vscode/LICENSE",
-    "purpose": "docs/config",
-    "bytes": 1090
-  },
-  {
-    "path": "editors/vscode/README.md",
-    "purpose": "docs/config",
-    "bytes": 1202
-  },
-  {
-    "path": "editors/vscode/extension.js",
-    "purpose": "docs/config",
-    "bytes": 1478
-  },
-  {
-    "path": "editors/vscode/language-configuration.json",
-    "purpose": "docs/config",
-    "bytes": 546
-  },
-  {
-    "path": "editors/vscode/package-lock.json",
-    "purpose": "docs/config",
-    "bytes": 139327
-  },
-  {
-    "path": "editors/vscode/package.json",
-    "purpose": "docs/config",
-    "bytes": 1884
-  },
-  {
-    "path": "editors/vscode/server-path.js",
-    "purpose": "docs/config",
-    "bytes": 745
-  },
-  {
-    "path": "editors/vscode/syntaxes/mql.tmLanguage.json",
-    "purpose": "docs/config",
-    "bytes": 2860
-  },
-  {
-    "path": "editors/vscode/test/server-path.test.js",
-    "purpose": "docs/config",
-    "bytes": 1455
-  },
-  {
-    "path": "examples/orders.mql",
-    "purpose": "docs/config",
-    "bytes": 672
-  },
-  {
-    "path": "examples/slow-queries.mql",
-    "purpose": "Sample queries for mdbx optimize",
-    "bytes": 1543
-  },
-  {
-    "path": "mdbx/__init__.py",
-    "purpose": "Package version",
-    "bytes": 106
-  },
-  {
-    "path": "mdbx/cli.py",
-    "purpose": "mdbx command entry point",
-    "bytes": 8444
-  },
-  {
-    "path": "mdbx/corpus.py",
-    "purpose": "Corpus discovery, classification, chunking",
-    "bytes": 4290
-  },
-  {
-    "path": "mdbx/embed.py",
-    "purpose": "Ollama embedding client",
-    "bytes": 2771
-  },
-  {
-    "path": "mdbx/index.py",
-    "purpose": "SQLite schema + keyword/semantic index builds",
-    "bytes": 5413
-  },
-  {
-    "path": "mdbx/mcp_server.py",
-    "purpose": "MCP server (stdio)",
-    "bytes": 5883
-  },
-  {
-    "path": "mdbx/mql/__init__.py",
-    "purpose": "docs/config",
-    "bytes": 86
-  },
-  {
-    "path": "mdbx/mql/analyze.py",
-    "purpose": "Context-aware MQL lint + outline",
-    "bytes": 39336
-  },
-  {
-    "path": "mdbx/mql/features.py",
-    "purpose": "LSP completion and hover logic",
-    "bytes": 6724
-  },
-  {
-    "path": "mdbx/mql/operators.py",
-    "purpose": "MQL operator table",
-    "bytes": 20783
-  },
-  {
-    "path": "mdbx/mql/optimize.py",
-    "purpose": "Static MQL query optimizer",
-    "bytes": 47435
-  },
-  {
-    "path": "mdbx/mql/parser.py",
-    "purpose": "Tolerant mongosh/MQL parser",
-    "bytes": 13947
-  },
-  {
-    "path": "mdbx/mql/server.py",
-    "purpose": "mql-lsp language server (lint + optimizer diagnostics)",
-    "bytes": 8647
-  },
-  {
-    "path": "mdbx/recipes.py",
-    "purpose": "docs/config",
-    "bytes": 2757
-  },
-  {
-    "path": "mdbx/search.py",
-    "purpose": "Keyword, semantic, hybrid ranking",
-    "bytes": 7107
-  },
-  {
-    "path": "mdbx/tui.py",
-    "purpose": "Textual TUI",
-    "bytes": 8823
-  },
-  {
-    "path": "memory.md",
-    "purpose": "docs/config",
-    "bytes": 6404
-  },
-  {
-    "path": "prompts.md",
-    "purpose": "docs/config",
-    "bytes": 1712
-  },
-  {
-    "path": "pyproject.toml",
-    "purpose": "Packaging, deps, tool config",
-    "bytes": 943
-  },
-  {
-    "path": "scripts/check_doc_indexes.py",
-    "purpose": "Validate index paths",
-    "bytes": 453
-  },
-  {
-    "path": "scripts/gen_file_index.py",
-    "purpose": "Regenerate this index",
-    "bytes": 3400
-  },
-  {
-    "path": "scripts/gen_recipes_index.py",
-    "purpose": "docs/config",
-    "bytes": 3078
-  },
-  {
-    "path": "scripts/redact_corpus.py",
-    "purpose": "Redact customer/internal references",
-    "bytes": 4215
-  },
-  {
-    "path": "scripts/rotate_workflow_logs.py",
-    "purpose": "Rotate memory.md/prompts.md into docs/archive/",
-    "bytes": 2606
-  },
-  {
-    "path": "scripts/sweep_customers.py",
-    "purpose": "Customer-marker sweep",
-    "bytes": 2791
-  },
-  {
-    "path": "scripts/sync_corpus.sh",
-    "purpose": "Rebuild corpus from local skills + reindex",
-    "bytes": 2698
-  },
-  {
-    "path": "scripts/watch_and_index.sh",
-    "purpose": "Reindex on corpus changes (fswatch/inotifywait)",
-    "bytes": 849
-  },
-  {
-    "path": "tests/__init__.py",
-    "purpose": "docs/config",
-    "bytes": 0
-  },
-  {
     "path": "tests/test_cdo_hardening.py",
     "purpose": "Embed/index/search hardening tests",
     "bytes": 4735
@@ -683,6 +1008,11 @@
     "path": "tests/test_core.py",
     "purpose": "Core unit tests",
     "bytes": 3632
+  },
+  {
+    "path": "tests/test_js_parity.py",
+    "purpose": "docs/config",
+    "bytes": 1537
   },
   {
     "path": "tests/test_lsp_e2e.py",
@@ -700,6 +1030,11 @@
     "bytes": 5518
   },
   {
+    "path": "tests/test_normalize.py",
+    "purpose": "docs/config",
+    "bytes": 4406
+  },
+  {
     "path": "tests/test_optimize.py",
     "purpose": "Static optimizer tests",
     "bytes": 7499
@@ -712,6 +1047,6 @@
   {
     "path": "tests/test_tui.py",
     "purpose": "TUI pilot test",
-    "bytes": 1410
+    "bytes": 3212
   }
 ]

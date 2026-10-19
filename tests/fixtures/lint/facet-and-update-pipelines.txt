@@ -1,0 +1,33 @@
+// $facet sub-pipelines, $unionWith, and pipeline-style updates.
+
+// valid facet
+db.c.aggregate([
+  { $facet: {
+      byTag: [{ $unwind: "$tags" }, { $sortByCount: "$tags" }],
+      total: [{ $count: "n" }]
+  } }
+])
+
+// stages that may not appear in $facet
+db.c.aggregate([{ $facet: { a: [{ $out: "z" }], b: [{ $merge: "w" }] } }])
+db.c.aggregate([{ $facet: { a: [{ $facet: { x: [] } }] } }])
+db.c.aggregate([{ $facet: { a: [{ $geoNear: { near: [0, 0], distanceField: "d" } }] } }])
+db.c.aggregate([{ $facet: { a: [{ $collStats: {} }, { $indexStats: {} }] } }])
+db.c.aggregate([{ $facet: { a: [{ $search: { text: { query: "q", path: "p" } } }] } }])
+db.c.aggregate([{ $facet: { a: [{ $limit: 1 }, { $vectorSearch: { index: "i", path: "p", queryVector: [1], limit: 1, numCandidates: 5 } }] } }])
+db.c.aggregate([{ $facet: { bad: 5, worse: { $match: {} }, empty: [] } }])
+db.c.aggregate([{ $facet: 7 }])
+
+// $unionWith with a nested pipeline
+db.c.aggregate([{ $unionWith: { coll: "other", pipeline: [{ $out: "q" }, { $limit: 1 }] } }])
+db.c.aggregate([{ $unionWith: "other" }, { $unionWith: { coll: "o2", pipeline: [{ $match: { a: 1 } }] } }])
+db.c.aggregate([{ $unionWith: 5 }])
+
+// update pipelines: allowed stages
+db.c.updateOne({ _id: 1 }, [{ $set: { a: 1 } }, { $unset: "b" }, { $replaceWith: "$doc" }])
+db.c.updateMany({}, [{ $addFields: { t: "$$NOW" } }, { $project: { a: 1 } }, { $replaceRoot: { newRoot: "$x" } }])
+// update pipelines: forbidden stages
+db.c.updateOne({}, [{ $match: { a: 1 } }])
+db.c.updateOne({}, [{ $group: { _id: null } }, { $sort: { a: 1 } }, { $lookup: { from: "x", as: "y", localField: "a", foreignField: "b" } }])
+db.c.updateMany({ a: 1 }, [{ $limit: 1 }, { $out: "x" }, { $set: { ok: true } }])
+db.c.findOneAndUpdate({ a: 1 }, [{ $count: "n" }])

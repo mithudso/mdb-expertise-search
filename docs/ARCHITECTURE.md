@@ -33,6 +33,7 @@ MQL text ──parser.py──▶ analyze.py (lint) ────────┐
 - **Optimizer input normalization (0.5.0).** Case text is mostly log lines, profiler entries and command
   documents, so `normalize.py` turns them into mongosh calls before the audit, copying values from the
   source text (relaxed JSON and mongosh literals survive) and keeping log measurements as P9 evidence.
+- **Browser search without SQLite (0.6.0).** `mdbx export-web` writes postings as little-endian binary arrays (uint32 chunk ids, uint16 weighted term frequencies 4·heading + text + 2·source, uint32 doc lengths) and int8 vectors; the extension computes FTS5's bm25() from them, so keyword results equal `mdbx search` (verified on 41 real queries). Semantic search needs a query embedding from a local Ollama; keyword is the default so the extension works with no setup.
 - **Chrome extension as a JS port, not Pyodide (0.5.0).** A ~70 KB dependency-free port loads instantly
   and needs no `wasm-unsafe-eval`; drift is prevented by golden files and a cross-implementation test
   rather than by sharing one runtime.

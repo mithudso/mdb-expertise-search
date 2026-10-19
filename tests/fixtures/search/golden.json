@@ -1,0 +1,3265 @@
+{
+ "dim": 32,
+ "results": [
+  {
+   "query": {
+    "q": "compound index sort"
+   },
+   "qvec": [
+    0.0,
+    0.0,
+    0.7724037857799031,
+    0.0,
+    0.0,
+    0.512259475392493,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    -0.2047432072493506,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.314742498987237,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "keyword": [
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 6.734040652,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.40681214,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.317423096,
+     "via": "semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.305019014,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.259113798,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.229905411,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.220599189,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.190347645,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.14040889,
+     "via": "semantic"
+    },
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.112281592,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.096956672,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.032786885,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.016129032,
+     "via": "semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.015873016,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015625,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.015384615,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.015151515,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014925373,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.014705882,
+     "via": "semantic"
+    },
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014492754,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014285714,
+     "via": "semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "shard key chunk"
+   },
+   "qvec": [
+    0.40593795490402684,
+    0.0,
+    0.0,
+    0.0,
+    0.5246556586967139,
+    -0.19530977075571102,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.6954559680242572,
+    0.0,
+    -0.19530977075571102,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "keyword": [
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 2.689436187,
+     "via": "keyword"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 2.046946226,
+     "via": "keyword"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 2.033323215,
+     "via": "keyword"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 1.882501445,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.48431516,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.267595796,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.243363754,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.228310699,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.14699646,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.080059818,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.062244624,
+     "via": "semantic"
+    },
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.029111016,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015553617,
+     "via": "semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": -0.022887157,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.032786885,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.032258065,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.031746032,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.031009615,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.015625,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.015151515,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014925373,
+     "via": "semantic"
+    },
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014705882,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014492754,
+     "via": "semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.014285714,
+     "via": "semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "why is my compound index not used for sort"
+   },
+   "qvec": [
+    0.0,
+    0.0,
+    0.4232762409850505,
+    0.43383614720505176,
+    0.0,
+    0.16851850342752012,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    -0.11219900358751339,
+    0.0,
+    0.0,
+    0.4065563894700485,
+    0.0,
+    -0.11219900358751339,
+    0.0,
+    0.11175900749501334,
+    0.3361570146700401,
+    -0.11219900358751339,
+    0.0,
+    0.17247846826002056,
+    -0.11219900358751339,
+    0.2622376711300313,
+    0.0,
+    0.0,
+    0.0,
+    0.4056763972850484,
+    0.0
+   ],
+   "keyword": [
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 6.734040652,
+     "via": "keyword"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 2.843803453,
+     "via": "keyword"
+    },
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 1.346549931,
+     "via": "keyword"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 1.344877306,
+     "via": "keyword"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 1.301199021,
+     "via": "keyword"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 2.038e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 2.029e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 1.391e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 1.205e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 1.113e-06,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.418644156,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.312120063,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.231493377,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.208298308,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.193920483,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.176040011,
+     "via": "semantic"
+    },
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.168740234,
+     "via": "semantic"
+    },
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.139842538,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.132934253,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.097072839,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.032266458,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.031754032,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.031099325,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.031054405,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.030769231,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.030117754,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.029437229,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.029386529,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.029236022,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.028381643,
+     "via": "keyword+semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "private endpoint"
+   },
+   "qvec": [
+    0.0,
+    0.6147381297207087,
+    0.0,
+    0.0,
+    -0.24647519352009548,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    -0.24647519352009548,
+    0.707528790810627,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "keyword": [
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 8.583631856,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.790707034,
+     "via": "semantic"
+    },
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.484685077,
+     "via": "semantic"
+    },
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.393857998,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.31150172,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.286500299,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.246498026,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.222775217,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.19421195,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.151789448,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.143729629,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.032786885,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.016129032,
+     "via": "semantic"
+    },
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015873016,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015625,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015384615,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015151515,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014925373,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.014705882,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.014492754,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.014285714,
+     "via": "semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "vector search numCandidates recall"
+   },
+   "qvec": [
+    0.0,
+    0.0,
+    0.5464096642744681,
+    0.0,
+    -0.1838185546042076,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    -0.1838185546042076,
+    0.0,
+    0.0,
+    0.557943377504536,
+    0.49594966889292097,
+    0.0,
+    0.20688598106434347,
+    0.0,
+    0.0,
+    0.0,
+    -0.1838185546042076,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "keyword": [
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 12.565457178,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.36919802,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.19276967,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.134198613,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.12834094,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.105290542,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.104802402,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.101879242,
+     "via": "semantic"
+    },
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.101805453,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.054558096,
+     "via": "semantic"
+    },
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.030332758,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.032786885,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.016129032,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.015873016,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015625,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.015384615,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.015151515,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014925373,
+     "via": "semantic"
+    },
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014705882,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014492754,
+     "via": "semantic"
+    },
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014285714,
+     "via": "semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "regex anchored index bounds"
+   },
+   "qvec": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.5087932848133355,
+    -0.2033578175978065,
+    -0.2033578175978065,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.31500524686719045,
+    0.0,
+    0.0,
+    0.5805666322007966,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.471311647844328,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "keyword": [
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 4.303596716,
+     "via": "keyword"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 1.837819788,
+     "via": "keyword"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 2.038e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 2.015e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 1.993e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 1.391e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 1.205e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 1.113e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 9.89e-07,
+     "via": "keyword"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 9.64e-07,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.410137899,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.399255728,
+     "via": "semantic"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.296864109,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.202711041,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.133976915,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.08934934,
+     "via": "semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.060263238,
+     "via": "semantic"
+    },
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.023472334,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.014185126,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": -0.022643455,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.032786885,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.032258065,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.031257631,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.03125,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.030798389,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.030536131,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.030076888,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.028985507,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.028571429,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.028404512,
+     "via": "keyword+semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "balancer jumbo chunks",
+    "kind": "skill"
+   },
+   "qvec": [
+    0.0,
+    0.0,
+    0.0,
+    0.5354410748640764,
+    0.0,
+    -0.17918303686396259,
+    0.0,
+    -0.17918303686396259,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    -0.17918303686396259,
+    0.0,
+    0.4581464315109945,
+    0.0,
+    0.0,
+    0.0,
+    0.6380321469508942,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "keyword": [
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 7.182122094,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.589558391,
+     "via": "semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.199964617,
+     "via": "semantic"
+    },
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.184406097,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.006041929,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": -0.014429809,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": -0.025086178,
+     "via": "semantic"
+    },
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": -0.039892225,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": -0.042293504,
+     "via": "semantic"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": -0.076149333,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": -0.167043849,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.032786885,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.016129032,
+     "via": "semantic"
+    },
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015873016,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015625,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015384615,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015151515,
+     "via": "semantic"
+    },
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.014925373,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014705882,
+     "via": "semantic"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.014492754,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014285714,
+     "via": "semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "sort",
+    "source": "query-shape"
+   },
+   "qvec": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "keyword": [
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 2.843802465,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.267716535,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.157480315,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.032786885,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.016129032,
+     "via": "semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "shard",
+    "kind": "recipe"
+   },
+   "qvec": [
+    0.9011247017590058,
+    0.0,
+    0.0,
+    0.0,
+    -0.4335599980161254,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "keyword": [
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 1.10427441,
+     "via": "keyword"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 1.065740694,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.515559534,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.238635386,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.032786885,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.032258065,
+     "via": "keyword+semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "the and of"
+   },
+   "qvec": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.6622099487027973,
+    -0.16719162071209237,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    -0.16719162071209237,
+    0.6018898345635326,
+    0.0,
+    0.0,
+    0.33962846874064256,
+    -0.16719162071209237
+   ],
+   "keyword": [
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 2.234078412,
+     "via": "keyword"
+    },
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 3.844e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 3.709e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 3.483e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 3.475e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 2.882e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 2.763e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 2.718e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 2.225e-06,
+     "via": "keyword"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 2.11e-06,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.722292582,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.708766504,
+     "via": "semantic"
+    },
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.605627575,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.585018375,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.520867593,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.377785432,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.362349183,
+     "via": "semantic"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.35532285,
+     "via": "semantic"
+    },
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.315802953,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.255266009,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.032018443,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.032002048,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.032002048,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.031009615,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.030536131,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.029906956,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.029631255,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.029631255,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.029040404,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.028571429,
+     "via": "keyword+semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "zzzznotaword"
+   },
+   "qvec": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.9297654350691267,
+    0.0,
+    0.0,
+    -0.3681524626438312,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "keyword": [],
+   "semantic": [
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.5344321,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.483185187,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.443533626,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.336765433,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.322123458,
+     "via": "semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.241592593,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.103869355,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.063922226,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.037537114,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.036604938,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.016393443,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.016129032,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015873016,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.015625,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015384615,
+     "via": "semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.015151515,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.014925373,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.014705882,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.014492754,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014285714,
+     "via": "semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "$in 201 SORT_MERGE"
+   },
+   "qvec": [
+    0.0,
+    -0.2414401438020999,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.7555656264865714,
+    0.0,
+    0.0,
+    0.2717385147890301,
+    0.0,
+    0.0,
+    0.0,
+    -0.2414401438020999,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.4885612321642492
+   ],
+   "keyword": [
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 3.572944287,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.447340835,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.436769209,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.332469452,
+     "via": "semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.233947559,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.224061821,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.16311468,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.131958948,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.12255035,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.118636313,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.117741676,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.032522475,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.016393443,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015873016,
+     "via": "semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.015625,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.015384615,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015151515,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014925373,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014705882,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.014492754,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.014285714,
+     "via": "semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "hidden index hideIndex"
+   },
+   "qvec": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.5150753577161036,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    -0.20586867745706333,
+    0.2720695855020798,
+    0.0,
+    -0.20586867745706333,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.7588884580770179,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "keyword": [
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 6.795146889,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.572357515,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.33261284,
+     "via": "semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.154981577,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.135535775,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.081699066,
+     "via": "semantic"
+    },
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.04617027,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.045299373,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": -0.001888004,
+     "via": "semantic"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": -0.009096745,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": -0.019706435,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.032786885,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.016129032,
+     "via": "semantic"
+    },
+    {
+     "id": 5,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 8,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.015873016,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.015625,
+     "via": "semantic"
+    },
+    {
+     "id": 9,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 14,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015384615,
+     "via": "semantic"
+    },
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.015151515,
+     "via": "semantic"
+    },
+    {
+     "id": 11,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014925373,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014705882,
+     "via": "semantic"
+    },
+    {
+     "id": 6,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 14,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.014492754,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.014285714,
+     "via": "semantic"
+    }
+   ]
+  },
+  {
+   "query": {
+    "q": "scatter gather mongos shard"
+   },
+   "qvec": [
+    0.1723917375335334,
+    0.0,
+    0.0,
+    0.0,
+    -0.15985415662200367,
+    0.0,
+    -0.15985415662200367,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.6181027389384142,
+    0.3397684427024549,
+    0.0,
+    0.0,
+    0.6293865617587909,
+    -0.15985415662200367,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "keyword": [
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 11.56103474,
+     "via": "keyword"
+    }
+   ],
+   "semantic": [
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.68827864,
+     "via": "semantic"
+    },
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.620812633,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.466871871,
+     "via": "semantic"
+    },
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.433632474,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.407668822,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.243076052,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.225661648,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.214111278,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.194283144,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.19073412,
+     "via": "semantic"
+    }
+   ],
+   "hybrid": [
+    {
+     "id": 13,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 13,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.032786885,
+     "via": "keyword+semantic"
+    },
+    {
+     "id": 12,
+     "path": "skills/mongodb-expert/references/sharding.md",
+     "line": 8,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.016129032,
+     "via": "semantic"
+    },
+    {
+     "id": 0,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 3,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.015873016,
+     "via": "semantic"
+    },
+    {
+     "id": 4,
+     "path": "skills/mongodb-atlas-expert/SKILL.md",
+     "line": 3,
+     "source": "mongodb-atlas-expert",
+     "kind": "skill",
+     "score": 0.015625,
+     "via": "semantic"
+    },
+    {
+     "id": 7,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 3,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.015384615,
+     "via": "semantic"
+    },
+    {
+     "id": 1,
+     "path": "llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
+     "line": 9,
+     "source": "mongodb-query-shape-optimization",
+     "kind": "llms",
+     "score": 0.015151515,
+     "via": "semantic"
+    },
+    {
+     "id": 8,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 9,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014925373,
+     "via": "semantic"
+    },
+    {
+     "id": 2,
+     "path": "recipes/shard-a-collection.md",
+     "line": 1,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.014705882,
+     "via": "semantic"
+    },
+    {
+     "id": 3,
+     "path": "recipes/shard-a-collection.md",
+     "line": 11,
+     "source": "shard-a-collection",
+     "kind": "recipe",
+     "score": 0.014492754,
+     "via": "semantic"
+    },
+    {
+     "id": 10,
+     "path": "skills/mongodb-expert/references/indexes.md",
+     "line": 19,
+     "source": "mongodb-expert",
+     "kind": "skill",
+     "score": 0.014285714,
+     "via": "semantic"
+    }
+   ]
+  }
+ ]
+}

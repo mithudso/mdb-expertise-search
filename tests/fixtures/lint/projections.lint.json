@@ -1,0 +1,657 @@
+{
+  "diagnostics": [
+    {
+      "code": "projection-mix",
+      "column": 22,
+      "end": 182,
+      "fix": null,
+      "line": 4,
+      "message": "Cannot mix exclusion with inclusion in one projection (only _id may differ).",
+      "severity": "error",
+      "start": 181
+    },
+    {
+      "code": "projection-mix",
+      "column": 22,
+      "end": 212,
+      "fix": null,
+      "line": 5,
+      "message": "Cannot mix exclusion with inclusion in one projection (only _id may differ).",
+      "severity": "error",
+      "start": 211
+    },
+    {
+      "code": "projection-mix",
+      "column": 28,
+      "end": 218,
+      "fix": null,
+      "line": 5,
+      "message": "Cannot mix exclusion with inclusion in one projection (only _id may differ).",
+      "severity": "error",
+      "start": 217
+    },
+    {
+      "code": "projection-mix",
+      "column": 31,
+      "end": 304,
+      "fix": null,
+      "line": 7,
+      "message": "Cannot mix exclusion with inclusion in one projection (only _id may differ).",
+      "severity": "error",
+      "start": 294
+    },
+    {
+      "code": "projection-mix",
+      "column": 32,
+      "end": 344,
+      "fix": null,
+      "line": 8,
+      "message": "Cannot mix exclusion with inclusion in one projection (only _id may differ).",
+      "severity": "error",
+      "start": 343
+    },
+    {
+      "code": "projection-mix",
+      "column": 25,
+      "end": 379,
+      "fix": null,
+      "line": 9,
+      "message": "Cannot mix exclusion with inclusion in one projection (only _id may differ).",
+      "severity": "error",
+      "start": 378
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 16,
+      "end": 568,
+      "fix": null,
+      "line": 13,
+      "message": "Field names here cannot start with '$' ($bad); operators belong inside a field's value.",
+      "severity": "warning",
+      "start": 564
+    },
+    {
+      "code": "duplicate-key",
+      "column": 22,
+      "end": 604,
+      "fix": null,
+      "line": 14,
+      "message": "Duplicate key 'a': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 603
+    },
+    {
+      "code": "projection-mix",
+      "column": 22,
+      "end": 604,
+      "fix": null,
+      "line": 14,
+      "message": "Cannot mix exclusion with inclusion in one projection (only _id may differ).",
+      "severity": "error",
+      "start": 603
+    },
+    {
+      "code": "unknown-operator",
+      "column": 32,
+      "end": 648,
+      "fix": "$ne",
+      "line": 15,
+      "message": "Unknown expression operator $nope. Did you mean $ne?",
+      "severity": "error",
+      "start": 643
+    },
+    {
+      "code": "projection-mix",
+      "column": 30,
+      "end": 786,
+      "fix": null,
+      "line": 19,
+      "message": "Cannot mix exclusion with inclusion in one projection (only _id may differ).",
+      "severity": "error",
+      "start": 785
+    },
+    {
+      "code": "projection-mix",
+      "column": 36,
+      "end": 864,
+      "fix": null,
+      "line": 20,
+      "message": "Cannot mix exclusion with inclusion in one projection (only _id may differ).",
+      "severity": "error",
+      "start": 863
+    },
+    {
+      "code": "bad-argument",
+      "column": 68,
+      "end": 948,
+      "fix": null,
+      "line": 21,
+      "message": "$cond array form needs exactly 3 elements [if, then, else].",
+      "severity": "error",
+      "start": 942
+    },
+    {
+      "code": "bad-argument",
+      "column": 44,
+      "end": 1032,
+      "fix": null,
+      "line": 22,
+      "message": "$divide expects exactly 2 arguments.",
+      "severity": "error",
+      "start": 1026
+    },
+    {
+      "code": "bad-argument",
+      "column": 95,
+      "end": 1089,
+      "fix": null,
+      "line": 22,
+      "message": "$subtract expects exactly 2 arguments.",
+      "severity": "error",
+      "start": 1077
+    },
+    {
+      "code": "stage-shape",
+      "column": 33,
+      "end": 1132,
+      "fix": null,
+      "line": 23,
+      "message": "An expression object must contain exactly one operator key; found 2 keys.",
+      "severity": "error",
+      "start": 1131
+    },
+    {
+      "code": "unknown-operator",
+      "column": 35,
+      "end": 1211,
+      "fix": "$gt",
+      "line": 24,
+      "message": "Unknown expression operator $gtt. Did you mean $gt?",
+      "severity": "error",
+      "start": 1207
+    },
+    {
+      "code": "removed-operator",
+      "column": 59,
+      "end": 1239,
+      "fix": null,
+      "line": 24,
+      "message": "$pushAll: Removed in MongoDB 3.6; use $push with $each.",
+      "severity": "error",
+      "start": 1231
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 81,
+      "end": 1259,
+      "fix": null,
+      "line": 24,
+      "message": "$match is not an aggregation expression operator.",
+      "severity": "warning",
+      "start": 1253
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 30,
+      "end": 1627,
+      "fix": null,
+      "line": 28,
+      "message": "Field names here cannot start with '$' ($weird); operators belong inside a field's value.",
+      "severity": "warning",
+      "start": 1621
+    },
+    {
+      "code": "bad-argument",
+      "column": 28,
+      "end": 1671,
+      "fix": null,
+      "line": 29,
+      "message": "$project expects an object, got array.",
+      "severity": "error",
+      "start": 1665
+    },
+    {
+      "code": "unknown-operator",
+      "column": 31,
+      "end": 1870,
+      "fix": null,
+      "line": 33,
+      "message": "$unknownExpr is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 1858
+    },
+    {
+      "code": "duplicate-key",
+      "column": 38,
+      "end": 1921,
+      "fix": null,
+      "line": 34,
+      "message": "Duplicate key 'a': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 1920
+    },
+    {
+      "code": "bad-argument",
+      "column": 75,
+      "end": 2049,
+      "fix": null,
+      "line": 37,
+      "message": "$setDifference expects exactly 2 arguments.",
+      "severity": "error",
+      "start": 2031
+    },
+    {
+      "code": "bad-argument",
+      "column": 116,
+      "end": 2078,
+      "fix": null,
+      "line": 37,
+      "message": "$arrayElemAt expects exactly 2 arguments.",
+      "severity": "error",
+      "start": 2072
+    },
+    {
+      "code": "unknown-operator",
+      "column": 66,
+      "end": 2220,
+      "fix": null,
+      "line": 39,
+      "message": "$zzz is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 2216
+    }
+  ],
+  "source": "tests/fixtures/lint/projections.txt",
+  "symbols": [
+    {
+      "children": [],
+      "end": 128,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 91
+    },
+    {
+      "children": [],
+      "end": 158,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 129
+    },
+    {
+      "children": [],
+      "end": 188,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 159
+    },
+    {
+      "children": [],
+      "end": 230,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 189
+    },
+    {
+      "children": [],
+      "end": 262,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 231
+    },
+    {
+      "children": [],
+      "end": 310,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 263
+    },
+    {
+      "children": [],
+      "end": 352,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 311
+    },
+    {
+      "children": [],
+      "end": 389,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 353
+    },
+    {
+      "children": [],
+      "end": 431,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 390
+    },
+    {
+      "children": [],
+      "end": 489,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 432
+    },
+    {
+      "children": [],
+      "end": 547,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 490
+    },
+    {
+      "children": [],
+      "end": 580,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 548
+    },
+    {
+      "children": [],
+      "end": 610,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 581
+    },
+    {
+      "children": [],
+      "end": 656,
+      "kind": "method",
+      "name": "db.c.findOne",
+      "start": 611
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 752,
+          "kind": "stage",
+          "name": "$project",
+          "start": 699
+        }
+      ],
+      "end": 754,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 683
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 824,
+          "kind": "stage",
+          "name": "$project",
+          "start": 771
+        }
+      ],
+      "end": 826,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 755
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 871,
+          "kind": "stage",
+          "name": "$project",
+          "start": 843
+        }
+      ],
+      "end": 873,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 827
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 979,
+          "kind": "stage",
+          "name": "$project",
+          "start": 890
+        }
+      ],
+      "end": 981,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 874
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1095,
+          "kind": "stage",
+          "name": "$project",
+          "start": 998
+        }
+      ],
+      "end": 1097,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 982
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1169,
+          "kind": "stage",
+          "name": "$project",
+          "start": 1114
+        }
+      ],
+      "end": 1171,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1098
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1269,
+          "kind": "stage",
+          "name": "$project",
+          "start": 1188
+        }
+      ],
+      "end": 1271,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1172
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1389,
+          "kind": "stage",
+          "name": "$project",
+          "start": 1288
+        }
+      ],
+      "end": 1391,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1272
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1494,
+          "kind": "stage",
+          "name": "$project",
+          "start": 1408
+        }
+      ],
+      "end": 1496,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1392
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1588,
+          "kind": "stage",
+          "name": "$project",
+          "start": 1513
+        }
+      ],
+      "end": 1590,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1497
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1634,
+          "kind": "stage",
+          "name": "$project",
+          "start": 1607
+        }
+      ],
+      "end": 1636,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1591
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1673,
+          "kind": "stage",
+          "name": "$project",
+          "start": 1653
+        }
+      ],
+      "end": 1675,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1637
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1784,
+          "kind": "stage",
+          "name": "$addFields",
+          "start": 1730
+        },
+        {
+          "children": [],
+          "end": 1824,
+          "kind": "stage",
+          "name": "$set",
+          "start": 1786
+        }
+      ],
+      "end": 1826,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1714
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1879,
+          "kind": "stage",
+          "name": "$set",
+          "start": 1843
+        }
+      ],
+      "end": 1881,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1827
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1928,
+          "kind": "stage",
+          "name": "$addFields",
+          "start": 1898
+        }
+      ],
+      "end": 1930,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1882
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2084,
+          "kind": "stage",
+          "name": "$project",
+          "start": 1972
+        }
+      ],
+      "end": 2086,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1956
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2147,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2103
+        }
+      ],
+      "end": 2149,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2087
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2232,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2166
+        }
+      ],
+      "end": 2234,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2150
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2307,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2251
+        }
+      ],
+      "end": 2309,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2235
+    }
+  ]
+}

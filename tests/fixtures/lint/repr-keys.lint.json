@@ -1,0 +1,422 @@
+{
+  "diagnostics": [
+    {
+      "code": "duplicate-key",
+      "column": 24,
+      "end": 128,
+      "fix": null,
+      "line": 1,
+      "message": "Duplicate key \"it's\": the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 122
+    },
+    {
+      "code": "duplicate-key",
+      "column": 35,
+      "end": 140,
+      "fix": null,
+      "line": 1,
+      "message": "Duplicate key \"it's\": the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 133
+    },
+    {
+      "code": "duplicate-key",
+      "column": 27,
+      "end": 184,
+      "fix": null,
+      "line": 2,
+      "message": "Duplicate key 'say \"hi\"': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 174
+    },
+    {
+      "code": "duplicate-key",
+      "column": 32,
+      "end": 238,
+      "fix": null,
+      "line": 3,
+      "message": "Duplicate key 'both \\' and \"': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 223
+    },
+    {
+      "code": "duplicate-key",
+      "column": 23,
+      "end": 274,
+      "fix": null,
+      "line": 4,
+      "message": "Duplicate key 'café': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 268
+    },
+    {
+      "code": "duplicate-key",
+      "column": 45,
+      "end": 296,
+      "fix": null,
+      "line": 4,
+      "message": "Duplicate key 'über': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 290
+    },
+    {
+      "code": "duplicate-key",
+      "column": 27,
+      "end": 340,
+      "fix": null,
+      "line": 5,
+      "message": "Duplicate key 'nbsp\\xa0key': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 330
+    },
+    {
+      "code": "duplicate-key",
+      "column": 29,
+      "end": 388,
+      "fix": null,
+      "line": 6,
+      "message": "Duplicate key 'zero\\u200bwidth': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 376
+    },
+    {
+      "code": "duplicate-key",
+      "column": 27,
+      "end": 432,
+      "fix": null,
+      "line": 7,
+      "message": "Duplicate key 'tab\\tkey': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 422
+    },
+    {
+      "code": "duplicate-key",
+      "column": 56,
+      "end": 460,
+      "fix": null,
+      "line": 7,
+      "message": "Duplicate key 'nl\\nkey': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 451
+    },
+    {
+      "code": "duplicate-key",
+      "column": 30,
+      "end": 510,
+      "fix": null,
+      "line": 8,
+      "message": "Duplicate key 'back\\\\slash': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 497
+    },
+    {
+      "code": "duplicate-key",
+      "column": 24,
+      "end": 548,
+      "fix": null,
+      "line": 9,
+      "message": "Duplicate key 'bell\\x07': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 541
+    },
+    {
+      "code": "duplicate-key",
+      "column": 47,
+      "end": 570,
+      "fix": null,
+      "line": 9,
+      "message": "Duplicate key 'del\\x7f': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 564
+    },
+    {
+      "code": "duplicate-key",
+      "column": 22,
+      "end": 604,
+      "fix": null,
+      "line": 10,
+      "message": "Duplicate key '日本語': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 599
+    },
+    {
+      "code": "duplicate-key",
+      "column": 45,
+      "end": 630,
+      "fix": null,
+      "line": 10,
+      "message": "Duplicate key 'dash‒x': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 622
+    },
+    {
+      "code": "mixed-keys",
+      "column": 25,
+      "end": 667,
+      "fix": null,
+      "line": 11,
+      "message": "'müx' is a field name inside an operator expression; operators and field names cannot be mixed.",
+      "severity": "error",
+      "start": 662
+    },
+    {
+      "code": "mixed-keys",
+      "column": 35,
+      "end": 677,
+      "fix": null,
+      "line": 11,
+      "message": "\"o'x\" is a field name inside an operator expression; operators and field names cannot be mixed.",
+      "severity": "error",
+      "start": 672
+    },
+    {
+      "code": "update-shape",
+      "column": 37,
+      "end": 727,
+      "fix": null,
+      "line": 12,
+      "message": "'pé' mixes a plain field with update operators; wrap it in $set.",
+      "severity": "error",
+      "start": 723
+    },
+    {
+      "code": "update-shape",
+      "column": 46,
+      "end": 737,
+      "fix": null,
+      "line": 12,
+      "message": "\"q'r\" mixes a plain field with update operators; wrap it in $set.",
+      "severity": "error",
+      "start": 732
+    },
+    {
+      "code": "duplicate-key",
+      "column": 38,
+      "end": 786,
+      "fix": null,
+      "line": 13,
+      "message": "Duplicate key 'ké': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 782
+    },
+    {
+      "code": "bad-argument",
+      "column": 63,
+      "end": 810,
+      "fix": null,
+      "line": 13,
+      "message": "$inc requires a numeric value for 'né'.",
+      "severity": "error",
+      "start": 807
+    },
+    {
+      "code": "bad-argument",
+      "column": 75,
+      "end": 822,
+      "fix": null,
+      "line": 13,
+      "message": "$inc requires a numeric value for \"i'j\".",
+      "severity": "error",
+      "start": 819
+    },
+    {
+      "code": "stage-shape",
+      "column": 36,
+      "end": 869,
+      "fix": null,
+      "line": 14,
+      "message": "Field 'béd' must be an accumulator expression such as { $sum: 1 }.",
+      "severity": "error",
+      "start": 864
+    },
+    {
+      "code": "stage-shape",
+      "column": 46,
+      "end": 879,
+      "fix": null,
+      "line": 14,
+      "message": "Field \"c'd\" must be an accumulator expression such as { $sum: 1 }.",
+      "severity": "error",
+      "start": 874
+    },
+    {
+      "code": "bad-argument",
+      "column": 77,
+      "end": 906,
+      "fix": null,
+      "line": 14,
+      "message": "Sort order for 'zé' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 905
+    },
+    {
+      "code": "bad-argument",
+      "column": 87,
+      "end": 916,
+      "fix": null,
+      "line": 14,
+      "message": "Sort order for \"y'x\" must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 915
+    },
+    {
+      "code": "unknown-field",
+      "column": 85,
+      "end": 1015,
+      "fix": null,
+      "line": 15,
+      "message": "'wéird' is not a $lookup option.",
+      "severity": "warning",
+      "start": 1008
+    },
+    {
+      "code": "projection-mix",
+      "column": 37,
+      "end": 1066,
+      "fix": null,
+      "line": 16,
+      "message": "Cannot mix exclusion with inclusion in one projection (only _id may differ).",
+      "severity": "error",
+      "start": 1062
+    }
+  ],
+  "source": "tests/fixtures/lint/repr-keys.txt",
+  "symbols": [
+    {
+      "children": [],
+      "end": 146,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 98
+    },
+    {
+      "children": [],
+      "end": 190,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 147
+    },
+    {
+      "children": [],
+      "end": 244,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 191
+    },
+    {
+      "children": [],
+      "end": 302,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 245
+    },
+    {
+      "children": [],
+      "end": 346,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 303
+    },
+    {
+      "children": [],
+      "end": 394,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 347
+    },
+    {
+      "children": [],
+      "end": 466,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 395
+    },
+    {
+      "children": [],
+      "end": 516,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 467
+    },
+    {
+      "children": [],
+      "end": 576,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 517
+    },
+    {
+      "children": [],
+      "end": 636,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 577
+    },
+    {
+      "children": [],
+      "end": 685,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 637
+    },
+    {
+      "children": [],
+      "end": 743,
+      "kind": "method",
+      "name": "db.c.updateOne",
+      "start": 686
+    },
+    {
+      "children": [],
+      "end": 827,
+      "kind": "method",
+      "name": "db.c.updateOne",
+      "start": 744
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 886,
+          "kind": "stage",
+          "name": "$group",
+          "start": 844
+        },
+        {
+          "children": [],
+          "end": 920,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 888
+        }
+      ],
+      "end": 922,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 828
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1022,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 939
+        }
+      ],
+      "end": 1024,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 923
+    },
+    {
+      "children": [],
+      "end": 1072,
+      "kind": "method",
+      "name": "db.c.find",
+      "start": 1025
+    }
+  ]
+}

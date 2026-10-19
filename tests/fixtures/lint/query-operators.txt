@@ -1,0 +1,97 @@
+// Query documents: top-level and field operators, $text, $where, geo, mixed and duplicate keys.
+
+// valid
+db.c.find({ a: { $gt: 1, $lt: 5 }, $or: [{ b: 1 }, { c: { $in: [1, 2] } }], t: { $regex: "^a", $options: "i" } })
+db.c.find({ _id: { $oid: "507f1f77bcf86cd799439011" }, d: { $date: "2020-01-01T00:00:00Z" } })
+db.c.find({ tags: { $all: ["a", "b"] }, n: { $not: { $gt: 5 } }, r: { $not: /abc/i } })
+db.c.find({ arr: { $elemMatch: { $gt: 1, $lt: 4 } }, docs: { $elemMatch: { x: 1, y: { $gte: 2 } } } })
+db.c.find({ $nor: [{ a: 1 }, { b: 2 }], $and: [{ c: 3 }], $comment: "why" })
+db.c.find({ loc: { $near: { $geometry: { type: "Point", coordinates: [0, 0] }, $maxDistance: 100 } } })
+db.c.find({ loc: { $geoWithin: { $centerSphere: [[0, 0], 0.1] } }, $sampleRate: 0.5 })
+
+// $and/$or/$nor argument problems
+db.c.find({ $or: [] })
+db.c.find({ $and: [1, "x", { a: 1 }] })
+db.c.find({ $nor: { a: 1 } })
+db.c.find({ $or: [{ $gt: 1 }] })
+
+// misplaced operators
+db.c.find({ $gt: 5 })
+db.c.find({ $sum: 1 })
+db.c.find({ $match: { a: 1 } })
+db.c.find({ a: { $text: { $search: "x" } } })
+db.c.find({ a: { $group: { _id: 1 } } })
+db.c.find({ a: { $and: [{ b: 1 }] } })
+db.c.find({ a: { $where: "1" } })
+db.c.find({ a: { $add: [1, 2] } })
+
+// mixed operator and field names, duplicates
+db.c.find({ a: { $gt: 1, b: 2 } })
+db.c.find({ a: { $eq: 1, "x.y": 2, z: 3 } })
+db.c.find({ a: 1, a: 2, a: 3 })
+db.c.find({ a: { $gt: 1, $gt: 2 } })
+db.c.find({ a: { b: 1, c: 2 } })
+
+// unknown operators
+db.c.find({ a: { $gtt: 1 } })
+db.c.find({ $orr: [{ a: 1 }] })
+db.c.find({ a: { $regxe: "x" } })
+db.c.find({ a: { $inn: [1] }, b: { $existss: true } })
+db.c.find({ a: { $zzzqqq: 1 } })
+
+// argument kinds
+db.c.find({ a: { $in: 5 } })
+db.c.find({ a: { $nin: "x" }, b: { $all: {} } })
+db.c.find({ a: { $exists: "yes" } })
+db.c.find({ a: { $exists: 1 } })
+db.c.find({ a: { $size: "3" }, b: { $size: 2.5 }, c: { $size: -1 } })
+db.c.find({ a: { $mod: [5] }, b: { $mod: [5, 1] } })
+db.c.find({ a: { $not: 5 }, b: { $not: "x" } })
+db.c.find({ a: { $elemMatch: 5 }, b: { $elemMatch: [] } })
+db.c.find({ a: { $regex: 5 }, b: { $regex: /x/ }, c: { $regex: [] } })
+db.c.find({ a: { $type: "string" }, b: { $type: 2 }, c: { $type: ["int", "long"] }, d: { $type: {} } })
+db.c.find({ a: { $options: "i" }, b: { $regex: "x", $options: "m" }, c: { $options: 5, $regex: "y" } })
+db.c.find({ a: { $maxDistance: "far" }, b: { $language: 5 }, c: { $caseSensitive: "no" } })
+db.c.find({ a: { $bitsAllSet: [1, 2] }, b: { $geoIntersects: { $geometry: {} } } })
+
+// $text
+db.c.find({ $text: { $search: "coffee", $language: "en", $caseSensitive: true } })
+db.c.find({ $text: { $language: "en" } })
+db.c.find({ $text: { $search: "x", $fuzzy: 1 } })
+db.c.find({ $text: "coffee" })
+db.c.find({ $text: [] })
+db.c.aggregate([{ $match: { $text: { $search: "first" } } }, { $match: { $text: { $search: "second" } } }])
+db.c.aggregate([{ $sort: { a: 1 } }, { $match: { $text: { $search: "late" } } }])
+db.c.aggregate([{ $match: { $or: [{ $text: { $search: "in or" } }, { a: 1 }] } }])
+
+// $where
+db.c.find({ $where: "this.a > this.b" })
+db.c.find({ $where: function () { return this.a > 1; } })
+db.c.aggregate([{ $match: { $where: "1" } }])
+db.c.aggregate([{ $match: { a: 1, $where: "this.a" } }])
+
+// $sampleRate
+db.c.find({ $sampleRate: 0.5 })
+db.c.find({ $sampleRate: 2 })
+db.c.find({ $sampleRate: -0.1 })
+db.c.find({ $sampleRate: "half" })
+
+// $near in $match
+db.c.aggregate([{ $match: { loc: { $near: [0, 0] }, $nearSphere: [1, 1] } }])
+db.c.aggregate([{ $match: { $nearSphere: [1, 1], $near: [0, 0] } }])
+db.c.aggregate([{ $match: { loc: { $near: { $geometry: {} } } } }])
+
+// $expr and dynamic values
+db.c.find({ $expr: { $gt: ["$a", "$b"] } })
+db.c.find({ $expr: { $gt: ["$a"], $lt: 5 } })
+db.c.find({ $expr: { $bogusOp: 1 } })
+db.c.find({ a: someVariable, b: { $in: arr }, $or: orClauses })
+db.c.find(filterVar)
+db.c.find()
+db.c.find({}).sort({ a: 1 }).limit(5)
+db.c.find("not an object")
+db.c.find(5, { a: 1 })
+db.c.countDocuments({ a: { $gtt: 1 } })
+db.c.distinct("a", { b: { $nee: 1 } })
+db.c.deleteMany({ $or: [] })
+db.c.findOneAndDelete({ $gt: 1 })

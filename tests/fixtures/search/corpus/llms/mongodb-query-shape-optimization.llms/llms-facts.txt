@@ -1,0 +1,13 @@
+# MongoDB query shape optimization — facts
+
+## Sort and pagination
+
+- [fact] With a sort, $in under 201 elements expands and merges via a SORT_MERGE stage; at 201 or more it behaves like a range and blocks index sorting on later keys. — https://www.mongodb.com/docs/manual/reference/operator/query/in/
+- [fact] skip() walks and discards index keys or documents on every page; keyset pagination filters on the last seen sort key instead. — https://www.mongodb.com/docs/manual/reference/method/cursor.skip/
+- [fact] A blocking sort holds the whole result in memory up to 100 MB per stage and spills to disk when allowDiskUse is enabled. — https://www.mongodb.com/docs/manual/reference/method/cursor.sort/
+
+## Operators
+
+- [fact] An unanchored $regex scans every index key; only a case-sensitive pattern with a ^ prefix gets tight index bounds. — https://www.mongodb.com/docs/manual/reference/operator/query/regex/
+- [fact] $ne and $nin also match documents missing the field and cannot use selective index bounds. — https://www.mongodb.com/docs/manual/reference/operator/query/ne/
+- [fact] $where runs JavaScript per document, cannot use an index and is deprecated from MongoDB 8.0. — https://www.mongodb.com/docs/manual/reference/operator/query/where/

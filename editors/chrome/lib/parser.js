@@ -57,6 +57,28 @@ export class Statement {
   }
 }
 
+const hex = (n, w) => n.toString(16).padStart(w, "0");
+
+/** Python repr(str): quote choice, escapes and non-printable handling. */
+export function pyRepr(s) {
+  const q = s.includes("'") && !s.includes('"') ? '"' : "'";
+  let out = q;
+  for (const ch of s) {
+    const cp = ch.codePointAt(0);
+    if (ch === q || ch === "\\") out += "\\" + ch;
+    else if (ch === "\t") out += "\\t";
+    else if (ch === "\n") out += "\\n";
+    else if (ch === "\r") out += "\\r";
+    else if (cp < 0x20 || cp === 0x7f) out += "\\x" + hex(cp, 2);
+    else if (cp < 0x7f) out += ch;
+    else if (!/[\p{C}\p{Z}]/u.test(ch)) out += ch;
+    else if (cp <= 0xff) out += "\\x" + hex(cp, 2);
+    else if (cp <= 0xffff) out += "\\u" + hex(cp, 4);
+    else out += "\\U" + hex(cp, 8);
+  }
+  return out + q;
+}
+
 const isSpace = (c) => /\s/.test(c);
 
 class Parser {
@@ -107,7 +129,7 @@ class Parser {
       const stmt = this.statement();
       if (stmt !== null) out.push(stmt);
       if (this.i === start) {
-        this.err(this.i, this.i + 1, `unexpected '${this.s[this.i]}'`);
+        this.err(this.i, this.i + 1, `unexpected ${pyRepr(this.s[this.i])}`);
         this.i += 1;
       }
     }
@@ -422,7 +444,7 @@ class Parser {
     if (this.i < this.n && this.s[this.i] === ":") {
       this.i += 1;
     } else if (this.i < this.n && (this.s[this.i] === "," || this.s[this.i] === "}")) {
-      this.err(k0, k1, `property '${key}' has no value`);
+      this.err(k0, k1, `property ${pyRepr(key)} has no value`);
       return new Prop(key, k0, k1, quoted, null, k0, k1);
     } else {
       this.err(this.i, this.i + 1, "expected ':'");
@@ -431,7 +453,7 @@ class Parser {
     }
     const val = this.expression();
     if (val === null) {
-      this.err(this.i, this.i + 1, `expected a value for '${key}'`);
+      this.err(this.i, this.i + 1, `expected a value for ${pyRepr(key)}`);
       this.skipBadValue(new Set(["}"]));
     }
     return new Prop(key, k0, k1, quoted, val, k0, val ? val.end : this.i);

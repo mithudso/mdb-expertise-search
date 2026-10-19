@@ -1,0 +1,1486 @@
+{
+  "diagnostics": [
+    {
+      "code": "missing-field",
+      "column": 27,
+      "end": 463,
+      "fix": null,
+      "line": 6,
+      "message": "$lookup without a pipeline requires localField.",
+      "severity": "error",
+      "start": 462
+    },
+    {
+      "code": "missing-field",
+      "column": 27,
+      "end": 463,
+      "fix": null,
+      "line": 6,
+      "message": "$lookup without a pipeline requires foreignField.",
+      "severity": "error",
+      "start": 462
+    },
+    {
+      "code": "missing-field",
+      "column": 27,
+      "end": 517,
+      "fix": null,
+      "line": 7,
+      "message": "$lookup without a pipeline requires foreignField.",
+      "severity": "error",
+      "start": 516
+    },
+    {
+      "code": "missing-field",
+      "column": 27,
+      "end": 588,
+      "fix": null,
+      "line": 8,
+      "message": "$lookup without a pipeline requires localField.",
+      "severity": "error",
+      "start": 587
+    },
+    {
+      "code": "missing-field",
+      "column": 27,
+      "end": 661,
+      "fix": null,
+      "line": 9,
+      "message": "$lookup requires as.",
+      "severity": "error",
+      "start": 660
+    },
+    {
+      "code": "missing-field",
+      "column": 27,
+      "end": 661,
+      "fix": null,
+      "line": 9,
+      "message": "$lookup requires from.",
+      "severity": "error",
+      "start": 660
+    },
+    {
+      "code": "unknown-field",
+      "column": 85,
+      "end": 793,
+      "fix": null,
+      "line": 10,
+      "message": "'extra' is not a $lookup option.",
+      "severity": "warning",
+      "start": 788
+    },
+    {
+      "code": "unknown-field",
+      "column": 95,
+      "end": 807,
+      "fix": null,
+      "line": 10,
+      "message": "'odd-key' is not a $lookup option.",
+      "severity": "warning",
+      "start": 798
+    },
+    {
+      "code": "stage-position",
+      "column": 53,
+      "end": 874,
+      "fix": null,
+      "line": 11,
+      "message": "$out must be the last stage of the pipeline.",
+      "severity": "error",
+      "start": 870
+    },
+    {
+      "code": "unknown-operator",
+      "column": 52,
+      "end": 974,
+      "fix": null,
+      "line": 12,
+      "message": "$bogusLet is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 965
+    },
+    {
+      "code": "duplicate-key",
+      "column": 40,
+      "end": 1065,
+      "fix": null,
+      "line": 13,
+      "message": "Duplicate key 'from': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 1061
+    },
+    {
+      "code": "bad-argument",
+      "column": 27,
+      "end": 1152,
+      "fix": null,
+      "line": 14,
+      "message": "$lookup expects an object, got string.",
+      "severity": "error",
+      "start": 1149
+    },
+    {
+      "code": "missing-field",
+      "column": 32,
+      "end": 1380,
+      "fix": null,
+      "line": 18,
+      "message": "$graphLookup requires startWith.",
+      "severity": "error",
+      "start": 1379
+    },
+    {
+      "code": "missing-field",
+      "column": 32,
+      "end": 1380,
+      "fix": null,
+      "line": 18,
+      "message": "$graphLookup requires connectFromField.",
+      "severity": "error",
+      "start": 1379
+    },
+    {
+      "code": "missing-field",
+      "column": 32,
+      "end": 1380,
+      "fix": null,
+      "line": 18,
+      "message": "$graphLookup requires connectToField.",
+      "severity": "error",
+      "start": 1379
+    },
+    {
+      "code": "missing-field",
+      "column": 32,
+      "end": 1443,
+      "fix": null,
+      "line": 19,
+      "message": "$graphLookup requires from.",
+      "severity": "error",
+      "start": 1442
+    },
+    {
+      "code": "missing-field",
+      "column": 32,
+      "end": 1443,
+      "fix": null,
+      "line": 19,
+      "message": "$graphLookup requires startWith.",
+      "severity": "error",
+      "start": 1442
+    },
+    {
+      "code": "missing-field",
+      "column": 32,
+      "end": 1443,
+      "fix": null,
+      "line": 19,
+      "message": "$graphLookup requires connectFromField.",
+      "severity": "error",
+      "start": 1442
+    },
+    {
+      "code": "missing-field",
+      "column": 32,
+      "end": 1443,
+      "fix": null,
+      "line": 19,
+      "message": "$graphLookup requires connectToField.",
+      "severity": "error",
+      "start": 1442
+    },
+    {
+      "code": "missing-field",
+      "column": 32,
+      "end": 1443,
+      "fix": null,
+      "line": 19,
+      "message": "$graphLookup requires as.",
+      "severity": "error",
+      "start": 1442
+    },
+    {
+      "code": "unknown-operator",
+      "column": 58,
+      "end": 1518,
+      "fix": null,
+      "line": 20,
+      "message": "$bogusStart is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 1507
+    },
+    {
+      "code": "unknown-operator",
+      "column": 161,
+      "end": 1614,
+      "fix": "$gt",
+      "line": 20,
+      "message": "Unknown operator $gtt. Did you mean $gt?",
+      "severity": "error",
+      "start": 1610
+    },
+    {
+      "code": "bad-argument",
+      "column": 32,
+      "end": 1661,
+      "fix": null,
+      "line": 21,
+      "message": "$graphLookup expects an object, got number.",
+      "severity": "error",
+      "start": 1660
+    },
+    {
+      "code": "unknown-operator",
+      "column": 78,
+      "end": 1761,
+      "fix": "$gt",
+      "line": 24,
+      "message": "Unknown operator $gtt. Did you mean $gt?",
+      "severity": "error",
+      "start": 1757
+    },
+    {
+      "code": "missing-field",
+      "column": 28,
+      "end": 1804,
+      "fix": null,
+      "line": 25,
+      "message": "$geoNear requires near.",
+      "severity": "error",
+      "start": 1803
+    },
+    {
+      "code": "missing-field",
+      "column": 28,
+      "end": 1804,
+      "fix": null,
+      "line": 25,
+      "message": "$geoNear requires distanceField.",
+      "severity": "error",
+      "start": 1803
+    },
+    {
+      "code": "missing-field",
+      "column": 28,
+      "end": 1856,
+      "fix": null,
+      "line": 26,
+      "message": "$geoNear requires distanceField.",
+      "severity": "error",
+      "start": 1855
+    },
+    {
+      "code": "bad-argument",
+      "column": 28,
+      "end": 1905,
+      "fix": null,
+      "line": 27,
+      "message": "$geoNear expects an object, got number.",
+      "severity": "error",
+      "start": 1904
+    },
+    {
+      "code": "missing-field",
+      "column": 33,
+      "end": 2213,
+      "fix": null,
+      "line": 32,
+      "message": "ANN $vectorSearch needs numCandidates (or set exact: true).",
+      "severity": "warning",
+      "start": 2212
+    },
+    {
+      "code": "missing-field",
+      "column": 33,
+      "end": 2441,
+      "fix": null,
+      "line": 34,
+      "message": "$vectorSearch requires index.",
+      "severity": "error",
+      "start": 2440
+    },
+    {
+      "code": "missing-field",
+      "column": 33,
+      "end": 2441,
+      "fix": null,
+      "line": 34,
+      "message": "$vectorSearch requires limit.",
+      "severity": "error",
+      "start": 2440
+    },
+    {
+      "code": "missing-field",
+      "column": 33,
+      "end": 2441,
+      "fix": null,
+      "line": 34,
+      "message": "$vectorSearch requires queryVector (or query for auto-embedding).",
+      "severity": "error",
+      "start": 2440
+    },
+    {
+      "code": "missing-field",
+      "column": 33,
+      "end": 2513,
+      "fix": null,
+      "line": 35,
+      "message": "$vectorSearch requires index.",
+      "severity": "error",
+      "start": 2512
+    },
+    {
+      "code": "missing-field",
+      "column": 33,
+      "end": 2513,
+      "fix": null,
+      "line": 35,
+      "message": "$vectorSearch requires path.",
+      "severity": "error",
+      "start": 2512
+    },
+    {
+      "code": "missing-field",
+      "column": 33,
+      "end": 2513,
+      "fix": null,
+      "line": 35,
+      "message": "$vectorSearch requires limit.",
+      "severity": "error",
+      "start": 2512
+    },
+    {
+      "code": "missing-field",
+      "column": 33,
+      "end": 2513,
+      "fix": null,
+      "line": 35,
+      "message": "$vectorSearch requires queryVector (or query for auto-embedding).",
+      "severity": "error",
+      "start": 2512
+    },
+    {
+      "code": "missing-field",
+      "column": 33,
+      "end": 2513,
+      "fix": null,
+      "line": 35,
+      "message": "ANN $vectorSearch needs numCandidates (or set exact: true).",
+      "severity": "warning",
+      "start": 2512
+    },
+    {
+      "code": "bad-argument",
+      "column": 33,
+      "end": 2554,
+      "fix": null,
+      "line": 36,
+      "message": "$vectorSearch expects an object, got array.",
+      "severity": "error",
+      "start": 2552
+    },
+    {
+      "code": "bad-argument",
+      "column": 27,
+      "end": 2711,
+      "fix": null,
+      "line": 40,
+      "message": "$unwind path must start with '$' (e.g. \"$items\").",
+      "severity": "error",
+      "start": 2704
+    },
+    {
+      "code": "bad-argument",
+      "column": 35,
+      "end": 2758,
+      "fix": null,
+      "line": 41,
+      "message": "$unwind path must start with '$'.",
+      "severity": "error",
+      "start": 2751
+    },
+    {
+      "code": "missing-field",
+      "column": 27,
+      "end": 2793,
+      "fix": null,
+      "line": 42,
+      "message": "$unwind requires a path.",
+      "severity": "error",
+      "start": 2792
+    },
+    {
+      "code": "bad-argument",
+      "column": 27,
+      "end": 2851,
+      "fix": null,
+      "line": 43,
+      "message": "$unwind expects a path string or an object.",
+      "severity": "error",
+      "start": 2850
+    },
+    {
+      "code": "bad-argument",
+      "column": 27,
+      "end": 2960,
+      "fix": null,
+      "line": 45,
+      "message": "$unwind expects a path string or an object.",
+      "severity": "error",
+      "start": 2954
+    },
+    {
+      "code": "bad-argument",
+      "column": 26,
+      "end": 3112,
+      "fix": null,
+      "line": 49,
+      "message": "$unset expects a field name or an array of names.",
+      "severity": "error",
+      "start": 3111
+    },
+    {
+      "code": "bad-argument",
+      "column": 26,
+      "end": 3145,
+      "fix": null,
+      "line": 50,
+      "message": "$unset expects a field name or an array of names.",
+      "severity": "error",
+      "start": 3143
+    },
+    {
+      "code": "missing-field",
+      "column": 32,
+      "end": 3290,
+      "fix": null,
+      "line": 52,
+      "message": "$replaceRoot requires newRoot.",
+      "severity": "error",
+      "start": 3289
+    },
+    {
+      "code": "unknown-operator",
+      "column": 45,
+      "end": 3351,
+      "fix": null,
+      "line": 53,
+      "message": "$bogusRoot is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 3341
+    },
+    {
+      "code": "bad-argument",
+      "column": 32,
+      "end": 3401,
+      "fix": null,
+      "line": 54,
+      "message": "$replaceRoot expects an object, got string.",
+      "severity": "error",
+      "start": 3395
+    },
+    {
+      "code": "unknown-operator",
+      "column": 34,
+      "end": 3450,
+      "fix": null,
+      "line": 55,
+      "message": "$bogusWith is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 3440
+    },
+    {
+      "code": "unknown-operator",
+      "column": 100,
+      "end": 3570,
+      "fix": null,
+      "line": 56,
+      "message": "$nopeCount is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 3560
+    },
+    {
+      "code": "bad-argument",
+      "column": 36,
+      "end": 3734,
+      "fix": null,
+      "line": 58,
+      "message": "$cond array form needs exactly 3 elements [if, then, else].",
+      "severity": "error",
+      "start": 3702
+    },
+    {
+      "code": "missing-field",
+      "column": 27,
+      "end": 3836,
+      "fix": null,
+      "line": 62,
+      "message": "$sample requires size.",
+      "severity": "error",
+      "start": 3835
+    },
+    {
+      "code": "bad-argument",
+      "column": 27,
+      "end": 3870,
+      "fix": null,
+      "line": 63,
+      "message": "$sample expects an object, got number.",
+      "severity": "error",
+      "start": 3869
+    },
+    {
+      "code": "bad-argument",
+      "column": 43,
+      "end": 4300,
+      "fix": null,
+      "line": 69,
+      "message": "$limit expects a positive integer, got string.",
+      "severity": "error",
+      "start": 4297
+    }
+  ],
+  "source": "tests/fixtures/lint/lookup-graph-vector.txt",
+  "symbols": [
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 206,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 128
+        }
+      ],
+      "end": 208,
+      "kind": "method",
+      "name": "db.o.aggregate",
+      "start": 112
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 346,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 225
+        }
+      ],
+      "end": 348,
+      "kind": "method",
+      "name": "db.o.aggregate",
+      "start": 209
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 432,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 365
+        }
+      ],
+      "end": 434,
+      "kind": "method",
+      "name": "db.o.aggregate",
+      "start": 349
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 486,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 451
+        }
+      ],
+      "end": 488,
+      "kind": "method",
+      "name": "db.o.aggregate",
+      "start": 435
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 557,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 505
+        }
+      ],
+      "end": 559,
+      "kind": "method",
+      "name": "db.o.aggregate",
+      "start": 489
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 630,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 576
+        }
+      ],
+      "end": 632,
+      "kind": "method",
+      "name": "db.o.aggregate",
+      "start": 560
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 700,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 649
+        }
+      ],
+      "end": 702,
+      "kind": "method",
+      "name": "db.o.aggregate",
+      "start": 633
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 814,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 719
+        }
+      ],
+      "end": 816,
+      "kind": "method",
+      "name": "db.o.aggregate",
+      "start": 703
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 910,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 833
+        }
+      ],
+      "end": 912,
+      "kind": "method",
+      "name": "db.o.aggregate",
+      "start": 817
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1018,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 929
+        }
+      ],
+      "end": 1020,
+      "kind": "method",
+      "name": "db.o.aggregate",
+      "start": 913
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1119,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 1037
+        }
+      ],
+      "end": 1121,
+      "kind": "method",
+      "name": "db.o.aggregate",
+      "start": 1021
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1154,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 1138
+        }
+      ],
+      "end": 1156,
+      "kind": "method",
+      "name": "db.o.aggregate",
+      "start": 1122
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1344,
+          "kind": "stage",
+          "name": "$graphLookup",
+          "start": 1190
+        }
+      ],
+      "end": 1346,
+      "kind": "method",
+      "name": "db.e.aggregate",
+      "start": 1174
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1407,
+          "kind": "stage",
+          "name": "$graphLookup",
+          "start": 1363
+        }
+      ],
+      "end": 1409,
+      "kind": "method",
+      "name": "db.e.aggregate",
+      "start": 1347
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1446,
+          "kind": "stage",
+          "name": "$graphLookup",
+          "start": 1426
+        }
+      ],
+      "end": 1448,
+      "kind": "method",
+      "name": "db.e.aggregate",
+      "start": 1410
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1625,
+          "kind": "stage",
+          "name": "$graphLookup",
+          "start": 1465
+        }
+      ],
+      "end": 1627,
+      "kind": "method",
+      "name": "db.e.aggregate",
+      "start": 1449
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1663,
+          "kind": "stage",
+          "name": "$graphLookup",
+          "start": 1644
+        }
+      ],
+      "end": 1665,
+      "kind": "method",
+      "name": "db.e.aggregate",
+      "start": 1628
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1772,
+          "kind": "stage",
+          "name": "$geoNear",
+          "start": 1695
+        }
+      ],
+      "end": 1774,
+      "kind": "method",
+      "name": "db.p.aggregate",
+      "start": 1679
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1824,
+          "kind": "stage",
+          "name": "$geoNear",
+          "start": 1791
+        }
+      ],
+      "end": 1826,
+      "kind": "method",
+      "name": "db.p.aggregate",
+      "start": 1775
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1873,
+          "kind": "stage",
+          "name": "$geoNear",
+          "start": 1843
+        }
+      ],
+      "end": 1875,
+      "kind": "method",
+      "name": "db.p.aggregate",
+      "start": 1827
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1907,
+          "kind": "stage",
+          "name": "$geoNear",
+          "start": 1892
+        }
+      ],
+      "end": 1909,
+      "kind": "method",
+      "name": "db.p.aggregate",
+      "start": 1876
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2066,
+          "kind": "stage",
+          "name": "$vectorSearch",
+          "start": 1944
+        }
+      ],
+      "end": 2068,
+      "kind": "method",
+      "name": "db.v.aggregate",
+      "start": 1928
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2176,
+          "kind": "stage",
+          "name": "$vectorSearch",
+          "start": 2085
+        }
+      ],
+      "end": 2178,
+      "kind": "method",
+      "name": "db.v.aggregate",
+      "start": 2069
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2287,
+          "kind": "stage",
+          "name": "$vectorSearch",
+          "start": 2195
+        }
+      ],
+      "end": 2289,
+      "kind": "method",
+      "name": "db.v.aggregate",
+      "start": 2179
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2404,
+          "kind": "stage",
+          "name": "$vectorSearch",
+          "start": 2306
+        }
+      ],
+      "end": 2406,
+      "kind": "method",
+      "name": "db.v.aggregate",
+      "start": 2290
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2476,
+          "kind": "stage",
+          "name": "$vectorSearch",
+          "start": 2423
+        }
+      ],
+      "end": 2478,
+      "kind": "method",
+      "name": "db.v.aggregate",
+      "start": 2407
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2516,
+          "kind": "stage",
+          "name": "$vectorSearch",
+          "start": 2495
+        }
+      ],
+      "end": 2518,
+      "kind": "method",
+      "name": "db.v.aggregate",
+      "start": 2479
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2556,
+          "kind": "stage",
+          "name": "$vectorSearch",
+          "start": 2535
+        }
+      ],
+      "end": 2558,
+      "kind": "method",
+      "name": "db.v.aggregate",
+      "start": 2519
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2608,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 2587
+        },
+        {
+          "children": [],
+          "end": 2674,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 2610
+        }
+      ],
+      "end": 2676,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2571
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2713,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 2693
+        }
+      ],
+      "end": 2715,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2677
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2762,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 2732
+        }
+      ],
+      "end": 2764,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2716
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2820,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 2781
+        }
+      ],
+      "end": 2822,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2765
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2853,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 2839
+        }
+      ],
+      "end": 2855,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2823
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2902,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 2872
+        },
+        {
+          "children": [],
+          "end": 2924,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 2904
+        }
+      ],
+      "end": 2926,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2856
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2962,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 2943
+        }
+      ],
+      "end": 2964,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2927
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3058,
+          "kind": "stage",
+          "name": "$unset",
+          "start": 3043
+        },
+        {
+          "children": [],
+          "end": 3082,
+          "kind": "stage",
+          "name": "$unset",
+          "start": 3060
+        }
+      ],
+      "end": 3084,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3027
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3114,
+          "kind": "stage",
+          "name": "$unset",
+          "start": 3101
+        }
+      ],
+      "end": 3116,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3085
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3147,
+          "kind": "stage",
+          "name": "$unset",
+          "start": 3133
+        }
+      ],
+      "end": 3149,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3117
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3203,
+          "kind": "stage",
+          "name": "$replaceRoot",
+          "start": 3166
+        },
+        {
+          "children": [],
+          "end": 3254,
+          "kind": "stage",
+          "name": "$replaceWith",
+          "start": 3205
+        }
+      ],
+      "end": 3256,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3150
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3293,
+          "kind": "stage",
+          "name": "$replaceRoot",
+          "start": 3273
+        }
+      ],
+      "end": 3295,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3257
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3360,
+          "kind": "stage",
+          "name": "$replaceRoot",
+          "start": 3312
+        }
+      ],
+      "end": 3362,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3296
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3403,
+          "kind": "stage",
+          "name": "$replaceRoot",
+          "start": 3379
+        }
+      ],
+      "end": 3405,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3363
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3457,
+          "kind": "stage",
+          "name": "$replaceWith",
+          "start": 3422
+        }
+      ],
+      "end": 3459,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3406
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3500,
+          "kind": "stage",
+          "name": "$sortByCount",
+          "start": 3476
+        },
+        {
+          "children": [],
+          "end": 3540,
+          "kind": "stage",
+          "name": "$sortByCount",
+          "start": 3502
+        },
+        {
+          "children": [],
+          "end": 3577,
+          "kind": "stage",
+          "name": "$sortByCount",
+          "start": 3542
+        }
+      ],
+      "end": 3579,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3460
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3663,
+          "kind": "stage",
+          "name": "$redact",
+          "start": 3596
+        }
+      ],
+      "end": 3665,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3580
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3738,
+          "kind": "stage",
+          "name": "$redact",
+          "start": 3682
+        }
+      ],
+      "end": 3740,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3666
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3805,
+          "kind": "stage",
+          "name": "$sample",
+          "start": 3781
+        }
+      ],
+      "end": 3807,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3765
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3839,
+          "kind": "stage",
+          "name": "$sample",
+          "start": 3824
+        }
+      ],
+      "end": 3841,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3808
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3872,
+          "kind": "stage",
+          "name": "$sample",
+          "start": 3858
+        }
+      ],
+      "end": 3874,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3842
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 3957,
+          "kind": "stage",
+          "name": "$search",
+          "start": 3891
+        },
+        {
+          "children": [],
+          "end": 3972,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 3959
+        }
+      ],
+      "end": 3974,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3875
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 4041,
+          "kind": "stage",
+          "name": "$fill",
+          "start": 3991
+        },
+        {
+          "children": [],
+          "end": 4107,
+          "kind": "stage",
+          "name": "$densify",
+          "start": 4043
+        }
+      ],
+      "end": 4109,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 3975
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 4164,
+          "kind": "stage",
+          "name": "$merge",
+          "start": 4126
+        }
+      ],
+      "end": 4166,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 4110
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 4215,
+          "kind": "stage",
+          "name": "$out",
+          "start": 4183
+        }
+      ],
+      "end": 4217,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 4167
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 4251,
+          "kind": "stage",
+          "name": "$out",
+          "start": 4234
+        }
+      ],
+      "end": 4253,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 4218
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 4285,
+          "kind": "stage",
+          "name": "$count",
+          "start": 4270
+        },
+        {
+          "children": [],
+          "end": 4302,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 4287
+        }
+      ],
+      "end": 4304,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 4254
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 4342,
+          "kind": "stage",
+          "name": "$changeStream",
+          "start": 4321
+        },
+        {
+          "children": [],
+          "end": 4383,
+          "kind": "stage",
+          "name": "$match",
+          "start": 4344
+        }
+      ],
+      "end": 4385,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 4305
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 4421,
+          "kind": "stage",
+          "name": "$indexStats",
+          "start": 4402
+        },
+        {
+          "children": [],
+          "end": 4452,
+          "kind": "stage",
+          "name": "$unionWith",
+          "start": 4423
+        },
+        {
+          "children": [],
+          "end": 4478,
+          "kind": "stage",
+          "name": "$addFields",
+          "start": 4454
+        }
+      ],
+      "end": 4480,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 4386
+    }
+  ]
+}

@@ -67,6 +67,16 @@ test("Markdown case note includes rewrites and the rewritten text", () => {
   assert.deepEqual(severityCounts(rep), [["low", 0]].filter(([, n]) => n));
 });
 
+test("embedQuery: 403 explains OLLAMA_ORIGINS; success is L2-normalised", async () => {
+  const { embedQuery, EmbedError } = await import("../lib/textsearch.js");
+  const reply = (status, body) => async () => ({ status, ok: status < 400, json: async () => body });
+  await assert.rejects(embedQuery("x", { fetchImpl: reply(403, {}) }), (e) => e instanceof EmbedError && /OLLAMA_ORIGINS/.test(e.message));
+  await assert.rejects(embedQuery("x", { fetchImpl: reply(500, {}) }), /HTTP 500/);
+  await assert.rejects(embedQuery("x", { fetchImpl: async () => { throw new Error("ECONNREFUSED"); } }), /cannot reach Ollama/);
+  const v = await embedQuery("x", { fetchImpl: reply(200, { embeddings: [[3, 4]] }) });
+  assert.deepEqual(v, [0.6, 0.8]);
+});
+
 test("scanRatio", () => {
   assert.equal(scanRatio({ docsExamined: 1000, nreturned: 0 }), "1,000:1");
   assert.equal(scanRatio({ docsExamined: 10 }), null);
@@ -79,6 +89,9 @@ test("manifest: MV3, minimal permissions, no host access, files exist", () => {
   assert.equal(m.version, pkg.version, "manifest.json and package.json versions must match");
   assert.deepEqual([...m.permissions].sort(), ["activeTab", "contextMenus", "scripting", "storage"]);
   assert.equal(m.host_permissions, undefined);
+  // Ollama access is optional, local-only, and requested at runtime from the About tab
+  assert.deepEqual(m.optional_host_permissions, ["http://127.0.0.1/*", "http://localhost/*"]);
+  assert.equal(m.omnibox.keyword, "mdb");
   assert.equal(m.content_scripts, undefined);
   assert.ok(m.description.length <= 132, "Chrome Web Store limit is 132 characters");
   for (const f of [m.action.default_popup, m.background.service_worker, ...Object.values(m.icons)]) {
@@ -86,8 +99,16 @@ test("manifest: MV3, minimal permissions, no host access, files exist", () => {
   }
 });
 
+test("every runtime script parses (pages that need a DOM are not imported by the other tests)", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const { readdirSync } = await import("node:fs");
+  const scripts = ["app.js", "popup.js", "background.js", ...readdirSync(join(root, "lib")).filter((f) => f.endsWith(".js")).map((f) => `lib/${f}`)];
+  for (const f of scripts) execFileSync(process.execPath, ["--check", join(root, f)], { stdio: "pipe" });
+});
+
 test("popup code never assigns HTML from page text", () => {
-  for (const f of ["popup.js", "background.js", "lib/report.js", "lib/capture.js"]) {
+  for (const f of ["popup.js", "app.js", "background.js", "lib/report.js", "lib/capture.js", "lib/ui.js",
+    "lib/textsearch.js", "lib/store.js"]) {
     const src = readFileSync(join(root, f), "utf8");
     assert.doesNotMatch(src, /innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function/, f);
   }

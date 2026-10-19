@@ -1,0 +1,64 @@
+{
+ "format": 1,
+ "mdbx_version": "fixture",
+ "built_at": "fixture",
+ "chunks": 14,
+ "files": 5,
+ "terms": 253,
+ "postings": 446,
+ "total_tokens": 744,
+ "by_kind": {
+  "llms": 2,
+  "recipe": 2,
+  "skill": 10
+ },
+ "sources": [
+  {
+   "kind": "skill",
+   "source": "mongodb-expert",
+   "chunks": 7
+  },
+  {
+   "kind": "skill",
+   "source": "mongodb-atlas-expert",
+   "chunks": 3
+  },
+  {
+   "kind": "llms",
+   "source": "mongodb-query-shape-optimization",
+   "chunks": 2
+  },
+  {
+   "kind": "recipe",
+   "source": "shard-a-collection",
+   "chunks": 2
+  }
+ ],
+ "recipes": [
+  {
+   "name": "shard-a-collection",
+   "title": "Shard a collection",
+   "summary": "Pick a shard key, create its index, shard the collection and verify chunk distribution.",
+   "applies_to": [
+    "atlas",
+    "self-managed"
+   ],
+   "path": "recipes/shard-a-collection.md"
+  }
+ ],
+ "vectors": {
+  "count": 14,
+  "dim": 32,
+  "model": "fake-hash-32",
+  "scale": 127
+ },
+ "bm25": {
+  "k1": 1.2,
+  "b": 0.75,
+  "weights": {
+   "heading": 4,
+   "text": 1,
+   "source": 2
+  }
+ }
+}

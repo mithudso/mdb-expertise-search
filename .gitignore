@@ -27,3 +27,6 @@ editors/vscode/node_modules/
 
 # Claude Code local state (session worktrees)
 .claude/
+
+# Chrome extension search data (built by scripts/package_chrome_extension.py)
+editors/chrome/data/

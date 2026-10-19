@@ -1,0 +1,72 @@
+// $lookup, $graphLookup, $geoNear, $vectorSearch, $unwind, $replaceRoot and other stage arguments.
+
+// $lookup
+db.o.aggregate([{ $lookup: { from: "u", localField: "uid", foreignField: "_id", as: "user" } }])
+db.o.aggregate([{ $lookup: { from: "u", let: { id: "$uid" }, pipeline: [{ $match: { $expr: { $eq: ["$_id", "$$id"] } } }], as: "user" } }])
+db.o.aggregate([{ $lookup: { pipeline: [{ $documents: [{ a: 1 }] }], as: "docs" } }])
+db.o.aggregate([{ $lookup: { from: "u", as: "x" } }])
+db.o.aggregate([{ $lookup: { from: "u", localField: "a", as: "x" } }])
+db.o.aggregate([{ $lookup: { from: "u", foreignField: "b", as: "x" } }])
+db.o.aggregate([{ $lookup: { localField: "a", foreignField: "b" } }])
+db.o.aggregate([{ $lookup: { from: "u", localField: "a", foreignField: "b", as: "x", extra: 1, 'odd-key': 2 } }])
+db.o.aggregate([{ $lookup: { from: "u", pipeline: [{ $out: "z" }, { $limit: 1 }], as: "x" } }])
+db.o.aggregate([{ $lookup: { from: "u", let: { a: { $bogusLet: 1 }, b: "$ok" }, pipeline: [], as: "x" } }])
+db.o.aggregate([{ $lookup: { from: "u", from: "v", localField: "a", foreignField: "b", as: "x" } }])
+db.o.aggregate([{ $lookup: "u" }])
+
+// $graphLookup
+db.e.aggregate([{ $graphLookup: { from: "e", startWith: "$mgr", connectFromField: "mgr", connectToField: "_id", as: "chain", restrictSearchWithMatch: { active: true } } }])
+db.e.aggregate([{ $graphLookup: { from: "e", as: "chain" } }])
+db.e.aggregate([{ $graphLookup: {} }])
+db.e.aggregate([{ $graphLookup: { from: "e", startWith: { $bogusStart: 1 }, connectFromField: "a", connectToField: "b", as: "c", restrictSearchWithMatch: { x: { $gtt: 1 } } } }])
+db.e.aggregate([{ $graphLookup: 5 }])
+
+// $geoNear
+db.p.aggregate([{ $geoNear: { near: [0, 0], distanceField: "d", query: { a: { $gtt: 1 } } } }])
+db.p.aggregate([{ $geoNear: { spherical: true } }])
+db.p.aggregate([{ $geoNear: { near: [0, 0] } }])
+db.p.aggregate([{ $geoNear: 5 }])
+
+// $vectorSearch
+db.v.aggregate([{ $vectorSearch: { index: "vec", path: "emb", queryVector: [0.1, 0.2], numCandidates: 100, limit: 10, filter: { a: 1 } } }])
+db.v.aggregate([{ $vectorSearch: { index: "vec", path: "emb", queryVector: [0.1], limit: 5, exact: true } }])
+db.v.aggregate([{ $vectorSearch: { index: "vec", path: "emb", queryVector: [0.1], limit: 5, exact: false } }])
+db.v.aggregate([{ $vectorSearch: { index: "vec", path: "emb", query: "auto embed", limit: 5, numCandidates: 50 } }])
+db.v.aggregate([{ $vectorSearch: { path: "emb", numCandidates: 10 } }])
+db.v.aggregate([{ $vectorSearch: {} }])
+db.v.aggregate([{ $vectorSearch: [] }])
+
+// $unwind
+db.c.aggregate([{ $unwind: "$items" }, { $unwind: { path: "$tags", preserveNullAndEmptyArrays: true } }])
+db.c.aggregate([{ $unwind: "items" }])
+db.c.aggregate([{ $unwind: { path: "items" } }])
+db.c.aggregate([{ $unwind: { includeArrayIndex: "i" } }])
+db.c.aggregate([{ $unwind: 5 }])
+db.c.aggregate([{ $unwind: { path: pathVar } }, { $unwind: someVar }])
+db.c.aggregate([{ $unwind: ["$a"] }])
+
+// $unset, $replaceRoot, $replaceWith, $sortByCount, $redact
+db.c.aggregate([{ $unset: "a" }, { $unset: ["b", "c"] }])
+db.c.aggregate([{ $unset: 5 }])
+db.c.aggregate([{ $unset: {} }])
+db.c.aggregate([{ $replaceRoot: { newRoot: "$doc" } }, { $replaceWith: { $mergeObjects: ["$a", "$b"] } }])
+db.c.aggregate([{ $replaceRoot: {} }])
+db.c.aggregate([{ $replaceRoot: { newRoot: { $bogusRoot: 1 } } }])
+db.c.aggregate([{ $replaceRoot: "$doc" }])
+db.c.aggregate([{ $replaceWith: { $bogusWith: 1 } }])
+db.c.aggregate([{ $sortByCount: "$tag" }, { $sortByCount: { $toLower: "$tag" } }, { $sortByCount: { $nopeCount: 1 } }])
+db.c.aggregate([{ $redact: { $cond: [{ $eq: ["$lvl", 1] }, "$$KEEP", "$$PRUNE"] } }])
+db.c.aggregate([{ $redact: { $cond: [{ $eq: ["$lvl", 1] }, "$$KEEP"] } }])
+
+// $sample and friends
+db.c.aggregate([{ $sample: { size: 5 } }])
+db.c.aggregate([{ $sample: {} }])
+db.c.aggregate([{ $sample: 5 }])
+db.c.aggregate([{ $search: { index: "default", text: { query: "x", path: "t" } } }, { $limit: 3 }])
+db.c.aggregate([{ $fill: { output: { a: { method: "linear" } } } }, { $densify: { field: "t", range: { step: 1, bounds: "full" } } }])
+db.c.aggregate([{ $merge: { into: "out", on: "_id" } }])
+db.c.aggregate([{ $out: { db: "d", coll: "c" } }])
+db.c.aggregate([{ $out: "plain" }])
+db.c.aggregate([{ $count: "n" }, { $limit: "x" }])
+db.c.aggregate([{ $changeStream: {} }, { $match: { operationType: "insert" } }])
+db.c.aggregate([{ $indexStats: {} }, { $unionWith: { coll: "x" } }, { $addFields: { a: 1 } }])

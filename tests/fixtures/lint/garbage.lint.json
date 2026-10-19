@@ -1,0 +1,89 @@
+{
+  "diagnostics": [
+    {
+      "code": "syntax",
+      "column": 14,
+      "end": 15,
+      "fix": null,
+      "line": 0,
+      "message": "unclosed '('",
+      "severity": "error",
+      "start": 14
+    },
+    {
+      "code": "syntax",
+      "column": 0,
+      "end": 112,
+      "fix": null,
+      "line": 2,
+      "message": "expected a value for '$sum'",
+      "severity": "error",
+      "start": 111
+    },
+    {
+      "code": "syntax",
+      "column": 4,
+      "end": 116,
+      "fix": null,
+      "line": 2,
+      "message": "unexpected ')'; expected ']'",
+      "severity": "error",
+      "start": 115
+    },
+    {
+      "code": "syntax",
+      "column": 6,
+      "end": 118,
+      "fix": null,
+      "line": 2,
+      "message": "unexpected ']'; expected '}'",
+      "severity": "error",
+      "start": 117
+    },
+    {
+      "code": "syntax",
+      "column": 6,
+      "end": 118,
+      "fix": null,
+      "line": 2,
+      "message": "unexpected ']'; expected '}'",
+      "severity": "error",
+      "start": 117
+    },
+    {
+      "code": "syntax",
+      "column": 6,
+      "end": 520,
+      "fix": null,
+      "line": 2,
+      "message": "unexpected tokens",
+      "severity": "error",
+      "start": 117
+    }
+  ],
+  "source": "tests/fixtures/lint/garbage.txt",
+  "symbols": [
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 75,
+          "kind": "stage",
+          "name": "$match",
+          "start": 55
+        },
+        {
+          "children": [],
+          "end": 114,
+          "kind": "stage",
+          "name": "$group",
+          "start": 77
+        }
+      ],
+      "end": 520,
+      "kind": "method",
+      "name": "db.orders.find",
+      "start": 0
+    }
+  ]
+}

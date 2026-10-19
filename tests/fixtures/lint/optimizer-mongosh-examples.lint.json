@@ -1,0 +1,95 @@
+{
+  "diagnostics": [
+    {
+      "code": "perf",
+      "column": 20,
+      "end": 1484,
+      "fix": null,
+      "line": 34,
+      "message": "$where runs JavaScript per document, cannot use indexes and is an injection risk; prefer $expr or regular operators.",
+      "severity": "warning",
+      "start": 1478
+    }
+  ],
+  "source": "tests/fixtures/optimizer/mongosh-examples.txt",
+  "symbols": [
+    {
+      "children": [],
+      "end": 491,
+      "kind": "method",
+      "name": "db.orders.find",
+      "start": 295
+    },
+    {
+      "children": [],
+      "end": 749,
+      "kind": "method",
+      "name": "db.orders.find",
+      "start": 593
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1011,
+          "kind": "stage",
+          "name": "$addFields",
+          "start": 942
+        },
+        {
+          "children": [],
+          "end": 1036,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 1015
+        },
+        {
+          "children": [],
+          "end": 1106,
+          "kind": "stage",
+          "name": "$match",
+          "start": 1040
+        },
+        {
+          "children": [],
+          "end": 1164,
+          "kind": "stage",
+          "name": "$group",
+          "start": 1110
+        },
+        {
+          "children": [],
+          "end": 1215,
+          "kind": "stage",
+          "name": "$project",
+          "start": 1168
+        },
+        {
+          "children": [],
+          "end": 1301,
+          "kind": "stage",
+          "name": "$lookup",
+          "start": 1219
+        }
+      ],
+      "end": 1304,
+      "kind": "method",
+      "name": "db.events.aggregate",
+      "start": 918
+    },
+    {
+      "children": [],
+      "end": 1387,
+      "kind": "method",
+      "name": "db.orders.countDocuments",
+      "start": 1359
+    },
+    {
+      "children": [],
+      "end": 1540,
+      "kind": "method",
+      "name": "db.inventory.find",
+      "start": 1458
+    }
+  ]
+}

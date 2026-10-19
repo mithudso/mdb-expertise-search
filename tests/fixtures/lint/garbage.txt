@@ -1,0 +1,18 @@
+db.orders.find({ a: 1, b: { $gt:
+db.orders.aggregate([ { $match: { x: 1 } }, { $group: { _id: "$k", n: { $sum:
+}}} ) ]]
+{ a, b: , : 3, 'unterminated: 4 }
+db.c.find({ a: { $in: [1, 2, }, b: 5 })
+/* never closed comment
+const = 5
+let x =
+db..find()
+db.c.find(,,,)
+[1, 2, ) ]
+{ "a": /unterminated
+use
+@@@ ### $$$
+db.c.updateOne({ _id: 1 }, { $set: { a: 1 }, $inc: })
+db.c.aggregate([{ $limit: 5 }, { $mtch: { a: 1 } }, { $project: { a: 1, b: 0 } ])
+db.c.find({ "a.b": { $exists: true }, $or: [{ a: 1 }, { b: })
+\ ~ ^ ; % &

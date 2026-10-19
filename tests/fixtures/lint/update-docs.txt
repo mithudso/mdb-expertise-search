@@ -1,0 +1,44 @@
+// Update documents: valid shapes and every update-shape / removed / bad-argument rule.
+use shop
+
+// valid
+db.users.updateOne({ _id: 1 }, { $set: { name: "a" }, $inc: { n: 1, "stats.hits": 2 }, $unset: { tmp: "" } })
+db.users.updateMany({}, { $push: { tags: { $each: ["a", "b"], $slice: -5, $sort: 1, $position: 0 } } })
+db.users.updateOne({ _id: 2 }, { $addToSet: { tags: { $each: ["x"] } }, $pull: { tags: { $in: ["y", "z"] } } })
+db.users.findOneAndUpdate({ _id: 3 }, { $rename: { old: "new" }, $pop: { stack: 1 }, $mul: { price: 1.5 } })
+
+// plain document where operators are required
+db.users.updateOne({ _id: 4 }, { name: "plain" })
+// mixed operators and plain fields
+db.users.updateOne({ _id: 5 }, { $set: { a: 1 }, b: 2, "c.d": 3 })
+// empty update document
+db.users.updateOne({ _id: 6 }, {})
+// removed operators
+db.users.updateOne({ _id: 7 }, { $pushAll: { a: [1, 2] } })
+db.users.updateOne({ _id: 8 }, { $isolated: 1, $set: { a: 1 } })
+// not an update operator, and unknown ones
+db.users.updateOne({ _id: 9 }, { $match: { a: 1 } })
+db.users.updateOne({ _id: 10 }, { $sett: { a: 1 }, $increment: { n: 1 } })
+db.users.updateOne({ _id: 11 }, { $totallyNewOperator: { a: 1 } })
+// operator argument is not an object
+db.users.updateOne({ _id: 12 }, { $set: 5 })
+db.users.updateOne({ _id: 13 }, { $inc: [1] })
+// per-field value rules
+db.users.updateOne({ _id: 14 }, { $inc: { n: "five" }, $mul: { m: true } })
+db.users.updateOne({ _id: 15 }, { $pop: { stack: 2 }, $rename: { a: 1 } })
+db.users.updateOne({ _id: 16 }, { $pop: { stack: "last" } })
+// modifiers
+db.users.updateOne({ _id: 17 }, { $push: { xs: { $each: 5, $slice: -1 } } })
+db.users.updateOne({ _id: 18 }, { $push: { xs: { $slice: -1 } } })
+db.users.updateOne({ _id: 19 }, { $addToSet: { xs: { $each: [1], $slice: 2 } } })
+db.users.updateOne({ _id: 20 }, { $push: { xs: { $bogus: 1, $each: [] } } })
+// $pull with a query operator expression
+db.users.updateOne({ _id: 21 }, { $pull: { xs: { $gt: 5, $foo: 1 } } })
+// duplicate field inside an operator, duplicate operator
+db.users.updateOne({ _id: 22 }, { $set: { a: 1, a: 2 }, $set: { b: 1 } })
+// dynamic values are accepted
+db.users.updateOne({ _id: 23 }, { $set: { a: new Date() }, $inc: { n: someVar }, $pop: { s: dir } })
+// replacement documents are free-form
+db.users.replaceOne({ _id: 24 }, { name: "whole", a: 1 })
+// update as a bare statement
+{ $set: { a: 1 }, $unset: { b: 1 } }

@@ -1,0 +1,938 @@
+{
+  "diagnostics": [
+    {
+      "code": "stage-position",
+      "column": 18,
+      "end": 370,
+      "fix": null,
+      "line": 11,
+      "message": "$out must be the last stage of the pipeline.",
+      "severity": "error",
+      "start": 366
+    },
+    {
+      "code": "stage-position",
+      "column": 18,
+      "end": 419,
+      "fix": null,
+      "line": 12,
+      "message": "$merge must be the last stage of the pipeline.",
+      "severity": "error",
+      "start": 413
+    },
+    {
+      "code": "stage-position",
+      "column": 33,
+      "end": 622,
+      "fix": null,
+      "line": 16,
+      "message": "$geoNear must be the first stage of the pipeline.",
+      "severity": "error",
+      "start": 614
+    },
+    {
+      "code": "stage-position",
+      "column": 40,
+      "end": 715,
+      "fix": null,
+      "line": 17,
+      "message": "$collStats must be the first stage of the pipeline.",
+      "severity": "error",
+      "start": 705
+    },
+    {
+      "code": "stage-position",
+      "column": 40,
+      "end": 786,
+      "fix": null,
+      "line": 18,
+      "message": "$indexStats must be the first stage of the pipeline.",
+      "severity": "error",
+      "start": 775
+    },
+    {
+      "code": "stage-position",
+      "column": 42,
+      "end": 844,
+      "fix": null,
+      "line": 19,
+      "message": "$search must be the first stage of the pipeline.",
+      "severity": "error",
+      "start": 837
+    },
+    {
+      "code": "stage-position",
+      "column": 33,
+      "end": 930,
+      "fix": null,
+      "line": 20,
+      "message": "$searchMeta must be the first stage of the pipeline.",
+      "severity": "error",
+      "start": 919
+    },
+    {
+      "code": "stage-position",
+      "column": 33,
+      "end": 1011,
+      "fix": null,
+      "line": 21,
+      "message": "$vectorSearch must be the first stage of the pipeline.",
+      "severity": "error",
+      "start": 998
+    },
+    {
+      "code": "stage-position",
+      "column": 39,
+      "end": 1136,
+      "fix": null,
+      "line": 22,
+      "message": "$changeStream must be the first stage of the pipeline.",
+      "severity": "error",
+      "start": 1123
+    },
+    {
+      "code": "stage-position",
+      "column": 33,
+      "end": 1188,
+      "fix": null,
+      "line": 23,
+      "message": "$documents must be the first stage of the pipeline.",
+      "severity": "error",
+      "start": 1178
+    },
+    {
+      "code": "stage-position",
+      "column": 33,
+      "end": 1256,
+      "fix": null,
+      "line": 24,
+      "message": "$listSearchIndexes must be the first stage of the pipeline.",
+      "severity": "error",
+      "start": 1238
+    },
+    {
+      "code": "stage-shape",
+      "column": 16,
+      "end": 1298,
+      "fix": null,
+      "line": 27,
+      "message": "A stage must have exactly one key; found 2 (split into separate stages).",
+      "severity": "error",
+      "start": 1297
+    },
+    {
+      "code": "stage-shape",
+      "column": 16,
+      "end": 1348,
+      "fix": null,
+      "line": 28,
+      "message": "Empty stage object.",
+      "severity": "error",
+      "start": 1347
+    },
+    {
+      "code": "stage-shape",
+      "column": 38,
+      "end": 1391,
+      "fix": null,
+      "line": 29,
+      "message": "Each pipeline stage must be an object.",
+      "severity": "error",
+      "start": 1390
+    },
+    {
+      "code": "stage-shape",
+      "column": 41,
+      "end": 1399,
+      "fix": null,
+      "line": 29,
+      "message": "Each pipeline stage must be an object.",
+      "severity": "error",
+      "start": 1393
+    },
+    {
+      "code": "stage-shape",
+      "column": 16,
+      "end": 1434,
+      "fix": null,
+      "line": 30,
+      "message": "A stage must have exactly one key; found 3 (split into separate stages).",
+      "severity": "error",
+      "start": 1433
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 18,
+      "end": 1542,
+      "fix": null,
+      "line": 33,
+      "message": "$gt is not an aggregation stage. Did you mean { $match: { … $gt … } }?",
+      "severity": "error",
+      "start": 1539
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 18,
+      "end": 1571,
+      "fix": null,
+      "line": 34,
+      "message": "$eq is not an aggregation stage. Did you mean { $match: { … $eq … } }?",
+      "severity": "error",
+      "start": 1568
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 18,
+      "end": 1609,
+      "fix": null,
+      "line": 35,
+      "message": "$sum is not an aggregation stage. Expressions go inside $project, $addFields or $group.",
+      "severity": "error",
+      "start": 1605
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 18,
+      "end": 1642,
+      "fix": null,
+      "line": 36,
+      "message": "$inc is not an aggregation stage.",
+      "severity": "error",
+      "start": 1638
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 18,
+      "end": 1679,
+      "fix": null,
+      "line": 37,
+      "message": "$oid is not an aggregation stage.",
+      "severity": "error",
+      "start": 1675
+    },
+    {
+      "code": "bad-argument",
+      "column": 26,
+      "end": 1762,
+      "fix": null,
+      "line": 40,
+      "message": "$limit expects a positive integer, got string.",
+      "severity": "error",
+      "start": 1757
+    },
+    {
+      "code": "bad-argument",
+      "column": 26,
+      "end": 1794,
+      "fix": null,
+      "line": 41,
+      "message": "$limit expects a positive integer, got number.",
+      "severity": "error",
+      "start": 1793
+    },
+    {
+      "code": "bad-argument",
+      "column": 26,
+      "end": 1828,
+      "fix": null,
+      "line": 42,
+      "message": "$limit expects a positive integer, got number.",
+      "severity": "error",
+      "start": 1825
+    },
+    {
+      "code": "bad-argument",
+      "column": 25,
+      "end": 1860,
+      "fix": null,
+      "line": 43,
+      "message": "$skip expects a non-negative integer, got number.",
+      "severity": "error",
+      "start": 1858
+    },
+    {
+      "code": "bad-argument",
+      "column": 26,
+      "end": 1923,
+      "fix": null,
+      "line": 45,
+      "message": "$count expects a string, got number.",
+      "severity": "error",
+      "start": 1922
+    },
+    {
+      "code": "bad-argument",
+      "column": 26,
+      "end": 1956,
+      "fix": null,
+      "line": 46,
+      "message": "$match expects an object, got array.",
+      "severity": "error",
+      "start": 1954
+    },
+    {
+      "code": "bad-argument",
+      "column": 30,
+      "end": 1993,
+      "fix": null,
+      "line": 47,
+      "message": "$documents expects an array, got object.",
+      "severity": "error",
+      "start": 1991
+    },
+    {
+      "code": "bad-argument",
+      "column": 15,
+      "end": 2089,
+      "fix": null,
+      "line": 51,
+      "message": "A pipeline must be an array of stages, not an object.",
+      "severity": "error",
+      "start": 2075
+    }
+  ],
+  "source": "tests/fixtures/lint/pipeline-positions.txt",
+  "symbols": [
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 243,
+          "kind": "stage",
+          "name": "$geoNear",
+          "start": 135
+        },
+        {
+          "children": [],
+          "end": 275,
+          "kind": "stage",
+          "name": "$match",
+          "start": 247
+        },
+        {
+          "children": [],
+          "end": 293,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 279
+        },
+        {
+          "children": [],
+          "end": 315,
+          "kind": "stage",
+          "name": "$out",
+          "start": 297
+        }
+      ],
+      "end": 318,
+      "kind": "method",
+      "name": "db.places.aggregate",
+      "start": 111
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 377,
+          "kind": "stage",
+          "name": "$out",
+          "start": 364
+        },
+        {
+          "children": [],
+          "end": 392,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 379
+        }
+      ],
+      "end": 394,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 348
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 460,
+          "kind": "stage",
+          "name": "$merge",
+          "start": 411
+        },
+        {
+          "children": [],
+          "end": 481,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 462
+        }
+      ],
+      "end": 483,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 395
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 514,
+          "kind": "stage",
+          "name": "$match",
+          "start": 500
+        },
+        {
+          "children": [],
+          "end": 531,
+          "kind": "stage",
+          "name": "$merge",
+          "start": 516
+        }
+      ],
+      "end": 533,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 484
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 610,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 597
+        },
+        {
+          "children": [],
+          "end": 662,
+          "kind": "stage",
+          "name": "$geoNear",
+          "start": 612
+        }
+      ],
+      "end": 664,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 581
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 701,
+          "kind": "stage",
+          "name": "$match",
+          "start": 681
+        },
+        {
+          "children": [],
+          "end": 732,
+          "kind": "stage",
+          "name": "$collStats",
+          "start": 703
+        }
+      ],
+      "end": 734,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 665
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 771,
+          "kind": "stage",
+          "name": "$match",
+          "start": 751
+        },
+        {
+          "children": [],
+          "end": 792,
+          "kind": "stage",
+          "name": "$indexStats",
+          "start": 773
+        }
+      ],
+      "end": 794,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 735
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 833,
+          "kind": "stage",
+          "name": "$project",
+          "start": 811
+        },
+        {
+          "children": [],
+          "end": 883,
+          "kind": "stage",
+          "name": "$search",
+          "start": 835
+        }
+      ],
+      "end": 885,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 795
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 915,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 902
+        },
+        {
+          "children": [],
+          "end": 962,
+          "kind": "stage",
+          "name": "$searchMeta",
+          "start": 917
+        }
+      ],
+      "end": 964,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 886
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 994,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 981
+        },
+        {
+          "children": [],
+          "end": 1081,
+          "kind": "stage",
+          "name": "$vectorSearch",
+          "start": 996
+        }
+      ],
+      "end": 1083,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 965
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1119,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 1100
+        },
+        {
+          "children": [],
+          "end": 1142,
+          "kind": "stage",
+          "name": "$changeStream",
+          "start": 1121
+        }
+      ],
+      "end": 1144,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1084
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1174,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 1161
+        },
+        {
+          "children": [],
+          "end": 1202,
+          "kind": "stage",
+          "name": "$documents",
+          "start": 1176
+        }
+      ],
+      "end": 1204,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1145
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1234,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 1221
+        },
+        {
+          "children": [],
+          "end": 1262,
+          "kind": "stage",
+          "name": "$listSearchIndexes",
+          "start": 1236
+        }
+      ],
+      "end": 1264,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1205
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1328,
+          "kind": "stage",
+          "name": "$match",
+          "start": 1297
+        }
+      ],
+      "end": 1330,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1281
+    },
+    {
+      "children": [],
+      "end": 1351,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1331
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1388,
+          "kind": "stage",
+          "name": "$match",
+          "start": 1368
+        },
+        {
+          "children": [],
+          "end": 1414,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 1401
+        }
+      ],
+      "end": 1416,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1352
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1484,
+          "kind": "stage",
+          "name": "$match",
+          "start": 1433
+        }
+      ],
+      "end": 1486,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1417
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1547,
+          "kind": "stage",
+          "name": "$gt",
+          "start": 1537
+        }
+      ],
+      "end": 1549,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1521
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1584,
+          "kind": "stage",
+          "name": "$eq",
+          "start": 1566
+        }
+      ],
+      "end": 1586,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1550
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1617,
+          "kind": "stage",
+          "name": "$sum",
+          "start": 1603
+        }
+      ],
+      "end": 1619,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1587
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1654,
+          "kind": "stage",
+          "name": "$inc",
+          "start": 1636
+        }
+      ],
+      "end": 1656,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1620
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1709,
+          "kind": "stage",
+          "name": "$oid",
+          "start": 1673
+        }
+      ],
+      "end": 1711,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1657
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1764,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 1747
+        }
+      ],
+      "end": 1766,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1731
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1796,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 1783
+        }
+      ],
+      "end": 1798,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1767
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1830,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 1815
+        }
+      ],
+      "end": 1832,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1799
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1862,
+          "kind": "stage",
+          "name": "$skip",
+          "start": 1849
+        }
+      ],
+      "end": 1864,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1833
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1893,
+          "kind": "stage",
+          "name": "$skip",
+          "start": 1881
+        }
+      ],
+      "end": 1895,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1865
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1925,
+          "kind": "stage",
+          "name": "$count",
+          "start": 1912
+        }
+      ],
+      "end": 1927,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1896
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1958,
+          "kind": "stage",
+          "name": "$match",
+          "start": 1944
+        }
+      ],
+      "end": 1960,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1928
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 1995,
+          "kind": "stage",
+          "name": "$documents",
+          "start": 1977
+        }
+      ],
+      "end": 1997,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1961
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2025,
+          "kind": "stage",
+          "name": "$out",
+          "start": 2014
+        }
+      ],
+      "end": 2027,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 1998
+    },
+    {
+      "children": [],
+      "end": 2090,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2060
+    },
+    {
+      "children": [],
+      "end": 2113,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2091
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2150,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2130
+        },
+        {
+          "children": [],
+          "end": 2171,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 2152
+        },
+        {
+          "children": [],
+          "end": 2186,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 2173
+        },
+        {
+          "children": [],
+          "end": 2200,
+          "kind": "stage",
+          "name": "$skip",
+          "start": 2188
+        },
+        {
+          "children": [],
+          "end": 2217,
+          "kind": "stage",
+          "name": "$count",
+          "start": 2202
+        }
+      ],
+      "end": 2219,
+      "kind": "method",
+      "name": "db.c.aggregate",
+      "start": 2114
+    },
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 2271,
+          "kind": "stage",
+          "name": "$match",
+          "start": 2232
+        }
+      ],
+      "end": 2273,
+      "kind": "method",
+      "name": "db.c.watch",
+      "start": 2220
+    }
+  ]
+}

@@ -6,6 +6,10 @@
 - Chrome extension: toolbar clicks cannot be automated, so `test/e2e.mjs` opens the popup as a tab and
   feeds the right-click handoff; the activeTab selection path is covered by running `grabSelection` in a
   real page. Virtualized editors (Monaco) expose only visible text to `getSelection()`; paste instead.
+- Extension search data is a snapshot taken at packaging time; rebuild the zip after corpus changes.
+- Hybrid/semantic search in the extension uses int8-quantised vectors, so its semantic ranking can differ
+  slightly from `mdbx search -m semantic` (float32); keyword ranking is identical.
+- Ollama answers HTTP 403 to extension origins until `OLLAMA_ORIGINS` allows `chrome-extension://<id>`.
 - `chrome.action.openPopup()` needs Chrome 127+; older versions open the report in a tab instead.
 
 - `mdbx index` rebuilds the keyword index from scratch every run (fast) but does not drop vectors for

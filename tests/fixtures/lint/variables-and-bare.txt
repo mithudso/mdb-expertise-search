@@ -1,0 +1,60 @@
+// Variables carry the context of the call that uses them; bare documents are classified by shape.
+use shop
+
+const pipe = [{ $group: { n: { $sum: 1 } } }, { $out: "x" }, { $limit: 1 }]
+const filter = { $or: [] }
+let proj = { a: 1, b: 0 }
+var upd = { plain: 1 }
+const sortSpec = { a: 3 }
+const unusedVar = [{ $out: "z" }, { $limit: 1 }]
+const objectOnly = { a: { $gtt: 1 } }
+
+db.orders.aggregate(pipe)
+db.orders.find(filter, proj)
+db.orders.updateOne({ _id: 1 }, upd)
+db.orders.find({}).sort(sortSpec)
+db.orders.countDocuments(filter)
+db.orders.aggregate(pipe)
+db.orders.find(undeclared, alsoUndeclared)
+
+// bare pipeline arrays
+[{ $match: { a: 1 } }, { $out: "x" }, { $limit: 1 }]
+[{ $match: { a: 1 } }, { $group: { _id: "$k" } }]
+[{ a: 1 }, { b: 2 }]
+[]
+
+// bare single-stage object
+{ $match: { a: { $gtt: 1 } } }
+{ $limit: 0 }
+{ $group: { n: 1 } }
+
+// bare update-like object
+{ $set: { a: 1 }, $inc: { n: "x" } }
+{ $pushAll: { a: [1] } }
+{ $unset: { a: 1 }, $setx: { b: 1 } }
+
+// bare query-like object (lenient: expression operators tolerated)
+{ a: 1, a: 2 }
+{ $gt: 5 }
+{ $sum: 1, a: 1 }
+{ $match: { a: 1 }, $limit: 3 }
+{ $set: { a: 1 }, b: 2 }
+{ }
+{ a: { $in: 5 } }
+
+// chain and member shapes
+db["my-coll"].find({ a: { $nee: 1 } })
+db.getCollection("x").aggregate([{ $out: "y" }, { $limit: 1 }])
+db.orders.find({ a: { $gtt: 1 } }).sort({ a: 5 }).limit(2).skip(1)
+db.orders.aggregate([{ $match: { a: 1 } }]).toArray()
+db.orders.aggregate([{ $limit: 0 }]).forEach(printjson)
+db.orders.explain("executionStats").find({ $or: [] })
+db.orders.estimatedDocumentCount()
+db.adminCommand({ ping: 1 })
+sh.status()
+print("hello")
+show collections
+ObjectId("507f1f77bcf86cd799439011")
+ISODate("2020-01-01")
+db.c.find({ _id: ObjectId("507f1f77bcf86cd799439011"), d: { $gt: ISODate("2020-01-01") }, n: NumberLong(5) })
+db.c.find({ a: { $gt: new Date("2020-01-01") } }, { _id: 0 })

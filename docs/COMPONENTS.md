@@ -9,7 +9,8 @@
 | `mdbx/cli.py` | `mdbx` command (`index`, `search`, `show`, `stats`, `lint`, `optimize`/`opt`, `tui`, ...) | `main`, `cmd_optimize` |
 | `mdbx/tui.py` | Textual app: results table, detail pane, MongoDB-area facets | `MdbxApp`, `run` |
 | `mdbx/recipes.py` | Frontmatter parser and lookup for `corpus/recipes/*.md` | `load`, `find`, `Recipe` |
-| `editors/chrome/` | MV3 Chrome extension: highlight a query / log line, click, get the optimizer report and a Markdown case note; JS port of the parser, normalizer and optimizer; no network, `activeTab` only | `lib/optimize.js` (`optimize`, `toDict`, `formatReport`), `lib/normalize.js`, `lib/parser.js`, `popup.js` |
+| `editors/chrome/` | MV3 "MongoDB Expertise" extension: popup (optimize the highlighted query, or corpus passages for non-query text), full app (`app.html`: Search with area facets and document view, Recipes, Optimize, Lint, Operators, About), right-click items, `mdb` omnibox keyword; JS ports of search, optimizer, normalizer, parser and linter; packaged search data in `data/`; no network except optional local Ollama | `lib/textsearch.js` (`SearchIndex`, `queryTerms`, `snippet`, `embedQuery`), `lib/store.js`, `lib/optimize.js`, `lib/analyze.js`, `lib/ui.js`, `app.js`, `popup.js` |
+| `mdbx/webexport.py` | `mdbx export-web`: writes chunks, BM25 postings/weights, doc lengths and int8 vectors as static files from git-tracked corpus files only; `WebIndex` is the pure-Python reference search (equal to SQLite FTS5 ranking) | `export`, `WebIndex`, `tokens`, `porter`, `query_terms` |
 | `editors/vscode/` | VS Code extension (grammar + launcher for `mql-lsp`), packaged with `vsce` | `extension.js`, `server-path.js` |
 | `scripts/gen_recipes_index.py` | Regenerates `docs/RECIPES.md` | — |
 | `mdbx/mcp_server.py` | MCP server (`MCPServer`, stdio): 8 tools: search, show, recipes (2), stats, MQL lint, MQL optimize, operator lookup | `server`, `run` |
@@ -27,7 +28,9 @@
 | `scripts/watch_and_index.sh` | fswatch/inotifywait loop that re-runs `mdbx index` on corpus changes | — |
 | `scripts/gen_file_index.py` | Regenerate `docs/high_signal_file_index.json` and `docs/codebase-overview.md` | — |
 | `scripts/gen_optimizer_golden.py` | Writes `tests/fixtures/optimizer/*.golden.json` from the Python optimizer (the JS port's contract); `--check` fails on stale goldens | — |
-| `scripts/package_chrome_extension.py` | Builds `dist/mql-optimizer-chrome-<version>.zip` (runtime files only) | — |
+| `scripts/package_chrome_extension.py` | Exports search data, then builds `dist/mongodb-expertise-chrome-<version>.zip` (runtime files + data); `--no-vectors`, `--no-data` | — |
+| `scripts/gen_search_golden.py` | Exports `tests/fixtures/search/index/` and writes `golden.json` (keyword/semantic/hybrid reference results); `--check` | — |
+| `scripts/gen_lint_golden.py`, `scripts/gen_chrome_operators.py` | Lint goldens and the JS operator table; `--check` | — |
 | `scripts/make_chrome_icons.py` | Renders the extension icons with no image library | — |
 | `scripts/check_chrome_doc_links.py` | Checks the extension's MongoDB docs links resolve (network) | — |
 | `scripts/check_doc_indexes.py` | CI check that every indexed path exists | — |

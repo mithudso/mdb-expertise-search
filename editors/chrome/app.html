@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MongoDB Expertise</title>
+  <link rel="icon" href="icons/icon32.png">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><img src="icons/icon32.png" alt="" width="22" height="22"><span>MongoDB Expertise</span></div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <a role="tab" href="#search" data-tab="search">Search</a>
+      <a role="tab" href="#recipes" data-tab="recipes">Recipes</a>
+      <a role="tab" href="#optimize" data-tab="optimize">Optimize</a>
+      <a role="tab" href="#lint" data-tab="lint">Lint</a>
+      <a role="tab" href="#operators" data-tab="operators">Operators</a>
+      <a role="tab" href="#about" data-tab="about">About</a>
+    </nav>
+    <span class="local" title="Search, lint and the optimizer run inside the extension. Nothing is sent anywhere unless you turn on local Ollama.">runs locally</span>
+  </header>
+
+  <p id="banner" class="banner" role="status" hidden></p>
+
+  <!-- Search -->
+  <section id="tab-search" class="tab" hidden>
+    <aside class="facets" aria-label="MongoDB areas">
+      <div class="facet-head">Kind</div>
+      <div id="kinds" class="kinds"></div>
+      <div class="facet-head">MongoDB areas <button id="clear-scope" class="link" type="button" hidden>clear</button></div>
+      <input id="facet-filter" type="search" placeholder="filter areas…" aria-label="Filter areas">
+      <ul id="sources" class="sources"></ul>
+    </aside>
+    <div class="results-col">
+      <form id="search-form" class="searchbar" role="search">
+        <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search MongoDB expertise…  (/ to focus)" aria-label="Search">
+        <select id="mode" aria-label="Search mode">
+          <option value="keyword">Keyword</option>
+          <option value="hybrid">Hybrid</option>
+          <option value="semantic">Semantic</option>
+        </select>
+        <button class="primary" type="submit">Search</button>
+      </form>
+      <p id="search-status" class="status" role="status"></p>
+      <ol id="results" class="results"></ol>
+    </div>
+    <article id="detail" class="detail" aria-live="polite"></article>
+  </section>
+
+  <!-- Document -->
+  <section id="tab-doc" class="tab" hidden>
+    <div class="doc-bar"><button id="doc-back" type="button">← Back</button><span id="doc-title" class="doc-title"></span><span id="doc-actions"></span></div>
+    <article id="doc" class="doc"></article>
+  </section>
+
+  <!-- Recipes -->
+  <section id="tab-recipes" class="tab single" hidden>
+    <div class="searchbar"><input id="recipe-filter" type="search" placeholder="Filter recipes (shard, private link, upgrade, restore…)" aria-label="Filter recipes"></div>
+    <ul id="recipes" class="cards"></ul>
+  </section>
+
+  <!-- Optimize -->
+  <section id="tab-optimize" class="tab single" hidden>
+    <label for="opt-input" class="label">Query, pipeline, slow-query log line, profiler entry or command document</label>
+    <textarea id="opt-input" spellcheck="false" rows="8"></textarea>
+    <div class="row"><button id="opt-run" class="primary" type="button">Optimize</button><button id="opt-example" type="button">Example log line</button><span class="kind">Ctrl/⌘+Enter runs it</span></div>
+    <div id="opt-out"></div>
+  </section>
+
+  <!-- Lint -->
+  <section id="tab-lint" class="tab single" hidden>
+    <label for="lint-input" class="label">MQL to check (mongosh syntax)</label>
+    <textarea id="lint-input" spellcheck="false" rows="10"></textarea>
+    <div class="row"><button id="lint-run" class="primary" type="button">Lint</button><button id="lint-to-opt" type="button">Optimize this</button><span class="kind">Ctrl/⌘+Enter runs it</span></div>
+    <div id="lint-out"></div>
+  </section>
+
+  <!-- Operators -->
+  <section id="tab-operators" class="tab single" hidden>
+    <div class="searchbar"><input id="op-filter" type="search" placeholder="Filter operators ($lookup, accumulator, geo…)" aria-label="Filter operators"></div>
+    <p id="op-count" class="status"></p>
+    <ul id="ops" class="ops"></ul>
+  </section>
+
+  <!-- About -->
+  <section id="tab-about" class="tab single" hidden>
+    <h2>Index</h2>
+    <dl id="stats" class="stats"></dl>
+    <h2>Semantic and hybrid search (optional)</h2>
+    <p>Keyword search works everywhere. Hybrid and semantic search also need the query embedded with the same model the
+      index was built with, which a local <a href="https://ollama.com" target="_blank" rel="noopener noreferrer">Ollama</a> provides.
+      The query text goes only to that local Ollama.</p>
+    <div class="row">
+      <label for="ollama-host">Ollama</label>
+      <input id="ollama-host" type="url" value="http://127.0.0.1:11434" spellcheck="false">
+      <button id="ollama-enable" class="primary" type="button">Enable and test</button>
+      <button id="ollama-disable" type="button">Turn off</button>
+    </div>
+    <p id="ollama-status" class="status"></p>
+    <div id="ollama-help" hidden></div>
+    <h2>Privacy</h2>
+    <ul>
+      <li>Search, lint and the optimizer run inside the extension and make no network requests.</li>
+      <li>The extension reads a page only when you click it, use its shortcut or its right-click items.</li>
+      <li>The packaged corpus is the redacted, committed corpus of the mdb-expertise-search repository; private local files are never included.</li>
+    </ul>
+    <h2>Shortcuts</h2>
+    <ul>
+      <li><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> — optimize the highlighted text (toolbar popup)</li>
+      <li>Address bar: type <kbd>mdb</kbd>, a space, then your question</li>
+      <li>Right-click a selection: <em>Optimize selected MQL</em>, <em>Search MongoDB expertise</em>, <em>Lint selected MQL</em></li>
+      <li>In Search: <kbd>/</kbd> focuses the box, <kbd>↑</kbd>/<kbd>↓</kbd> move through results, <kbd>Enter</kbd> opens the document</li>
+    </ul>
+  </section>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

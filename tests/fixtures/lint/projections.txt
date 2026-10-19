@@ -1,0 +1,41 @@
+// Projections: inclusion/exclusion mixes, computed fields, $addFields, find projections.
+
+db.c.find({}, { a: 1, b: 1, _id: 0 })
+db.c.find({}, { a: 0, b: 0 })
+db.c.find({}, { a: 1, b: 0 })
+db.c.find({}, { a: 1, b: 0, c: 0, d: 1 })
+db.c.find({}, { _id: 0, a: 0 })
+db.c.find({}, { "nested.x": 1, "nested.y": 0 })
+db.c.find({}, { nested: { x: 1, y: 0 } })
+db.c.find({}, { a: true, b: false })
+db.c.find({}, { a: { $slice: 3 }, b: 1 })
+db.c.find({}, { arr: { $elemMatch: { x: 1 } }, name: 1 })
+db.c.find({}, { score: { $meta: "textScore" }, name: 1 })
+db.c.find({}, { $bad: 1, a: 1 })
+db.c.find({}, { a: 1, a: 0 })
+db.c.findOne({ _id: 1 }, { a: { $nope: 1 } })
+
+// $project in pipelines
+db.c.aggregate([{ $project: { a: 1, total: { $add: ["$x", "$y"] } } }])
+db.c.aggregate([{ $project: { a: 0, total: { $add: ["$x", "$y"] } } }])
+db.c.aggregate([{ $project: { a: 1, b: 0 } }])
+db.c.aggregate([{ $project: { name: { $toUpper: "$n" }, c: { $cond: [1, 2] }, d: { $cond: [1, 2, 3] } } }])
+db.c.aggregate([{ $project: { x: { $divide: ["$a"] }, y: { $log: ["$a", 10] }, z: { $subtract: ["$a", 1, 2] } } }])
+db.c.aggregate([{ $project: { x: { $gt: ["$a", 1], $lt: ["$a", 5] } } }])
+db.c.aggregate([{ $project: { x: { $gtt: ["$a", 1] }, y: { $pushAll: [1] }, z: { $match: {} } } }])
+db.c.aggregate([{ $project: { x: { $literal: { $add: 1 } }, y: { $function: { body: "f", args: [], lang: "js" } } } }])
+db.c.aggregate([{ $project: { x: { $oid: "507f1f77bcf86cd799439011" }, y: { $meta: "searchScore" } } }])
+db.c.aggregate([{ $project: { sub: { deep: { a: 1, b: 1 }, other: { $sum: ["$x", 1] } } } }])
+db.c.aggregate([{ $project: { $weird: 1 } }])
+db.c.aggregate([{ $project: [1, 2] }])
+
+// $addFields / $set never mix-check
+db.c.aggregate([{ $addFields: { a: 0, b: 1, c: { $sum: ["$x", 1] } } }, { $set: { d: [1, { $add: [1, 2] }] } }])
+db.c.aggregate([{ $set: { a: { $unknownExpr: 1 } } }])
+db.c.aggregate([{ $addFields: { a: 1, a: 2 } }])
+
+// expression arguments
+db.c.aggregate([{ $project: { r: { $range: [0, 10] }, s: { $setDifference: ["$a", "$b", "$c"] }, t: { $arrayElemAt: ["$a"] } } }])
+db.c.aggregate([{ $match: { $expr: { $gt: ["$a", "$b"] } } }])
+db.c.aggregate([{ $match: { $expr: { $and: [{ $gt: ["$a", 1] }, { $zzz: 1 }] } } }])
+db.c.aggregate([{ $match: { $expr: { $eq: ["$a", { $add: [1, 2] }] } } }])

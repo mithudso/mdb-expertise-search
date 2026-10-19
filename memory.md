@@ -1,5 +1,25 @@
 # memory.md — operator log
 
+## v0.6.0 — 2026-10-19
+- Chrome extension grew from the optimizer into "MongoDB Expertise" (ext 0.2.0): packaged corpus + search index
+  (10.2 MB zip / 28.5 MB unpacked: 12,402 chunks, 14,672 terms, 867k postings, 10,820 int8 vectors), full app
+  (`app.html`: Search with area facets + document view, Recipes, Optimize, Lint, Operators, About), popup falls
+  back to corpus passages for non-query selections, right-click Search/Lint, omnibox `mdb`.
+- `mdbx export-web` (`mdbx/webexport.py`): git-tracked corpus files only (refuses corpus outside git, errors when
+  everything is untracked). Pure-Python `WebIndex` reproduces SQLite FTS5 exactly (unicode61 + porter + bm25 with
+  weights 4/1/2): identical top-10 and order on 41/41 real queries. JS port (`lib/textsearch.js`) identical to
+  Python on 87/87 real query×mode runs; fixture goldens in tests/fixtures/search/.
+- Semantic/hybrid in the browser needs a local Ollama: optional host permission for 127.0.0.1/localhost; Ollama
+  returns 403 to chrome-extension origins until OLLAMA_ORIGINS allows the extension id (About tab shows the
+  command). Live hybrid check: embed 240-590 ms, rank 15-25 ms.
+- Linter port `lib/analyze.js` + operator table (subagent): 14/14 diagnostic codes, 859 prefix inputs identical,
+  difflib `suggest()` port verified on 1,137 words.
+- Fact packs "never publish" label = the hub pipeline's blanket rule for third-party snapshots, not a licence
+  finding. MongoDB docs are CC BY-NC-SA 3.0 US (98.4% of fact lines cite www.mongodb.com; ~100 lines cite
+  third-party blogs). Public release would need a CC carve-out licence file + filtering non-MongoDB lines.
+- e2e (Playwright 1.64 + Chromium 156): popup optimizer, corpus fallback, app search/facets/doc view, recipes,
+  lint, operators, about, optimizer corpus links, right-click lint handoff. 119 pytest + 130 node tests.
+
 ## v0.5.0 — 2026-10-19
 - Chrome extension `editors/chrome/` for the TSE team: highlight a query / log line, click (or Alt+Shift+O, or
   right-click "Optimize selected MQL"), get findings, log evidence, safe rewrites, index advice and "Copy as

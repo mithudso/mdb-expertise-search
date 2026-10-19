@@ -26,3 +26,4 @@
    then click the extension and it'll run the optimizer on it . 2. yes copy it [~/.config/mdbx redaction config]"
 7. "mdbx tui -> zsh: command not found: mdbx" (installed as uv tool; README global-install section)
 8. "The lefthand panel is crowded and linewrapped, expand it to fit" (TUI facet sidebar sizes to labels, caps at 45%, ellipsis instead of wrap)
+9. "Package the mongodb expertise search, indexes, etc. All the functionality add it to the chrome plugin." (+ asked why the fact packs are marked never publish when based on public docs)

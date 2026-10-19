@@ -1,0 +1,422 @@
+{
+  "diagnostics": [
+    {
+      "code": "update-shape",
+      "column": 31,
+      "end": 622,
+      "fix": null,
+      "line": 10,
+      "message": "Update document requires atomic operators such as $set; a plain document is only valid for replaceOne/findOneAndReplace.",
+      "severity": "error",
+      "start": 621
+    },
+    {
+      "code": "update-shape",
+      "column": 49,
+      "end": 726,
+      "fix": null,
+      "line": 12,
+      "message": "'b' mixes a plain field with update operators; wrap it in $set.",
+      "severity": "error",
+      "start": 725
+    },
+    {
+      "code": "update-shape",
+      "column": 55,
+      "end": 736,
+      "fix": null,
+      "line": 12,
+      "message": "'c.d' mixes a plain field with update operators; wrap it in $set.",
+      "severity": "error",
+      "start": 731
+    },
+    {
+      "code": "update-shape",
+      "column": 31,
+      "end": 801,
+      "fix": null,
+      "line": 14,
+      "message": "Update document is empty; add an operator such as $set.",
+      "severity": "error",
+      "start": 799
+    },
+    {
+      "code": "removed-operator",
+      "column": 33,
+      "end": 865,
+      "fix": null,
+      "line": 16,
+      "message": "$pushAll: Removed in MongoDB 3.6; use $push with $each.",
+      "severity": "error",
+      "start": 857
+    },
+    {
+      "code": "removed-operator",
+      "column": 33,
+      "end": 926,
+      "fix": null,
+      "line": 17,
+      "message": "$isolated: Removed in MongoDB 4.0; use transactions.",
+      "severity": "error",
+      "start": 917
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 33,
+      "end": 1032,
+      "fix": null,
+      "line": 19,
+      "message": "$match is not an update operator.",
+      "severity": "error",
+      "start": 1026
+    },
+    {
+      "code": "unknown-operator",
+      "column": 34,
+      "end": 1085,
+      "fix": "$set",
+      "line": 20,
+      "message": "Unknown update operator $sett. Did you mean $set?",
+      "severity": "error",
+      "start": 1080
+    },
+    {
+      "code": "unknown-operator",
+      "column": 51,
+      "end": 1107,
+      "fix": "$tsIncrement",
+      "line": 20,
+      "message": "Unknown update operator $increment. Did you mean $tsIncrement?",
+      "severity": "error",
+      "start": 1097
+    },
+    {
+      "code": "unknown-operator",
+      "column": 34,
+      "end": 1174,
+      "fix": null,
+      "line": 21,
+      "message": "$totallyNewOperator is not in the built-in operator table (it may be newer than this server).",
+      "severity": "warning",
+      "start": 1155
+    },
+    {
+      "code": "bad-argument",
+      "column": 40,
+      "end": 1267,
+      "fix": null,
+      "line": 23,
+      "message": "$set expects an object of field: value pairs.",
+      "severity": "error",
+      "start": 1266
+    },
+    {
+      "code": "bad-argument",
+      "column": 40,
+      "end": 1314,
+      "fix": null,
+      "line": 24,
+      "message": "$inc expects an object of field: value pairs.",
+      "severity": "error",
+      "start": 1311
+    },
+    {
+      "code": "bad-argument",
+      "column": 45,
+      "end": 1394,
+      "fix": null,
+      "line": 26,
+      "message": "$inc requires a numeric value for 'n'.",
+      "severity": "error",
+      "start": 1388
+    },
+    {
+      "code": "bad-argument",
+      "column": 66,
+      "end": 1413,
+      "fix": null,
+      "line": 26,
+      "message": "$mul requires a numeric value for 'm'.",
+      "severity": "error",
+      "start": 1409
+    },
+    {
+      "code": "bad-argument",
+      "column": 49,
+      "end": 1469,
+      "fix": null,
+      "line": 27,
+      "message": "$pop requires 1 (last) or -1 (first).",
+      "severity": "error",
+      "start": 1468
+    },
+    {
+      "code": "bad-argument",
+      "column": 68,
+      "end": 1488,
+      "fix": null,
+      "line": 27,
+      "message": "$rename requires the new field name as a string.",
+      "severity": "error",
+      "start": 1487
+    },
+    {
+      "code": "bad-argument",
+      "column": 49,
+      "end": 1549,
+      "fix": null,
+      "line": 28,
+      "message": "$pop requires 1 (last) or -1 (first).",
+      "severity": "error",
+      "start": 1543
+    },
+    {
+      "code": "bad-argument",
+      "column": 56,
+      "end": 1625,
+      "fix": null,
+      "line": 30,
+      "message": "$each expects an array.",
+      "severity": "error",
+      "start": 1624
+    },
+    {
+      "code": "missing-field",
+      "column": 49,
+      "end": 1700,
+      "fix": null,
+      "line": 31,
+      "message": "Modifiers on $push require $each.",
+      "severity": "error",
+      "start": 1694
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 65,
+      "end": 1783,
+      "fix": null,
+      "line": 32,
+      "message": "$slice is not a valid modifier for $addToSet.",
+      "severity": "error",
+      "start": 1777
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 49,
+      "end": 1849,
+      "fix": null,
+      "line": 33,
+      "message": "$bogus is not a valid modifier for $push.",
+      "severity": "error",
+      "start": 1843
+    },
+    {
+      "code": "unknown-operator",
+      "column": 57,
+      "end": 1974,
+      "fix": "$floor",
+      "line": 35,
+      "message": "Unknown operator $foo. Did you mean $floor?",
+      "severity": "error",
+      "start": 1970
+    },
+    {
+      "code": "duplicate-key",
+      "column": 48,
+      "end": 2092,
+      "fix": null,
+      "line": 37,
+      "message": "Duplicate key 'a': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 2091
+    },
+    {
+      "code": "duplicate-key",
+      "column": 56,
+      "end": 2103,
+      "fix": null,
+      "line": 37,
+      "message": "Duplicate key '$set': the later value silently replaces the earlier one.",
+      "severity": "warning",
+      "start": 2099
+    }
+  ],
+  "source": "tests/fixtures/lint/update-docs.txt",
+  "symbols": [
+    {
+      "children": [],
+      "end": 216,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 107
+    },
+    {
+      "children": [],
+      "end": 320,
+      "kind": "method",
+      "name": "db.users.updateMany",
+      "start": 217
+    },
+    {
+      "children": [],
+      "end": 432,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 321
+    },
+    {
+      "children": [],
+      "end": 541,
+      "kind": "method",
+      "name": "db.users.findOneAndUpdate",
+      "start": 433
+    },
+    {
+      "children": [],
+      "end": 639,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 590
+    },
+    {
+      "children": [],
+      "end": 742,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 676
+    },
+    {
+      "children": [],
+      "end": 802,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 768
+    },
+    {
+      "children": [],
+      "end": 883,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 824
+    },
+    {
+      "children": [],
+      "end": 948,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 884
+    },
+    {
+      "children": [],
+      "end": 1045,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 993
+    },
+    {
+      "children": [],
+      "end": 1120,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 1046
+    },
+    {
+      "children": [],
+      "end": 1187,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 1121
+    },
+    {
+      "children": [],
+      "end": 1270,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 1226
+    },
+    {
+      "children": [],
+      "end": 1317,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 1271
+    },
+    {
+      "children": [],
+      "end": 1418,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 1343
+    },
+    {
+      "children": [],
+      "end": 1493,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 1419
+    },
+    {
+      "children": [],
+      "end": 1554,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 1494
+    },
+    {
+      "children": [],
+      "end": 1644,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 1568
+    },
+    {
+      "children": [],
+      "end": 1711,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 1645
+    },
+    {
+      "children": [],
+      "end": 1793,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 1712
+    },
+    {
+      "children": [],
+      "end": 1870,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 1794
+    },
+    {
+      "children": [],
+      "end": 1984,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 1913
+    },
+    {
+      "children": [],
+      "end": 2116,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 2043
+    },
+    {
+      "children": [],
+      "end": 2248,
+      "kind": "method",
+      "name": "db.users.updateOne",
+      "start": 2148
+    },
+    {
+      "children": [],
+      "end": 2345,
+      "kind": "method",
+      "name": "db.users.replaceOne",
+      "start": 2288
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "diagnostics": [
+    {
+      "code": "unknown-operator",
+      "column": 34,
+      "end": 152,
+      "fix": "$gt",
+      "line": 4,
+      "message": "Unknown operator $gtt. Did you mean $gt?",
+      "severity": "error",
+      "start": 148
+    },
+    {
+      "code": "missing-field",
+      "column": 12,
+      "end": 217,
+      "fix": null,
+      "line": 5,
+      "message": "$group requires an _id field (use _id: null to aggregate all documents).",
+      "severity": "error",
+      "start": 216
+    },
+    {
+      "code": "bad-argument",
+      "column": 20,
+      "end": 298,
+      "fix": null,
+      "line": 6,
+      "message": "Sort order for 'total' must be 1, -1 or { $meta: … }.",
+      "severity": "error",
+      "start": 297
+    },
+    {
+      "code": "bad-argument",
+      "column": 13,
+      "end": 380,
+      "fix": null,
+      "line": 7,
+      "message": "$unwind path must start with '$' (e.g. \"$items\").",
+      "severity": "error",
+      "start": 373
+    },
+    {
+      "code": "stage-position",
+      "column": 4,
+      "end": 444,
+      "fix": null,
+      "line": 8,
+      "message": "$out must be the last stage of the pipeline.",
+      "severity": "error",
+      "start": 440
+    },
+    {
+      "code": "update-shape",
+      "column": 52,
+      "end": 626,
+      "fix": null,
+      "line": 13,
+      "message": "'note' mixes a plain field with update operators; wrap it in $set.",
+      "severity": "error",
+      "start": 622
+    }
+  ],
+  "source": "tests/fixtures/optimizer/mongosh-orders.txt",
+  "symbols": [
+    {
+      "children": [
+        {
+          "children": [],
+          "end": 161,
+          "kind": "stage",
+          "name": "$match",
+          "start": 116
+        },
+        {
+          "children": [],
+          "end": 248,
+          "kind": "stage",
+          "name": "$group",
+          "start": 206
+        },
+        {
+          "children": [],
+          "end": 302,
+          "kind": "stage",
+          "name": "$sort",
+          "start": 279
+        },
+        {
+          "children": [],
+          "end": 382,
+          "kind": "stage",
+          "name": "$unwind",
+          "start": 362
+        },
+        {
+          "children": [],
+          "end": 456,
+          "kind": "stage",
+          "name": "$out",
+          "start": 438
+        },
+        {
+          "children": [],
+          "end": 474,
+          "kind": "stage",
+          "name": "$limit",
+          "start": 460
+        }
+      ],
+      "end": 538,
+      "kind": "variable",
+      "name": "pipeline",
+      "start": 95
+    },
+    {
+      "children": [],
+      "end": 568,
+      "kind": "method",
+      "name": "db.orders.aggregate",
+      "start": 539
+    },
+    {
+      "children": [],
+      "end": 634,
+      "kind": "method",
+      "name": "db.orders.updateOne",
+      "start": 570
+    }
+  ]
+}
