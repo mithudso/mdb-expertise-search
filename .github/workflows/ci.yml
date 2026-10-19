@@ -21,6 +21,9 @@ jobs:
       - run: ruff check .
       - run: pytest -q
       - run: python scripts/sweep_customers.py
+      - run: python scripts/rotate_workflow_logs.py --check
+      - name: Optimizer smoke test on the example file
+        run: mdbx optimize --read-only examples/slow-queries.mql || test $? -eq 1
       - run: cd editors/vscode && npm install --ignore-scripts && npm test
       - name: Index doc paths exist
         run: python scripts/check_doc_indexes.py
