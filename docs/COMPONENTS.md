@@ -5,7 +5,8 @@
 | `mdbx/corpus.py` | Discover, classify and chunk corpus files | `iter_chunks`, `chunk_text`, `classify`, `Chunk` |
 | `mdbx/embed.py` | Ollama `/api/embed` client (stdlib `urllib`), L2-normalised output | `embed`, `embed_query`, `EmbedError` |
 | `mdbx/index.py` | SQLite schema, keyword and semantic index builds, stats | `connect`, `build_keyword`, `build_semantic`, `stats` |
-| `mdbx/search.py` | Keyword, semantic and hybrid ranking | `search`, `keyword`, `semantic`, `hybrid`, `VectorStore`, `Hit` |
+| `mdbx/search.py` | Keyword, semantic and hybrid ranking; hybrid records a semantic-fallback note instead of degrading silently | `search(notes=…)`, `keyword`, `semantic`, `hybrid`, `fallback_note`, `VectorStore`, `Hit` |
+| `mdbx/providers.py` | Adapter over the shared `ai-auth` library (optional `ai` extra): credentials for Claude / Codex / Antigravity / Glean, Apple Intelligence fallback, corpus-grounded prompts for `mdbx ask`, Glean search | `get_auth`, `auth_cli`, `build_context`, `ask`, `glean_search`, `available`, `INSTALL_HINT` |
 | `mdbx/cli.py` | `mdbx` command (`index`, `search`, `show`, `stats`, `lint`, `optimize`/`opt`, `tui`, ...) | `main`, `cmd_optimize` |
 | `mdbx/tui.py` | Textual app: results table, detail pane, MongoDB-area facets | `MdbxApp`, `run` |
 | `mdbx/recipes.py` | Frontmatter parser and lookup for `corpus/recipes/*.md` | `load`, `find`, `Recipe` |
@@ -28,7 +29,10 @@
 | `scripts/watch_and_index.sh` | fswatch/inotifywait loop that re-runs `mdbx index` on corpus changes | — |
 | `scripts/gen_file_index.py` | Regenerate `docs/high_signal_file_index.json` and `docs/codebase-overview.md` | — |
 | `scripts/gen_optimizer_golden.py` | Writes `tests/fixtures/optimizer/*.golden.json` from the Python optimizer (the JS port's contract); `--check` fails on stale goldens | — |
-| `scripts/package_chrome_extension.py` | Exports search data, then builds `dist/mongodb-expertise-chrome-<version>.zip` (runtime files + data); `--no-vectors`, `--no-data` | — |
+| `scripts/package_chrome_extension.py` | Exports search data, writes `data/build.json` (version, commit, built_at), then builds `dist/mongodb-expertise-chrome-<version>.zip` (runtime files + data); `--no-vectors`, `--no-data` | `write_build_stamp`, `git_commit` |
+| `scripts/chrome_extension_autoupdate.py` | Keeps an unpacked Chrome install current with GitHub: launchd agent (`install-agent`), own clone + rebuild or `--source release` download, atomic folder swap; `status`, `run [--force]`, `uninstall-agent` | `run_update`, `needs_update`, `sync_runtime`, `agent_plist` |
+| `editors/chrome/lib/autoupdate.js` | Service-worker side of auto-update: alarm every 5 min re-reads `data/build.json` and calls `chrome.runtime.reload()` when the build id changed | `startAutoUpdate`, `buildId`, `shouldReload`, `readBuild` |
+| `scripts/glean_cli_helper.py` | Glean CLI fallback helper (shim over `ai_auth.glean_helper`): `check`, `login`, `search`, `api`, `chat`; JSON out; exit 2 = CLI missing, 3 = not authenticated | — |
 | `scripts/gen_search_golden.py` | Exports `tests/fixtures/search/index/` and writes `golden.json` (keyword/semantic/hybrid reference results); `--check` | — |
 | `scripts/gen_lint_golden.py`, `scripts/gen_chrome_operators.py` | Lint goldens and the JS operator table; `--check` | — |
 | `scripts/make_chrome_icons.py` | Renders the extension icons with no image library | — |
