@@ -144,7 +144,27 @@ linter, recipes and operator reference, so a TSE needs nothing but Chrome:
 - Runs locally: no network access, `activeTab` only; only committed (redacted) corpus files are packaged.
 
 Build it with `python scripts/package_chrome_extension.py`; install and team rollout:
-[editors/chrome/README.md](editors/chrome/README.md).
+[editors/chrome/README.md](editors/chrome/README.md). An unpacked install keeps itself current:
+`python scripts/chrome_extension_autoupdate.py install-agent` polls GitHub, rebuilds after every push to `main`
+and the extension reloads itself.
+
+### 8. Ask a question, grounded in the corpus
+
+```bash
+$ mdbx ask "Why does my $lookup with a $match after it scan the whole foreign collection?"
+A $match after $lookup cannot be pushed into the foreign collection scan; move the filter into the
+$lookup pipeline (sub-pipeline form) or into a preceding $match on the local side [1][3] …
+
+Sources:
+  [1] mongodb-expert · Aggregation > $lookup  (skills/mongodb-expert/SKILL.md:412)
+  [3] query-optimization-facts · $lookup pushdown  (llms/qo.llms/llms.txt:88)
+[claude · oauth · claude-sonnet-5-5]
+```
+
+`mdbx ask` sends the question plus the best corpus passages to the first configured provider (Claude, Codex,
+Antigravity, in the order you set with `mdbx auth prefer`) and falls back to on-device Apple Intelligence on a
+Mac that has it, so the command works offline too. `mdbx glean "…"` searches Glean the same way: API token,
+then an OAuth session, then the Glean CLI through `scripts/glean_cli_helper.py`.
 
 ## Quick start
 
@@ -179,6 +199,9 @@ mdbx index && mdbx tui
 | `mdbx stats [--sources]` | Index statistics |
 | `mdbx recipes [WORDS]` / `mdbx recipe NAME` | List / print step-by-step recipes |
 | `mdbx tui` | Interactive browser |
+| `mdbx ask QUESTION [-p claude\|codex\|antigravity\|apple] [-n N] [-k KIND] [--json]` | Answer from corpus passages with the first available AI provider; falls back to on-device Apple Intelligence (`ai` extra) |
+| `mdbx auth status\|set-key\|login\|unset\|mode\|prefer\|test` | AI provider credentials: API keys in the Keychain, or OAuth through the vendor CLIs / Glean PKCE ([docs/INSTALLATION.md](docs/INSTALLATION.md#ai-providers-mdbx-ask-mdbx-glean-mdbx-auth)) |
+| `mdbx glean QUERY [-n N] [-d DATASOURCE] [--json]` | Search Glean: API token → OAuth session → Glean CLI helper (`scripts/glean_cli_helper.py`) |
 | `mdbx mcp` | MCP server over stdio ([docs/MCP.md](docs/MCP.md)) |
 | `mql-lsp` | Language server over stdio ([docs/LSP.md](docs/LSP.md)) |
 
@@ -197,6 +220,10 @@ TUI keys: `Enter` search, `Ctrl+T` cycle mode, `Ctrl+K` cycle kind, `Ctrl+F` foc
 
 `MDBX_DB` (index path), `MDBX_CORPUS` (corpus dir), `MDBX_OLLAMA_HOST` / `OLLAMA_HOST`,
 `MDBX_EMBED_MODEL`, `MDBX_LSP_OPTIMIZE=0` (hide optimizer findings in the editor). See `.env.example`.
+
+AI providers (`mdbx ask`, `mdbx glean`): `mdbx auth set-key <provider>` or `mdbx auth login <provider>`; env vars
+`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GLEAN_API_TOKEN` + `GLEAN_BASE_URL` also work. Settings in
+`~/.config/mdbx/config.json`, secrets in the macOS Keychain (service `ai-auth/mdbx`).
 
 ## Corpus
 

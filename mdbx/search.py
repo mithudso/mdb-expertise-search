@@ -168,12 +168,25 @@ def hybrid(
     kind: str | None = None,
     source: str | None = None,
     store: VectorStore | None = None,
+    notes: list[str] | None = None,
 ) -> list[Hit]:
-    """Fuse keyword and semantic rankings. Falls back to keyword if embeddings are unavailable."""
+    """Fuse keyword and semantic rankings.
+
+    Falls back to keyword when embeddings are unavailable (Ollama down, no vectors indexed, model
+    mismatch). The fallback is never silent: it is logged at WARNING and, when the caller passes a
+    ``notes`` list, the reason is appended there so the CLI / TUI / MCP surface can show it.
+    """
     kw = keyword(con, query, limit * 3, kind=kind, source=source)
     try:
         sm = semantic(con, query, limit * 3, kind=kind, source=source, store=store)
-    except embedmod.EmbedError:
+    except embedmod.EmbedError as exc:
+        msg = fallback_note(exc)
+        # a caller that passed `notes` will show the message itself; only silent callers get the WARNING
+        log.log(logging.INFO if notes is not None else logging.WARNING, "%s", msg)
+        if notes is not None:
+            notes.append(msg)
+        for h in kw[:limit]:
+            h.via = "keyword (semantic unavailable)"
         return kw[:limit]
     fused: dict[int, Hit] = {}
     scores: dict[int, float] = {}
@@ -194,8 +207,19 @@ def hybrid(
     return _dedupe(out, limit)
 
 
-def search(con, query, mode="hybrid", limit=10, **kw) -> list[Hit]:
-    fn = {"hybrid": hybrid, "keyword": keyword, "semantic": semantic}[mode]
+def fallback_note(exc: Exception) -> str:
+    """One line telling the user that semantic search did not run and why."""
+    return f"semantic search unavailable ({exc}); showing keyword results only"
+
+
+def search(con, query, mode="hybrid", limit=10, *, notes: list[str] | None = None, **kw) -> list[Hit]:
+    """Dispatch on ``mode``. ``notes`` (hybrid only) collects the semantic-fallback message, if any.
+
+    In ``semantic`` mode an unreachable embedder raises ``EmbedError`` — there is nothing to fall back to.
+    """
+    if mode == "hybrid":
+        return hybrid(con, query, limit, notes=notes, **kw)
+    fn = {"keyword": keyword, "semantic": semantic}[mode]
     return fn(con, query, limit, **kw)
 
 

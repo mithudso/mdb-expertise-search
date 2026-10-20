@@ -87,3 +87,33 @@ def test_cli_search_and_stats(tmp_path, capsys, monkeypatch):
     assert cli.main(["--db", str(db), "stats", "--json"]) == 0
     with pytest.raises(SystemExit):
         cli.main(["search"])
+
+
+def test_hybrid_fallback_is_signalled(tmp_path, monkeypatch, capsys):
+    """When the embedder is unreachable, hybrid search must say so, not silently degrade."""
+    monkeypatch.setenv("MDBX_OLLAMA_HOST", "http://127.0.0.1:9")
+    db = tmp_path / "t.sqlite"
+    con = index.connect(db)
+    index.build_keyword(con, make_corpus(tmp_path))
+    notes: list[str] = []
+    hits = search.search(con, "shard key cardinality", "hybrid", notes=notes)
+    assert hits and all(h.via == "keyword (semantic unavailable)" for h in hits)
+    assert len(notes) == 1 and notes[0].startswith("semantic search unavailable (")
+    assert "showing keyword results only" in notes[0]
+    # keyword mode is what was asked for: no note
+    notes.clear()
+    assert search.search(con, "shard key", "keyword", notes=notes) and notes == []
+    # semantic mode has nothing to fall back to
+    with pytest.raises(search.embedmod.EmbedError):
+        search.search(con, "shard key", "semantic")
+    con.close()
+
+    from mdbx import cli
+    assert cli.main(["--db", str(db), "search", "shard", "key"]) == 0
+    err = capsys.readouterr().err
+    assert "warning: semantic search unavailable" in err
+    assert cli.main(["--db", str(db), "search", "-m", "semantic", "shard", "key"]) == 1
+    err = capsys.readouterr().err
+    assert "error:" in err and "start Ollama" in err
+    assert cli.main(["--db", str(db), "search", "-m", "keyword", "shard", "key"]) == 0
+    assert "warning" not in capsys.readouterr().err

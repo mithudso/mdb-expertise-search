@@ -87,7 +87,7 @@ test("manifest: MV3, minimal permissions, no host access, files exist", () => {
   const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
   assert.equal(m.manifest_version, 3);
   assert.equal(m.version, pkg.version, "manifest.json and package.json versions must match");
-  assert.deepEqual([...m.permissions].sort(), ["activeTab", "contextMenus", "scripting", "storage"]);
+  assert.deepEqual([...m.permissions].sort(), ["activeTab", "alarms", "contextMenus", "scripting", "storage"]);
   assert.equal(m.host_permissions, undefined);
   // Ollama access is optional, local-only, and requested at runtime from the About tab
   assert.deepEqual(m.optional_host_permissions, ["http://127.0.0.1/*", "http://localhost/*"]);

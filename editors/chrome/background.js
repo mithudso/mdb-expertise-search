@@ -1,6 +1,11 @@
-// background — right-click menu items and the "mdb" address-bar keyword.
+// background — right-click menu items, the "mdb" address-bar keyword, and the self-reload check for
+// unpacked installs kept current by scripts/chrome_extension_autoupdate.py.
 // Selected text reaches the popup / app through session storage (memory only, cleared when the browser
 // closes); nothing is sent over the network.
+
+import { startAutoUpdate } from "./lib/autoupdate.js";
+
+startAutoUpdate();
 
 const MENUS = [
   { id: "mql-optimize-selection", title: "Optimize selected MQL" },

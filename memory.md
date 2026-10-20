@@ -1,5 +1,32 @@
 # memory.md — operator log
 
+## v0.7.0 — 2026-10-20
+- AI providers via the new shared library `ai-auth` (`~/dev/libraries/ai-auth`, https://github.com/mithudso/ai-auth,
+  private; optional extra `ai`): `mdbx auth status|set-key|login|unset|mode|prefer|test` (= `ai-auth --app mdbx …`),
+  `mdbx ask` (corpus passages → first available provider, Apple Intelligence fallback), `mdbx glean` (token → PKCE
+  OAuth → Glean CLI helper). Adapter: `mdbx/providers.py`; helper shim: `scripts/glean_cli_helper.py` (the
+  implementation lives in `ai_auth/glean_helper.py`, same contract as the tam-dashboard / case-assistant native
+  hosts: binary resolution, auth probe, login, transient retry, JSON out, exit 2/3).
+- Credential chain per provider: stored key (Keychain `ai-auth/mdbx`) → env → vendor OAuth (`claude auth login` →
+  `claude -p`; `codex login` → `codex exec`; `agy`/`gemini` sign-in → `-p`). Anthropic/OpenAI/Google have no
+  third-party OAuth for their APIs, so the CLIs' own logins are the OAuth path; Claude Code's Keychain tokens are not
+  read. Live-verified on this Mac: claude (oauth, 17–22 s with haiku), codex exec (34 s), agy -p (21 s), Apple
+  Intelligence (macOS 27.0.1, helper built by `swiftc` in ~1 s, answers in ~1.5 s). Gemini CLI headless needs
+  `GEMINI_CLI_TRUST_WORKSPACE=true`; `claude -p --bare` cannot see the Keychain login (do not use `--bare`).
+- Chrome extension auto-update (ext 0.3.0, `alarms` permission): `scripts/chrome_extension_autoupdate.py
+  install-agent` = launchd agent (default 10 min) that fetches its own clone, rebuilds via
+  `package_chrome_extension.py` (now writes `data/build.json` {version, commit, built_at}), swaps the unpacked folder
+  atomically; `editors/chrome/lib/autoupdate.js` re-reads `build.json` every 5 min and `chrome.runtime.reload()`s.
+  `--source release` consumes the rolling `chrome-latest` GitHub release that CI now publishes on every push to main
+  (keyword-only build; job `chrome-release` in ci.yml, `contents: write`).
+- Semantic fallback is now signalled everywhere: `search.hybrid(notes=…)` records why the embedder was skipped and
+  marks hits `via="keyword (semantic unavailable)"`; CLI prints `warning: semantic search unavailable (…)` to stderr
+  (semantic mode: error + "start Ollama" hint, exit 1); TUI status shows `⚠ …`; MCP `mdb_search` adds
+  `degraded: true` + `warning` to every hit (semantic mode raises). The Chrome app already noted it in the status line.
+- Known gaps: `ai-auth` is a private repo, so CI cannot install the `ai` extra (provider tests `importorskip`);
+  Glean PKCE login is implemented against the tenant's RFC 8414 metadata (verified discoverable) but the browser
+  flow and whether REST accepts those tokens are not yet exercised — the Glean CLI fallback is the proven path.
+
 ## v0.6.0 — 2026-10-19
 - Chrome extension grew from the optimizer into "MongoDB Expertise" (ext 0.2.0): packaged corpus + search index
   (10.2 MB zip / 28.5 MB unpacked: 12,402 chunks, 14,672 terms, 867k postings, 10,820 int8 vectors), full app

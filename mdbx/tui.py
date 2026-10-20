@@ -233,10 +233,13 @@ class MdbxApp(App):
             try:
                 if mode != "keyword" and (self._store is None or not len(self._store)):
                     self._store = srch.VectorStore(con)
+                notes: list[str] = []
                 hits = srch.search(
-                    con, query, mode, 40, kind=KINDS[self.kind], source=self.source,
+                    con, query, mode, 40, kind=KINDS[self.kind], source=self.source, notes=notes,
                     **({"store": self._store} if mode != "keyword" else {}),
                 )
+                if notes:  # hybrid ran keyword-only because the embedder is down: say so in the status bar
+                    note = f" ⚠ {notes[0]}"
             except embedmod.EmbedError as exc:
                 log.warning("semantic search unavailable, using keyword: %s", exc)
                 hits = srch.keyword(con, query, 40, kind=KINDS[self.kind], source=self.source)

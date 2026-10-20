@@ -93,6 +93,31 @@ Options: `--no-vectors` (keyword-only, ~7 MB smaller), `--no-data` (code only; s
 2. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, choose the folder.
 3. Pin the extension (puzzle-piece icon → pin). Check `chrome://extensions/shortcuts` if Alt+Shift+O is taken.
 
+### Auto-update an unpacked install (updates when `main` moves)
+
+Chrome only updates Web Store / force-installed extensions by itself. For a Load-unpacked install,
+`scripts/chrome_extension_autoupdate.py` is the updater:
+
+```bash
+python scripts/chrome_extension_autoupdate.py install-agent          # launchd agent, every 10 min
+#   → Load unpacked once from: ~/Library/Application Support/mdbx/chrome-extension
+python scripts/chrome_extension_autoupdate.py status                 # installed build vs. origin/main
+python scripts/chrome_extension_autoupdate.py run --force            # rebuild + install now
+python scripts/chrome_extension_autoupdate.py uninstall-agent
+```
+
+How it works: the agent fetches its own clone of the repo (`~/Library/Caches/mdbx/chrome-autoupdate/repo`);
+when `origin/main` has a new commit it rebuilds the extension there (vectors included when a local Ollama is
+running), swaps the runtime files into the install folder atomically, and writes `data/build.json`
+(`{version, commit, built_at}`). The service worker (`lib/autoupdate.js`) re-reads that file every five minutes
+and calls `chrome.runtime.reload()` when the build id changed. A push to GitHub is live in the browser within
+about 15 minutes, with no clicks. Options: `--interval-min`, `--install-dir`, `--branch`, `--no-vectors`,
+`--python` (an interpreter with `mdbx` + numpy; defaults to the one that ran `install-agent`).
+`--source release` skips the local build and downloads the keyword-only zip CI publishes on the rolling
+`chrome-latest` GitHub release (needs `gh auth login`). Settings: `~/.config/mdbx/chrome-autoupdate.json`;
+log: `~/Library/Logs/mdbx-chrome-autoupdate.log`. The extension itself still makes no network requests: it only
+reads its own `data/build.json`.
+
 ## Limits
 
 - The optimizer is static: it does not know collection size, value distribution or existing indexes; confirm

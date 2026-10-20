@@ -30,3 +30,32 @@ jobs:
       - run: python scripts/package_chrome_extension.py
       - name: Index doc paths exist
         run: python scripts/check_doc_indexes.py
+
+  # Release channel for the Chrome extension auto-updater (scripts/chrome_extension_autoupdate.py --source release):
+  # every push to main republishes the keyword-only build on the rolling "chrome-latest" release.
+  chrome-release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - run: python -m mdbx.cli index --skip-semantic
+      - run: python scripts/package_chrome_extension.py --no-vectors
+      - name: Publish rolling release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          zip=$(ls dist/mongodb-expertise-chrome-*.zip)
+          cp "$zip" dist/mongodb-expertise-chrome.zip
+          cp editors/chrome/data/build.json dist/build.json
+          gh release view chrome-latest >/dev/null 2>&1 || \
+            gh release create chrome-latest --prerelease --title "Chrome extension (latest main)" \
+              --notes "Rolling build of editors/chrome from main; consumed by scripts/chrome_extension_autoupdate.py --source release."
+          gh release upload chrome-latest dist/mongodb-expertise-chrome.zip dist/build.json --clobber

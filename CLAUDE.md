@@ -9,6 +9,8 @@ Project: `mdb-expertise-search` (`mdbx`) — hybrid search CLI/TUI over a MongoD
 - MQL: `.venv/bin/mdbx lint FILE` · `.venv/bin/mdbx optimize FILE|- [--read-only] [--write] [--json]` (exit 1 on high/blocking)
 - Chrome extension: `cd editors/chrome && npm test` · package (exports search data to `editors/chrome/data/`): `python3 scripts/package_chrome_extension.py` · export only: `mdbx export-web DIR`
 - Logs: `python3 scripts/rotate_workflow_logs.py --check` (rotate `memory.md`/`prompts.md` over 200 KB) · Reindex on change: `scripts/watch_and_index.sh`
+- AI providers (optional `ai` extra = the `ai-auth` library at `~/dev/libraries/ai-auth`, app namespace `mdbx`): `mdbx auth status|set-key|login|test` · `mdbx ask "..."` (corpus RAG, Apple Intelligence fallback) · `mdbx glean "..."` (token → OAuth → `scripts/glean_cli_helper.py`). Provider logic lives in the library, not here; `mdbx/providers.py` is the adapter.
+- Chrome extension auto-update: `python3 scripts/chrome_extension_autoupdate.py install-agent` (launchd, polls GitHub, rebuilds, swaps the unpacked folder; the extension reloads itself from `data/build.json`).
 
 ## Rules
 - Code lives in `mdbx/`; version in `pyproject.toml` and `mdbx/__init__.py` must match.

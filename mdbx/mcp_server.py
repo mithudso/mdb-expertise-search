@@ -46,17 +46,21 @@ def mdb_search(
     if mode not in {"hybrid", "keyword", "semantic"}:
         raise ValueError("mode must be hybrid, keyword or semantic")
     con = _db()
+    notes: list[str] = []
     try:
         try:
-            hits = srch.search(con, query, mode, max(1, min(limit, 25)), kind=kind, source=source)
+            hits = srch.search(con, query, mode, max(1, min(limit, 25)), kind=kind, source=source, notes=notes)
         except embedmod.EmbedError as exc:
             if mode == "semantic":
-                raise
+                raise ValueError(f"{srch.fallback_note(exc)}; start Ollama or use mode=keyword") from exc
+            notes.append(srch.fallback_note(exc))
             hits = srch.keyword(con, query, max(1, min(limit, 25)), kind=kind, source=source)
-            hits and setattr(hits[0], "via", f"keyword (semantic unavailable: {exc})")
+        # The fallback is signalled on every hit so an agent cannot miss it: `via` names the reason and
+        # `degraded` is set. (Keyword-only mode is not degraded; it is what was asked for.)
         return [
             {"path": h.path, "line": h.line, "heading": h.heading, "source": h.source, "kind": h.kind,
-             "score": round(h.score, 4), "via": h.via, "text": h.text}
+             "score": round(h.score, 4), "via": h.via, "text": h.text,
+             **({"degraded": True, "warning": notes[0]} if notes else {})}
             for h in hits
         ]
     finally:

@@ -1,6 +1,6 @@
 {
   "name": "mongodb-expertise-chrome",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Chrome extension: highlight a MongoDB query, slow-query log line or pipeline and run the static MQL optimizer on it, entirely in the browser.",
   "license": "MIT",

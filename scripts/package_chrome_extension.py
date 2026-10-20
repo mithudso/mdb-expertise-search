@@ -13,8 +13,10 @@ screenshots stay out. Fails if manifest.json and package.json versions differ.
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
 import shutil
+import subprocess
 import sys
 import zipfile
 from pathlib import Path
@@ -40,6 +42,26 @@ def build_data(vectors: bool) -> None:
         print("note: no embeddings found in the local index (run `mdbx index` with Ollama); keyword search only")
 
 
+def git_commit() -> str:
+    """Short SHA of HEAD, or "unknown" outside a git checkout."""
+    try:
+        out = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short=12", "HEAD"], capture_output=True,
+                             text=True, timeout=10, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+    return out.stdout.strip() or "unknown"
+
+
+def write_build_stamp(version: str, *, data: bool, vectors: bool) -> dict:
+    """data/build.json: what the extension's self-reload check compares (see lib/autoupdate.js)."""
+    DATA.mkdir(exist_ok=True)
+    stamp = {"version": version, "commit": git_commit(),
+             "built_at": dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+             "search_data": data, "vectors": vectors}
+    (DATA / "build.json").write_text(json.dumps(stamp, indent=2) + "\n", encoding="utf-8")
+    return stamp
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--no-vectors", action="store_true", help="omit embeddings (keyword search only)")
@@ -60,6 +82,8 @@ def main() -> int:
         except RuntimeError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1
+    stamp = write_build_stamp(version, data=not a.no_data, vectors=not (a.no_data or a.no_vectors))
+    print(f"build stamp: {stamp['version']} @ {stamp['commit']} ({stamp['built_at']})")
     files = [EXT / f for f in RUNTIME]
     for d, suffixes in RUNTIME_DIRS.items():
         if (EXT / d).is_dir():

@@ -27,3 +27,14 @@
 7. "mdbx tui -> zsh: command not found: mdbx" (installed as uv tool; README global-install section)
 8. "The lefthand panel is crowded and linewrapped, expand it to fit" (TUI facet sidebar sizes to labels, caps at 45%, ellipsis instead of wrap)
 9. "Package the mongodb expertise search, indexes, etc. All the functionality add it to the chrome plugin." (+ asked why the fact packs are marked never publish when based on public docs)
+
+## 2026-10-20
+10. "Add the ability to set the api key for claude, codex, glean, and antigravity with oauth options for all of them, as
+    well as a fallback local apple intelligence model if those are unavailable and it's a mac that has it. For glean have
+    an optional glean cli fallback which would require glean cli be installed along with a helper script in the same way
+    as works in ~/dev/mdb-case-assistant and ~/dev/tam-dashboard, also create a library for doing this process since I do
+    it often and store it in ~/dev/libraries" (→ `~/dev/libraries/ai-auth`, `mdbx auth|ask|glean`, `scripts/glean_cli_helper.py`)
+11. "Also add an auto-updater so the plugin updates when I push new code." (→ `scripts/chrome_extension_autoupdate.py`,
+    `editors/chrome/lib/autoupdate.js`, CI `chrome-latest` release)
+12. "When attempting to do a symantic search but the symantic indexer is not running and cannot return a result then
+    signal that" (→ `search.hybrid(notes=…)`, CLI/TUI/MCP warnings)

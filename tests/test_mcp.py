@@ -45,7 +45,13 @@ def test_search_and_show(env):
 
 
 def test_hybrid_degrades_to_keyword(env):
-    assert m.mdb_search("lucene analyzer")  # Ollama unreachable -> keyword results
+    degraded = m.mdb_search("lucene analyzer")  # Ollama unreachable -> keyword results, flagged
+    assert degraded and all(h["degraded"] is True for h in degraded)
+    assert degraded[0]["warning"].startswith("semantic search unavailable (")
+    assert degraded[0]["via"] == "keyword (semantic unavailable)"
+    assert "degraded" not in m.mdb_search("lucene analyzer", mode="keyword")[0]  # asked for keyword: not degraded
+    with pytest.raises(ValueError, match="semantic search unavailable"):
+        m.mdb_search("lucene analyzer", mode="semantic")
 
 
 def test_stats_lint_operator(env):

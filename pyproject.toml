@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mdb-expertise-search"
-version = "0.6.0"
+version = "0.7.0"
 description = "Hybrid keyword + semantic search CLI and TUI over a curated MongoDB / Atlas expertise corpus"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -17,7 +17,8 @@ dependencies = ["numpy>=1.26"]
 tui = ["textual>=0.80", "rich>=13"]
 lsp = ["pygls>=2.0", "lsprotocol>=2025.0"]
 mcp = ["mcp>=2.0"]
-all = ["mdb-expertise-search[tui,lsp,mcp]"]
+ai = ["ai-auth @ git+https://github.com/mithudso/ai-auth.git"]
+all = ["mdb-expertise-search[tui,lsp,mcp,ai]"]
 dev = ["mdb-expertise-search[all]", "pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.6"]
 
 [project.scripts]

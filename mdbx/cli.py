@@ -47,12 +47,17 @@ def cmd_search(args) -> int:
     if not idx.stats(con)["chunks"]:
         _say("index is empty — run `mdbx index` first")
         return 2
+    notes: list[str] = []
     try:
         hits = srch.search(con, " ".join(args.query), args.mode, args.limit,
-                           kind=args.kind, source=args.source)
+                           kind=args.kind, source=args.source, notes=notes)
     except embedmod.EmbedError as exc:
         _say(f"error: {exc}")
+        _say("semantic search needs the embedder: start Ollama (`ollama serve`, model nomic-embed-text) "
+             "or use `-m keyword`")
         return 1
+    for n in notes:
+        _say(f"warning: {n}")
     if args.json:
         print(json.dumps([{**h.__dict__, "location": h.location} for h in hits], indent=2))
         return 0
@@ -189,6 +194,95 @@ def cmd_optimize(args) -> int:
     return 1 if any(f.severity in {"blocking", "high"} for f in rep.findings) else 0
 
 
+def cmd_auth(args) -> int:
+    """`mdbx auth …` is the ai-auth CLI pinned to the mdbx namespace (see docs/INSTALLATION.md)."""
+    from . import providers
+
+    try:
+        return providers.auth_cli(args.rest or ["status"])
+    except providers.ProvidersUnavailable as exc:
+        _say(str(exc))
+        return 2
+
+
+def cmd_ask(args) -> int:
+    from . import providers
+
+    if not providers.available():
+        _say(providers.INSTALL_HINT)
+        return 2
+    import ai_auth
+
+    question = " ".join(args.question)
+    con = idx.connect(args.db)
+    hits = []
+    if idx.stats(con)["chunks"]:
+        notes: list[str] = []
+        try:
+            hits = srch.search(con, question, args.mode, args.limit, kind=args.kind, source=args.source,
+                               notes=notes)
+        except embedmod.EmbedError as exc:
+            notes.append(srch.fallback_note(exc))
+            hits = srch.search(con, question, "keyword", args.limit, kind=args.kind, source=args.source)
+        for n in notes:
+            _say(f"warning: {n}")
+    else:
+        _say("index is empty — answering without corpus passages (run `mdbx index`)")
+    try:
+        result, sources = providers.ask(question, hits, provider=args.provider, model=args.model,
+                                        timeout=args.timeout, allow_apple=not args.no_apple)
+    except ai_auth.NotConfigured as exc:
+        _say(str(exc))
+        _say("configure a provider with `mdbx auth set-key <provider>` or `mdbx auth login <provider>`")
+        return 1
+    except ai_auth.AIAuthError as exc:
+        _say(f"error: {exc}")
+        return 1
+    if args.json:
+        print(json.dumps({"question": question, "answer": result.text, "provider": result.provider,
+                          "kind": result.kind, "model": result.model, "sources": sources}, indent=2))
+        return 0
+    print(result.text.rstrip())
+    if sources:
+        print("\nSources:")
+        for s in sources:
+            print(f"  [{s['n']}] {s['source']} · {s['heading']}  ({s['location']})")
+    _say(f"[{result.provider} · {result.kind} · {result.model}]")
+    return 0
+
+
+def cmd_glean(args) -> int:
+    from . import providers
+
+    if not providers.available():
+        _say(providers.INSTALL_HINT)
+        return 2
+    import ai_auth
+
+    try:
+        out = providers.glean_search(" ".join(args.query), page_size=args.limit, datasources=args.datasource)
+    except ai_auth.NotConfigured as exc:
+        _say(str(exc))
+        _say("Glean CLI fallback: brew install gleanwork/tap/glean-cli && mdbx auth login glean --mode cli")
+        return 1
+    except ai_auth.AIAuthError as exc:
+        _say(f"error: {exc}")
+        return 1
+    if args.json:
+        print(json.dumps(out, indent=2))
+        return 0
+    if not out["results"]:
+        _say("no results")
+        return 1
+    for i, r in enumerate(out["results"], 1):
+        print(f"{i:>2}. {r['title']}  [{r['datasource']}]")
+        print(f"    {r['url']}")
+        if r["snippet"]:
+            print(f"    {r['snippet'][:240]}")
+        print()
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="mdbx", description=__doc__)
     p.add_argument("--version", action="version", version=f"mdbx {__version__}")
@@ -255,6 +349,32 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("tui", help="interactive MongoDB expertise browser")
     s.set_defaults(fn=cmd_tui)
+
+    s = sub.add_parser("auth", help="AI provider credentials: status | set-key | login | unset | mode | prefer | test "
+                       "(Claude, Codex, Antigravity, Glean; needs the ai extra)")
+    s.add_argument("rest", nargs=argparse.REMAINDER, help="ai-auth subcommand and flags; default: status")
+    s.set_defaults(fn=cmd_auth)
+
+    s = sub.add_parser("ask", help="answer a question from corpus passages with the first available AI provider "
+                       "(falls back to on-device Apple Intelligence)")
+    s.add_argument("question", nargs="+")
+    s.add_argument("-p", "--provider", default="auto", help="claude | codex | antigravity | apple | auto")
+    s.add_argument("--model")
+    s.add_argument("-m", "--mode", choices=["hybrid", "keyword", "semantic"], default="hybrid")
+    s.add_argument("-n", "--limit", type=int, default=6, help="corpus passages to include")
+    s.add_argument("-k", "--kind", choices=["skill", "llms", "memory", "recipe"])
+    s.add_argument("-s", "--source", help="substring of skill / llms set name")
+    s.add_argument("--no-apple", action="store_true", help="do not fall back to Apple Intelligence")
+    s.add_argument("--timeout", type=float, default=180)
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_ask)
+
+    s = sub.add_parser("glean", help="search Glean (API token → OAuth → glean CLI helper)")
+    s.add_argument("query", nargs="+")
+    s.add_argument("-n", "--limit", type=int, default=10)
+    s.add_argument("-d", "--datasource", action="append", help="e.g. confluence, slack, salesforce")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_glean)
     return p
 
 
