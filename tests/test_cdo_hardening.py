@@ -25,7 +25,7 @@ def test_embed_non_json_body_is_embed_error(monkeypatch, caplog):
     monkeypatch.setattr("urllib.request.urlopen", _urlopen_returning(b"<html>502</html>"))
     with caplog.at_level(logging.WARNING, logger="mdbx.embed"), pytest.raises(embed.EmbedError):
         embed.embed(["x"])
-    assert "not valid JSON" in caplog.text
+    assert "failed" in caplog.text  # ollama-client folds bad JSON into OllamaUnavailable; shim logs it
 
 
 def test_embed_ragged_vectors_is_embed_error(monkeypatch):

@@ -11,7 +11,7 @@ requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = ["mongodb", "atlas", "semantic-search", "fts5", "tui", "llms.txt"]
-dependencies = ["numpy>=1.26"]
+dependencies = ["numpy>=1.26", "ollama-client @ git+https://github.com/mithudso/ollama-client.git"]
 
 [project.optional-dependencies]
 tui = ["textual>=0.80", "rich>=13"]

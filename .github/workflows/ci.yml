@@ -6,6 +6,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      LIBS_TOKEN: ${{ secrets.LIBS_TOKEN }}
     strategy:
       matrix:
         python: ["3.11", "3.12", "3.13"]
@@ -17,6 +19,10 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
+      # ollama-client / ai-auth are private repos: give git a token when the LIBS_TOKEN secret exists.
+      - name: Git auth for private libraries
+        if: env.LIBS_TOKEN != ''
+        run: git config --global url."https://x-access-token:${LIBS_TOKEN}@github.com/".insteadOf "https://github.com/"
       - run: pip install -e '.[dev]'
       - run: ruff check .
       - run: pytest -q
@@ -39,11 +45,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      LIBS_TOKEN: ${{ secrets.LIBS_TOKEN }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+      # ollama-client / ai-auth are private repos: give git a token when the LIBS_TOKEN secret exists.
+      - name: Git auth for private libraries
+        if: env.LIBS_TOKEN != ''
+        run: git config --global url."https://x-access-token:${LIBS_TOKEN}@github.com/".insteadOf "https://github.com/"
       - run: pip install -e .
       - run: python -m mdbx.cli index --skip-semantic
       - run: python scripts/package_chrome_extension.py --no-vectors
