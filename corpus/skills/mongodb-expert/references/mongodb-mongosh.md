@@ -882,11 +882,11 @@ config.get('snippetIndexSourceURLs')
 // Add a private registry (semicolon-separated)
 config.set('snippetIndexSourceURLs',
   'https://compass.mongodb.com/mongosh/snippets-index.bson.br;' +
-  'https://example.com/mongosh-snippets/index.bson.br'
+  'https://internal.corp.com/mongosh-snippets/index.bson.br'
 )
 
 // Set custom npm registry for snippet installs
-config.set('snippetRegistryURL', 'https://registry.example.com')
+config.set('snippetRegistryURL', 'https://registry.npmjs.internal.corp.com')
 ```
 
 ### Disable Auto-load

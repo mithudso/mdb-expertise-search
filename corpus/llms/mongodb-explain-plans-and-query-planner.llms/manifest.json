@@ -1,142 +1,142 @@
 {
-  "kind": "concept",
-  "concept": "MongoDB explain plans, query planner and plan cache",
-  "slug": "mongodb-explain-plans-and-query-planner",
-  "version": "1.4.1",
-  "generated": "2026-10-19",
-  "summary": "MongoDB explain output (queryPlanner, executionStats, allPlansExecution) details the plan the query optimizer selected and how it ran; the plan cache, query shapes with $queryStats, query settings and hint() steer or bypass that choice, and the database profiler, the slow query log and $indexStats measure what indexes actually did. Compiled from MongoDB manual, Atlas and Compass pages plus the run's verified claims; facets cover definitions, mechanisms, how-tos, problems and version changes.",
-  "rights": "extractive",
-  "budget_tokens": 24000,
-  "base_url": null,
-  "inputs": [
-    "<local-path>",
-    "<local-path>"
-  ],
-  "scanned_units": 45854,
-  "harvested_units": 1671,
-  "kept_units": 1574,
-  "dropped_by_classification": 23,
-  "dropped_lead_ins": 74,
-  "sources": {
-    "www.mongodb.com": 1546,
-    "www.percona.com": 8,
-    "www.netdata.cloud": 5,
-    "jira.mongodb.org": 4,
-    "dev.to": 3,
-    "oneuptime.com": 3,
-    "jira.mongodb.com": 2,
-    "www.slideshare.net": 1,
-    "www.pythian.com": 1,
-    "docs.datadoghq.com": 1
+ "kind": "concept",
+ "concept": "MongoDB explain plans, query planner and plan cache",
+ "slug": "mongodb-explain-plans-and-query-planner",
+ "version": "1.4.1",
+ "generated": "2026-10-19",
+ "summary": "MongoDB explain output (queryPlanner, executionStats, allPlansExecution) details the plan the query optimizer selected and how it ran; the plan cache, query shapes with $queryStats, query settings and hint() steer or bypass that choice, and the database profiler, the slow query log and $indexStats measure what indexes actually did. Compiled from MongoDB manual, Atlas and Compass pages plus the run's verified claims; facets cover definitions, mechanisms, how-tos, problems and version changes.",
+ "rights": "extractive",
+ "budget_tokens": 24000,
+ "base_url": null,
+ "inputs": [
+  "<local-path>",
+  "<local-path>"
+ ],
+ "scanned_units": 45854,
+ "harvested_units": 1671,
+ "kept_units": 1574,
+ "dropped_by_classification": 23,
+ "dropped_lead_ins": 74,
+ "sources": {
+  "www.mongodb.com": 1546,
+  "www.percona.com": 8,
+  "www.netdata.cloud": 5,
+  "jira.mongodb.org": 4,
+  "dev.to": 3,
+  "oneuptime.com": 3,
+  "jira.mongodb.com": 2,
+  "www.slideshare.net": 1,
+  "www.pythian.com": 1,
+  "docs.datadoghq.com": 1
+ },
+ "facets": {
+  "definition": 23,
+  "structure": 78,
+  "mechanism": 118,
+  "how-to": 96,
+  "examples": 130,
+  "measures": 14,
+  "problems": 180,
+  "comparisons": 47,
+  "facts": 888
+ },
+ "relations": {
+  "about": 407,
+  "component": 1022,
+  "context": 80,
+  "measure": 12,
+  "related": 53
+ },
+ "lexicon": {
+  "terms": 16,
+  "zero_hit": [],
+  "by_relation": {
+   "self": 1,
+   "synonym": 1,
+   "part": 8,
+   "related": 3,
+   "measure": 1,
+   "hypernym": 2
+  }
+ },
+ "conflicts": 0,
+ "semantic": {
+  "units": 8,
+  "scored": 8
+ },
+ "files": {
+  "llms.txt": {
+   "bytes": 7438,
+   "tokens": 1859
   },
-  "facets": {
-    "definition": 23,
-    "structure": 78,
-    "mechanism": 118,
-    "how-to": 96,
-    "examples": 130,
-    "measures": 14,
-    "problems": 180,
-    "comparisons": 47,
-    "facts": 888
+  "llms-full.txt": {
+   "bytes": 576135,
+   "tokens": 144033
   },
-  "relations": {
-    "about": 407,
-    "component": 1022,
-    "context": 80,
-    "measure": 12,
-    "related": 53
+  "llms-small.txt": {
+   "bytes": 96907,
+   "tokens": 24226
   },
-  "lexicon": {
-    "terms": 16,
-    "zero_hit": [],
-    "by_relation": {
-      "self": 1,
-      "synonym": 1,
-      "part": 8,
-      "related": 3,
-      "measure": 1,
-      "hypernym": 2
-    }
+  "llms-facts.txt": {
+   "bytes": 784985,
+   "tokens": 196246
   },
-  "conflicts": 0,
-  "semantic": {
-    "units": 8,
-    "scored": 8
+  "llms-vocabulary.txt": {
+   "bytes": 6651,
+   "tokens": 1662
   },
-  "files": {
-    "llms.txt": {
-      "bytes": 7438,
-      "tokens": 1859
-    },
-    "llms-full.txt": {
-      "bytes": 576135,
-      "tokens": 144033
-    },
-    "llms-small.txt": {
-      "bytes": 96907,
-      "tokens": 24226
-    },
-    "llms-facts.txt": {
-      "bytes": 784985,
-      "tokens": 196246
-    },
-    "llms-vocabulary.txt": {
-      "bytes": 6651,
-      "tokens": 1662
-    },
-    "units.jsonl": {
-      "bytes": 1266282,
-      "tokens": 316569
-    }
+  "units.jsonl": {
+   "bytes": 1266282,
+   "tokens": 316569
+  }
+ },
+ "title": "MongoDB explain plans, query planner and plan cache",
+ "pages": 228,
+ "units": 1574,
+ "children": {
+  "mongodb-explain-output-and-stages": {
+   "concept": "MongoDB explain output and plan stages",
+   "units": 578,
+   "terms": [
+    "explain plan",
+    "executionStats",
+    "plan stage",
+    "index bounds"
+   ],
+   "full_tokens": 53885,
+   "small_tokens": 8191,
+   "path": "mongodb-explain-output-and-stages.llms"
   },
-  "title": "MongoDB explain plans, query planner and plan cache",
-  "pages": 228,
-  "units": 1574,
-  "children": {
-    "mongodb-explain-output-and-stages": {
-      "concept": "MongoDB explain output and plan stages",
-      "units": 578,
-      "terms": [
-        "explain plan",
-        "executionStats",
-        "plan stage",
-        "index bounds"
-      ],
-      "full_tokens": 53885,
-      "small_tokens": 8191,
-      "path": "mongodb-explain-output-and-stages.llms"
-    },
-    "mongodb-query-planner-plan-cache-and-query-settings": {
-      "concept": "MongoDB query planner, plan cache, query settings and hints",
-      "units": 428,
-      "terms": [
-        "query planner",
-        "plan cache",
-        "query settings",
-        "hint",
-        "slot-based execution engine"
-      ],
-      "full_tokens": 38003,
-      "small_tokens": 8197,
-      "path": "mongodb-query-planner-plan-cache-and-query-settings.llms"
-    },
-    "mongodb-query-shapes-profiler-and-index-usage": {
-      "concept": "MongoDB query shapes, $queryStats, profiler and index usage",
-      "units": 560,
-      "terms": [
-        "query shape",
-        "database profiler",
-        "$indexStats",
-        "index effectiveness",
-        "$currentOp",
-        "query optimization",
-        "index"
-      ],
-      "full_tokens": 52664,
-      "small_tokens": 8220,
-      "path": "mongodb-query-shapes-profiler-and-index-usage.llms"
-    }
+  "mongodb-query-planner-plan-cache-and-query-settings": {
+   "concept": "MongoDB query planner, plan cache, query settings and hints",
+   "units": 428,
+   "terms": [
+    "query planner",
+    "plan cache",
+    "query settings",
+    "hint",
+    "slot-based execution engine"
+   ],
+   "full_tokens": 38003,
+   "small_tokens": 8197,
+   "path": "mongodb-query-planner-plan-cache-and-query-settings.llms"
   },
-  "parent_only_units": 8
+  "mongodb-query-shapes-profiler-and-index-usage": {
+   "concept": "MongoDB query shapes, $queryStats, profiler and index usage",
+   "units": 560,
+   "terms": [
+    "query shape",
+    "database profiler",
+    "$indexStats",
+    "index effectiveness",
+    "$currentOp",
+    "query optimization",
+    "index"
+   ],
+   "full_tokens": 52664,
+   "small_tokens": 8220,
+   "path": "mongodb-query-shapes-profiler-and-index-usage.llms"
+  }
+ },
+ "parent_only_units": 8
 }

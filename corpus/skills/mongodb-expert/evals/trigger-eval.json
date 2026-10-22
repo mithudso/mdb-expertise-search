@@ -1,82 +1,82 @@
 [
   {
-    "query": "how do I use deep mongodb mql query optimizer for our application architecture",
+    "query": "why is my mongo query slow af",
     "should_trigger": true
   },
   {
-    "query": "best practices and patterns for mongodb 80 performance changes",
+    "query": "shard key help",
     "should_trigger": true
   },
   {
-    "query": "troubleshoot and debug issues with mongodb aggregation pipeline",
+    "query": "group my orders by month and total the revenue in one pipeline",
     "should_trigger": true
   },
   {
-    "query": "guide me through mongodb expert concepts and setup",
+    "query": "explain says COLLSCAN, how do I make it use an index",
     "should_trigger": true
   },
   {
-    "query": "explain the core mechanics of deep mongodb mql query optimizer",
+    "query": "embed the line items in the order doc or keep them in their own collection?",
     "should_trigger": true
   },
   {
-    "query": "configure production environment for mongodb 80 performance changes",
+    "query": "can I run a transaction across two collections in mongo",
     "should_trigger": true
   },
   {
-    "query": "audit our system configuration regarding mongodb aggregation pipeline",
+    "query": "my change stream resume token is invalid after a restart, now what",
     "should_trigger": true
   },
   {
-    "query": "deep dive reference and implementation for deep mongodb mql query optimizer",
+    "query": "replica set stuck with no primary, the election won't complete",
     "should_trigger": true
   },
   {
-    "query": "recommended architecture pattern for mongodb 80 performance changes",
+    "query": "wiredtiger cache keeps filling up and evicting, why",
     "should_trigger": true
   },
   {
-    "query": "optimize performance and reliability in mongodb expert",
+    "query": "insert blew up with E11000 duplicate key, what does that mean",
     "should_trigger": true
   },
   {
-    "query": "evaluate and validate our assertion test suite coverage",
+    "query": "set up an Atlas Vector Search index for my embeddings",
     "should_trigger": false
   },
   {
-    "query": "run autonomous eval convergence loop on this new skill",
+    "query": "cpu is pegged at 100% on the cluster, walk me through the FTDC metrics",
     "should_trigger": false
   },
   {
-    "query": "optimize this system prompt for customer support interactions",
+    "query": "configure point-in-time restore for our disaster recovery plan",
     "should_trigger": false
   },
   {
-    "query": "review and critique this runbook document in place",
+    "query": "define a Mongoose schema with virtuals and a populate hook",
     "should_trigger": false
   },
   {
-    "query": "audit our git commit history for security disclosures",
+    "query": "store PDF files bigger than 16MB in mongodb",
     "should_trigger": false
   },
   {
-    "query": "format these markdown tables using prettier",
+    "query": "sort names case-insensitively and ignore accents",
     "should_trigger": false
   },
   {
-    "query": "scaffold a new repository structure with CI actions",
+    "query": "zero-downtime column rename in postgres without locking the table",
     "should_trigger": false
   },
   {
-    "query": "one-shot review of git diff on branch fix-login",
+    "query": "which MongoDB University course preps me for the associate developer exam",
     "should_trigger": false
   },
   {
-    "query": "benchmark LLM token throughput on metal accelerator",
+    "query": "which KB article covers installing mongod from the yum repo",
     "should_trigger": false
   },
   {
-    "query": "tune this slow postgresql query execution plan",
+    "query": "walk me through Query Insights in the Atlas UI to find my slowest queries",
     "should_trigger": false
   }
 ]

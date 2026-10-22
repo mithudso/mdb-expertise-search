@@ -1,82 +1,82 @@
 [
   {
-    "query": "how do I use cloud native database disaggregation for our application architecture",
+    "query": "restore our Atlas cluster to the minute before someone dropped the orders collection",
     "should_trigger": true
   },
   {
-    "query": "best practices and patterns for database migrations",
+    "query": "what RTO and RPO can we promise with a three-region replica set?",
     "should_trigger": true
   },
   {
-    "query": "troubleshoot and debug issues with htap disaggregated storage",
+    "query": "plan the 6.0 to 8.0 upgrade of our self-managed replica set and the FCV steps",
     "should_trigger": true
   },
   {
-    "query": "guide me through mongodb operations expert concepts and setup",
+    "query": "cut over from our on-prem cluster to Atlas with mongosync",
     "should_trigger": true
   },
   {
-    "query": "explain the core mechanics of cloud native database disaggregation",
+    "query": "should we use CSFLE or Queryable Encryption for SSNs?",
     "should_trigger": true
   },
   {
-    "query": "configure production environment for database migrations",
+    "query": "why did our Atlas bill jump last month, which SKU grew?",
     "should_trigger": true
   },
   {
-    "query": "audit our system configuration regarding htap disaggregated storage",
+    "query": "does Atlas bought through Azure Marketplace count toward our MACC?",
     "should_trigger": true
   },
   {
-    "query": "deep dive reference and implementation for cloud native database disaggregation",
+    "query": "Low-CPU vs General tier for a read-heavy sharded cluster, what does each cost?",
     "should_trigger": true
   },
   {
-    "query": "recommended architecture pattern for database migrations",
+    "query": "TTL, Online Archive or Data Federation for cold data, which is cheapest?",
     "should_trigger": true
   },
   {
-    "query": "optimize performance and reliability in mongodb operations expert",
+    "query": "cap Atlas spend so nobody can spin up an M200",
     "should_trigger": true
   },
   {
-    "query": "evaluate and validate our assertion test suite coverage",
+    "query": "write an aggregation pipeline that groups orders by month with $lookup",
     "should_trigger": false
   },
   {
-    "query": "run autonomous eval convergence loop on this new skill",
+    "query": "which compound index should I add for this find with a sort?",
     "should_trigger": false
   },
   {
-    "query": "optimize this system prompt for customer support interactions",
+    "query": "our Atlas cluster CPU is pinned at 95%, help me find the slow queries",
     "should_trigger": false
   },
   {
-    "query": "review and critique this runbook document in place",
+    "query": "set up PrivateLink between our AWS VPC and Atlas",
     "should_trigger": false
   },
   {
-    "query": "audit our git commit history for security disclosures",
+    "query": "configure an Online Archive rule on createdAt for 90-day-old documents",
     "should_trigger": false
   },
   {
-    "query": "format these markdown tables using prettier",
+    "query": "build an Atlas Search index with fuzzy autocomplete",
     "should_trigger": false
   },
   {
-    "query": "scaffold a new repository structure with CI actions",
+    "query": "how does WiredTiger cache eviction work?",
     "should_trigger": false
   },
   {
-    "query": "one-shot review of git diff on branch fix-login",
+    "query": "compare AWS savings plans and reserved instances for our EC2 fleet",
     "should_trigger": false
   },
   {
-    "query": "benchmark LLM token throughput on metal accelerator",
+    "query": "schedule nightly pg_dump backups of our Postgres database",
     "should_trigger": false
   },
   {
-    "query": "tune this slow postgresql query execution plan",
+    "query": "FinOps tagging policy for our EKS clusters",
     "should_trigger": false
   }
 ]

@@ -20,19 +20,16 @@ done
 # MQL query-optimization fact families (source-anchored extracts of public MongoDB docs). llms-small and
 # llms-full are omitted: small is a subset of facts (duplicate hits), full repeats facts with context.
 CONCEPTS_SRC="${MDBX_CONCEPTS_SRC:-$HOME/.global-ai-hub/llms-concepts}"
-for n in advanced-explain-and-planner-changes atlas-and-compass-query-tooling \
-         atlas-slow-query-and-advisor-automation compound-index-design explain-output-and-stages \
-         explain-plans-and-query-planner query-engine-releases-and-ai-tooling \
-         query-operators-bounds-and-projection query-optimization-tooling \
-         query-planner-plan-cache-and-query-settings query-shape-optimization \
-         query-shapes-profiler-and-index-usage sharded-query-targeting special-indexes-and-index-builds \
-         time-series-indexes-and-metafield time-series-query-execution time-series-query-optimization \
-         time-series-sizing-and-sharding mql-query-optimization-family; do
-  d="$CONCEPTS_SRC/mongodb-$n.llms"
+# Every mongodb-*.llms family the concept builder has produced is picked up (no hard-coded list), except
+# the two already synced above from the skills export. Dated "-frontier-YYYYMMDD" research families
+# are public-docs extracts too; the redact/sweep step below is the gate for anything sensitive.
+for d in "$CONCEPTS_SRC"/mongodb-*.llms; do
   [ -d "$d" ] || continue
-  mkdir -p "corpus/llms/mongodb-$n.llms"
+  b="$(basename "$d")"
+  case "$b" in mongodb-atlas-data-federation.llms|mongodb-drivers.llms) continue ;; esac
+  mkdir -p "corpus/llms/$b"
   for f in llms.txt llms-facts.txt llms-vocabulary.txt manifest.json; do
-    [ -f "$d/$f" ] && cp "$d/$f" "corpus/llms/mongodb-$n.llms/"
+    [ -f "$d/$f" ] && cp "$d/$f" "corpus/llms/$b/"
   done
 done
 # NOTE: the deep MQL optimizer skill ships only as the redacted mongodb-expert reference
@@ -40,4 +37,4 @@ done
 # after a re-sync — its live SKILL.md cites workload analyses that must not be committed.
 python3 scripts/redact_corpus.py
 python3 scripts/sweep_customers.py
-.venv/bin/mdbx index
+[ "${MDBX_SKIP_INDEX:-0}" = 1 ] || .venv/bin/mdbx index

@@ -231,7 +231,8 @@ AI providers (`mdbx ask`, `mdbx glean`): `mdbx auth set-key <provider>` or `mdbx
 MQL query-optimization fact packs whose every line ends in its MongoDB-docs URL) and recipes (`corpus/recipes/`).
 Customer and internal-tooling references are redacted by `scripts/redact_corpus.py` (customer-name rules live
 outside the repo in `~/.config/mdbx/redactions.py`); material that cannot be redacted stays local (see `.gitignore`). `scripts/sweep_customers.py` fails if any marker remains in
-committed corpus files. `scripts/sync_corpus.sh` rebuilds, redacts, sweeps and reindexes from your own skill tree.
+committed corpus files. `scripts/sync_corpus.sh` rebuilds, redacts, sweeps and reindexes from your own skill tree;
+`python scripts/corpus_autoupdate.py install-agent` schedules that refresh and pushes the result to GitHub.
 Point `MDBX_CORPUS` at any directory of `.md` / `.txt` files to index your own material.
 
 ## Docs

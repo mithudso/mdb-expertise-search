@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `atlas-diagnostics-expert` hub.** Created by deep research 2026-10-19; research dir `<local-path>
+> **Reference file — part of the `atlas-diagnostics-expert` hub.** Created by `/dr` deep research 2026-10-19; research dir `<local-path>`.
 
 ---
 name: mongodb-query-optimization-tooling
@@ -14,7 +14,7 @@ whenToUse:
   - "decide between $regex, $text and Atlas Search"
 keywords: ["Compass explain plan", "Visual Tree", "Query Insights", "Query Profiler", "Namespace Insights", "Performance Advisor", "index suggestions", "Impact score", "MongoDB 8.2", "MongoDB 9.0", "queryStats", "MCP server", "Compass assistant", "Atlas Search vs $text", "$regex vs $text"]
 tags: ["mongodb", "atlas", "compass", "query-optimization", "tooling", "llm"]
-provenance: "deep research · <local-path>
+provenance: "/dr · <local-path>"
 ---
 
 # MongoDB Query Optimization Tooling: Compass Explain, Atlas Query Insights and Performance Advisor

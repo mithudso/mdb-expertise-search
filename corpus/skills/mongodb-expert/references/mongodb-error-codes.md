@@ -95,7 +95,7 @@ related_skills:
 
 # MongoDB Error Codes and Driver Error Handling
 
-A support-grade catalog of the MongoDB server error codes you will actually see in production, paired with the driver behavior, retry semantics, and remediation patterns needed to handle them correctly. Complements `mongodb-developer` (driver usage), `mongodb-transactions` (transient errors), `mongodb-performance-troubleshooting` (timeout investigation).
+A support-grade catalog of the MongoDB server error codes you will actually see in production, paired with the driver behavior, retry semantics, and remediation patterns needed to handle them correctly. Complements `mongodb-kb` (broad ops), `mongodb-developer` (driver usage), `mongodb-transactions` (transient errors), `mongodb-performance-troubleshooting` (timeout investigation).
 
 ### When to use this skill
 

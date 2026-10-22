@@ -168,7 +168,7 @@ never rely on a report older than 12 months for audit purposes.
 - **Not** available on Azure Government or GCP Government at GA as of knowledge
   cutoff — confirm with MongoDB Sales.
 
-### FedRAMP Readiness Checklist (customer pursuing its own FedRAMP authorization)
+### FedRAMP Readiness Checklist (Pattern: Identity Provider Pursuing FedRAMP Authorization)
 
 When a customer using Atlas as a backend is pursuing their own FedRAMP
 authorization (Moderate or High), the following Atlas-layer checklist applies:

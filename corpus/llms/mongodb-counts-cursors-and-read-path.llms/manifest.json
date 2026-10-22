@@ -1,0 +1,91 @@
+{
+ "kind": "concept",
+ "concept": "MongoDB counts, distinct, cursors and read-path tuning",
+ "slug": "mongodb-counts-cursors-and-read-path",
+ "version": "1.4.1",
+ "generated": "2026-10-19",
+ "summary": "Everything the scanned sources say about MongoDB counts, distinct, cursors and read-path tuning: 948 source-anchored units across 5 sources, grouped by facet.",
+ "rights": "extractive",
+ "budget_tokens": 8000,
+ "base_url": null,
+ "inputs": [
+  "<local-path>",
+  "<local-path>"
+ ],
+ "scanned_units": 45847,
+ "harvested_units": 948,
+ "kept_units": 948,
+ "dropped_by_classification": 0,
+ "dropped_lead_ins": 0,
+ "sources": {
+  "www.mongodb.com": 943,
+  "oneuptime.com": 2,
+  "www.netdata.cloud": 1,
+  "dev.to": 1,
+  "jira.mongodb.org": 1
+ },
+ "facets": {
+  "definition": 8,
+  "structure": 41,
+  "mechanism": 84,
+  "how-to": 44,
+  "examples": 146,
+  "measures": 6,
+  "problems": 77,
+  "comparisons": 24,
+  "facts": 518
+ },
+ "relations": {
+  "component": 943,
+  "related": 5
+ },
+ "lexicon": {
+  "terms": 8,
+  "zero_hit": [
+   "MongoDB counts, distinct, cursors and read-path tuning"
+  ],
+  "by_relation": {
+   "self": 1,
+   "part": 3,
+   "related": 3,
+   "hypernym": 1
+  }
+ },
+ "conflicts": 0,
+ "semantic": {
+  "units": 0,
+  "scored": 0
+ },
+ "files": {
+  "llms.txt": {
+   "bytes": 4159,
+   "tokens": 1025
+  },
+  "llms-full.txt": {
+   "bytes": 356939,
+   "tokens": 88322
+  },
+  "llms-small.txt": {
+   "bytes": 33042,
+   "tokens": 8246
+  },
+  "llms-facts.txt": {
+   "bytes": 474422,
+   "tokens": 117847
+  },
+  "llms-vocabulary.txt": {
+   "bytes": 3316,
+   "tokens": 820
+  },
+  "units.jsonl": {
+   "bytes": 844109,
+   "tokens": 211025
+  }
+ },
+ "parent": "mongodb-query-shape-optimization",
+ "split_terms": [
+  "count",
+  "cursor",
+  "read preference"
+ ]
+}

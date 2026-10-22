@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-expert` hub.** Created by deep research 2026-10-19; research dir `<local-path>
+> **Reference file — part of the `mongodb-expert` hub.** Created by `/dr` deep research 2026-10-19; research dir `<local-path>`.
 
 ---
 name: mongodb-time-series-query-optimization
@@ -14,7 +14,7 @@ whenToUse:
   - "read bucket unpacking and block processing in explain"
 keywords: ["time series", "metaField", "timeField", "bucket", "bucket unpacking", "$_internalUnpackBucket", "block processing", "secondary index time series", "metaField cardinality", "control.min", "last point query", "DISTINCT_SCAN", "bounded sort", "working set"]
 tags: ["mongodb", "time-series", "query-optimization", "indexes", "buckets"]
-provenance: "deep research · <local-path>
+provenance: "/dr · <local-path>"
 ---
 
 # MongoDB Time-Series Query and Index Optimization

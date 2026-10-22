@@ -1,7 +1,7 @@
 {
   "": "https://json-schema.org/draft/2020-12/schema",
   "skill_name": "atlas-diagnostics-expert",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Functional evaluation suite for atlas-diagnostics-expert hub verifying spoke routing, architecture guidance, and domain invariants.",
   "evals": [
     {
@@ -87,6 +87,64 @@
         {
           "name": "no blind resource overprovisioning",
           "check": "does not recommend blindly increasing memory or CPU without diagnostic evidence",
+          "type": "negative"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "atlas-diagnostics-ex-spoke4-query-optimization-tooling",
+      "prompt": "A customer's M30 Atlas cluster has slow queries. I want to see which query shapes are slowest, read one plan in Compass, and decide whether to apply a Performance Advisor suggestion. What tools do I use and what are their limits?",
+      "expected_output": "Routes to references/mongodb-query-optimization-tooling.md and walks Query Insights (Query Shapes, Namespace Insights, Query Profiler), the Compass Explain Plan modal, and Performance Advisor create-index, drop-index and schema suggestions, with tier and sampling caveats.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "spoke reference routing",
+          "check": "identifies references/mongodb-query-optimization-tooling.md as the reference to load",
+          "type": "structural"
+        },
+        {
+          "name": "surface coverage",
+          "check": "names Query Insights or Query Profiler, the Compass Explain Plan, and Performance Advisor",
+          "type": "content"
+        },
+        {
+          "name": "caveat stated",
+          "check": "states at least one limit such as M10+ tier requirement, sampled data, or that suggestions need read-versus-write review",
+          "type": "content"
+        },
+        {
+          "name": "no explain-semantics takeover",
+          "check": "does not teach planner or plan-cache internals as this hub's content and defers them to mongodb-expert",
+          "type": "negative"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "atlas-diagnostics-ex-spoke5-advisor-automation",
+      "prompt": "Write a script that pulls Performance Advisor suggested indexes and slow query logs for every cluster in a project each night and opens tickets. Which API calls, roles and Atlas-managed threshold setting matter?",
+      "expected_output": "Routes to references/mongodb-atlas-slow-query-and-advisor-automation.md and covers the Admin API v2 Performance Advisor and slow-query-log endpoints, atlas performanceAdvisor versus atlas api performanceAdvisor, process-id (host:port) scoping, Project Read Only versus Project Owner roles, and managedSlowMs.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "spoke reference routing",
+          "check": "identifies references/mongodb-atlas-slow-query-and-advisor-automation.md as the reference to load",
+          "type": "structural"
+        },
+        {
+          "name": "endpoint and CLI coverage",
+          "check": "names the suggested-indexes and slow-query-log endpoints and distinguishes atlas performanceAdvisor from atlas api performanceAdvisor",
+          "type": "content"
+        },
+        {
+          "name": "roles and scoping",
+          "check": "states that read endpoints need Project Read Only, the managedSlowMs toggle needs Project Owner, and calls take a host:port process id",
+          "type": "content"
+        },
+        {
+          "name": "no generic Atlas setup takeover",
+          "check": "does not route general Atlas Admin API, Terraform or AKO setup into this hub; defers it to mongodb-atlas-expert",
           "type": "negative"
         }
       ]

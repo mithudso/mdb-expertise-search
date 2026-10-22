@@ -785,6 +785,7 @@ As of 2023, the MongoDB JDBC driver had a known bug where `readPreferenceTag` fo
 
 ### Community and Third-Party
 - [Fun With MongoDB Atlas Analytics Nodes — Patrick McLain](https://pmclain.com/mongodb/2022/09/28/fun-with-mongodb-atlas-analytics-nodes.html)
+- [Maximizing CRM Efficiency with Atlas Analytics Tier — Tekion](https://tekionc.medium.com/maximizing-crm-efficiency-leveraging-atlas-analytics-tier-node-in-mongodb-1a2aee8830d1)
 - [MongoDB Atlas Read Preference Tags — Studio 3T](https://studio3t.com/whats-new/mongodb-atlas-read-preference-tags-and-studio-3t/)
 - [PyMongo Read Preferences API](https://pymongo.readthedocs.io/en/stable/api/pymongo/read_preferences.html)
 

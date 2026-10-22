@@ -141,7 +141,7 @@ need multiple clustered orderings, or your `_id` keys are large or random.
 - **"Can I convert my existing collection?"** → no; create a new clustered
   collection and migrate the data. [^cc-manual]
 - **Optimizing a specific slow query against a clustered collection**
-  (explain-verified rewrite loop) → an explain-verified MQL optimizer.
+  (explain-verified rewrite loop) → mongodb-expert (references/deep-mongodb-mql-query-optimizer.md) (/dmqo).
 
 ## References
 

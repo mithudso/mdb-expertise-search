@@ -2,6 +2,7 @@
 
 > Two-thousand-token digest of MongoDB collation: defaults, the three levels and their inheritance, case-insensitive indexes, views, and the gotchas that silently skip an index.
 
+
 ## Digest
 
 - [Definition](../SKILL.md#overview): Collation: locale-aware string comparison/ordering.

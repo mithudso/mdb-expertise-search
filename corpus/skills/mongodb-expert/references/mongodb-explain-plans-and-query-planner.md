@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-expert` hub.** Created by deep research 2026-10-19; research dir `<local-path>
+> **Reference file — part of the `mongodb-expert` hub.** Created by `/dr` deep research 2026-10-19; research dir `<local-path>`.
 
 ---
 name: mongodb-explain-plans-and-query-planner
@@ -14,7 +14,7 @@ whenToUse:
   - "find slow or unindexed queries from logs, profiler or $queryStats"
 keywords: ["explain", "executionStats", "query planner", "plan cache", "query shape", "queryStats", "setQuerySettings", "hint", "indexStats", "profiler", "slow query log", "planSummary", "totalKeysExamined", "replanning", "queryShapeHash"]
 tags: ["mongodb", "query-optimization", "explain", "plan-cache", "profiling"]
-provenance: "deep research · <local-path>
+provenance: "/dr · <local-path>"
 ---
 
 # MongoDB Explain Plans, Query Planner and Plan Cache

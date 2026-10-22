@@ -595,7 +595,7 @@ DR trigger:
 
 3. **Backup restore to DR cloud:** No cross-cloud replica; instead, Atlas continuous cloud backup restores to a new Azure/GCP cluster. RPO: ~15 minutes (oplog restore). RTO: 15–60 minutes depending on cluster size.
 
-#### DR Testing (failover drill)
+#### DR Testing (FireDrill Pattern)
 
 Node priority is cluster topology config, not an advanced setting — use the Atlas Admin API to PATCH the cluster spec:
 

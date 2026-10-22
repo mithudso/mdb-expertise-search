@@ -276,7 +276,8 @@ QE always uses **randomized encryption** but adds cryptographic metadata structu
 > raw floats to be searchable, so you **cannot** QE/CSFLE-encrypt the vector field and
 > still run `$vectorSearch` over it. Encrypt the sensitive **source/metadata** fields
 > (SSN, account, name) with QE/CSFLE and leave the embedding + coarse filter keys
-> queryable.
+> queryable. Full pattern in `atlas-vector-search-pii-isolation`; embedding-leakage
+> rationale in `embedding-inversion-threat-model`.
 
 **QE equality queries** support all BSON types except: `array`, `decimal`, `double`, `object` ([QE encrypt and query](https://www.mongodb.com/docs/manual/core/queryable-encryption/fundamentals/encrypt-and-query/)).
 

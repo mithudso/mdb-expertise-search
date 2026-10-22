@@ -1,29 +1,29 @@
 # MongoDB MQL query optimization concept family
 
-> Eight source-anchored concept packs covering MongoDB MQL query optimization: explain plans and the query planner, compound index design, wildcard/hidden indexes and index builds, query-shape optimization, time-series query optimization, query-optimization tooling, advanced explain and the 8.3 cost-based ranker, and Atlas slow-query/advisor automation. Built 2026-10-19 by an automated research pipeline; page counts are cited source documents, not site coverage; private derived navigation over MongoDB documentation, never published. A pack that was split lists its child packs under '## Child packs' in its own llms.txt; pages inside a child pack are three hops from this file, an exception to the two-hop rule below that applied to the time-series and query-optimization-tooling packs at generation time.
+> Eight source-anchored concept packs covering MongoDB MQL query optimization: explain plans and the query planner, compound index design, wildcard/hidden indexes and index builds, query-shape optimization, time-series query optimization, query-optimization tooling, advanced explain and the 8.3 cost-based ranker, and Atlas slow-query/advisor automation. Built 2026-10-19 by /full-suite (concept-family-explorer -> /dr -> /lca); frontier-saturated at threshold 3.2; page counts are cited source documents, not site coverage; private derived navigation over MongoDB documentation, never published. A pack that was split lists its child packs under '## Child packs' in its own llms.txt; pages inside a child pack are three hops from this file, an exception to the two-hop rule below that applied to the time-series and query-optimization-tooling packs at generation time.
 <!-- internal -->
-<!-- generated: 2026-10-19; generator: automated; rights: private derived navigation (extractive) -->
+<!-- generated: 2026-10-19; generator: docset_refine.family; rights: private derived navigation (extractive) -->
 
 Each product below has its own llms.txt (the authoritative map of that product); this file links indexes, not pages, so a reader is at most two hops from any page.
 
 ## Products
 
-- [MongoDB explain plans, query planner and plan cache](../mongodb-explain-plans-and-query-planner.llms/llms.txt): 228 pages, ~1859 tokens index, ~144033 tokens full
-- [MongoDB compound index design: ESR, selectivity, covering and multikey bounds](../mongodb-compound-index-design.llms/llms.txt): 148 pages, ~1745 tokens index, ~63850 tokens full
-- [MongoDB wildcard and hidden indexes, index builds and index overhead](../mongodb-special-indexes-and-index-builds.llms/llms.txt): 89 pages, ~1378 tokens index, ~62353 tokens full
-- [MongoDB query shape optimization: sort, pagination, operators and sharded targeting](../mongodb-query-shape-optimization.llms/llms.txt): 348 pages, ~1905 tokens index, ~228033 tokens full
-- [MongoDB time-series query and index optimization](../mongodb-time-series-query-optimization.llms/llms.txt): 163 pages, ~1553 tokens index, ~105029 tokens full
-- [MongoDB query optimization tooling: Compass explain, Atlas Query Insights and Performance Advisor](../mongodb-query-optimization-tooling.llms/llms.txt): 170 pages, ~1521 tokens index, ~92052 tokens full
-- [MongoDB advanced explain: aggregation spills, sharded plans, loose index scans and the cost-based ranker](../mongodb-advanced-explain-and-planner-changes.llms/llms.txt): 74 pages, ~1401 tokens index, ~24946 tokens full
-- [Atlas slow-query log and Performance Advisor automation](../mongodb-atlas-slow-query-and-advisor-automation.llms/llms.txt): 184 pages, ~892 tokens index, ~77022 tokens full
+- [MongoDB explain plans, query planner and plan cache](<local-path>): 228 pages, ~1859 tokens index, ~144033 tokens full
+- [MongoDB compound index design: ESR, selectivity, covering and multikey bounds](<local-path>): 148 pages, ~1745 tokens index, ~63850 tokens full
+- [MongoDB wildcard and hidden indexes, index builds and index overhead](<local-path>): 89 pages, ~1378 tokens index, ~62353 tokens full
+- [MongoDB query shape optimization: sort, pagination, operators and sharded targeting](<local-path>): 348 pages, ~1905 tokens index, ~228033 tokens full
+- [MongoDB time-series query and index optimization](<local-path>): 163 pages, ~1553 tokens index, ~105029 tokens full
+- [MongoDB query optimization tooling: Compass explain, Atlas Query Insights and Performance Advisor](<local-path>): 170 pages, ~1521 tokens index, ~92052 tokens full
+- [MongoDB advanced explain: aggregation spills, sharded plans, loose index scans and the cost-based ranker](<local-path>): 74 pages, ~1401 tokens index, ~24946 tokens full
+- [Atlas slow-query log and Performance Advisor automation](<local-path>): 184 pages, ~892 tokens index, ~77022 tokens full
 
 ## Facts
 
-- [MongoDB explain plans, query planner and plan cache facts](../mongodb-explain-plans-and-query-planner.llms/llms-facts.txt): 1574 units, ~196246 tokens
-- [MongoDB compound index design: ESR, selectivity, covering and multikey bounds facts](../mongodb-compound-index-design.llms/llms-facts.txt): 683 units, ~84866 tokens
-- [MongoDB wildcard and hidden indexes, index builds and index overhead facts](../mongodb-special-indexes-and-index-builds.llms/llms-facts.txt): 664 units, ~75769 tokens
-- [MongoDB query shape optimization: sort, pagination, operators and sharded targeting facts](../mongodb-query-shape-optimization.llms/llms-facts.txt): 2446 units, ~292150 tokens
-- [MongoDB time-series query and index optimization facts](../mongodb-time-series-query-optimization.llms/llms-facts.txt): 1032 units, ~126067 tokens
-- [MongoDB query optimization tooling: Compass explain, Atlas Query Insights and Performance Advisor facts](../mongodb-query-optimization-tooling.llms/llms-facts.txt): 927 units, ~130721 tokens
-- [MongoDB advanced explain: aggregation spills, sharded plans, loose index scans and the cost-based ranker facts](../mongodb-advanced-explain-and-planner-changes.llms/llms-facts.txt): 269 units, ~41545 tokens
-- [Atlas slow-query log and Performance Advisor automation facts](../mongodb-atlas-slow-query-and-advisor-automation.llms/llms-facts.txt): 744 units, ~107466 tokens
+- [MongoDB explain plans, query planner and plan cache facts](<local-path>): 1574 units, ~196246 tokens
+- [MongoDB compound index design: ESR, selectivity, covering and multikey bounds facts](<local-path>): 683 units, ~84866 tokens
+- [MongoDB wildcard and hidden indexes, index builds and index overhead facts](<local-path>): 664 units, ~75769 tokens
+- [MongoDB query shape optimization: sort, pagination, operators and sharded targeting facts](<local-path>): 2446 units, ~292150 tokens
+- [MongoDB time-series query and index optimization facts](<local-path>): 1032 units, ~126067 tokens
+- [MongoDB query optimization tooling: Compass explain, Atlas Query Insights and Performance Advisor facts](<local-path>): 927 units, ~130721 tokens
+- [MongoDB advanced explain: aggregation spills, sharded plans, loose index scans and the cost-based ranker facts](<local-path>): 269 units, ~41545 tokens
+- [Atlas slow-query log and Performance Advisor automation facts](<local-path>): 744 units, ~107466 tokens

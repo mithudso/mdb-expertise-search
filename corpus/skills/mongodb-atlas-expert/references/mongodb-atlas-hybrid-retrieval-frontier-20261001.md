@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-atlas-expert` hub.** Created by deep research 2026-10-01.
+> **Reference file — part of the `mongodb-atlas-expert` hub.** Created by `/dr` deep research 2026-10-01; research dir `<local-path>`.
 
 ---
 name: mongodb-atlas-hybrid-retrieval-frontier-20261001
@@ -13,7 +13,7 @@ whenToUse:
   - "Choose rank versus score fusion"
 keywords: ["MongoDB", "Atlas Search", "hybrid retrieval", "rankFusion", "scoreFusion", "reciprocal rank fusion", "BM25", "searchScoreDetails", "normalization", "IDF"]
 tags: ["mongodb", "search", "retrieval", "diagnostics"]
-provenance: "deep research 2026-10-01"
+provenance: "/dr · <local-path>"
 ---
 
 # Atlas Hybrid Fusion and BM25 Diagnostics

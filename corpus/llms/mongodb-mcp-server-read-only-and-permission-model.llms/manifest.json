@@ -1,0 +1,74 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB MCP Server read-only and permission model",
+  "slug": "mongodb-mcp-server-read-only-and-permission-model",
+  "version": "1.4.1",
+  "generated": "2026-10-22",
+  "summary": "Source-anchored research for MongoDB MCP Server read-only and permission model. Run status: COMPLETED.",
+  "rights": "quote",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 11,
+  "kept_units": 11,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 11,
+    "www.anchorterminal.com": 0,
+    "ts.sdk.modelcontextprotocol.io": 0,
+    "github.com": 0,
+    "medium.com": 0,
+    "safetycard.dev": 0,
+    "cheatsheetseries.owasp.org": 0
+  },
+  "facets": {
+    "mechanism": 1,
+    "problems": 4,
+    "comparisons": 1,
+    "facts": 5
+  },
+  "relations": {
+    "about": 11
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 2768,
+      "tokens": 684
+    },
+    "llms-full.txt": {
+      "bytes": 7932,
+      "tokens": 1966
+    },
+    "llms-small.txt": {
+      "bytes": 7175,
+      "tokens": 1781
+    },
+    "llms-facts.txt": {
+      "bytes": 7296,
+      "tokens": 1811
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 744,
+      "tokens": 184
+    },
+    "units.jsonl": {
+      "bytes": 9328,
+      "tokens": 2332
+    }
+  },
+  "research_status": "COMPLETED"
+}

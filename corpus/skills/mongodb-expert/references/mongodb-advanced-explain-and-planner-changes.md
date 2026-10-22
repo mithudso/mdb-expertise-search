@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-expert` hub.** Created by deep research 2026-10-19; research dir `<local-path>
+> **Reference file — part of the `mongodb-expert` hub.** Created by `/dr` deep research 2026-10-19; research dir `<local-path>`.
 
 ---
 name: mongodb-advanced-explain-and-planner-changes
@@ -14,7 +14,7 @@ whenToUse:
   - "understand cost-based ranking fields in an 8.3+ explain"
 keywords: ["spill statistics", "usedDisk", "spilledBytes", "allowDiskUseByDefault", "SHARD_MERGE", "splitPipeline", "mergerPart", "shardsPart", "DISTINCT_SCAN", "loose index scan", "$group $first", "cost-based ranker", "CBR", "costEstimate", "cardinalityEstimate", "MongoDB 8.3"]
 tags: ["mongodb", "explain", "aggregation", "sharding", "query-planner", "8.3"]
-provenance: "deep research · <local-path>
+provenance: "/dr · <local-path>"
 ---
 
 # MongoDB Advanced Explain: Aggregation, Sharded Plans, Loose Index Scans and the 8.3 Cost-Based Ranker

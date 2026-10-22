@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "kind": "family",
   "generated": "2026-10-19",
-  "generator": "automated",
+  "generator": "docset_refine.export_llms.family",
   "members": [
     "mongodb-explain-plans-and-query-planner",
     "mongodb-compound-index-design",
@@ -32,6 +32,6 @@
       "tokens": 1213
     }
   },
-  "scope": "8 concept packs from the 2026-10-19 research run; pages are distinct cited http(s) source URLs per pack; no extra research",
+  "scope": "8 concept packs from the 2026-10-19 full-suite run; pages are distinct cited http(s) source URLs per pack; no extra research",
   "index_policy": "navigation-only family; member fact layers indexed per pack, no duplicate embedding layer"
 }
