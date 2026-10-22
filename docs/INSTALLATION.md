@@ -2,6 +2,15 @@
 
 Prerequisites: Python ≥ 3.11; optional [Ollama](https://ollama.com) with `nomic-embed-text` for semantic search.
 
+One command does everything below (pull, `.venv` on Python 3.11–3.13, all extras, embedding model, index, corpus
+auto-update agent on macOS, smoke test); re-run it any time. Options: `--no-model`, `--no-index`, `--no-agent`.
+
+```bash
+scripts/install.sh
+```
+
+Manual steps:
+
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -e '.[all]'   # extras: tui, lsp, mcp
 .venv/bin/mdbx index && .venv/bin/mdbx stats     # expect chunks > 0 (and vectors > 0 with Ollama)
