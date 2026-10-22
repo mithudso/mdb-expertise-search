@@ -38,3 +38,9 @@
     `editors/chrome/lib/autoupdate.js`, CI `chrome-latest` release)
 12. "When attempting to do a symantic search but the symantic indexer is not running and cannot return a result then
     signal that" (→ `search.hybrid(notes=…)`, CLI/TUI/MCP warnings)
+
+## 2026-10-22
+13. "update the corpus with the additional concepts, files, and research done by other sessions. Create a scheduled
+    agent to keep the corpus here up to date, it needs to be a copy because it will be downloaded via the github repo.
+    Also is there a way to package the symantic search such that a separate ollama process isn't required"
+    (→ `scripts/sync_corpus.sh`, `scripts/corpus_autoupdate.py`, ONNX embedding parity test)

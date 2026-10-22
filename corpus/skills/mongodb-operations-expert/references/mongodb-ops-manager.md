@@ -173,13 +173,13 @@ Cloud Manager updates more frequently than Ops Manager because it's a managed se
 
 ### Cloud Manager pricing levels (signal, not contract)
 
-Cloud Manager has historically had three plan tiers:
+Cloud Manager has historically had three plan tiers, billed per-server per-month (public list pricing has hovered around **$39/server/month for paid tiers**; final pricing is per contract):
 
 - **Free Tier** — basic monitoring, limited metric resolution, 24-hour metric retention, no automation, no backup
 - **Standard** — full monitoring + automation, no backup
 - **Premium** — adds continuous backup with PITR
 
-Ops Manager is bundled in **Enterprise Advanced**; there's no separate Ops Manager line item. Contact MongoDB for subscription details.
+Ops Manager is bundled in **Enterprise Advanced**; there's no separate per-server Ops Manager line item. Enterprise Advanced subscription pricing is per-server or per-core, typically ranging from low five figures to mid six figures per year depending on server count, support tier, and contract length. Multi-year commits and volume discounts are routine.
 
 ---
 
@@ -1103,11 +1103,11 @@ The Automation Config is JSON stored in the App DB. You can edit it through the 
 ```json
 {
   "processes": [
-    { "name": "rs0_1", "hostname": "host1.example.com", "port": 27017,
+    { "name": "rs0_1", "hostname": "host1.corp", "port": 27017,
       "args2_6": { "replication": { "replSetName": "rs0" } }, "version": "7.0.14" },
-    { "name": "rs0_2", "hostname": "host2.example.com", "port": 27017,
+    { "name": "rs0_2", "hostname": "host2.corp", "port": 27017,
       "args2_6": { "replication": { "replSetName": "rs0" } }, "version": "7.0.14" },
-    { "name": "rs0_3", "hostname": "host3.example.com", "port": 27017,
+    { "name": "rs0_3", "hostname": "host3.corp", "port": 27017,
       "args2_6": { "replication": { "replSetName": "rs0" } }, "version": "7.0.14" }
   ],
   "replicaSets": [
@@ -1161,7 +1161,7 @@ curl -fsSL https://opsmanager.mongodb.com/static/version_manifest/8.0.json \
 
 # Transfer to air-gapped network, then POST to Ops Manager admin API
 curl -u "admin:password" --digest \
-  -X PUT "https://ops-manager.example.com/api/public/v1.0/versionManifest" \
+  -X PUT "https://ops-manager.corp/api/public/v1.0/versionManifest" \
   -H "Content-Type: application/json" \
   --data @version_manifest_8.0.json
 ```

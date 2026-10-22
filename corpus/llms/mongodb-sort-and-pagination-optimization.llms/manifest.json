@@ -1,0 +1,90 @@
+{
+ "kind": "concept",
+ "concept": "MongoDB sort and pagination optimization",
+ "slug": "mongodb-sort-and-pagination-optimization",
+ "version": "1.4.1",
+ "generated": "2026-10-19",
+ "summary": "Check for a blocking sort with explain(): a SORT stage in the plan means a blocking sort; no SORT stage means the index supplies the order. Use hint() when testing candidate indexes. (from www.mongodb.com)",
+ "rights": "extractive",
+ "budget_tokens": 8000,
+ "base_url": null,
+ "inputs": [
+  "<local-path>",
+  "<local-path>"
+ ],
+ "scanned_units": 45847,
+ "harvested_units": 245,
+ "kept_units": 245,
+ "dropped_by_classification": 0,
+ "dropped_lead_ins": 0,
+ "sources": {
+  "www.mongodb.com": 235,
+  "blog.openreplay.com": 3,
+  "jira.mongodb.org": 3,
+  "begriffs.com": 1,
+  "intl.cloud.tencent.com": 1,
+  "codemia.io": 1,
+  "www.netdata.cloud": 1
+ },
+ "facets": {
+  "structure": 5,
+  "mechanism": 10,
+  "how-to": 5,
+  "examples": 48,
+  "measures": 3,
+  "problems": 92,
+  "comparisons": 10,
+  "facts": 72
+ },
+ "relations": {
+  "component": 133,
+  "about": 112
+ },
+ "lexicon": {
+  "terms": 12,
+  "zero_hit": [],
+  "by_relation": {
+   "self": 1,
+   "part": 6,
+   "problem": 1,
+   "related": 3,
+   "hypernym": 1
+  }
+ },
+ "conflicts": 0,
+ "semantic": {
+  "units": 0,
+  "scored": 0
+ },
+ "files": {
+  "llms.txt": {
+   "bytes": 4904,
+   "tokens": 1210
+  },
+  "llms-full.txt": {
+   "bytes": 96310,
+   "tokens": 23816
+  },
+  "llms-small.txt": {
+   "bytes": 32877,
+   "tokens": 8201
+  },
+  "llms-facts.txt": {
+   "bytes": 127073,
+   "tokens": 31567
+  },
+  "llms-vocabulary.txt": {
+   "bytes": 5654,
+   "tokens": 1399
+  },
+  "units.jsonl": {
+   "bytes": 201860,
+   "tokens": 50464
+  }
+ },
+ "parent": "mongodb-query-shape-optimization",
+ "split_terms": [
+  "blocking sort",
+  "pagination"
+ ]
+}

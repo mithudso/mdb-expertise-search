@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-operations-expert` hub.** Created 2026-06-13.
+> **Reference file — part of the `mongodb-operations-expert` hub.** Created by `/dr` via `concept-family-explorer` (2026-06-13).
 > Vendor-neutral, **public** architecture scaffolding. Sibling to `references/cloud-native-database-disaggregation.md` (the disaggregation
 > substrate) and cross-links `da-data-engineering-platform` ▸ `da-28-realtime-olap-databases` (OLAP engines). Load from the owning hub.
 

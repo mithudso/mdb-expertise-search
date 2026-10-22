@@ -24,7 +24,8 @@
 | `mdbx/mql/server.py` | `mql-lsp` language server (pygls); also publishes optimizer findings as diagnostics | `build_server`, `optimizer_diagnostics`, `main` |
 | `scripts/redact_corpus.py` | Exact-phrase redaction of customer/internal references | `RULES`, `PRIVATE_FILES` |
 | `scripts/sweep_customers.py` | Fails on customer/internal markers in committed corpus files | — |
-| `scripts/sync_corpus.sh` | Rebuild `corpus/` from a local skill tree, then reindex | — |
+| `scripts/sync_corpus.sh` | Rebuild `corpus/` from a local skill tree and every `mongodb-*.llms` concept family, redact, sweep, then reindex (`MDBX_SKIP_INDEX=1` skips the index) | — |
+| `scripts/corpus_autoupdate.py` | Scheduled corpus refresh: launchd agent (`install-agent`) runs `sync_corpus.sh` in its own clone, holds back files the customer sweep flags, commits `corpus/` and pushes; refuses to run without `~/.config/mdbx/denylist.txt`; `status`, `run [--dry-run]`, `uninstall-agent` | `run_update`, `sweep`, `restore_committed`, `agent_plist` |
 | `scripts/rotate_workflow_logs.py` | Move old `## v...` sections of `memory.md`/`prompts.md` over 200 KB to `docs/archive/`; `--check` for CI | `rotate` |
 | `scripts/watch_and_index.sh` | fswatch/inotifywait loop that re-runs `mdbx index` on corpus changes | — |
 | `scripts/gen_file_index.py` | Regenerate `docs/high_signal_file_index.json` and `docs/codebase-overview.md` | — |

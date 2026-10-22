@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `atlas-diagnostics-expert` hub.** Created by deep research 2026-10-19; research dir `<local-path>
+> **Reference file — part of the `atlas-diagnostics-expert` hub.** Created by `/dr` deep research 2026-10-19; research dir `<local-path>`.
 
 ---
 name: mongodb-atlas-slow-query-and-advisor-automation
@@ -14,7 +14,7 @@ whenToUse:
   - "wire Atlas query recommendations into a ticket or CI pipeline"
 keywords: ["Performance Advisor API", "listSuggestedIndexes", "slow query logs API", "managedSlowMs", "atlas performanceAdvisor", "atlas api", "Admin API v2", "Project Read Only", "process id host:port", "automation"]
 tags: ["mongodb", "atlas", "performance-advisor", "automation", "admin-api"]
-provenance: "deep research · <local-path>
+provenance: "/dr · <local-path>"
 ---
 
 # Atlas Slow-Query Log and Performance Advisor Automation

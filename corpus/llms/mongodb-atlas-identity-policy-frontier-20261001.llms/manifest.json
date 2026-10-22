@@ -1,0 +1,82 @@
+{
+  "kind": "concept",
+  "concept": "Atlas Identity Federation and Resource Policy Boundaries",
+  "slug": "mongodb-atlas-identity-policy-frontier-20261001",
+  "version": "1.4.1",
+  "generated": "2026-10-01",
+  "summary": "Source-anchored research for Atlas Identity Federation and Resource Policy Boundaries. Run status: COMPLETED.",
+  "rights": "extractive",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 42,
+  "kept_units": 42,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 32,
+    "cheatsheetseries.owasp.org": 2,
+    "learn.microsoft.com": 2,
+    "github.com": 1,
+    "docs.cedarpolicy.com": 1,
+    "datatracker.ietf.org": 1,
+    "aws.amazon.com": 1,
+    "help.napa.fi": 1,
+    "docs.cloud.google.com": 1,
+    "foojay.io": 0,
+    "jimmydqv.com": 0
+  },
+  "facets": {
+    "structure": 1,
+    "mechanism": 6,
+    "problems": 4,
+    "comparisons": 3,
+    "facts": 28
+  },
+  "relations": {
+    "about": 42
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 3584,
+      "tokens": 887
+    },
+    "llms-full.txt": {
+      "bytes": 21126,
+      "tokens": 5236
+    },
+    "llms-small.txt": {
+      "bytes": 18964,
+      "tokens": 4707
+    },
+    "llms-facts.txt": {
+      "bytes": 21810,
+      "tokens": 5413
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 778,
+      "tokens": 192
+    },
+    "units.jsonl": {
+      "bytes": 31080,
+      "tokens": 7770
+    }
+  },
+  "research_status": "COMPLETED",
+  "dr_source_sha256": "9b5d831ef04815dafebefc02a88e57dcaec7023e4c8003c849d4f3262929e452",
+  "dr_source_run": "mongodb-atlas-identity-policy-frontier-20261001",
+  "researched_at": "2026-10-01"
+}

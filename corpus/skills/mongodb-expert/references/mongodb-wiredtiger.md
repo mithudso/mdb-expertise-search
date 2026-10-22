@@ -311,7 +311,7 @@ The `eviction_dirty_target` (5%) and `eviction_dirty_trigger` (20%) exist becaus
 
 ### Checkpoint Triggers
 
-MongoDB configures WiredTiger to create a checkpoint **every 60 seconds** (`storage.syncPeriodSecs`). That is the only documented trigger in the current Manual (`core/wiredtiger`: "at intervals of 60 seconds"). The older "or 2 GB of journal data, whichever comes first" wording is **not** a checkpoint trigger; the Manual's journaling page says "the default maximum size for a checkpoint is 2 GB" only in the context of sizing journal disk space.
+MongoDB configures WiredTiger to create a checkpoint **every 60 seconds** (`storage.syncPeriodSecs`). That is the only documented trigger in the current Manual (`core/wiredtiger`: "at intervals of 60 seconds"). The older "or 2 GB of journal data, whichever comes first" wording is **not** a checkpoint trigger; the Manual's journaling page says "the default maximum size for a checkpoint is 2 GB" only in the context of sizing journal disk space. (Corrected 2026-09-15 after a claim-validation pass; the stale "2 GB" trigger had leaked into a customer-facing draft.)
 
 Other things that force a checkpoint outside the 60 s cadence: `fsync`/`db.fsyncLock()`, clean shutdown, and `compact`/`autoCompact` ("Compaction regularly checkpoints the database").
 
@@ -716,7 +716,7 @@ db.adminCommand({
 });
 ```
 
-Background compaction that continuously keeps free space per collection/index file below `freeSpaceTargetMB` (default 20 MB). `runOnce: true` does a single pass over every collection/index on the node and stops; `autoCompact: false` stops a continuous run. Verified facts (Manual `autoCompact`, WiredTiger source, Jira):
+Background compaction that continuously keeps free space per collection/index file below `freeSpaceTargetMB` (default 20 MB). `runOnce: true` does a single pass over every collection/index on the node and stops; `autoCompact: false` stops a continuous run. Verified facts (Manual `autoCompact`, WiredTiger source, Jira; validated 2026-09-15):
 
 - **Per node, not replicated.** "The primary node does not replicate the autoCompact command to the secondary nodes." A node compacts only if the command is issued on that node. Sharded: run on each shard's mongods directly; cannot be issued to `mongos`.
 - **Non-blocking.** "Reads and writes are permitted while background compaction is running"; no `force` needed on a primary. Calling `autoCompact` again while one is active returns an error — disable first.

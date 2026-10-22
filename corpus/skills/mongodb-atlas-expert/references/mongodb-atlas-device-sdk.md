@@ -609,7 +609,7 @@ As of September 30, 2025, Atlas Device Sync is shut down. Options for apps that 
 | **WatermelonDB** | Local SQLite + custom sync adapter | JavaScript/React Native focus |
 | **Core Data + CloudKit** | Apple-platform only | Native iOS/macOS; no cross-platform |
 
-**Extension requests:** See the official Device Sync deprecation announcement for extension options.
+**Extension requests:** Customers with active Atlas contracts who needed more time could open a MongoDB Support case and request a 3–6 month extension.
 
 ### 5.3 Migration Timeline Reference
 

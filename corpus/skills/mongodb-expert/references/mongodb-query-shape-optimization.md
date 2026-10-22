@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-expert` hub.** Created by deep research 2026-10-19; research dir `<local-path>
+> **Reference file — part of the `mongodb-expert` hub.** Created by `/dr` deep research 2026-10-19; research dir `<local-path>`.
 
 ---
 name: mongodb-query-shape-optimization
@@ -14,7 +14,7 @@ whenToUse:
   - "make a sharded query targeted instead of scatter-gather"
 keywords: ["blocking sort", "in-memory sort", "keyset pagination", "skip limit", "regex anchor", "negation operators", "$in", "$or", "SORT_MERGE", "projection", "covered query", "countDocuments", "estimatedDocumentCount", "batchSize", "maxTimeMS", "scatter-gather", "shard key targeting"]
 tags: ["mongodb", "query-optimization", "pagination", "sort", "sharding"]
-provenance: "deep research · <local-path>
+provenance: "/dr · <local-path>"
 ---
 
 # MongoDB Query Shape Optimization: Sort, Pagination, Operators and Sharded Targeting

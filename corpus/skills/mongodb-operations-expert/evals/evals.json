@@ -1,7 +1,7 @@
 {
   "": "https://json-schema.org/draft/2020-12/schema",
   "skill_name": "mongodb-operations-expert",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Functional evaluation suite for mongodb-operations-expert hub verifying spoke routing, architecture guidance, and domain invariants.",
   "evals": [
     {
@@ -87,6 +87,93 @@
         {
           "name": "no blind resource overprovisioning",
           "check": "does not recommend blindly increasing memory or CPU without diagnostic evidence",
+          "type": "negative"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "mongodb-operations-e-cost-invoice-tags-routing",
+      "prompt": "Finance wants our Atlas spend split by team. Which Atlas tooling gives us invoice line items per cluster, and how do resource tags show up in that data?",
+      "expected_output": "Routes to references/atlas-billing-mechanics-and-cost-visibility.md and explains Cost Explorer (UI and async Admin API), Tag/<key> invoice CSV columns, and the export-time tag snapshot.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "billing spoke routing",
+          "check": "identifies references/atlas-billing-mechanics-and-cost-visibility.md as the target reference file",
+          "type": "structural"
+        },
+        {
+          "name": "tag columns",
+          "check": "states that cluster tags appear as Tag/<key> columns in the invoice CSV and in results.lineItems.tags from the Admin API",
+          "type": "content"
+        },
+        {
+          "name": "export-time snapshot",
+          "check": "warns that tags are read at export or API-call time, so retagging mid-cycle changes the whole invoice view",
+          "type": "content"
+        },
+        {
+          "name": "no spend cap claim",
+          "check": "does not claim that Atlas billing alerts can stop, pause, or cap spend",
+          "type": "negative"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "mongodb-operations-e-cost-commitment-drawdown-honesty",
+      "prompt": "We have an AWS EDP commitment and run Atlas on AWS. If we buy Atlas through the AWS Marketplace, will that draw down our EDP?",
+      "expected_output": "Routes to references/atlas-cost-commitments-cross-org-billing-and-finops-tooling.md and says AWS EDP drawdown for Atlas was not researched, so the answer must be confirmed with the MongoDB and AWS account teams.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "commitments spoke routing",
+          "check": "identifies references/atlas-cost-commitments-cross-org-billing-and-finops-tooling.md as the target reference file",
+          "type": "structural"
+        },
+        {
+          "name": "AWS gap stated",
+          "check": "states that AWS EDP drawdown for Atlas is not covered or verified by the reference and must be confirmed with the MongoDB and AWS account teams",
+          "type": "content"
+        },
+        {
+          "name": "comparison cases",
+          "check": "contrasts the researched cases: Azure MACC eligibility is per offer, and Google Minimum Commitment drawdown caps channel private offers at 25% of the commitment",
+          "type": "content"
+        },
+        {
+          "name": "no invented answer",
+          "check": "does not state as fact that Atlas spend retires an AWS EDP commitment",
+          "type": "negative"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "mongodb-operations-e-cost-storage-levers-routing",
+      "prompt": "We keep three years of event data on a large Atlas cluster and want to cut the storage bill. How do deleting with TTL, Online Archive, and Data Federation compare on cost?",
+      "expected_output": "Routes to references/storage-and-data-lifecycle-cost-levers.md and compares the three cost models, including Data Federation at $5/TB processed and Online Archive per-GB storage with query limits.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "storage levers routing",
+          "check": "identifies references/storage-and-data-lifecycle-cost-levers.md as the target reference file",
+          "type": "structural"
+        },
+        {
+          "name": "three-way cost model",
+          "check": "compares TTL delete, Online Archive, and Data Federation on cost, naming the $5/TB processed Data Federation rate and per-GB archive storage",
+          "type": "content"
+        },
+        {
+          "name": "compression lever",
+          "check": "mentions WiredTiger block compression (snappy, zlib, zstd) or index pruning with $indexStats as additional storage levers",
+          "type": "content"
+        },
+        {
+          "name": "hands off feature setup",
+          "check": "points Online Archive rule configuration to mongodb-atlas-expert instead of explaining rule syntax",
           "type": "negative"
         }
       ]

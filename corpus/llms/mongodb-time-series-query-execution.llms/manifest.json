@@ -1,92 +1,92 @@
 {
-  "kind": "concept",
-  "concept": "MongoDB time-series query execution: bucket unpacking, pushdown, block processing and sorts",
-  "slug": "mongodb-time-series-query-execution",
-  "version": "1.4.1",
-  "generated": "2026-10-19",
-  "summary": "Time series collections use [zstd](https://www.mongodb.com/docs/manual/reference/glossary.md#std-term-zstd) compression, which differs from the global default compression algorithm, [snappy.](https://www.mongodb.com/docs/manual/reference/glossary.md#std-term-snappy) (from www.mongodb.com)",
-  "rights": "extractive",
-  "budget_tokens": 8000,
-  "base_url": null,
-  "inputs": [
-    "<local-path>",
-    "<local-path>"
-  ],
-  "scanned_units": 45813,
-  "harvested_units": 249,
-  "kept_units": 249,
-  "dropped_by_classification": 0,
-  "dropped_lead_ins": 0,
-  "sources": {
-    "www.mongodb.com": 242,
-    "www.netdata.cloud": 2,
-    "mongodb.com": 2,
-    "jira.mongodb.org": 1,
-    "blog.allegro.tech": 1,
-    "mongodb.com-docs-query-core.md": 1
+ "kind": "concept",
+ "concept": "MongoDB time-series query execution: bucket unpacking, pushdown, block processing and sorts",
+ "slug": "mongodb-time-series-query-execution",
+ "version": "1.4.1",
+ "generated": "2026-10-19",
+ "summary": "Time series collections use [zstd](https://www.mongodb.com/docs/manual/reference/glossary.md#std-term-zstd) compression, which differs from the global default compression algorithm, [snappy.](https://www.mongodb.com/docs/manual/reference/glossary.md#std-term-snappy) (from www.mongodb.com)",
+ "rights": "extractive",
+ "budget_tokens": 8000,
+ "base_url": null,
+ "inputs": [
+  "<local-path>",
+  "<local-path>"
+ ],
+ "scanned_units": 45813,
+ "harvested_units": 249,
+ "kept_units": 249,
+ "dropped_by_classification": 0,
+ "dropped_lead_ins": 0,
+ "sources": {
+  "www.mongodb.com": 242,
+  "www.netdata.cloud": 2,
+  "mongodb.com": 2,
+  "jira.mongodb.org": 1,
+  "blog.allegro.tech": 1,
+  "mongodb.com-docs-query-core.md": 1
+ },
+ "facets": {
+  "definition": 6,
+  "structure": 9,
+  "mechanism": 11,
+  "how-to": 28,
+  "examples": 20,
+  "measures": 3,
+  "problems": 22,
+  "comparisons": 6,
+  "facts": 144
+ },
+ "relations": {
+  "about": 207,
+  "measure": 14,
+  "component": 28
+ },
+ "lexicon": {
+  "terms": 6,
+  "zero_hit": [],
+  "by_relation": {
+   "self": 1,
+   "part": 2,
+   "measure": 1,
+   "related": 2
+  }
+ },
+ "conflicts": 0,
+ "semantic": {
+  "units": 0,
+  "scored": 0
+ },
+ "files": {
+  "llms.txt": {
+   "bytes": 5007,
+   "tokens": 1238
   },
-  "facets": {
-    "definition": 6,
-    "structure": 9,
-    "mechanism": 11,
-    "how-to": 28,
-    "examples": 20,
-    "measures": 3,
-    "problems": 22,
-    "comparisons": 6,
-    "facts": 144
+  "llms-full.txt": {
+   "bytes": 95455,
+   "tokens": 23639
   },
-  "relations": {
-    "about": 207,
-    "measure": 14,
-    "component": 28
+  "llms-small.txt": {
+   "bytes": 32848,
+   "tokens": 8169
   },
-  "lexicon": {
-    "terms": 6,
-    "zero_hit": [],
-    "by_relation": {
-      "self": 1,
-      "part": 2,
-      "measure": 1,
-      "related": 2
-    }
+  "llms-facts.txt": {
+   "bytes": 108642,
+   "tokens": 26963
   },
-  "conflicts": 0,
-  "semantic": {
-    "units": 0,
-    "scored": 0
+  "llms-vocabulary.txt": {
+   "bytes": 3203,
+   "tokens": 792
   },
-  "files": {
-    "llms.txt": {
-      "bytes": 5007,
-      "tokens": 1238
-    },
-    "llms-full.txt": {
-      "bytes": 95455,
-      "tokens": 23639
-    },
-    "llms-small.txt": {
-      "bytes": 32848,
-      "tokens": 8169
-    },
-    "llms-facts.txt": {
-      "bytes": 108642,
-      "tokens": 26963
-    },
-    "llms-vocabulary.txt": {
-      "bytes": 3203,
-      "tokens": 792
-    },
-    "units.jsonl": {
-      "bytes": 186981,
-      "tokens": 46744
-    }
-  },
-  "parent": "mongodb-time-series-query-optimization",
-  "split_terms": [
-    "time series query",
-    "block processing",
-    "time series collection",
-    "index"
-  ]
+  "units.jsonl": {
+   "bytes": 186981,
+   "tokens": 46744
+  }
+ },
+ "parent": "mongodb-time-series-query-optimization",
+ "split_terms": [
+  "time series query",
+  "block processing",
+  "time series collection",
+  "index"
+ ]
 }

@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-expert` hub.** Created by deep research 2026-10-19; research dir `<local-path>
+> **Reference file — part of the `mongodb-expert` hub.** Created by `/dr` deep research 2026-10-19; research dir `<local-path>`.
 
 ---
 name: mongodb-compound-index-design
@@ -14,7 +14,7 @@ whenToUse:
   - "clean up redundant or unused indexes"
 keywords: ["compound index", "ESR rule", "equality sort range", "index prefix", "covered query", "selectivity", "multikey index", "elemMatch", "partial index", "partialFilterExpression", "sparse index", "index intersection", "index anti-patterns", "redundant index"]
 tags: ["mongodb", "indexes", "query-optimization", "esr", "covered-queries"]
-provenance: "deep research · <local-path>
+provenance: "/dr · <local-path>"
 ---
 
 # MongoDB Compound Index Design: ESR, Selectivity, Covering and Multikey Bounds

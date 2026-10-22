@@ -1,0 +1,80 @@
+# MongoDB cost optimization concept family
+
+> 33 source-anchored MongoDB/Atlas cost concepts from the 2026-10-19 full-suite run (five /dr cohorts, saturation-gated). Page counts are cited-URL counts, not site coverage. Internal local index of third-party extracts; list prices and vendor claims carry their original confidence and dates.
+
+This file links each concept pack's index and facts layer; original source documents remain linked inside each pack. Sibling packs researched 2026-10-15 (instance right-sizing, storage tiers, autoscaling, backups, egress, committed use, cluster pause, index storage, cost monitoring, common overruns) live beside these under llms-concepts/ and are not members here.
+
+<!-- internal -->
+<!-- generated: 2026-10-19; generator: docset_refine.family; rights: private derived navigation (extractive) -->
+
+## Products
+
+- [Atlas Billing and Invoice Anatomy](<local-path>): 2 pages, ~1513 tokens index, ~8445 tokens full
+- [Atlas Cost Explorer and Billing Data API](<local-path>): 4 pages, ~1630 tokens index, ~8027 tokens full
+- [Atlas Credits Prepaid Subscriptions and Overage](<local-path>): 2 pages, ~1441 tokens index, ~5763 tokens full
+- [Atlas Support Plan Pricing](<local-path>): 3 pages, ~1266 tokens index, ~4749 tokens full
+- [Billing Alerts and Budget Controls](<local-path>): 2 pages, ~1234 tokens index, ~5112 tokens full
+- [Cloud Marketplace Billing for Atlas (AWS GCP Azure)](<local-path>): 3 pages, ~1190 tokens index, ~4764 tokens full
+- [Resource Tags and Cost Allocation (Showback/Chargeback)](<local-path>): 4 pages, ~1653 tokens index, ~12378 tokens full
+- [Atlas Search and Dedicated Search Nodes Cost](<local-path>): 2 pages, ~1608 tokens index, ~9409 tokens full
+- [Cluster Tier Families and Hourly Pricing (General vs Low-CPU vs NVMe)](<local-path>): 3 pages, ~1738 tokens index, ~7572 tokens full
+- [Multi-Region and Cross-Cloud Data Transfer Costs](<local-path>): 4 pages, ~1777 tokens index, ~5573 tokens full
+- [Replica Set Node Topology Cost](<local-path>): 3 pages, ~1565 tokens index, ~8151 tokens full
+- [Sharded Cluster Cost Economics](<local-path>): 3 pages, ~1608 tokens index, ~6586 tokens full
+- [Storage Growth and IOPS Forecasting for Cost](<local-path>): 2 pages, ~1669 tokens index, ~9321 tokens full
+- [Vector Search Quantization and Embedding Storage Cost](<local-path>): 4 pages, ~1690 tokens index, ~9193 tokens full
+- [Data Lifecycle Cost Model (TTL vs Online Archive vs Data Federation)](<local-path>): 3 pages, ~1790 tokens index, ~8431 tokens full
+- [Query Efficiency as a Cost Lever](<local-path>): 5 pages, ~1462 tokens index, ~8634 tokens full
+- [Schema Design for Storage Cost](<local-path>): 3 pages, ~1412 tokens index, ~7719 tokens full
+- [WiredTiger Block and Prefix Compression as Storage Cost Lever](<local-path>): 5 pages, ~1953 tokens index, ~8227 tokens full
+- [Atlas AI Services Pricing (Agent Engine and Voyage AI)](<local-path>): 3 pages, ~1580 tokens index, ~10079 tokens full
+- [Atlas Flex Pricing and Flex-vs-Dedicated Break-Even](<local-path>): 4 pages, ~1825 tokens index, ~9056 tokens full
+- [Cost Governance Guardrails (Resource Policies and IaC Cost Controls)](<local-path>): 5 pages, ~1999 tokens index, ~10480 tokens full
+- [FinOps Framework Applied to Atlas](<local-path>): 5 pages, ~1692 tokens index, ~10090 tokens full
+- [Self-Managed MongoDB vs Atlas TCO](<local-path>): 4 pages, ~1553 tokens index, ~8679 tokens full
+- [Cloud Commit Drawdown via Atlas Marketplace (EDP MACC GCP commit)](<local-path>): 7 pages, ~1797 tokens index, ~5670 tokens full
+- [Cross-Organization Billing and Linked Invoices](<local-path>): 2 pages, ~1646 tokens index, ~4719 tokens full
+- [FinOps Tooling for Atlas (FOCUS Ingestion Anomaly Detection Budgets)](<local-path>): 5 pages, ~1812 tokens index, ~7040 tokens full
+- [Matryoshka Dimension Truncation for Vector Storage Cost](<local-path>): 4 pages, ~1670 tokens index, ~9029 tokens full
+- [Resource Policy Drift Monitoring (nonCompliantResources)](<local-path>): 3 pages, ~1502 tokens index, ~4028 tokens full
+- [Terraform Tag Enforcement and Policy-as-Code for Atlas Cost](<local-path>): 5 pages, ~1751 tokens index, ~5159 tokens full
+- [Cross-Vendor Document Database Pricing Comparison (DocumentDB Cosmos DB DynamoDB)](<local-path>): 5 pages, ~1925 tokens index, ~13782 tokens full
+- [Pre-Deployment Cost Estimation and Sizing Model (Atlas Pricing Calculator)](<local-path>): 3 pages, ~1823 tokens index, ~9018 tokens full
+- [Region and Cloud Provider Price Differentials for Atlas](<local-path>): 4 pages, ~1719 tokens index, ~9890 tokens full
+- [Scheduled and Predictive Scaling for Atlas Cost](<local-path>): 5 pages, ~1626 tokens index, ~13910 tokens full
+
+## Facts
+
+- [Atlas Billing and Invoice Anatomy facts](<local-path>): 93 units, ~7637 tokens
+- [Atlas Cost Explorer and Billing Data API facts](<local-path>): 94 units, ~7531 tokens
+- [Atlas Credits Prepaid Subscriptions and Overage facts](<local-path>): 67 units, ~5259 tokens
+- [Atlas Support Plan Pricing facts](<local-path>): 47 units, ~4001 tokens
+- [Billing Alerts and Budget Controls facts](<local-path>): 53 units, ~4771 tokens
+- [Cloud Marketplace Billing for Atlas (AWS GCP Azure) facts](<local-path>): 53 units, ~4392 tokens
+- [Resource Tags and Cost Allocation (Showback/Chargeback) facts](<local-path>): 136 units, ~12140 tokens
+- [Atlas Search and Dedicated Search Nodes Cost facts](<local-path>): 82 units, ~8628 tokens
+- [Cluster Tier Families and Hourly Pricing (General vs Low-CPU vs NVMe) facts](<local-path>): 73 units, ~6966 tokens
+- [Multi-Region and Cross-Cloud Data Transfer Costs facts](<local-path>): 47 units, ~4479 tokens
+- [Replica Set Node Topology Cost facts](<local-path>): 72 units, ~7221 tokens
+- [Sharded Cluster Cost Economics facts](<local-path>): 68 units, ~5682 tokens
+- [Storage Growth and IOPS Forecasting for Cost facts](<local-path>): 88 units, ~8502 tokens
+- [Vector Search Quantization and Embedding Storage Cost facts](<local-path>): 64 units, ~9012 tokens
+- [Data Lifecycle Cost Model (TTL vs Online Archive vs Data Federation) facts](<local-path>): 90 units, ~7872 tokens
+- [Query Efficiency as a Cost Lever facts](<local-path>): 81 units, ~7532 tokens
+- [Schema Design for Storage Cost facts](<local-path>): 57 units, ~6684 tokens
+- [WiredTiger Block and Prefix Compression as Storage Cost Lever facts](<local-path>): 77 units, ~6916 tokens
+- [Atlas AI Services Pricing (Agent Engine and Voyage AI) facts](<local-path>): 77 units, ~8282 tokens
+- [Atlas Flex Pricing and Flex-vs-Dedicated Break-Even facts](<local-path>): 67 units, ~7260 tokens
+- [Cost Governance Guardrails (Resource Policies and IaC Cost Controls) facts](<local-path>): 102 units, ~9248 tokens
+- [FinOps Framework Applied to Atlas facts](<local-path>): 86 units, ~9096 tokens
+- [Self-Managed MongoDB vs Atlas TCO facts](<local-path>): 62 units, ~6800 tokens
+- [Cloud Commit Drawdown via Atlas Marketplace (EDP MACC GCP commit) facts](<local-path>): 46 units, ~4931 tokens
+- [Cross-Organization Billing and Linked Invoices facts](<local-path>): 52 units, ~4170 tokens
+- [FinOps Tooling for Atlas (FOCUS Ingestion Anomaly Detection Budgets) facts](<local-path>): 75 units, ~6390 tokens
+- [Matryoshka Dimension Truncation for Vector Storage Cost facts](<local-path>): 60 units, ~8329 tokens
+- [Resource Policy Drift Monitoring (nonCompliantResources) facts](<local-path>): 30 units, ~3592 tokens
+- [Terraform Tag Enforcement and Policy-as-Code for Atlas Cost facts](<local-path>): 49 units, ~4606 tokens
+- [Cross-Vendor Document Database Pricing Comparison (DocumentDB Cosmos DB DynamoDB) facts](<local-path>): 115 units, ~13234 tokens
+- [Pre-Deployment Cost Estimation and Sizing Model (Atlas Pricing Calculator) facts](<local-path>): 91 units, ~7794 tokens
+- [Region and Cloud Provider Price Differentials for Atlas facts](<local-path>): 85 units, ~8962 tokens
+- [Scheduled and Predictive Scaling for Atlas Cost facts](<local-path>): 127 units, ~12424 tokens

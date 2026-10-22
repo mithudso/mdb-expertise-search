@@ -1,5 +1,18 @@
 # memory.md — operator log
 
+## 2026-10-22 — corpus refresh + scheduled updater
+- Corpus refreshed from the skill tree and `~/.global-ai-hub/llms-concepts`: six new `mongodb-*.llms` families
+  (cost-optimization, counts/cursors/read path, sort and pagination, MCP read-only/permissions, two dated Atlas
+  frontier families), ~35 new skill references (index builds, bucket catalog, hidden indexes, Atlas cost and
+  topology), many updated Atlas/expert references. `sync_corpus.sh` now globs concept families instead of a list.
+- The sweep flagged 22 re-synced files whose hand-redacted text the rsync had overwritten; they were put back to the
+  committed text, as were three files naming customers. `~/.config/mdbx/denylist.txt` now exists on this box (it did
+  not; customer names were slipping past the built-in markers).
+- New `scripts/corpus_autoupdate.py` (launchd agent, own clone, sweep gate, commit + push) with tests in
+  `tests/test_corpus_autoupdate.py`.
+- Finding: in-process query embedding is feasible. nomic-embed-text-v1.5 fp32 ONNX (onnxruntime + tokenizers,
+  mean pooling) matches the stored Ollama vectors at mean cosine 0.999 (13 ms/query); the int8 ONNX only 0.94.
+
 ## v0.7.0 — 2026-10-20
 - AI providers via the new shared library `ai-auth` (`~/dev/libraries/ai-auth`, https://github.com/mithudso/ai-auth,
   private; optional extra `ai`): `mdbx auth status|set-key|login|unset|mode|prefer|test` (= `ai-auth --app mdbx …`),

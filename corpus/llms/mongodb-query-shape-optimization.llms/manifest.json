@@ -1,146 +1,146 @@
 {
-  "kind": "concept",
-  "concept": "MongoDB query shape optimization: sort, pagination, operators and sharded targeting",
-  "slug": "mongodb-query-shape-optimization",
-  "version": "1.4.1",
-  "generated": "2026-10-19",
-  "summary": "The shape of a find or aggregate query decides whether the planner can use an index: index-backed sorts avoid the blocking SORT stage and its memory limit, keyset pagination replaces deep skip, $regex, $ne, $nin, $where and $expr constrain index bounds, $in and $or become point bounds or index unions, projection can make a query covered, count, distinct, $sample and cursor batchSize/maxTimeMS carry their own costs, and a sharded query is targeted only when the shard key is in the filter. Compiled from MongoDB manual and Atlas pages plus the run's verified claims.",
-  "rights": "extractive",
-  "budget_tokens": 24000,
-  "base_url": null,
-  "inputs": [
-    "<local-path>",
-    "<local-path>"
-  ],
-  "scanned_units": 45847,
-  "harvested_units": 2556,
-  "kept_units": 2446,
-  "dropped_by_classification": 62,
-  "dropped_lead_ins": 48,
-  "sources": {
-    "www.mongodb.com": 2422,
-    "jira.mongodb.org": 7,
-    "oneuptime.com": 4,
-    "mongodb.com": 3,
-    "blog.openreplay.com": 3,
-    "www.netdata.cloud": 2,
-    "dev.to": 2,
-    "begriffs.com": 1,
-    "intl.cloud.tencent.com": 1,
-    "codemia.io": 1
+ "kind": "concept",
+ "concept": "MongoDB query shape optimization: sort, pagination, operators and sharded targeting",
+ "slug": "mongodb-query-shape-optimization",
+ "version": "1.4.1",
+ "generated": "2026-10-19",
+ "summary": "The shape of a find or aggregate query decides whether the planner can use an index: index-backed sorts avoid the blocking SORT stage and its memory limit, keyset pagination replaces deep skip, $regex, $ne, $nin, $where and $expr constrain index bounds, $in and $or become point bounds or index unions, projection can make a query covered, count, distinct, $sample and cursor batchSize/maxTimeMS carry their own costs, and a sharded query is targeted only when the shard key is in the filter. Compiled from MongoDB manual and Atlas pages plus the run's verified claims.",
+ "rights": "extractive",
+ "budget_tokens": 24000,
+ "base_url": null,
+ "inputs": [
+  "<local-path>",
+  "<local-path>"
+ ],
+ "scanned_units": 45847,
+ "harvested_units": 2556,
+ "kept_units": 2446,
+ "dropped_by_classification": 62,
+ "dropped_lead_ins": 48,
+ "sources": {
+  "www.mongodb.com": 2422,
+  "jira.mongodb.org": 7,
+  "oneuptime.com": 4,
+  "mongodb.com": 3,
+  "blog.openreplay.com": 3,
+  "www.netdata.cloud": 2,
+  "dev.to": 2,
+  "begriffs.com": 1,
+  "intl.cloud.tencent.com": 1,
+  "codemia.io": 1
+ },
+ "facets": {
+  "definition": 20,
+  "structure": 126,
+  "mechanism": 169,
+  "how-to": 95,
+  "examples": 540,
+  "measures": 13,
+  "problems": 281,
+  "comparisons": 66,
+  "facts": 1136
+ },
+ "relations": {
+  "component": 1947,
+  "problem": 328,
+  "context": 24,
+  "related": 33,
+  "about": 114
+ },
+ "lexicon": {
+  "terms": 12,
+  "zero_hit": [],
+  "by_relation": {
+   "self": 1,
+   "part": 6,
+   "problem": 1,
+   "related": 3,
+   "hypernym": 1
+  }
+ },
+ "conflicts": 0,
+ "semantic": {
+  "units": 2,
+  "scored": 2
+ },
+ "files": {
+  "llms.txt": {
+   "bytes": 7621,
+   "tokens": 1905
   },
-  "facets": {
-    "definition": 20,
-    "structure": 126,
-    "mechanism": 169,
-    "how-to": 95,
-    "examples": 540,
-    "measures": 13,
-    "problems": 281,
-    "comparisons": 66,
-    "facts": 1136
+  "llms-full.txt": {
+   "bytes": 912134,
+   "tokens": 228033
   },
-  "relations": {
-    "component": 1947,
-    "problem": 328,
-    "context": 24,
-    "related": 33,
-    "about": 114
+  "llms-small.txt": {
+   "bytes": 96960,
+   "tokens": 24240
   },
-  "lexicon": {
-    "terms": 12,
-    "zero_hit": [],
-    "by_relation": {
-      "self": 1,
-      "part": 6,
-      "problem": 1,
-      "related": 3,
-      "hypernym": 1
-    }
+  "llms-facts.txt": {
+   "bytes": 1168600,
+   "tokens": 292150
   },
-  "conflicts": 0,
-  "semantic": {
-    "units": 2,
-    "scored": 2
+  "llms-vocabulary.txt": {
+   "bytes": 6422,
+   "tokens": 1605
   },
-  "files": {
-    "llms.txt": {
-      "bytes": 7621,
-      "tokens": 1905
-    },
-    "llms-full.txt": {
-      "bytes": 912134,
-      "tokens": 228033
-    },
-    "llms-small.txt": {
-      "bytes": 96960,
-      "tokens": 24240
-    },
-    "llms-facts.txt": {
-      "bytes": 1168600,
-      "tokens": 292150
-    },
-    "llms-vocabulary.txt": {
-      "bytes": 6422,
-      "tokens": 1605
-    },
-    "units.jsonl": {
-      "bytes": 2022296,
-      "tokens": 505570
-    }
+  "units.jsonl": {
+   "bytes": 2022296,
+   "tokens": 505570
+  }
+ },
+ "title": "MongoDB query shape optimization: sort, pagination, operators and sharded targeting",
+ "pages": 348,
+ "units": 2446,
+ "children": {
+  "mongodb-sort-and-pagination-optimization": {
+   "concept": "MongoDB sort and pagination optimization",
+   "units": 245,
+   "terms": [
+    "blocking sort",
+    "pagination"
+   ],
+   "full_tokens": 23816,
+   "small_tokens": 8201,
+   "path": "mongodb-sort-and-pagination-optimization.llms"
   },
-  "title": "MongoDB query shape optimization: sort, pagination, operators and sharded targeting",
-  "pages": 348,
-  "units": 2446,
-  "children": {
-    "mongodb-sort-and-pagination-optimization": {
-      "concept": "MongoDB sort and pagination optimization",
-      "units": 245,
-      "terms": [
-        "blocking sort",
-        "pagination"
-      ],
-      "full_tokens": 23816,
-      "small_tokens": 8201,
-      "path": "mongodb-sort-and-pagination-optimization.llms"
-    },
-    "mongodb-query-operators-bounds-and-projection": {
-      "concept": "MongoDB query operators, index bounds and projection",
-      "units": 890,
-      "terms": [
-        "query operator anti-pattern",
-        "$in",
-        "projection"
-      ],
-      "full_tokens": 77481,
-      "small_tokens": 8196,
-      "path": "mongodb-query-operators-bounds-and-projection.llms"
-    },
-    "mongodb-counts-cursors-and-read-path": {
-      "concept": "MongoDB counts, distinct, cursors and read-path tuning",
-      "units": 948,
-      "terms": [
-        "count",
-        "cursor",
-        "read preference"
-      ],
-      "full_tokens": 88322,
-      "small_tokens": 8246,
-      "path": "mongodb-counts-cursors-and-read-path.llms"
-    },
-    "mongodb-sharded-query-targeting": {
-      "concept": "MongoDB sharded query targeting and scatter-gather",
-      "units": 361,
-      "terms": [
-        "sharded query targeting",
-        "query shape",
-        "index",
-        "query optimization"
-      ],
-      "full_tokens": 39331,
-      "small_tokens": 8202,
-      "path": "mongodb-sharded-query-targeting.llms"
-    }
+  "mongodb-query-operators-bounds-and-projection": {
+   "concept": "MongoDB query operators, index bounds and projection",
+   "units": 890,
+   "terms": [
+    "query operator anti-pattern",
+    "$in",
+    "projection"
+   ],
+   "full_tokens": 77481,
+   "small_tokens": 8196,
+   "path": "mongodb-query-operators-bounds-and-projection.llms"
   },
-  "parent_only_units": 2
+  "mongodb-counts-cursors-and-read-path": {
+   "concept": "MongoDB counts, distinct, cursors and read-path tuning",
+   "units": 948,
+   "terms": [
+    "count",
+    "cursor",
+    "read preference"
+   ],
+   "full_tokens": 88322,
+   "small_tokens": 8246,
+   "path": "mongodb-counts-cursors-and-read-path.llms"
+  },
+  "mongodb-sharded-query-targeting": {
+   "concept": "MongoDB sharded query targeting and scatter-gather",
+   "units": 361,
+   "terms": [
+    "sharded query targeting",
+    "query shape",
+    "index",
+    "query optimization"
+   ],
+   "full_tokens": 39331,
+   "small_tokens": 8202,
+   "path": "mongodb-sharded-query-targeting.llms"
+  }
+ },
+ "parent_only_units": 2
 }

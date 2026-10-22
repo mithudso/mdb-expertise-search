@@ -365,7 +365,7 @@ Connection string types available:
 ```bash
 terraform import mongodbatlas_advanced_cluster.main PROJECT_ID-CLUSTER_NAME
 # Example:
-terraform import mongodbatlas_advanced_cluster.main <PROJECT_ID>-production
+terraform import mongodbatlas_advanced_cluster.main 6494919b2b3afd2b4ff2e70c-production
 ```
 
 ---
@@ -1093,12 +1093,12 @@ atlas networking peering list --projectId <id> --provider AWS
 # import.tf — run once, then optionally remove after import
 import {
   to = mongodbatlas_advanced_cluster.existing
-  id = "<PROJECT_ID>-my-cluster"
+  id = "6494919b2b3afd2b4ff2e70c-my-cluster"
 }
 
 import {
   to = mongodbatlas_database_user.app
-  id = "<PROJECT_ID>/appuser/admin"
+  id = "6494919b2b3afd2b4ff2e70c/appuser/admin"
 }
 ```
 

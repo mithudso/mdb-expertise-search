@@ -1,94 +1,94 @@
 {
-  "kind": "concept",
-  "concept": "MongoDB wildcard and hidden indexes, index builds and index overhead",
-  "slug": "mongodb-special-indexes-and-index-builds",
-  "version": "1.4.1",
-  "generated": "2026-10-19",
-  "summary": "Wildcard indexes index every scalar value under a path so queries on unknown field names can use an index, hidden indexes stay fully maintained but invisible to the planner, and index builds run as optimized hybrid builds that replica-set members vote to commit under a commit quorum; every index adds disk, cache and write cost. Compiled from MongoDB manual and Atlas pages plus the run's verified claims.",
-  "rights": "extractive",
-  "budget_tokens": 24000,
-  "base_url": null,
-  "inputs": [
-    "<local-path>",
-    "<local-path>"
-  ],
-  "scanned_units": 45812,
-  "harvested_units": 722,
-  "kept_units": 664,
-  "dropped_by_classification": 8,
-  "dropped_lead_ins": 50,
-  "sources": {
-    "www.mongodb.com": 654,
-    "mongodb.com": 4,
-    "www.netdata.cloud": 3,
-    "learn.microsoft.com": 1,
-    "jira.mongodb.org": 1,
-    "www.percona.com": 1
+ "kind": "concept",
+ "concept": "MongoDB wildcard and hidden indexes, index builds and index overhead",
+ "slug": "mongodb-special-indexes-and-index-builds",
+ "version": "1.4.1",
+ "generated": "2026-10-19",
+ "summary": "Wildcard indexes index every scalar value under a path so queries on unknown field names can use an index, hidden indexes stay fully maintained but invisible to the planner, and index builds run as optimized hybrid builds that replica-set members vote to commit under a commit quorum; every index adds disk, cache and write cost. Compiled from MongoDB manual and Atlas pages plus the run's verified claims.",
+ "rights": "extractive",
+ "budget_tokens": 24000,
+ "base_url": null,
+ "inputs": [
+  "<local-path>",
+  "<local-path>"
+ ],
+ "scanned_units": 45812,
+ "harvested_units": 722,
+ "kept_units": 664,
+ "dropped_by_classification": 8,
+ "dropped_lead_ins": 50,
+ "sources": {
+  "www.mongodb.com": 654,
+  "mongodb.com": 4,
+  "www.netdata.cloud": 3,
+  "learn.microsoft.com": 1,
+  "jira.mongodb.org": 1,
+  "www.percona.com": 1
+ },
+ "facets": {
+  "definition": 22,
+  "structure": 23,
+  "mechanism": 74,
+  "how-to": 50,
+  "examples": 56,
+  "measures": 2,
+  "problems": 84,
+  "comparisons": 16,
+  "facts": 337
+ },
+ "relations": {
+  "component": 237,
+  "subtype": 142,
+  "about": 235,
+  "problem": 20,
+  "measure": 20,
+  "context": 10
+ },
+ "lexicon": {
+  "terms": 12,
+  "zero_hit": [],
+  "by_relation": {
+   "self": 1,
+   "hyponym": 5,
+   "part": 2,
+   "problem": 1,
+   "related": 1,
+   "measure": 1,
+   "hypernym": 1
+  }
+ },
+ "conflicts": 0,
+ "semantic": {
+  "units": 16,
+  "scored": 16
+ },
+ "files": {
+  "llms.txt": {
+   "bytes": 5512,
+   "tokens": 1378
   },
-  "facets": {
-    "definition": 22,
-    "structure": 23,
-    "mechanism": 74,
-    "how-to": 50,
-    "examples": 56,
-    "measures": 2,
-    "problems": 84,
-    "comparisons": 16,
-    "facts": 337
+  "llms-full.txt": {
+   "bytes": 249414,
+   "tokens": 62353
   },
-  "relations": {
-    "component": 237,
-    "subtype": 142,
-    "about": 235,
-    "problem": 20,
-    "measure": 20,
-    "context": 10
+  "llms-small.txt": {
+   "bytes": 96838,
+   "tokens": 24209
   },
-  "lexicon": {
-    "terms": 12,
-    "zero_hit": [],
-    "by_relation": {
-      "self": 1,
-      "hyponym": 5,
-      "part": 2,
-      "problem": 1,
-      "related": 1,
-      "measure": 1,
-      "hypernym": 1
-    }
+  "llms-facts.txt": {
+   "bytes": 303079,
+   "tokens": 75769
   },
-  "conflicts": 0,
-  "semantic": {
-    "units": 16,
-    "scored": 16
+  "llms-vocabulary.txt": {
+   "bytes": 4942,
+   "tokens": 1235
   },
-  "files": {
-    "llms.txt": {
-      "bytes": 5512,
-      "tokens": 1378
-    },
-    "llms-full.txt": {
-      "bytes": 249414,
-      "tokens": 62353
-    },
-    "llms-small.txt": {
-      "bytes": 96838,
-      "tokens": 24209
-    },
-    "llms-facts.txt": {
-      "bytes": 303079,
-      "tokens": 75769
-    },
-    "llms-vocabulary.txt": {
-      "bytes": 4942,
-      "tokens": 1235
-    },
-    "units.jsonl": {
-      "bytes": 492770,
-      "tokens": 123192
-    }
-  },
-  "title": "MongoDB wildcard and hidden indexes, index builds and index overhead",
-  "pages": 89,
-  "units": 664
+  "units.jsonl": {
+   "bytes": 492770,
+   "tokens": 123192
+  }
+ },
+ "title": "MongoDB wildcard and hidden indexes, index builds and index overhead",
+ "pages": 89,
+ "units": 664
 }

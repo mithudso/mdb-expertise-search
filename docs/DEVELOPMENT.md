@@ -23,9 +23,14 @@ python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'   # dev pulls in all 
   an editor swap file exists. `--check` writes nothing and exits 1 when a rotation is due (CI runs it).
 - `scripts/watch_and_index.sh` — needs `fswatch` or `inotifywait`; re-runs `.venv/bin/mdbx index` when `MDBX_CORPUS`
   (default `corpus`) changes.
-- `scripts/sync_corpus.sh` — also copies the `mongodb-*.llms` MQL query-optimization fact families
-  (`llms.txt`, `llms-facts.txt`, `llms-vocabulary.txt`, `manifest.json`) from `MDBX_CONCEPTS_SRC`. The deep MQL
+- `scripts/sync_corpus.sh` — also copies every `mongodb-*.llms` fact family found in `MDBX_CONCEPTS_SRC`
+  (`llms.txt`, `llms-facts.txt`, `llms-vocabulary.txt`, `manifest.json`; new families need no script edit). The deep MQL
   optimizer reference ships only in redacted form; re-redact it by hand after a re-sync.
+- `scripts/corpus_autoupdate.py install-agent` — keeps the committed corpus current. The corpus is a copy (clones of the
+  repo must work without your skill tree), so a launchd agent on the machine that holds the sources runs a refresh in
+  its own clone (`~/Library/Caches/mdbx/corpus-autoupdate/repo`) every 6 h by default: sync, redact, sweep (flagged
+  files are reverted to their committed text, or dropped when new), commit `corpus/`, push. It aborts without
+  `~/.config/mdbx/denylist.txt`. Log: `~/Library/Logs/mdbx-corpus-autoupdate.log`; `run --dry-run` to preview.
 - `mdbx optimize FILE|- [--read-only] [--write] [--json]` — static optimizer; `examples/slow-queries.mql` is a sample input.
 - `.vscode/mcp.json` — registers `.venv/bin/mdbx mcp` for VS Code.
 

@@ -1,0 +1,79 @@
+{
+  "kind": "concept",
+  "concept": "Atlas Hybrid Fusion and BM25 Diagnostics",
+  "slug": "mongodb-atlas-hybrid-fusion-bm25-frontier-20261001",
+  "version": "1.4.1",
+  "generated": "2026-10-01",
+  "summary": "Source-anchored research for Atlas Hybrid Fusion and BM25 Diagnostics. Run status: COMPLETED.",
+  "rights": "extractive",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 19,
+  "kept_units": 19,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 15,
+    "www.ccs.neu.edu": 1,
+    "issues.apache.org": 1,
+    "opensearch.org": 1,
+    "cormack.uwaterloo.ca": 1,
+    "dev.to": 0
+  },
+  "facets": {
+    "definition": 1,
+    "structure": 3,
+    "mechanism": 1,
+    "measures": 1,
+    "problems": 1,
+    "comparisons": 4,
+    "facts": 8
+  },
+  "relations": {
+    "about": 19
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 2860,
+      "tokens": 705
+    },
+    "llms-full.txt": {
+      "bytes": 10601,
+      "tokens": 2627
+    },
+    "llms-small.txt": {
+      "bytes": 9575,
+      "tokens": 2376
+    },
+    "llms-facts.txt": {
+      "bytes": 10712,
+      "tokens": 2659
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 713,
+      "tokens": 176
+    },
+    "units.jsonl": {
+      "bytes": 14594,
+      "tokens": 3648
+    }
+  },
+  "research_status": "COMPLETED",
+  "dr_source_sha256": "531db918e89ae6fcab757719ade72a13c0176fb57a9dce38143f34f7bce910b7",
+  "dr_source_run": "mongodb-atlas-hybrid-fusion-bm25-frontier-20261001",
+  "researched_at": "2026-10-01"
+}

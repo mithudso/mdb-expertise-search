@@ -1,7 +1,7 @@
 {
   "": "https://json-schema.org/draft/2020-12/schema",
   "skill_name": "mongodb-expert",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Functional evaluation suite for mongodb-expert hub verifying spoke routing, architecture guidance, and domain invariants.",
   "evals": [
     {
@@ -88,6 +88,126 @@
           "name": "no blind resource overprovisioning",
           "check": "does not recommend blindly increasing memory or CPU without diagnostic evidence",
           "type": "negative"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "mongodb-expert-plan-cache-and-pinning",
+      "prompt": "Our orders query started using a different index after a deploy and p95 tripled. explain() shows a different winningPlan than last week. How do I tell if the plan cache is stale and how do I pin the index we want so it survives restarts?",
+      "expected_output": "Routes to references/mongodb-explain-plans-and-query-planner.md, explains reading winningPlan/rejectedPlans and executionStats counters, plan cache replanning and eviction, and pinning with setQuerySettings (8.0+) instead of deprecated index filters or a bare hint().",
+      "files": [],
+      "assertions": [
+        {
+          "name": "explain spoke routing",
+          "check": "names references/mongodb-explain-plans-and-query-planner.md as the reference to load",
+          "type": "structural"
+        },
+        {
+          "name": "plan cache diagnosis",
+          "check": "explains how to check whether a cached plan is stale (planCacheShapeHash or plan cache stats) rather than only suggesting a hint",
+          "type": "content"
+        },
+        {
+          "name": "persistent pinning",
+          "check": "recommends query settings (setQuerySettings) or hint() with the trade-off, and does not present index filters as the current approach",
+          "type": "content"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "mongodb-expert-compound-index-key-order",
+      "prompt": "I filter on status (equality), sort by createdAt, and range-filter on price. What compound index key order should I use, and why does explain show totalDocsExamined much larger than nReturned?",
+      "expected_output": "Routes to references/mongodb-compound-index-design.md, applies ESR (equality, sort, range) with the ERS exception, and ties the docsExamined gap to key order or selectivity.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "compound index spoke routing",
+          "check": "names references/mongodb-compound-index-design.md, not only mongodb-indexes-deep",
+          "type": "structural"
+        },
+        {
+          "name": "ESR ordering",
+          "check": "proposes status, createdAt, price (equality, sort, range) and states the rule",
+          "type": "content"
+        },
+        {
+          "name": "examined-vs-returned diagnosis",
+          "check": "explains that a large totalDocsExamined/nReturned ratio signals a poorly ordered or non-selective index",
+          "type": "content"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "mongodb-expert-keyset-pagination",
+      "prompt": "Page 4000 of our product listing takes seconds because we use skip and limit with a sort. How should I rewrite the query?",
+      "expected_output": "Routes to references/mongodb-query-shape-optimization.md, replaces skip/limit with keyset (range on the sort key plus a unique tiebreaker), and requires an index matching the sort.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "query-shape spoke routing",
+          "check": "names references/mongodb-query-shape-optimization.md",
+          "type": "structural"
+        },
+        {
+          "name": "keyset rewrite",
+          "check": "shows a range predicate on the last seen sort value and recommends a unique tiebreaker such as _id",
+          "type": "content"
+        },
+        {
+          "name": "supporting index",
+          "check": "states that an index matching the sort order is required so the sort is not blocking",
+          "type": "content"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "mongodb-expert-hide-index-before-drop",
+      "prompt": "We think an index on a 2 TB collection is unused. How do we confirm it is safe to drop without risking a slow rebuild if we are wrong?",
+      "expected_output": "Routes to references/mongodb-special-indexes-and-index-builds.md, explains hideIndex (index still maintained, invisible to the planner), observation window, then drop or unhide; mentions $indexStats.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "special-indexes spoke routing",
+          "check": "names references/mongodb-special-indexes-and-index-builds.md",
+          "type": "structural"
+        },
+        {
+          "name": "hide-before-drop procedure",
+          "check": "describes hiding the index, observing, then dropping or unhiding, and notes a hidden index is still maintained",
+          "type": "content"
+        },
+        {
+          "name": "usage evidence",
+          "check": "mentions $indexStats (or the explain/profiler evidence) as the check for use",
+          "type": "content"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "mongodb-expert-disambiguate-fix-loop-vs-live-mcp",
+      "prompt": "Take this aggregation pipeline and iteratively optimize it until explain looks good, applying each fix: [{$match:{status:'A'}},{$sort:{ts:-1}},{$limit:50}]. There is no live cluster connected.",
+      "expected_output": "Loads references/deep-mongodb-mql-query-optimizer.md and runs its review-and-fix workflow from the file; does not defer to a live-cluster MCP skill and does not claim deep-mongodb-mql-query-optimizer is a separate installed skill.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "dmqo reference routing",
+          "check": "names references/deep-mongodb-mql-query-optimizer.md as the workflow source",
+          "type": "structural"
+        },
+        {
+          "name": "no live-cluster deferral",
+          "check": "does not hand off to mongodb:mongodb-query-optimizer when no cluster is connected",
+          "type": "content"
+        },
+        {
+          "name": "index-backed sort",
+          "check": "recommends an index on (status, ts) so the sort and limit are index-backed",
+          "type": "content"
         }
       ]
     }

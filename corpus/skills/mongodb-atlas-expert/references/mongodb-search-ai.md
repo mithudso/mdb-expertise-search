@@ -826,6 +826,7 @@ db.articles.aggregate([
 > RAG corpus, tenant/PII isolation, and the encryption-vs-searchable-vector
 > constraint are covered in the `atlas-vector-search-pii-isolation` skill;
 > prompt-injection defense for the LLM layer in `rag-prompt-injection-defense`;
+> why the stored embedding is itself sensitive in `embedding-inversion-threat-model`;
 > and bank model-risk/governance in `bank-genai-model-risk-governance`.
 
 ---

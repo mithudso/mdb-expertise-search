@@ -1,5 +1,5 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-expert` hub.** Created by deep research 2026-10-19; research dir `<local-path>
+> **Reference file — part of the `mongodb-expert` hub.** Created by `/dr` deep research 2026-10-19; research dir `<local-path>`.
 
 ---
 name: mongodb-special-indexes-and-index-builds
@@ -14,7 +14,7 @@ whenToUse:
   - "estimate what an extra index costs on writes and RAM"
 keywords: ["wildcard index", "compound wildcard index", "wildcardProjection", "hidden index", "hideIndex", "index build", "hybrid index build", "commitQuorum", "setIndexCommitQuorum", "rolling index build", "index build conflict", "index overhead", "write amplification", "totalIndexSize", "prefix compression"]
 tags: ["mongodb", "indexes", "index-builds", "wildcard", "hidden-index"]
-provenance: "deep research · <local-path>
+provenance: "/dr · <local-path>"
 ---
 
 # MongoDB Wildcard and Hidden Indexes, Index Builds and Index Overhead

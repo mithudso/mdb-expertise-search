@@ -214,6 +214,8 @@ MongoDB Atlas CFN resources (`MongoDB::Atlas::*`) deploy Atlas infrastructure as
 **Limitation**: CloudFormation only deploys Atlas clusters to AWS — Azure/GCP require Terraform or CDK.
 **Resource types**: `MongoDB::Atlas::Cluster`, `MongoDB::Atlas::DatabaseUser`, `MongoDB::Atlas::NetworkPeering`, `MongoDB::Atlas::PrivateEndpointService`
 
+**Status (2026)**: 17/26 target Atlas features shipped in CFN; remaining 9 in progress.
+
 ### Terraform Atlas Provider
 
 Provider: `mongodb/mongodbatlas` — version 2.12.0 (May 2026), 72.5M downloads, 139 versions.
@@ -311,6 +313,22 @@ Atlas is listed on AWS Marketplace:
 - **ISV Workload Migration Program (WMP)**: direct credit disbursement to end customers for eligible SaaS deployments through Marketplace
 - **Migration Acceleration Program (MAP)**: AWS credits for customers migrating workloads to AWS; applicable when migrating on-prem MongoDB to Atlas on AWS
 - **Scope restriction**: AWS-funded days may not apply to on-prem-only MongoDB work unless tied to an Atlas consumption or migration path
+
+### Competitive Dynamics
+
+AWS offers competing database services:
+- **Amazon DocumentDB**: MongoDB-compatible (wire protocol) managed service
+- **Amazon DynamoDB**: key-value/document NoSQL service
+- **Aurora PostgreSQL**: relational alternative
+
+**Coexistence**: MongoDB and AWS maintain a strategic partnership despite competition. Atlas runs on AWS infrastructure; MongoDB is an Advanced Technology Partner. Joint reference architectures, re:Invent sessions, and co-marketing continue. The partnership is commercially motivated — Atlas consumption on AWS generates AWS infrastructure revenue.
+
+### Deal Patterns
+
+- **Commit-and-consume**: customer commits to a spend level on Atlas via Marketplace; consumption draws down the commitment
+- **EDP alignment**: Atlas purchases through Marketplace count toward the customer's AWS EDP commit, making Atlas spend "free" against existing AWS commitments
+- **Private offers**: negotiated pricing for enterprise customers; can include multi-year terms, custom SLAs
+- **Co-sell**: AWS sales team refers opportunities to MongoDB; MongoDB refers opportunities to AWS. Both track via ACE pipeline.
 
 ---
 
