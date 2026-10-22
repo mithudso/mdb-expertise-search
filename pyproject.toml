@@ -17,6 +17,8 @@ dependencies = ["numpy>=1.26", "ollama-client @ git+https://github.com/mithudso/
 tui = ["textual>=0.80", "rich>=13"]
 lsp = ["pygls>=2.0", "lsprotocol>=2025.0"]
 mcp = ["mcp>=2.0"]
+# In-process query embeddings (no Ollama process). Not part of `all`: onnxruntime has no wheel for the newest Python.
+onnx = ["onnxruntime>=1.18", "tokenizers>=0.19", "huggingface_hub>=0.23"]
 # `ai` is opt-in and not part of `all`: ai-auth is a private repo, so unauthenticated installs (CI) must not pull it.
 ai = ["ai-auth @ git+https://github.com/mithudso/ai-auth.git"]
 all = ["mdb-expertise-search[tui,lsp,mcp]"]

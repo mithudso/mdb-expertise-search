@@ -3,7 +3,8 @@
 | Module | Purpose | Key API |
 |---|---|---|
 | `mdbx/corpus.py` | Discover, classify and chunk corpus files | `iter_chunks`, `chunk_text`, `classify`, `Chunk` |
-| `mdbx/embed.py` | Ollama `/api/embed` client (stdlib `urllib`), L2-normalised output | `embed`, `embed_query`, `EmbedError` |
+| `mdbx/embed.py` | Embedding front door: Ollama (via `ollama-client`) or in-process ONNX per `MDBX_EMBED_BACKEND` (`auto`/`ollama`/`onnx`), L2-normalised output | `embed`, `embed_query`, `backend`, `EmbedError` |
+| `mdbx/embed_onnx.py` | In-process nomic-embed-text-v1.5 fp32 (onnxruntime + tokenizers, mean pooling); `mdbx embed-fetch` downloads the model | `embed`, `fetch`, `available`, `OnnxUnavailable` |
 | `mdbx/index.py` | SQLite schema, keyword and semantic index builds, stats | `connect`, `build_keyword`, `build_semantic`, `stats` |
 | `mdbx/search.py` | Keyword, semantic and hybrid ranking; hybrid records a semantic-fallback note instead of degrading silently | `search(notes=…)`, `keyword`, `semantic`, `hybrid`, `fallback_note`, `VectorStore`, `Hit` |
 | `mdbx/providers.py` | Adapter over the shared `ai-auth` library (optional `ai` extra): credentials for Claude / Codex / Antigravity / Glean, Apple Intelligence fallback, corpus-grounded prompts for `mdbx ask`, Glean search | `get_auth`, `auth_cli`, `build_context`, `ask`, `glean_search`, `available`, `INSTALL_HINT` |

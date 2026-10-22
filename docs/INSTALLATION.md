@@ -6,6 +6,20 @@ Prerequisites: Python ≥ 3.11; optional [Ollama](https://ollama.com) with `nomi
 python3 -m venv .venv && .venv/bin/pip install -e '.[all]'   # extras: tui, lsp, mcp
 .venv/bin/mdbx index && .venv/bin/mdbx stats     # expect chunks > 0 (and vectors > 0 with Ollama)
 ```
+## Semantic search without Ollama
+
+Search embeds only the query at run time; document vectors are already in the index. Install the `onnx` extra
+(Python 3.11–3.13; `onnxruntime` has no wheel for 3.15) and download the model once (~550 MB, Hugging Face cache):
+
+```bash
+.venv/bin/pip install -e '.[onnx]' && .venv/bin/mdbx embed-fetch
+```
+
+`MDBX_EMBED_BACKEND` = `auto` (default: Ollama first, in-process model when Ollama is unreachable), `ollama`, or
+`onnx` (never contacts Ollama). The model is nomic-embed-text v1.5 fp32, the same model Ollama serves; vectors match
+an Ollama-built index (mean cosine 0.999), so no reindex. `MDBX_ONNX_MODEL=DIR` points at a folder with
+`model.onnx` + `tokenizer.json` for offline installs. Do not swap in the int8 export: its vectors differ (0.94).
+
 Upgrade: `git pull && .venv/bin/pip install -e '.[tui]' && .venv/bin/mdbx index`.
 Uninstall: `pip uninstall mdb-expertise-search` and delete `data/`.
 

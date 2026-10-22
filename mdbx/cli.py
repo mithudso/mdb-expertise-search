@@ -105,6 +105,19 @@ def cmd_tui(args) -> int:
     return 0
 
 
+def cmd_embed_fetch(args) -> int:
+    from . import embed_onnx
+
+    try:
+        path = embed_onnx.fetch()
+    except embed_onnx.OnnxUnavailable as exc:
+        _say(str(exc))
+        return 1
+    print(f"in-process embedding model ready: {path}")
+    print("Semantic search now works without Ollama (MDBX_EMBED_BACKEND=onnx forces it; default auto uses Ollama first).")
+    return 0
+
+
 def cmd_recipes(args) -> int:
     from . import recipes as rec
 
@@ -346,6 +359,10 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--allow-untracked", action="store_true",
                    help="export a corpus outside git (only when every file in it may be shared)")
     s.set_defaults(fn=cmd_export_web)
+
+    s = sub.add_parser("embed-fetch", help="download the in-process embedding model (~550 MB; needs the onnx extra) "
+                                           "so semantic search runs without Ollama")
+    s.set_defaults(fn=cmd_embed_fetch)
 
     s = sub.add_parser("tui", help="interactive MongoDB expertise browser")
     s.set_defaults(fn=cmd_tui)
