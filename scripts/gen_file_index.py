@@ -7,7 +7,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PURPOSE = {
     "mdbx/corpus.py": "Corpus discovery, classification, chunking",
-    "mdbx/embed.py": "Ollama embedding client",
+    "mdbx/embed.py": "Embedding client: Ollama or in-process ONNX",
+    "mdbx/embed_onnx.py": "In-process nomic-embed-text ONNX embedder",
     "mdbx/index.py": "SQLite schema + keyword/semantic index builds",
     "mdbx/search.py": "Keyword, semantic, hybrid ranking",
     "mdbx/cli.py": "mdbx command entry point",

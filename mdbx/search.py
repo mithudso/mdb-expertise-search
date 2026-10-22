@@ -209,7 +209,10 @@ def hybrid(
 
 def fallback_note(exc: Exception) -> str:
     """One line telling the user that semantic search did not run and why."""
-    return f"semantic search unavailable ({exc}); showing keyword results only"
+    note = f"semantic search unavailable ({exc}); showing keyword results only"
+    if not embedmod.embed_onnx.available():
+        note += " (to run without Ollama: pip install 'mdb-expertise-search[onnx]' && mdbx embed-fetch)"
+    return note
 
 
 def search(con, query, mode="hybrid", limit=10, *, notes: list[str] | None = None, **kw) -> list[Hit]:

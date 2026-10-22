@@ -10,6 +10,9 @@
   not; customer names were slipping past the built-in markers).
 - New `scripts/corpus_autoupdate.py` (launchd agent, own clone, sweep gate, commit + push) with tests in
   `tests/test_corpus_autoupdate.py`.
+- Shipped the in-process embedder: `mdbx/embed_onnx.py`, `MDBX_EMBED_BACKEND=auto|ollama|onnx`, `mdbx embed-fetch`,
+  `onnx` extra, `tests/test_embed_backend.py`, `tests/conftest.py` (forces `ollama` in tests). Denylist now also holds
+  the customer names from the TAM assignments sheet (OpenAI/Splunk/Stripe/Wise left out: they are products in public docs).
 - Finding: in-process query embedding is feasible. nomic-embed-text-v1.5 fp32 ONNX (onnxruntime + tokenizers,
   mean pooling) matches the stored Ollama vectors at mean cosine 0.999 (13 ms/query); the int8 ONNX only 0.94.
 
