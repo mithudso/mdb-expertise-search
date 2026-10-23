@@ -1,0 +1,73 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB Major-Version Upgrade Regression Detection",
+  "slug": "mongodb-major-version-upgrade-regression-detection",
+  "version": "1.4.1",
+  "generated": "2026-10-23",
+  "summary": "Source-anchored research for MongoDB Major-Version Upgrade Regression Detection. Run status: COMPLETED.",
+  "rights": "quote",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 8,
+  "kept_units": 8,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 4,
+    "www.percona.com": 2,
+    "arxiv.org": 1,
+    "learn.percona.com": 1,
+    "floatingpoint.sorint.it": 0
+  },
+  "facets": {
+    "structure": 1,
+    "mechanism": 3,
+    "facts": 4
+  },
+  "relations": {
+    "about": 8
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 2244,
+      "tokens": 553
+    },
+    "llms-full.txt": {
+      "bytes": 7307,
+      "tokens": 1813
+    },
+    "llms-small.txt": {
+      "bytes": 6694,
+      "tokens": 1664
+    },
+    "llms-facts.txt": {
+      "bytes": 6750,
+      "tokens": 1678
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 747,
+      "tokens": 184
+    },
+    "units.jsonl": {
+      "bytes": 11601,
+      "tokens": 2900
+    }
+  },
+  "research_status": "COMPLETED",
+  "canonical_artifact_sha256": "0873d7b6311e63f837cfbb7525930975837af466138b7b3aaf469a9cf05f1d5a",
+  "canonical_concept_id": "concept:7839e26a30af8fd9cdebabe941c0341e99fcd14c371a08714bb1f12f48f839eb"
+}
