@@ -44,3 +44,4 @@
     agent to keep the corpus here up to date, it needs to be a copy because it will be downloaded via the github repo.
     Also is there a way to package the symantic search such that a separate ollama process isn't required"
     (→ `scripts/sync_corpus.sh`, `scripts/corpus_autoupdate.py`, ONNX embedding parity test)
+14. "Write a small install script that does all of what you need with one command" (→ `scripts/install.sh`)

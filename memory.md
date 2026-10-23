@@ -1,5 +1,10 @@
 # memory.md — operator log
 
+## 2026-10-22 — one-command installer
+- `scripts/install.sh`: pull, `.venv` on Python 3.11–3.13 (recreated when older/newer), `.[dev,onnx]`, `mdbx embed-fetch`,
+  `mdbx index`, corpus auto-update agent (macOS), smoke test. Flags `--no-model`, `--no-index`, `--no-agent`.
+  Needed because the default `python3` here is 3.15 (no onnxruntime wheel) and the user's venv was 3.14.
+
 ## 2026-10-22 — corpus refresh + scheduled updater
 - Corpus refreshed from the skill tree and `~/.global-ai-hub/llms-concepts`: six new `mongodb-*.llms` families
   (cost-optimization, counts/cursors/read path, sort and pagination, MCP read-only/permissions, two dated Atlas
