@@ -1,0 +1,77 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB 8.0 WT Improvements (TCMalloc, ExpressPlan)",
+  "slug": "mongodb-8-0-wt-improvements-tcmalloc-expressplan",
+  "version": "1.4.1",
+  "generated": "2026-10-23",
+  "summary": "Source-anchored research for MongoDB 8.0 WT Improvements (TCMalloc, ExpressPlan). Run status: COMPLETED.",
+  "rights": "quote",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 22,
+  "kept_units": 22,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 11,
+    "www.percona.com": 4,
+    "jira.mongodb.org": 3,
+    "google.github.io": 3,
+    "www.techempower.com": 1
+  },
+  "facets": {
+    "structure": 2,
+    "mechanism": 2,
+    "how-to": 2,
+    "measures": 4,
+    "problems": 2,
+    "comparisons": 3,
+    "facts": 7
+  },
+  "relations": {
+    "about": 22
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 2944,
+      "tokens": 726
+    },
+    "llms-full.txt": {
+      "bytes": 13192,
+      "tokens": 3271
+    },
+    "llms-small.txt": {
+      "bytes": 11987,
+      "tokens": 2975
+    },
+    "llms-facts.txt": {
+      "bytes": 12630,
+      "tokens": 3134
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 752,
+      "tokens": 186
+    },
+    "units.jsonl": {
+      "bytes": 24584,
+      "tokens": 6144
+    }
+  },
+  "research_status": "COMPLETED",
+  "canonical_artifact_sha256": "41711ed3c35cb2449537b2d4dcf161885ce55626cd0365cdbe1d983df682ff1b",
+  "canonical_concept_id": "concept:2ee48b2ee172047612a041ae4a55e179de424b700aa8d4d57e25f7d37f15dacb"
+}
