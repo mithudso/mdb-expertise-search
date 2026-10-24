@@ -1,0 +1,76 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB 8.0 autoCompact background compaction on Atlas",
+  "slug": "mongodb-8-0-autocompact-background-compaction-on-atlas",
+  "version": "1.4.1",
+  "generated": "2026-10-23",
+  "summary": "Source-anchored research for MongoDB 8.0 autoCompact background compaction on Atlas. Run status: COMPLETED.",
+  "rights": "quote",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 20,
+  "kept_units": 20,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 19,
+    "jira.mongodb.org": 1,
+    "github.com": 0,
+    "www.percona.com": 0,
+    "www.mydbops.com": 0
+  },
+  "facets": {
+    "mechanism": 2,
+    "how-to": 1,
+    "measures": 1,
+    "problems": 4,
+    "comparisons": 3,
+    "facts": 9
+  },
+  "relations": {
+    "about": 20
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    }
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 2802,
+      "tokens": 691
+    },
+    "llms-full.txt": {
+      "bytes": 12000,
+      "tokens": 2976
+    },
+    "llms-small.txt": {
+      "bytes": 11047,
+      "tokens": 2742
+    },
+    "llms-facts.txt": {
+      "bytes": 11445,
+      "tokens": 2841
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 764,
+      "tokens": 189
+    },
+    "units.jsonl": {
+      "bytes": 22582,
+      "tokens": 5645
+    }
+  },
+  "research_status": "COMPLETED",
+  "canonical_artifact_sha256": "8135e096efa8ac79a36930ae3e83ea3b7a884d780a961374d7eb6dabb290962b",
+  "canonical_concept_id": "concept:d895ca5988ea4232127287032756c338f5bc469c2c49007e77b84c498b4e3f55"
+}
