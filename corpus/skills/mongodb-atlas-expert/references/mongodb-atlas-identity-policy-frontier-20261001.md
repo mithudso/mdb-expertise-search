@@ -1,7 +1,11 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-atlas-expert` hub.** Created by `/dr` deep research 2026-10-01; research dir `<local-path>`.
+> **Reference file — part of the `mongodb-atlas-expert` hub.** Formerly the standalone `mongodb-atlas-identity-policy-frontier-20261001` skill.
+> Sibling topics in this family are now reference files under the hubs (`mongodb-atlas-expert`) — **not** standalone
+> skills. Ignore any "use the X skill" / `related_skills` / SKIP pointers below that name a bare sibling
+> skill; load that topic's `references/<name>.md` from the owning hub (see the hub's "Cross-hub map").
 
 ---
+
 name: mongodb-atlas-identity-policy-frontier-20261001
 description: "Configure and troubleshoot Atlas API machine identities, human and workload database federation, and Cedar resource guardrails with explicit control-plane and data-plane boundaries. TRIGGER: Atlas service account OAuth tokens or rotation, workforce or workload OIDC setup, issuer audience group claims, and resource policy compliance or exceptions. SKIP: general database CRUD authorization, self-managed authentication, and encryption configuration."
 version: "1.0.1"

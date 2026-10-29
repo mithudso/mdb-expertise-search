@@ -1,7 +1,11 @@
 <!-- hub-reference-banner -->
-> **Reference file — part of the `mongodb-atlas-expert` hub.** Created by `/dr` deep research 2026-10-01; research dir `<local-path>`.
+> **Reference file — part of the `mongodb-atlas-expert` hub.** Formerly the standalone `mongodb-atlas-hybrid-retrieval-frontier-20261001` skill.
+> Sibling topics in this family are now reference files under the hubs (`mongodb-atlas-expert`) — **not** standalone
+> skills. Ignore any "use the X skill" / `related_skills` / SKIP pointers below that name a bare sibling
+> skill; load that topic's `references/<name>.md` from the owning hub (see the hub's "Cross-hub map").
 
 ---
+
 name: mongodb-atlas-hybrid-retrieval-frontier-20261001
 description: "Diagnose Atlas hybrid retrieval fusion and BM25 explanations with source-scoped operator constraints and relevance evaluation. TRIGGER: MongoDB $rankFusion or $scoreFusion eligibility, ranked or scored pipeline restrictions, fusion normalization, Atlas searchScoreDetails, BM25 term frequency and IDF diagnosis. SKIP: lexical vector prefilters, stored-source optimization, general MongoDB CRUD, embedding model selection, non-Atlas performance predictions."
 version: "1.0.0"

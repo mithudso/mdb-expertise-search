@@ -1,3 +1,11 @@
+<!-- hub-reference-banner -->
+> **Reference file — part of the `mongodb-atlas-expert` hub.** Formerly the standalone `mongodb-atlas-platform-changelog` skill.
+> Sibling topics in this family are now reference files under the hubs (`mongodb-atlas-expert`) — **not** standalone
+> skills. Ignore any "use the X skill" / `related_skills` / SKIP pointers below that name a bare sibling
+> skill; load that topic's `references/<name>.md` from the owning hub (see the hub's "Cross-hub map").
+
+---
+
 ---
 name: mongodb-atlas-platform-changelog
 description: "Dated Atlas and MongoDB platform changes since late 2024 — 8.0/8.2/8.3 server releases, Flex tier migration timeline and limits, Atlas Stream Processing GA, Voyage AI acquisition and Automated Embedding, Lexical Prefilters, $rankFusion hybrid search, Search Nodes GA, Queryable Encryption enhancements, Terraform Provider 2.0, Admin API rate limiting GA, Architecture Center compliance additions, Atlas CLI updates, and AI/agentic positioning. Read this when a version cutoff, GA date, or pricing figure is load-bearing."
