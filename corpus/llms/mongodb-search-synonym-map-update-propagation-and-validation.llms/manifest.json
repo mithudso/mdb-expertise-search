@@ -1,0 +1,71 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB Search synonym map update propagation and validation",
+  "slug": "mongodb-search-synonym-map-update-propagation-and-validation",
+  "version": "1.4.1",
+  "generated": "2026-10-29",
+  "summary": "Source-anchored research for MongoDB Search synonym map update propagation and validation. Run status: COMPLETED.",
+  "rights": "quote",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 9,
+  "kept_units": 9,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 8,
+    "www.reddit.com": 1
+  },
+  "facets": {
+    "problems": 4,
+    "facts": 5
+  },
+  "relations": {
+    "about": 9
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    },
+    "defined": 0,
+    "undefined": 1
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 1678,
+      "tokens": 413
+    },
+    "llms-full.txt": {
+      "bytes": 5102,
+      "tokens": 1263
+    },
+    "llms-small.txt": {
+      "bytes": 3908,
+      "tokens": 969
+    },
+    "llms-facts.txt": {
+      "bytes": 4265,
+      "tokens": 1057
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 787,
+      "tokens": 194
+    },
+    "units.jsonl": {
+      "bytes": 8464,
+      "tokens": 2115
+    }
+  },
+  "research_status": "COMPLETED",
+  "canonical_artifact_sha256": "02084321e97cbe5ed81d35ce14c08f0acb40a3f8705fe98bf779b0443864aa4a",
+  "canonical_concept_id": "concept:e737f7569e7e6f745728a1d2a58b5cbf68831e2252ab41d2216fdcfa86b47678"
+}

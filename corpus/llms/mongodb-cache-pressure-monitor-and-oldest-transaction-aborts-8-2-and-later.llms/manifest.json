@@ -1,0 +1,76 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB cache-pressure monitor and oldest-transaction aborts (8.2 and later)",
+  "slug": "mongodb-cache-pressure-monitor-and-oldest-transaction-aborts-8-2-and-later",
+  "version": "1.4.1",
+  "generated": "2026-10-31",
+  "summary": "Source-anchored research for MongoDB cache-pressure monitor and oldest-transaction aborts (8.2 and later). Run status: COMPLETED.",
+  "rights": "quote",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 13,
+  "kept_units": 13,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "github.com": 8,
+    "minervadb.com": 2,
+    "www.mongodb.com": 2,
+    "jira.mongodb.org": 1,
+    "www.netdata.cloud": 0
+  },
+  "facets": {
+    "structure": 1,
+    "mechanism": 6,
+    "problems": 1,
+    "facts": 5
+  },
+  "relations": {
+    "about": 13
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    },
+    "defined": 0,
+    "undefined": 1
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 2614,
+      "tokens": 646
+    },
+    "llms-full.txt": {
+      "bytes": 9087,
+      "tokens": 2254
+    },
+    "llms-small.txt": {
+      "bytes": 7823,
+      "tokens": 1943
+    },
+    "llms-facts.txt": {
+      "bytes": 8100,
+      "tokens": 2012
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 852,
+      "tokens": 211
+    },
+    "units.jsonl": {
+      "bytes": 14972,
+      "tokens": 3743
+    }
+  },
+  "research_status": "COMPLETED",
+  "canonical_artifact_sha256": "b2d3efda40545b734146d4c3194312853660978df53c41fe6c5d1833742bc7d6",
+  "canonical_concept_id": "concept:a0f1008a3e00849dafc7a692b41fc51d59367faaccc3259bfabb29cab6e8ac09"
+}

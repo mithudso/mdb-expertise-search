@@ -1,0 +1,75 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB rolling index builds",
+  "slug": "mongodb-rolling-index-builds",
+  "version": "1.4.1",
+  "generated": "2026-10-30",
+  "summary": "Source-anchored research for MongoDB rolling index builds. Run status: COMPLETED.",
+  "rights": "quote",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 12,
+  "kept_units": 12,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 8,
+    "jira.mongodb.org": 2,
+    "www.percona.com": 1,
+    "oneuptime.com": 1,
+    "dzone.com": 0
+  },
+  "facets": {
+    "mechanism": 3,
+    "problems": 1,
+    "facts": 8
+  },
+  "relations": {
+    "about": 12
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    },
+    "defined": 0,
+    "undefined": 1
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 1899,
+      "tokens": 467
+    },
+    "llms-full.txt": {
+      "bytes": 6917,
+      "tokens": 1713
+    },
+    "llms-small.txt": {
+      "bytes": 6040,
+      "tokens": 1499
+    },
+    "llms-facts.txt": {
+      "bytes": 6123,
+      "tokens": 1519
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 660,
+      "tokens": 163
+    },
+    "units.jsonl": {
+      "bytes": 12321,
+      "tokens": 3080
+    }
+  },
+  "research_status": "COMPLETED",
+  "canonical_artifact_sha256": "9ac7987561380af617e2ec5de087c1199b2d514079d7da7d62a1d4e552c440fc",
+  "canonical_concept_id": "concept:f0cc60d8b3513e03f5ae28bb2796df842c45c3e0b57185150cc1c6f435265858"
+}

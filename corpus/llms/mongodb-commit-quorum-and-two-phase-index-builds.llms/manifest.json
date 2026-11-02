@@ -1,0 +1,77 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB commit quorum and two-phase index builds",
+  "slug": "mongodb-commit-quorum-and-two-phase-index-builds",
+  "version": "1.4.1",
+  "generated": "2026-10-30",
+  "summary": "Source-anchored research for MongoDB commit quorum and two-phase index builds. Run status: COMPLETED.",
+  "rights": "quote",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 16,
+  "kept_units": 16,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 10,
+    "jira.mongodb.org": 2,
+    "github.com": 2,
+    "www.percona.com": 2,
+    "www.mydbops.com": 0
+  },
+  "facets": {
+    "definition": 1,
+    "mechanism": 2,
+    "problems": 3,
+    "comparisons": 4,
+    "facts": 6
+  },
+  "relations": {
+    "about": 16
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    },
+    "defined": 0,
+    "undefined": 1
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 2418,
+      "tokens": 596
+    },
+    "llms-full.txt": {
+      "bytes": 9939,
+      "tokens": 2464
+    },
+    "llms-small.txt": {
+      "bytes": 8898,
+      "tokens": 2209
+    },
+    "llms-facts.txt": {
+      "bytes": 9061,
+      "tokens": 2249
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 740,
+      "tokens": 183
+    },
+    "units.jsonl": {
+      "bytes": 17389,
+      "tokens": 4347
+    }
+  },
+  "research_status": "COMPLETED",
+  "canonical_artifact_sha256": "a3d707a90cea8c7ae21e3dc3a3a3cc82f519b876f1074ef634e7216b23e1105c",
+  "canonical_concept_id": "concept:0496ea6c9bad04819cdbf5accd23add25d6db5105887ad72a30dba7017daa335"
+}

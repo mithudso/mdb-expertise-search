@@ -1,0 +1,77 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB cache-pressure monitor and ticket admission",
+  "slug": "mongodb-cache-pressure-monitor-and-ticket-admission",
+  "version": "1.4.1",
+  "generated": "2026-10-30",
+  "summary": "Source-anchored research for MongoDB cache-pressure monitor and ticket admission. Run status: COMPLETED.",
+  "rights": "quote",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 20,
+  "kept_units": 20,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "github.com": 8,
+    "www.mongodb.com": 4,
+    "www.percona.com": 3,
+    "help.aliyun.com": 2,
+    "www.alibabacloud.com": 2,
+    "jira.mongodb.org": 1
+  },
+  "facets": {
+    "mechanism": 2,
+    "problems": 2,
+    "comparisons": 4,
+    "facts": 12
+  },
+  "relations": {
+    "about": 20
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    },
+    "defined": 0,
+    "undefined": 1
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 2494,
+      "tokens": 616
+    },
+    "llms-full.txt": {
+      "bytes": 11488,
+      "tokens": 2847
+    },
+    "llms-small.txt": {
+      "bytes": 10324,
+      "tokens": 2562
+    },
+    "llms-facts.txt": {
+      "bytes": 10564,
+      "tokens": 2621
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 752,
+      "tokens": 186
+    },
+    "units.jsonl": {
+      "bytes": 21211,
+      "tokens": 5302
+    }
+  },
+  "research_status": "COMPLETED",
+  "canonical_artifact_sha256": "7f2b3432ddf53f4f147dcbbe2dba5efa9cfe9afe2c7bb9bdb1f8d42c7c70f799",
+  "canonical_concept_id": "concept:b38e27840039737ed64e0d119552e7ec17cc73b133ad7d87768609b3150739e2"
+}

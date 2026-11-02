@@ -1,0 +1,78 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB Node.js driver pool sizing under Lambda concurrency",
+  "slug": "mongodb-node-js-driver-pool-sizing-under-lambda-concurrency",
+  "version": "1.4.1",
+  "generated": "2026-10-31",
+  "summary": "Source-anchored research for MongoDB Node.js driver pool sizing under Lambda concurrency. Run status: COMPLETED.",
+  "rights": "quote",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 18,
+  "kept_units": 18,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 14,
+    "mongoosejs.com": 1,
+    "docs.aws.amazon.com": 1,
+    "jira.mongodb.org": 1,
+    "www.anthonywentzel.com": 1,
+    "github.com": 0
+  },
+  "facets": {
+    "mechanism": 6,
+    "how-to": 1,
+    "problems": 1,
+    "comparisons": 3,
+    "facts": 7
+  },
+  "relations": {
+    "about": 18
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    },
+    "defined": 0,
+    "undefined": 1
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 2772,
+      "tokens": 685
+    },
+    "llms-full.txt": {
+      "bytes": 10974,
+      "tokens": 2720
+    },
+    "llms-small.txt": {
+      "bytes": 10024,
+      "tokens": 2487
+    },
+    "llms-facts.txt": {
+      "bytes": 10012,
+      "tokens": 2484
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 784,
+      "tokens": 194
+    },
+    "units.jsonl": {
+      "bytes": 20286,
+      "tokens": 5071
+    }
+  },
+  "research_status": "COMPLETED",
+  "canonical_artifact_sha256": "565586def7d5a6f6c83f3ca9e6a4a3f8dbdccd916f3330a01633e5a6d68f8745",
+  "canonical_concept_id": "concept:0a1ad1e3a0d4398d36794755e0951f9c1e69caeb1e87d8836de4b24bad38d419"
+}

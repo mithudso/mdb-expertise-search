@@ -1,0 +1,76 @@
+{
+  "kind": "concept",
+  "concept": "MongoDB Search searchNodePreference routing and result consistency",
+  "slug": "mongodb-search-searchnodepreference-routing-and-result-consistency",
+  "version": "1.4.1",
+  "generated": "2026-10-29",
+  "summary": "Source-anchored research for MongoDB Search searchNodePreference routing and result consistency. Run status: COMPLETED.",
+  "rights": "quote",
+  "budget_tokens": 8000,
+  "base_url": null,
+  "inputs": [],
+  "scanned_units": null,
+  "harvested_units": 8,
+  "kept_units": 8,
+  "dropped_by_classification": 0,
+  "dropped_lead_ins": 0,
+  "sources": {
+    "www.mongodb.com": 6,
+    "jira.mongodb.org": 1,
+    "docs.percona.com": 1
+  },
+  "facets": {
+    "definition": 1,
+    "structure": 1,
+    "mechanism": 1,
+    "problems": 1,
+    "comparisons": 1,
+    "facts": 3
+  },
+  "relations": {
+    "about": 8
+  },
+  "lexicon": {
+    "terms": 1,
+    "zero_hit": [],
+    "by_relation": {
+      "self": 1
+    },
+    "defined": 0,
+    "undefined": 1
+  },
+  "conflicts": 0,
+  "semantic": {
+    "units": 0,
+    "scored": 0
+  },
+  "files": {
+    "llms.txt": {
+      "bytes": 2517,
+      "tokens": 620
+    },
+    "llms-full.txt": {
+      "bytes": 6055,
+      "tokens": 1501
+    },
+    "llms-small.txt": {
+      "bytes": 5328,
+      "tokens": 1322
+    },
+    "llms-facts.txt": {
+      "bytes": 5161,
+      "tokens": 1281
+    },
+    "llms-vocabulary.txt": {
+      "bytes": 811,
+      "tokens": 200
+    },
+    "units.jsonl": {
+      "bytes": 8977,
+      "tokens": 2244
+    }
+  },
+  "research_status": "COMPLETED",
+  "canonical_artifact_sha256": "02084321e97cbe5ed81d35ce14c08f0acb40a3f8705fe98bf779b0443864aa4a",
+  "canonical_concept_id": "concept:8b8af506c7f2ea514ab1e3d50d92fff5646463bb5bafe1952bd0c57aefc66ed0"
+}
