@@ -298,3 +298,22 @@ Final local Python validation passed686 tests with2 explicit platform/model skip
 Ruff passed. Required final-head and postmerge matrix outcomes are recorded in
 PR7 and the external delivery receipt. Both blind slots remain spent and the
 optimizer remains BLIND-AUDIT-DISSENT.
+
+### Completed-rename rollback correction
+
+CI43320069281 passed the Linux descendant proof and exposed a separate package
+rollback defect. A synthetic exception immediately after a successful metadata
+rename occurred before publish_entries recorded that inode as published.
+Rollback preserved both versions but left new metadata beside the previous ZIP.
+Different build timestamps in actual CI exposed a mismatch that same-second
+local runs had masked. The regression now advances a synthetic clock on every
+build, and fails deterministically before the fix.
+
+Publication records backup and candidate identities before attempting their
+renames. Rollback still evacuates only the exact candidate inode and exclusively
+restores the backup, preserving an uncooperative writer's replacement. Faults
+before publication, after publication and after moving the old generation now
+restore the original pair. Targeted publication/tooling regressions passed31
+tests; the full local suite again passed686 tests with2 documented skips and Ruff
+passed. The wheel was rebuilt for the changed safety helper. This is a focused
+ordinary preservation repair; no third blind gate or serialization change occurs.

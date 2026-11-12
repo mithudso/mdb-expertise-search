@@ -288,10 +288,14 @@ def publish_entries(directory, staged, names, *, lock_name):
                         if not (stat.S_ISREG(old.st_mode) or stat.S_ISDIR(old.st_mode)):
                             raise ValueError('unsupported previous generation member')
                         backup = recovery(position, 'previous')
-                        _rename_exclusive(name, backup, src_dir_fd=parent, dst_dir_fd=parent)
                         backups[name] = backup
-                    _rename_exclusive(name, name, src_dir_fd=source, dst_dir_fd=parent)
+                        _rename_exclusive(name, backup, src_dir_fd=parent, dst_dir_fd=parent)
+                    # Record intent before the syscall: interruption can arrive
+                    # after the move succeeds but before Python resumes. Rollback
+                    # still evacuates only the exact candidate inode, never a
+                    # concurrent writer's replacement.
                     published[name] = candidates[name]
+                    _rename_exclusive(name, name, src_dir_fd=source, dst_dir_fd=parent)
                 os.fsync(parent)
                 if not _same_directory(parent, directory):
                     raise ValueError('publication directory moved; held generation retained')

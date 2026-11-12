@@ -190,7 +190,16 @@ def test_release_metadata_archive_and_identity_fail_controlled(tmp_path,monkeypa
 
 
 def test_package_requires_directories_captures_manifest_and_rolls_back_pair(tmp_path,monkeypatch):
+    import datetime as dt
+    from types import SimpleNamespace
+
     m=module('package_chrome_extension');ext=tmp_path/'editors/chrome';ext.mkdir(parents=True)
+    ticks = iter(range(60))
+    class AdvancingClock:
+        @staticmethod
+        def now(zone):
+            return dt.datetime(2026, 1, 1, 0, 0, next(ticks), tzinfo=zone)
+    monkeypatch.setattr(m, 'dt', SimpleNamespace(datetime=AdvancingClock, UTC=dt.UTC))
     for name in m.RUNTIME:(ext/name).write_text('synthetic')
     for name in ['lib','icons']:(ext/name).mkdir()
     (ext/'manifest.json').write_text('{"version":"1.0"}');(ext/'package.json').write_text('{"version":"1.0"}')
@@ -216,6 +225,15 @@ def test_package_requires_directories_captures_manifest_and_rolls_back_pair(tmp_
             raise OSError('synthetic after metadata publication')
         return result
     monkeypatch.setattr(safety,'_rename_exclusive',after_publish);assert m.main()==1
+    assert failed == [1] and (output.read_bytes(),metadata.read_bytes())==old
+    failed.clear()
+    def after_backup(source,destination,*args,**kwargs):
+        result=real(source,destination,*args,**kwargs)
+        if source==output.name and destination.endswith('-previous') and not failed:
+            failed.append(1)
+            raise OSError('synthetic after previous generation move')
+        return result
+    monkeypatch.setattr(safety,'_rename_exclusive',after_backup);assert m.main()==1
     assert failed == [1] and (output.read_bytes(),metadata.read_bytes())==old
     (ext/'lib').rmdir();assert m.main()==1
     (ext/'lib').mkdir();(ext/'manifest.json').write_text('{"version":"0.0"}');(ext/'package.json').write_text('{"version":"0.0"}')

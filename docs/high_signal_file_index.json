@@ -187,7 +187,7 @@
   {
     "path": "docs/code-deep-optimizer-2026-11-12.md",
     "purpose": "docs/config",
-    "bytes": 32878
+    "bytes": 34071
   },
   {
     "path": "docs/codebase-overview.md",
@@ -232,7 +232,7 @@
   {
     "path": "docs/repo-bootstrap-audit-2026-11-12.md",
     "purpose": "docs/config",
-    "bytes": 22037
+    "bytes": 23230
   },
   {
     "path": "docs/requirements.md",
@@ -722,7 +722,7 @@
   {
     "path": "mdbx/safety.py",
     "purpose": "docs/config",
-    "bytes": 20460
+    "bytes": 20755
   },
   {
     "path": "mdbx/search.py",
@@ -1197,7 +1197,7 @@
   {
     "path": "tests/test_iteration2_scripts.py",
     "purpose": "docs/config",
-    "bytes": 19532
+    "bytes": 20357
   },
   {
     "path": "tests/test_js_lint_parity.py",

@@ -252,6 +252,25 @@ Ruff passed. Required final-head and postmerge matrix outcomes are recorded in
 PR7 and the external delivery receipt. Both blind slots remain spent and the
 optimizer remains BLIND-AUDIT-DISSENT.
 
+### Completed-rename rollback correction
+
+CI43320069281 passed the Linux descendant proof and exposed a separate package
+rollback defect. A synthetic exception immediately after a successful metadata
+rename occurred before publish_entries recorded that inode as published.
+Rollback preserved both versions but left new metadata beside the previous ZIP.
+Different build timestamps in actual CI exposed a mismatch that same-second
+local runs had masked. The regression now advances a synthetic clock on every
+build, and fails deterministically before the fix.
+
+Publication records backup and candidate identities before attempting their
+renames. Rollback still evacuates only the exact candidate inode and exclusively
+restores the backup, preserving an uncooperative writer's replacement. Faults
+before publication, after publication and after moving the old generation now
+restore the original pair. Targeted publication/tooling regressions passed31
+tests; the full local suite again passed686 tests with2 documented skips and Ruff
+passed. The wheel was rebuilt for the changed safety helper. This is a focused
+ordinary preservation repair; no third blind gate or serialization change occurs.
+
 ## 10. Snapshot, convergence and rollback
 These literal measured outputs are retained. Iteration 1 has 112 exact
 measurements; iteration 2 has 145. The latter emitted 142 CLEAN and 3 CONTINUE
@@ -348,7 +367,7 @@ and ratios remain in convergence-iteration2.json. No distance was estimated.
 | `mdbx/mql/server.py` | 0.1678 | CLEAN |
 | `mdbx/providers.py` | 0.1006 | CLEAN |
 | `mdbx/recipes.py` | 0.1716 | CLEAN |
-| `mdbx/safety.py` | 0.8812 | CLEAN |
+| `mdbx/safety.py` | 0.6726 | CLEAN |
 | `mdbx/search.py` | 0.4672 | CLEAN |
 | `mdbx/tui.py` | 0.0713 | CLEAN |
 | `mdbx/unicode61.py` | 1.0000 | CLEAN |
@@ -388,7 +407,7 @@ and ratios remain in convergence-iteration2.json. No distance was estimated.
 | `tests/test_embed_backend.py` | 0.1006 | CLEAN |
 | `tests/test_generator_preservation.py` | 1.0000 | CLEAN |
 | `tests/test_iteration2_python.py` | 1.0000 | CLEAN |
-| `tests/test_iteration2_scripts.py` | 1.0000 | CLEAN |
+| `tests/test_iteration2_scripts.py` | 0.1676 | CLEAN |
 | `tests/test_js_lint_parity.py` | 0.0408 | CLEAN |
 | `tests/test_js_parity.py` | 0.2925 | CLEAN |
 | `tests/test_lint_preservation.py` | 1.0000 | CLEAN |
@@ -408,7 +427,7 @@ and ratios remain in convergence-iteration2.json. No distance was estimated.
 | `tests/test_web_search.py` | 0.1162 | CLEAN |
 
 
-**FINAL_CONVERGENCE:** Canonical convergence_check.py ran separately for161 files:143 legacy runtime/config/test targets,2 legacy auxiliaries and16 ordinary additions. Exact output artifact SHA256 4b4b09fa582a603fe93436cda250fc8bedda453feba0ddfe420513cbb362f39b:158 local CLEAN,2 CONTINUE,1 NO-PROGRESS. The latter is corpus.py, whose current count includes four retained historical representation defects while the raw gate2 input had two rows; this is not an inferred performance regression. Paired optimizer files retain one schema-advice row each. Local checker labels do not supersede BLIND-AUDIT-DISSENT. Full per-file commands, exact ratios, hashes and outputs remain in convergence-iteration3.json; no whole-repository SequenceMatcher artifact or estimated distances were used.
+**FINAL_CONVERGENCE:** Canonical convergence_check.py ran separately for161 files:143 legacy runtime/config/test targets,2 legacy auxiliaries and16 ordinary additions. Exact output artifact SHA256 e79d83758ab3b17ba5c9eb71c4dc45cebd4c848fa62912b3fc61d784b98f8376:158 local CLEAN,2 CONTINUE,1 NO-PROGRESS. The latter is corpus.py, whose current count includes four retained historical representation defects while the raw gate2 input had two rows; this is not an inferred performance regression. Paired optimizer files retain one schema-advice row each. Local checker labels do not supersede BLIND-AUDIT-DISSENT. Full per-file commands, exact ratios, hashes and outputs remain in convergence-iteration3.json; no whole-repository SequenceMatcher artifact or estimated distances were used.
 
 The external evidence preserves actual per-file measurements, hashes and count summary, and
 links the complete external output. Keep literal local checker labels separate

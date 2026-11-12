@@ -560,7 +560,7 @@
     },
     {
       "path": "mdbx/safety.py",
-      "sha256": "3f76954970d52ded423fdb8017b9a77bb33604c8d314a68fba2d7f48eb99a07d",
+      "sha256": "85c319f3ebf61e8e40efed52cd6e9ca3e601fccc03c0c6c1812f21bba078bb5d",
       "frozen_gate2_sha256": "979da24bfab67fb2d1d94fd2a0641e90188ff464dee032665d47adce15d6983c",
       "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
     },
@@ -824,7 +824,7 @@
     },
     {
       "path": "tests/test_iteration2_scripts.py",
-      "sha256": "b62c93309d316c80bbf3a6a7ac6acda064396efbfe98fc95f115098996c0996c",
+      "sha256": "ca259e2e17209e3ee90645cfa61c2831a815829faa47e3ed7e23d4ef56fc69b3",
       "frozen_gate2_sha256": "6e8d32d08d70fc043e4716ac92fac83bc4c97c58c627303a92b8b34fdfaf51ea",
       "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
     },
