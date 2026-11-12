@@ -16,9 +16,10 @@ import argparse
 import hashlib
 import json
 import math
-import shutil
+import os
 import sys
 import tempfile
+from contextlib import closing, contextmanager
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -26,6 +27,7 @@ sys.path.insert(0, str(ROOT))
 
 from mdbx import corpus as corpusmod
 from mdbx import index as idx
+from mdbx.safety import _directory, _read_bytes, directory_lock, publish_entries
 from mdbx.webexport import WebIndex, export
 
 FIX = ROOT / "tests" / "fixtures" / "search"
@@ -65,23 +67,22 @@ def build(out_index: Path) -> dict:
     corpus_root = FIX / "corpus"
     with tempfile.TemporaryDirectory() as tmp:
         db = Path(tmp) / "fx.sqlite"
-        con = idx.connect(db)
-        idx.build_keyword(con, corpus_root)
-        import array
+        with closing(idx.connect(db)) as con:
+            idx.build_keyword(con, corpus_root)
+            import array
 
-        for c in corpusmod.iter_chunks(corpus_root):
-            vec = array.array("f", fake_vec(f"{c.heading}\n{c.text}"))
-            con.execute("INSERT OR REPLACE INTO vectors(digest, dim, vec) VALUES (?,?,?)",
-                        (c.digest, DIM, vec.tobytes()))
-        con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model', 'fake-hash-32')")
-        con.commit()
-        con.close()
-        if out_index.exists():
-            shutil.rmtree(out_index)
+            for digest, heading, text in con.execute('SELECT digest,MIN(heading),MIN(text) FROM chunks GROUP BY digest ORDER BY digest'):
+                vec = array.array('f', fake_vec(corpusmod.embedding_input(heading, text)))
+                con.execute('INSERT OR REPLACE INTO vector_inputs VALUES (?,?)',
+                            (digest, corpusmod.embedding_input_hash(heading, text)))
+                con.execute('INSERT OR REPLACE INTO vectors(digest, dim, vec) VALUES (?,?,?)',
+                            (digest, DIM, vec.tobytes()))
+            con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model', 'fake-hash-32')")
+            con.commit()
         export(corpus_root, out_index, db=db, allow_untracked=True)
-    meta = json.loads((out_index / "meta.json").read_text())
+    meta = json.loads((out_index / "meta.json").read_text(encoding="utf-8"))
     meta["built_at"] = meta["mdbx_version"] = "fixture"  # keep the committed fixture stable across builds/releases
-    (out_index / "meta.json").write_text(json.dumps(meta, indent=1, ensure_ascii=False), encoding="utf-8")
+    (out_index / "meta.json").write_text(json.dumps(meta, indent=1, ensure_ascii=False), encoding="utf-8", newline="\n")
     wi = WebIndex(out_index)
 
     def dump(hits):
@@ -102,6 +103,21 @@ def build(out_index: Path) -> dict:
     return {"dim": DIM, "results": results}
 
 
+@contextmanager
+def _pair_lock():
+    parent = _directory(FIX)
+    try:
+        with directory_lock(parent, 'search-fixture-pair'):
+            yield parent
+    finally:
+        os.close(parent)
+
+
+def publish_pair(staged: Path) -> None:
+    """Keep the previous pair recoverable if either replacement fails."""
+    publish_entries(FIX, staged, ('index', 'golden.json'), lock_name='search-fixture-pair')
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true")
@@ -111,19 +127,32 @@ def main() -> int:
             tmp_index = Path(tmp) / "index"
             want = json.dumps(build(tmp_index), indent=1) + "\n"
             stale = []
-            if (FIX / "golden.json").read_text() != want:
-                stale.append("golden.json")
-            for f in sorted(tmp_index.iterdir()):
-                cur = FIX / "index" / f.name
-                if not cur.is_file() or cur.read_bytes() != f.read_bytes():
-                    stale.append(f"index/{f.name}")
+            with _pair_lock() as parent:
+                directory = os.open('index', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent)
+                try:
+                    stale.extend('index/' + name for name in os.listdir(directory) if not (tmp_index / name).exists())
+                    if _read_bytes(parent, 'golden.json').decode('utf-8') != want:
+                        stale.append('golden.json')
+                    for file in sorted(tmp_index.iterdir()):
+                        try:
+                            current = _read_bytes(directory, file.name)
+                        except FileNotFoundError:
+                            current = None
+                        if current != file.read_bytes():
+                            stale.append('index/' + file.name)
+                finally:
+                    os.close(directory)
+
         if stale:
             print("stale search fixtures (run scripts/gen_search_golden.py):", ", ".join(stale))
             return 1
         return 0
-    data = build(FIX / "index")
-    (FIX / "golden.json").write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8")
-    print(f"wrote {FIX / 'golden.json'} ({len(data['results'])} queries) and {FIX / 'index'}")
+    with tempfile.TemporaryDirectory(prefix="mdbx-golden-") as temporary:
+        staged = Path(temporary)
+        data = build(staged / "index")
+        (staged / "golden.json").write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8", newline="\n")
+        publish_pair(staged)
+    print("wrote search fixtures")
     return 0
 
 

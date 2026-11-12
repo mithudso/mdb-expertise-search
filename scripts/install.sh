@@ -6,7 +6,8 @@
 # 3. installs mdbx with all extras     6. installs the corpus auto-update agent (macOS launchd), then smoke-tests
 # Re-run any time: every step is idempotent.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+cd "$(dirname "$SCRIPT_PATH")/.."
 
 NO_MODEL=0 NO_INDEX=0 NO_AGENT=0
 for a in "$@"; do
@@ -14,7 +15,7 @@ for a in "$@"; do
     --no-model) NO_MODEL=1 ;;
     --no-index) NO_INDEX=1 ;;
     --no-agent) NO_AGENT=1 ;;
-    -h|--help) sed -n 2,7p "$0"; exit 0 ;;
+    -h|--help) sed -n 2,7p "$SCRIPT_PATH"; exit 0 ;;
     *) echo "unknown option: $a" >&2; exit 2 ;;
   esac
 done
@@ -29,7 +30,14 @@ pick_python() {
   done
   return 1
 }
-PY="$(pick_python)" || { echo "error: need Python 3.11-3.13 (try: brew install python@3.13)" >&2; exit 1; }
+
+
+install_lock="$PWD/.mdbx-install.lock"
+if ! mkdir "$install_lock" 2>/dev/null; then
+  echo "another installer owns this checkout; retry after it exits" >&2
+  exit 1
+fi
+trap 'rmdir "$install_lock" 2>/dev/null || true' EXIT
 
 say "Updating code"
 git pull --ff-only || echo "note: not fast-forwarding (local changes or no upstream); continuing with the current checkout"
@@ -37,14 +45,31 @@ git pull --ff-only || echo "note: not fast-forwarding (local changes or no upstr
 say "Virtualenv (.venv)"
 if [ -x .venv/bin/python ]; then
   cur="$(.venv/bin/python -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
-  case "$cur" in 3.11|3.12|3.13) ;; *) echo "recreating .venv: it uses Python $cur"; rm -rf .venv ;; esac
+  case "$cur" in
+    3.11|3.12|3.13) ;;
+    *)
+      PY="$(pick_python)" || { echo "error: need Python 3.11-3.13; existing .venv preserved" >&2; exit 1; }
+      backup=".venv.pre-install-$(date +%s)-$$"
+      mv .venv "$backup"
+      if ! "$PY" -m venv .venv; then
+        rm -rf .venv
+        mv "$backup" .venv
+        exit 1
+      fi
+      echo "previous virtualenv preserved at $backup"
+      ;;
+  esac
 fi
-[ -x .venv/bin/python ] || "$PY" -m venv .venv
+if [ ! -x .venv/bin/python ]; then
+  PY="$(pick_python)" || { echo "error: need Python 3.11-3.13 (try: brew install python@3.13)" >&2; exit 1; }
+  "$PY" -m venv .venv
+fi
 .venv/bin/python --version
 
 say "Installing mdbx with extras (dev, tui, lsp, mcp, onnx)"
-.venv/bin/pip install -q --upgrade pip
-.venv/bin/pip install -q -e '.[dev,onnx]'
+.venv/bin/python -m ensurepip --upgrade
+.venv/bin/python -m pip install -q --upgrade pip
+.venv/bin/python -m pip install -q -e '.[dev,onnx]'
 
 if [ "$NO_MODEL" = 0 ]; then
   say "Downloading the in-process embedding model (~550 MB, cached after the first run)"
@@ -52,7 +77,7 @@ if [ "$NO_MODEL" = 0 ]; then
 fi
 
 if [ "$NO_INDEX" = 0 ]; then
-  say "Building the search index (embeds with Ollama if it is running, else the in-process model; the first run can take a while)"
+  say "Building the search index (uses a cached in-process model, or an explicitly installed Ollama adapter; --no-model requires one of these)"
   .venv/bin/mdbx index
 fi
 
@@ -69,6 +94,6 @@ fi
 say "Smoke test"
 .venv/bin/mdbx stats
 if [ "$NO_MODEL" = 0 ] && [ "$NO_INDEX" = 0 ]; then
-  MDBX_EMBED_BACKEND=onnx .venv/bin/mdbx search -m semantic -n 1 "why is my sort not using an index" | head -3
+  .venv/bin/mdbx search -m semantic -n 1 "why is my sort not using an index" | head -3
 fi
 say "Done"

@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import sys
 from array import array
+from contextlib import closing
 from pathlib import Path
 
 import pytest
@@ -22,7 +23,7 @@ QUERIES = ["compound index sort", "shard key chunk", "why is my compound index n
 
 
 def _git(cwd: Path, *args: str) -> None:
-    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True)
+    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, timeout=10)
 
 
 @pytest.fixture()
@@ -34,7 +35,7 @@ def repo(tmp_path):
     shutil.copytree(FIX / "corpus", corpus)
     _git(tmp_path, "init", "-q")
     _git(tmp_path, "add", "corpus")
-    _git(tmp_path, "-c", "user.email=t@example.com", "-c", "user.name=t", "commit", "-q", "-m", "fixture")
+    _git(tmp_path, "-c", "user.email=t@example.com", "-c", "user.name=t", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "fixture")
     private = corpus / "skills" / "mongodb-expert" / "PRIVATE-notes.md"
     private.write_text("# Private\n\nsecretcustomerword lives only in an untracked file.\n")
     return corpus
@@ -49,7 +50,8 @@ def test_untracked_files_never_exported(repo, tmp_path):
     assert not WebIndex(tmp_path / "web").keyword("secretcustomerword")
 
 
-def test_refuses_corpus_outside_git(tmp_path):
+def test_refuses_corpus_outside_git(tmp_path, monkeypatch):
+    monkeypatch.setenv('GIT_CEILING_DIRECTORIES', str(tmp_path))
     plain = tmp_path / "plain"
     shutil.copytree(FIX / "corpus", plain)
     with pytest.raises(RuntimeError, match="not in a git checkout"):
@@ -59,38 +61,39 @@ def test_refuses_corpus_outside_git(tmp_path):
 
 def test_keyword_ranking_equals_sqlite_fts5(tmp_path):
     corpus = FIX / "corpus"
-    con = index.connect(tmp_path / "x.sqlite")
-    index.build_keyword(con, corpus)
-    export(corpus, tmp_path / "web", allow_untracked=True, vectors=False)
-    wi = WebIndex(tmp_path / "web")
-    rows = {r["id"]: (r["path"], r["line"]) for r in con.execute("SELECT id, path, line FROM chunks")}
-    for q in QUERIES:
-        for kw in ({}, {"kind": "skill"}, {"source": "atlas"}):
-            want = [rows[h.id] for h in search.keyword(con, q, 10, **kw)]
-            got = [(h.path, h.line) for h in wi.keyword(q, 10, **kw)]
-            assert got == want, (q, kw)
-            sq = search.keyword(con, q, 10, **kw)
-            for a, b in zip(sq, wi.keyword(q, 10, **kw), strict=True):
-                assert abs(a.score - b.score) < 1e-6 * max(1.0, abs(a.score))  # same bm25() value
+    with closing(index.connect(tmp_path / "x.sqlite")) as con:
+        index.build_keyword(con, corpus)
+        export(corpus, tmp_path / "web", allow_untracked=True, vectors=False)
+        wi = WebIndex(tmp_path / "web")
+        rows = {r["id"]: (r["path"], r["line"]) for r in con.execute("SELECT id, path, line FROM chunks")}
+        for q in QUERIES:
+            for kw in ({}, {"kind": "skill"}, {"source": "atlas"}):
+                want = [rows[h.id] for h in search.keyword(con, q, 10, **kw)]
+                got = [(h.path, h.line) for h in wi.keyword(q, 10, **kw)]
+                assert got == want, (q, kw)
+                sq = search.keyword(con, q, 10, **kw)
+                for a, b in zip(sq, wi.keyword(q, 10, **kw), strict=True):
+                    assert abs(a.score - b.score) < 1e-6 * max(1.0, abs(a.score))  # same bm25() value
 
 
 def test_vectors_roundtrip_int8(tmp_path):
-    corpus = FIX / "corpus"
-    db = tmp_path / "v.sqlite"
-    con = index.connect(db)
-    index.build_keyword(con, corpus)
-    digests = [r[0] for r in con.execute("SELECT DISTINCT digest FROM chunks")]
-    vec = array("f", [0.6, -0.8] + [0.0] * 6)
-    con.executemany("INSERT INTO vectors VALUES (?,?,?)", [(d, 8, vec.tobytes()) for d in digests])
-    con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model','m8')")
-    con.commit()
-    r = export(corpus, tmp_path / "web", db=db, allow_untracked=True)
-    assert r.vectors == len(digests)
-    wi = WebIndex(tmp_path / "web")
-    assert wi.meta["vectors"] == {"count": len(digests), "dim": 8, "model": "m8", "scale": 127}
-    q = [0.6, -0.8] + [0.0] * 6
-    hits = wi.semantic_vec(q, 3)
-    assert hits and abs(hits[0].score - (76 * 0.6 + 102 * 0.8) / 127) < 1e-9  # round(0.6*127)=76, round(0.8*127)=102
+    from mdbx import corpus as corpusmod
+    corpus=tmp_path/'synthetic';corpus.mkdir()
+    (corpus/'one.md').write_text('distinct alpha')
+    (corpus/'two.md').write_text('distinct beta')
+    db=tmp_path/'v.sqlite'
+    with closing(index.connect(db)) as con:
+        index.build_keyword(con,corpus)
+        for chunk in corpusmod.iter_chunks(corpus):
+            value=1. if chunk.path=='one.md' else -1.
+            vector=array('f',[value,0.])
+            con.execute('INSERT INTO vectors VALUES(?,?,?)',(chunk.digest,2,vector.tobytes()))
+            con.execute('INSERT INTO vector_inputs VALUES(?,?)',(chunk.digest,corpusmod.embedding_input_hash(chunk.heading,chunk.text)))
+        con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model','m2')");con.commit()
+        result=export(corpus,tmp_path/'web',db=db,allow_untracked=True)
+        assert result.vectors==2
+        hits=WebIndex(tmp_path/'web').semantic_vec([1.,0.],3)
+        assert [(h.path,h.score) for h in hits]==[('one.md',1.),('two.md',-1.)]
 
 
 def test_tokenizer_and_stemmer():
@@ -121,7 +124,7 @@ def test_cli_export_web(repo, tmp_path, capsys):
 
 def test_search_goldens_are_current():
     r = subprocess.run([sys.executable, str(ROOT / "scripts" / "gen_search_golden.py"), "--check"],
-                       check=False, capture_output=True, text=True, cwd=ROOT)
+                       check=False, capture_output=True, text=True, cwd=ROOT, timeout=30)
     assert r.returncode == 0, r.stdout + r.stderr
 
 

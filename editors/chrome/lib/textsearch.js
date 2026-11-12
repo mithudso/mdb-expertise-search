@@ -6,46 +6,19 @@
 // uses the exported int8 vectors; hybrid fuses both with reciprocal-rank fusion (k = 60).
 // The index files are written by `mdbx export-web`; tests/fixtures/search/golden.json pins the output.
 
+import { rawTokenSpans } from "./unicode61.js";
+export { rawTokenSpans };
+
 export const K1 = 1.2;
 export const B = 0.75;
 export const RRF_K = 60;
 export const STOPWORDS = new Set(["a", "an", "and", "are", "as", "at", "be", "but", "by", "do", "does", "for", "from", "how",
   "i", "if", "in", "is", "it", "my", "of", "on", "or", "so", "that", "the", "this", "to", "was", "what", "when", "where",
   "which", "why", "with", "you", "your", "can", "not"]);
-const TOKEN_CHAR = /[\p{L}\p{N}\p{Co}_]/u;
-const WORD = /[\p{L}\p{N}_]+/gu; // Python re \w+
 const PORTER_MAX = 64;
 const enc = new TextEncoder();
 
 // ---- tokenizer
-
-function fold(tok) {
-  return tok.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-}
-
-/** Lower-cased, diacritic-free tokens (FTS5 unicode61 with '_' as a token character), with offsets. */
-export function rawTokenSpans(text) {
-  const out = [];
-  let cur = "";
-  let start = 0;
-  let i = 0;
-  for (const c of text) {
-    if (TOKEN_CHAR.test(c)) {
-      if (!cur) start = i;
-      cur += c;
-    } else if (cur) {
-      const t = fold(cur);
-      if (t) out.push([t, start, i]);
-      cur = "";
-    }
-    i += c.length;
-  }
-  if (cur) {
-    const t = fold(cur);
-    if (t) out.push([t, start, i]);
-  }
-  return out;
-}
 
 export function tokens(text) {
   return rawTokenSpans(text).map(([t]) => porter(t));
@@ -63,6 +36,7 @@ function cons(w, i) {
 }
 
 function measure(w) {
+  w = Array.from(w);
   let n = 0, i = 0;
   const ln = w.length;
   while (i < ln && cons(w, i)) i++;
@@ -76,15 +50,18 @@ function measure(w) {
 }
 
 function hasVowel(w) {
+  w = Array.from(w);
   for (let i = 0; i < w.length; i++) if (!cons(w, i)) return true;
   return false;
 }
 
 function doubleCons(w) {
+  w = Array.from(w);
   return w.length >= 2 && w[w.length - 1] === w[w.length - 2] && cons(w, w.length - 1);
 }
 
 function cvc(w) {
+  w = Array.from(w);
   if (w.length < 3) return false;
   const n = w.length;
   return cons(w, n - 3) && !cons(w, n - 2) && cons(w, n - 1) && !"wxy".includes(w[n - 1]);
@@ -121,7 +98,7 @@ export function porter(w) {
   }
   if (extra) {
     if (w.endsWith("at") || w.endsWith("bl") || w.endsWith("iz")) w += "e";
-    else if (doubleCons(w) && !"lsz".includes(w[w.length - 1])) w = w.slice(0, -1);
+    else if (doubleCons(w) && !"lsz".includes([...w].at(-1))) w = [...w].slice(0, -1).join("");
     else if (measure(w) === 1 && cvc(w)) w += "e";
   }
   // step 1c
@@ -161,15 +138,17 @@ export function porter(w) {
 
 /** Stemmed search terms: words minus stopwords (all words if only stopwords). */
 export function queryTerms(query) {
-  const words = String(query).match(WORD) || [];
-  const kept = words.filter((w) => !STOPWORDS.has(w.toLowerCase()));
-  const use = kept.length ? kept : words;
-  const out = [];
-  for (const w of use) {
-    const t = tokens(w);
-    if (t.length) out.push(t[0]);
-  }
-  return out;
+  const words = rawTokenSpans(String(query)).map(([word]) => word);
+  const kept = words.filter(word => !STOPWORDS.has(word));
+  return (kept.length ? kept : words).map(porter);
+}
+
+
+// Count through one traversal; the iterable boundary also permits deterministic work assertions.
+export function termFrequencies(terms) {
+  const frequencies = new Map();
+  for (const term of terms) frequencies.set(term, (frequencies.get(term) || 0) + 1);
+  return frequencies;
 }
 
 // ---- index
@@ -204,13 +183,14 @@ export class SearchIndex {
   allowed(i, kind, source) {
     const r = this.rows[i];
     if (kind && this.kinds[r[2]] !== kind) return false;
-    return !(source && !this.sources[r[1]].toLowerCase().includes(String(source).toLowerCase()));
+    return !(source && !this.sources[r[1]].replace(/[A-Z]/g, c => c.toLowerCase()).includes(String(source).replace(/[A-Z]/g, c => c.toLowerCase())));
   }
 
   keywordRanked(query, kind = null, source = null) {
     const terms = queryTerms(query);
     if (!terms.length) return [];
-    const uniq = [...new Set(terms)];
+    const frequencies = termFrequencies(terms);
+    const uniq = [...frequencies.keys()];
     for (const mode of ["AND", "OR"]) {
       const scores = new Map();
       const present = new Map();
@@ -220,7 +200,7 @@ export class SearchIndex {
         const [df, off] = v;
         let idf = Math.log((this.n - df + 0.5) / (df + 0.5));
         if (idf <= 0) idf = 1e-6;
-        const qtf = terms.filter((x) => x === t).length;
+        const qtf = frequencies.get(t);
         for (let j = off; j < off + df; j++) {
           const i = this.ids[j];
           const w = this.wts[j];
@@ -240,14 +220,20 @@ export class SearchIndex {
     return [];
   }
 
+  *rankedHits(ranked, via) {
+    for (const [i, score] of ranked) yield this.hit(i, score, via);
+  }
+
   keyword(query, limit = 10, { kind = null, source = null } = {}) {
-    const ranked = this.keywordRanked(query, kind, source).slice(0, limit * 3);
-    return dedupe(ranked.map(([i, s]) => this.hit(i, s, "keyword")), limit);
+    const ranked = this.keywordRanked(query, kind, source);
+    return dedupe(this.rankedHits(ranked, "keyword"), limit);
   }
 
   semanticVec(qv, limit = 10, { kind = null, source = null } = {}) {
     if (!this.vectors) return [];
     const dim = this.dim;
+    if (!Array.isArray(qv) || qv.length !== dim) throw new EmbedError("query embedding dimension does not match the index");
+    if (!qv.every(Number.isFinite)) throw new EmbedError("query embedding must contain finite numbers");
     const ranked = [];
     for (let i = 0; i < this.n; i++) {
       const vi = this.rows[i][6];
@@ -258,7 +244,7 @@ export class SearchIndex {
       ranked.push([i, s / 127.0]);
     }
     ranked.sort((a, b) => b[1] - a[1] || a[0] - b[0]);
-    return dedupe(ranked.slice(0, limit * 3).map(([i, s]) => this.hit(i, s, "semantic")), limit);
+    return dedupe(this.rankedHits(ranked, "semantic"), limit);
   }
 
   hybridVec(query, qv, limit = 10, opts = {}) {
@@ -285,6 +271,7 @@ export class SearchIndex {
     const pi = this.paths.indexOf(path);
     if (pi < 0) return null;
     const parts = this.rows.map((r, i) => [r, i]).filter(([r]) => r[0] === pi).sort((a, b) => a[0][3] - b[0][3]);
+    if (!parts.length) return null;
     return { path, source: this.sources[parts[0][0][1]], kind: this.kinds[parts[0][0][2]],
       chunks: parts.map(([r, i]) => ({ id: i, line: r[3], heading: r[4], text: r[5] })) };
   }
@@ -296,10 +283,11 @@ export class SearchIndex {
 }
 
 export function dedupe(hits, limit) {
+  if (limit <= 0) return [];
   const seen = new Set();
   const out = [];
   for (const h of hits) {
-    const key = h.text.split(/\s+/).filter(Boolean).join(" ").slice(0, 300);
+    const key = h.text.split(/[\u0009-\u000D\u001C-\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]+/u).filter(Boolean).join(" ");
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(h);
@@ -325,8 +313,8 @@ export function snippet(text, query, width = 24) {
     if (count > bestCount) { bestCount = count; best = start; }
   }
   const end = Math.min(spans.length, best + width);
-  const from = spans[best][1];
-  const to = spans[end - 1][2];
+  const from = best === 0 ? 0 : spans[best - 1][2];
+  const to = end === spans.length ? text.length : spans[end][1];
   const segs = [];
   if (best > 0) segs.push({ text: "… ", hit: false });
   let pos = from;
@@ -336,7 +324,8 @@ export function snippet(text, query, width = 24) {
     segs.push({ text: text.slice(s, e), hit: isHit[i] });
     pos = e;
   }
-  if (to < text.length) segs.push({ text: " …", hit: false });
+  if (pos < to) segs.push({ text: text.slice(pos, to), hit: false });
+  if (end < spans.length) segs.push({ text: " …", hit: false });
   return segs.map((g) => ({ ...g, text: g.text.replace(/\s+/g, " ") }));
 }
 
@@ -352,29 +341,36 @@ export async function embedQuery(query, { host = "http://127.0.0.1:11434", model
   fetchImpl = fetch, timeoutMs = 8000 } = {}) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-  let res;
   try {
-    res = await fetchImpl(`${host.replace(/\/$/, "")}/api/embed`, {
+    let res;
+    try {
+      res = await fetchImpl(`${host.replace(/\/$/, "")}/api/embed`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ model, input: ["search_query: " + query] }), signal: ctrl.signal,
-    });
-  } catch (err) {
-    throw new EmbedError(`cannot reach Ollama at ${host} (${err && err.name === "AbortError" ? "timed out" : err.message})`);
-  } finally {
-    clearTimeout(timer);
-  }
+      });
+    } catch (err) {
+      throw new EmbedError(`cannot reach Ollama (${ctrl.signal.aborted || err?.name === "AbortError" ? "timed out" : "connection failed"})`);
+    }
   if (res.status === 403) {
-    throw new EmbedError("Ollama refused the extension (HTTP 403). Allow it with OLLAMA_ORIGINS=chrome-extension://* and restart Ollama.");
+    throw new EmbedError("Ollama refused the extension (HTTP 403). Set OLLAMA_ORIGINS to this extension's exact origin using About-page help, then restart Ollama.");
   }
   if (!res.ok) throw new EmbedError(`Ollama /api/embed returned HTTP ${res.status}`);
   let data;
   try {
     data = await res.json();
-  } catch {
-    throw new EmbedError("Ollama returned a response that is not JSON");
+  } catch (err) {
+    throw new EmbedError(ctrl.signal.aborted || err?.name === "AbortError" ? "Ollama request timed out" : "Ollama returned a response that is not JSON");
   }
   const v = data && Array.isArray(data.embeddings) ? data.embeddings[0] : null;
   if (!Array.isArray(v) || !v.length) throw new EmbedError("Ollama returned no embedding");
-  const n = Math.sqrt(v.reduce((s, x) => s + x * x, 0)) || 1;
-  return v.map((x) => x / n);
+  if (!v.every(Number.isFinite)) throw new EmbedError("Ollama embedding must contain finite numbers");
+  const scale = v.reduce((s, x) => Math.max(s, Math.abs(x)), 0);
+  if (!scale) throw new EmbedError("Ollama returned a zero embedding");
+  const scaled = v.map(x => x / scale);
+  const norm = Math.sqrt(scaled.reduce((s, x) => s + x * x, 0));
+  return scaled.map(x => x / norm);
+  } finally {
+    clearTimeout(timer);
+    ctrl.abort();
+  }
 }

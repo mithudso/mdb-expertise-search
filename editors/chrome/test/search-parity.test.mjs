@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { loadIndex } from "../lib/store.js";
-import { porter, queryTerms, snippet, tokens } from "../lib/textsearch.js";
+import { SearchIndex, porter, queryTerms, snippet, tokens } from "../lib/textsearch.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const FIX = join(here, "..", "..", "..", "tests", "fixtures", "search");
@@ -30,12 +30,22 @@ function strip(hits) {
 
 function same(actual, expected, label) {
   assert.equal(actual.length, expected.length, `${label}: result count`);
-  actual.forEach((a, i) => {
-    const e = expected[i];
+  for (let i = 0; i < expected.length; i++) {
+    assert.ok(Object.hasOwn(actual, i), `${label}[${i}]: result exists`);
+    assert.ok(Object.hasOwn(expected, i), `${label}[${i}]: reference exists`);
+    const a = actual[i], e = expected[i];
+    assert.ok(Number.isFinite(a.score) && Number.isFinite(e.score), `${label}[${i}]: finite numeric score`);
     assert.deepEqual({ ...a, score: 0 }, { ...e, score: 0 }, `${label}[${i}]`);
     assert.ok(Math.abs(a.score - e.score) <= 1e-8 * Math.max(1, Math.abs(e.score)), `${label}[${i}] score ${a.score} vs ${e.score}`);
-  });
+  }
 }
+
+assert.ok(Array.isArray(golden.results) && golden.results.length > 0, "nonempty golden query coverage");
+
+test("parity comparisons reject holes and coerced scores", () => {
+  assert.throws(() => same(new Array(1), [{ id: 1, score: 1 }], "hole"));
+  assert.throws(() => same([{ id: 1, score: "1" }], [{ id: 1, score: 1 }], "score"));
+});
 
 test("fixture index loads", () => {
   assert.ok(idx && idx.n > 10, "index has chunks");
@@ -73,8 +83,11 @@ test("snippet marks hits without HTML", () => {
 });
 
 test("document() rebuilds a file from its chunks in line order", () => {
-  const d = idx.document("skills/mongodb-expert/references/sharding.md");
-  assert.ok(d && d.chunks.length >= 2);
-  assert.deepEqual(d.chunks.map((c) => c.line), [...d.chunks.map((c) => c.line)].sort((a, b) => a - b));
-  assert.equal(idx.document("nope.md"), null);
+  const synthetic = new SearchIndex({ meta: { total_tokens: 0 }, chunks: {
+    paths: ["one.md", "two.md"], sources: ["area"], kinds: ["doc"], rows: [
+      [0,0,0,8,"later","second",-1], [1,0,0,1,"other","other",-1], [0,0,0,1,"first","first",-1]] },
+    vocab: {}, ids: new Uint32Array(), wts: new Uint16Array(), doclen: new Uint32Array(3) });
+  assert.deepEqual(synthetic.document("one.md"), { path: "one.md", source: "area", kind: "doc", chunks: [
+    { id: 2, line: 1, heading: "first", text: "first" }, { id: 0, line: 8, heading: "later", text: "second" }] });
+  assert.equal(synthetic.document("nope.md"), null);
 });

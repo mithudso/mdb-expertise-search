@@ -1,0 +1,964 @@
+{
+  "as_of": "2026-11-12",
+  "runtime_config_test_count": 159,
+  "legacy_15_pass_runtime_config_test_count": 143,
+  "legacy_auxiliary_count": 2,
+  "ordinary_additions": 16,
+  "optimizer_status": "BLIND-AUDIT-DISSENT",
+  "records": [
+    {
+      "path": ".editorconfig",
+      "sha256": "fa4b659891b975ba2fe617ef5eaa16e2531060af5a8b5e225ac1dff58e99aebe",
+      "frozen_gate2_sha256": "fa4b659891b975ba2fe617ef5eaa16e2531060af5a8b5e225ac1dff58e99aebe",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": ".env.example",
+      "sha256": "7522f6c4e4b84ebf5ead350fdbb3ed83235c15af6c40320e7f53d1869f1544b7",
+      "frozen_gate2_sha256": "fb7d988a9494e3e9f7b36b1f04e979453ff00254d8825cc2de674ba6096f50be",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": ".gitattributes",
+      "sha256": "6db1e9159c99b279343da4335721c03e1fd65a2fbbd3faf8de1e743a467b10be",
+      "frozen_gate2_sha256": "6db1e9159c99b279343da4335721c03e1fd65a2fbbd3faf8de1e743a467b10be",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": ".github/CODEOWNERS",
+      "sha256": "57059c7b6958ecc7c9d73f2545410f39f4be601fd7b6211c0f7ece7d1c750c88",
+      "frozen_gate2_sha256": "57059c7b6958ecc7c9d73f2545410f39f4be601fd7b6211c0f7ece7d1c750c88",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": ".github/dependabot.yml",
+      "sha256": "d606f7d4723145bf563819dfbde97fdca4d03692cb18a1e11f302307a78a7ba5",
+      "frozen_gate2_sha256": "d606f7d4723145bf563819dfbde97fdca4d03692cb18a1e11f302307a78a7ba5",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "c0999b3ff057bbc09a58e581bc42565ec7663b8c014928ea8389eb1a6719d795",
+      "frozen_gate2_sha256": "2afa93d13665254786202e6823316430fce94eec3fea0af460dfb785cad96aa8",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "0a064473eb248e2b9de07e6b87910a2021594d55f25b40a1866e3bb11204946b",
+      "frozen_gate2_sha256": "0a064473eb248e2b9de07e6b87910a2021594d55f25b40a1866e3bb11204946b",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": ".mcp.json",
+      "sha256": "0bcef837bcdd8b7076b9eab30919f33a4b7d1ee38568d2bed29f82c9cdeaea88",
+      "frozen_gate2_sha256": "206d63b8302ae8a92d4ce3ae49dc446b6ca6a8a7a085ed4cb6ae211021f82a5c",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": ".node-version",
+      "sha256": "20d2add851bf39edcc6b5e830930f962db7e19dffa2cab8610eed551eda6c302",
+      "frozen_gate2_sha256": "20d2add851bf39edcc6b5e830930f962db7e19dffa2cab8610eed551eda6c302",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": ".vscode/extensions.json",
+      "sha256": "f902659f9d871c088d9565db4b11b3547b5e3659a47d1deb7afca54e9b41b10a",
+      "frozen_gate2_sha256": "f902659f9d871c088d9565db4b11b3547b5e3659a47d1deb7afca54e9b41b10a",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "sha256": "4937b41004c717f321880d6663a221bc48bad7a7372b22df0c804910c6de2bae",
+      "frozen_gate2_sha256": "4937b41004c717f321880d6663a221bc48bad7a7372b22df0c804910c6de2bae",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": ".vscode/mcp.json",
+      "sha256": "27f996232225e3802a6f6ff96249b181b6d4c13b031861a628450b512068671f",
+      "frozen_gate2_sha256": "27f996232225e3802a6f6ff96249b181b6d4c13b031861a628450b512068671f",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": ".vscode/settings.json",
+      "sha256": "90185922fb1ce721d222511bae9477e6697e7efad55ac9d8b05433b4273ef40b",
+      "frozen_gate2_sha256": "90185922fb1ce721d222511bae9477e6697e7efad55ac9d8b05433b4273ef40b",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/app.css",
+      "sha256": "f083691c5a52e0006336cf824abb439e8d3e5ddbc19e85a3d235300892291039",
+      "frozen_gate2_sha256": "f083691c5a52e0006336cf824abb439e8d3e5ddbc19e85a3d235300892291039",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/app.html",
+      "sha256": "e0d6355155b1742bcc608caebbda5e6390f3c66794eb6234ea525d198ef812cf",
+      "frozen_gate2_sha256": "d9f0666a0dc86d30ff6040350dbd5006b6371325c4d3f5b104624c6cda14d908",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/app.js",
+      "sha256": "d745618bcc8b84140b333685e493decb829f742fe0f1d730963606ec4ab11975",
+      "frozen_gate2_sha256": "d4bbc3483240d710b505e14b7d9ae4552eaa7fbca495e43fdc55dc2bf2e0a2d0",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/background.js",
+      "sha256": "fd35d9cfcede085e74e5420b3bfe9bc7811d97df232c3a6e833fbc7c4b68a34a",
+      "frozen_gate2_sha256": "fd35d9cfcede085e74e5420b3bfe9bc7811d97df232c3a6e833fbc7c4b68a34a",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/analyze.js",
+      "sha256": "04ffd9bfc52685a821578642f383a74893d0ecb7f24a80fe72ed324d2982c537",
+      "frozen_gate2_sha256": "bdc5bdfaba6f17ab37d7bf96e79d8438f1130397489661a975557f0689c00d99",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/autoupdate.js",
+      "sha256": "28537d55676aff31ec2cbc3e9e80ea3ac6e8864661cfb6d60b1247fbb1925739",
+      "frozen_gate2_sha256": "8a4d512413f7f8f8de4d534c2fa1ca508b9608e90d0e88ccf800a2af3e9b76ff",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/capture.js",
+      "sha256": "61194e5f90b202212d98d028308bd5a60e5542e87d45e79e6f7b0198c9e3e540",
+      "frozen_gate2_sha256": "bc5973dfbe8c3bcd42d011e8cccb899cd96504caf16b320faf5a69a17c9ef7fc",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/docs.js",
+      "sha256": "18b9958318b9fb7753086c6f0127e61ba154fd737fe6cd4144de375293c5ea28",
+      "frozen_gate2_sha256": "18b9958318b9fb7753086c6f0127e61ba154fd737fe6cd4144de375293c5ea28",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/normalize.js",
+      "sha256": "481fa4f4311174cdda9ec2035b73d2815e64aa37a63b177213e7a58c8a768b40",
+      "frozen_gate2_sha256": "8839d3ff858a78350505be56ea5a29cc5658679a7a3f5cae4dedf94e49f11721",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/operators.js",
+      "sha256": "706fe6dac78d97a808e2f8f4ed77e8d9acb9b3e2b3db970ae57d324acb5fad48",
+      "frozen_gate2_sha256": "de3bcab2d070f03a40f20d1f405fdfaabd75be845180657a34735aa6e9be45cb",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/optimize.js",
+      "sha256": "afb707662207b513ee05abdc2716d21b5abff0a04d6e2a51045ea10d8bce13dc",
+      "frozen_gate2_sha256": "44eba4cb0752f50a5918c163d3b30f92a8f532d745c8cd6a518acb80ff858071",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/parser.js",
+      "sha256": "9b093c80b7850bba89fa64f5cdbcfb74934181dba6c5090a768ded2e21cc381b",
+      "frozen_gate2_sha256": "d2879593931ee11a285bdc583ca26cf98e63fd9965bf65afcbdaa9966944849a",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/report.js",
+      "sha256": "f213cc8603bb0cd3fe87da4746aa467c47523236113b97d86cd34491bbb61347",
+      "frozen_gate2_sha256": "f213cc8603bb0cd3fe87da4746aa467c47523236113b97d86cd34491bbb61347",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/store.js",
+      "sha256": "b0c827ea7f8d4f454ce52ac535bc9e5731653ec91231b60d85c0bf533ee128bf",
+      "frozen_gate2_sha256": "d169f5d81257aacd68957b403af0f4055caa20041bd0a5eb01576c90aa35130f",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/textsearch.js",
+      "sha256": "f126eec97cd8bee8e3b5ed7bda073d759d13d3dba1093002fbbe7b9bf0087ce4",
+      "frozen_gate2_sha256": "205d8177b8a7e51af77c0b80f68d6dfc6099fb4d1f1eb4fa88b6200dc29a3374",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/ui.js",
+      "sha256": "abdf0b8eaa03f2c892330ace5e86323e8215ff922eb00020bc2112ef9c207cef",
+      "frozen_gate2_sha256": "eb78c4d443e79108b35ee93714bbcc8eef6f41497137853a91ec0efd79b2b4e2",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/lib/unicode61.js",
+      "sha256": "5f44a1295b94837db913750d00b6ad352fa4b47ac87ece18bcf9369da8a12a35",
+      "frozen_gate2_sha256": "a7a103d9726fcc3a279538f094773d442b9f7d3192a0f908f1712a7fcd96ea73",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/manifest.json",
+      "sha256": "5ad47b710c091cab6f9877640d5a9a4015085d48c35b7bca85b735f2f3a0655e",
+      "frozen_gate2_sha256": "5ad47b710c091cab6f9877640d5a9a4015085d48c35b7bca85b735f2f3a0655e",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/package.json",
+      "sha256": "0dd44d255401b8dd7a506dc9f66c87e181c37cc1f8c99bd2e160a02819393611",
+      "frozen_gate2_sha256": "0dd44d255401b8dd7a506dc9f66c87e181c37cc1f8c99bd2e160a02819393611",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/popup.css",
+      "sha256": "f0163d472ad2220ab3630aae9b9661f9f7d55eab0f220f2ccbc40e122bb03e2f",
+      "frozen_gate2_sha256": "405a9962076bb63d7f2113d9ad2c5652ab7addec3be79992522f23cbbb17e23d",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/popup.html",
+      "sha256": "12154413c3d67abff21206f4c4a6893ad98f26a030fa30aa44cf42ed29b3cc1f",
+      "frozen_gate2_sha256": "12154413c3d67abff21206f4c4a6893ad98f26a030fa30aa44cf42ed29b3cc1f",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/popup.js",
+      "sha256": "678a4a3328bd723ad62852917ebd0acf1161ee669a06c0c02ad43ed2dca84942",
+      "frozen_gate2_sha256": "51a4c436245e4ad5c80eb3213cd71c24228c2705cbcca86b40f93bc6af5b6bc0",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/app-completion.mjs",
+      "sha256": "9af99f27106813ac4e4ece079c308a0b27e6b1ff9e51739d624778b857c167ec",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "editors/chrome/test/autoupdate.test.mjs",
+      "sha256": "770306909db5d966646cfb5276eb86fc86dbcd0fb9d709f98f44ac157ea0db64",
+      "frozen_gate2_sha256": "0a89fc0ed2ad57315a307685d53511c4d4b9ef874155a50e532bb1d18009fe64",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/batch.mjs",
+      "sha256": "f44c9fc3807b8fcc88967b12f3541b8b300b50d9657c33fc092057eadba2e43d",
+      "frozen_gate2_sha256": "f44c9fc3807b8fcc88967b12f3541b8b300b50d9657c33fc092057eadba2e43d",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/browser-context.mjs",
+      "sha256": "cf1c2ffa6274b9aa95a5ef43dea07939fe1508cc2a1a37b2efd207f664e0cb20",
+      "frozen_gate2_sha256": "cf1c2ffa6274b9aa95a5ef43dea07939fe1508cc2a1a37b2efd207f664e0cb20",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/browser-context.test.mjs",
+      "sha256": "c2ee2d7af7663ab35aa229b03e414c7b449f9f648a5510a7cf586f3bf1b310dc",
+      "frozen_gate2_sha256": "c2ee2d7af7663ab35aa229b03e414c7b449f9f648a5510a7cf586f3bf1b310dc",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/counted-source.mjs",
+      "sha256": "d08d61a1c97096d7f95c96cf33d0ea041452d7e0c81dcc19d1fb2422620ecd87",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "editors/chrome/test/debug-app.mjs",
+      "sha256": "5a81d8e922ed3cd7a2aa083b06c2e49830a6caf25c748262324bba078ffe95e9",
+      "frozen_gate2_sha256": "05e3b029be067cf638548cf584d87464d00880c58cdf668e21377d0c72363145",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/dom-fixture.mjs",
+      "sha256": "0f44b0e0c1eeea50f926acf3a4407c1f89bf592b65a5b117689d5cd116928c07",
+      "frozen_gate2_sha256": "2edc52fb9f960461360a700ef0c24ed5f1d46bdf78d202a44702dad62f6e4183",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/e2e.mjs",
+      "sha256": "20a6eeaf58e33c083712184ccde98c4d2b53821446ae2819a08f0e53946ff6c9",
+      "frozen_gate2_sha256": "fb7de8331c11a2334dc1b033bef92fa9b2e1399c105e3c883c90ff785f50a0ea",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/extension-under-test.mjs",
+      "sha256": "37c597c61ed80f3e678efa24d4ed0c20f96998a1e1d2d11cf8bb1db7db0fb876",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "editors/chrome/test/integrity.test.mjs",
+      "sha256": "e5fe6f912be2ddc442b8166d33bd6f1b795aff30ad461ae426e3ffa6ef153c3d",
+      "frozen_gate2_sha256": "e5fe6f912be2ddc442b8166d33bd6f1b795aff30ad461ae426e3ffa6ef153c3d",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/language-boundaries.test.mjs",
+      "sha256": "3c00c676bd6fe1241631007ff499d44dd52469e22b4d25c007aa5c87bc7cfcd6",
+      "frozen_gate2_sha256": "0016de236ee5d2ec19b12899405fe78d7e4ad1bc9b83a78597aef495252c6d22",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/lint-batch.mjs",
+      "sha256": "fbfe0de8ee5aca7180af64fa7f1fdf28bce02cec89890127df312fcee2cb003c",
+      "frozen_gate2_sha256": "fbfe0de8ee5aca7180af64fa7f1fdf28bce02cec89890127df312fcee2cb003c",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/lint-parity.test.mjs",
+      "sha256": "40819bf912b50c1085f23d3e764eb1e86df6c02205c8be0df51a9af7aaa5b6bd",
+      "frozen_gate2_sha256": "51f1ae62c05fbc6503babe7c68707783464a3b1d0c369681a14e60b51c05d85a",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/normalization-boundaries.test.mjs",
+      "sha256": "8aa2de3d6c19f20c3a3d58218c79c95ddbab708eaef4ecca869c84cf7c892437",
+      "frozen_gate2_sha256": "58bbf5ae34828062ef635c4682e846c20fb5e5b690b2bbc2c5410643cd88e616",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/optimizer-boundaries.test.mjs",
+      "sha256": "bfd327eb3db6b850520ce03890f10052909d284f92e13fbcd73a3b518c09bf26",
+      "frozen_gate2_sha256": "a274381e93225a5a93104186c2a09e6bab4ef8466e16331f68ec7e2ce10ec1fb",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/page-races.test.mjs",
+      "sha256": "08289b92ac6076a809f878c331b3b37400aa21b7325561dea3e301b0431aae20",
+      "frozen_gate2_sha256": "501a950f048591c80f4db29936e36a3eccaf1e8707c00397797b4dd0864343df",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/parity.test.mjs",
+      "sha256": "883a5ee420686ebeb826cf8d55e737b0a3c147076c88330e02fae1a962560c31",
+      "frozen_gate2_sha256": "7fe8fbee82f091fa28194743888aedfb355f0b64983f86b24ced2f5cc28e4a51",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/postgate-editors.test.mjs",
+      "sha256": "e6c5ffc9a770f1b08d869542270780a19f48d19c1d3d683c8522d91968230775",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "editors/chrome/test/postgate-mql.test.mjs",
+      "sha256": "41f439e77dfb75cacdbe2f21e81604ca3b775c36b947e243085576722f710798",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "editors/chrome/test/rendering.test.mjs",
+      "sha256": "f3bdeb38756e5ea68aee2804b773b8d62cc5a549ed36b14cb5ab9abb469deb85",
+      "frozen_gate2_sha256": "8640611463d5cf428726023764b2a6f8c2caea9d9f5d69c312dde3eae03a9751",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/run-tests.mjs",
+      "sha256": "918957b93f088c3a6e6decc1696118c66e46f65ccd991552cfae2a17b7255c23",
+      "frozen_gate2_sha256": "918957b93f088c3a6e6decc1696118c66e46f65ccd991552cfae2a17b7255c23",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/search-batch.mjs",
+      "sha256": "c58433245c94dad30ac8949fc7215528e0dd8d55ac85fb1b92b8b9b2c6e65f13",
+      "frozen_gate2_sha256": "4b7e6caed031bab86b5828e82172d00bcfd42804963f3d656bc80a908eada905",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/search-parity.test.mjs",
+      "sha256": "edf7491642505cde0de183c3c5c8891526c026eaa727cb5f9ad1812bc3db9faa",
+      "frozen_gate2_sha256": "edf7491642505cde0de183c3c5c8891526c026eaa727cb5f9ad1812bc3db9faa",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/search-rendering-boundaries.test.mjs",
+      "sha256": "871f31426b21fbc390f72b016865f0c2d0426e3158d9cd01105898a1a9d71d85",
+      "frozen_gate2_sha256": "dfdf244d6b73e228713138d07f149b336582a2fb6322ce96ff1bbb89ee2a3223",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/ui-boundaries.test.mjs",
+      "sha256": "0b36ae8c06639d8da0959de1793b4e187c7d0af0fb361dcb0b22cafb70fa2f85",
+      "frozen_gate2_sha256": "ed0eed1942684aa9c91f810379398bcd2f7cbfddfa91a73b29f7dd58df0f8e37",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/chrome/test/ui.test.mjs",
+      "sha256": "38c29b108aed3c593d80767d6f38589695734986bfbe06478815dbe6e76765c5",
+      "frozen_gate2_sha256": "f3654380fcf4a4d79d7212bd98fb42bcd77b4c0def18f1d73a09bd74cef476ed",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/helix-languages.toml",
+      "sha256": "f5c476810f8178c1a0d0b0d03a163e111475610f51eb6f3a0ce5b68bc3bc8cf3",
+      "frozen_gate2_sha256": "f5c476810f8178c1a0d0b0d03a163e111475610f51eb6f3a0ce5b68bc3bc8cf3",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/neovim.lua",
+      "sha256": "b6132005e54b80f97f7542ea17699222f2c90938ddd1a9edc7d8cdaf07b8a983",
+      "frozen_gate2_sha256": "b6132005e54b80f97f7542ea17699222f2c90938ddd1a9edc7d8cdaf07b8a983",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/vscode/.vscodeignore",
+      "sha256": "759fb32b972bdfc00a782c96dd5c48b13febd040125f4d99dc32e563c91d9cef",
+      "frozen_gate2_sha256": "759fb32b972bdfc00a782c96dd5c48b13febd040125f4d99dc32e563c91d9cef",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/vscode/extension.js",
+      "sha256": "a231406e584e8fd37c910cc961e5bfdf05d5949de3320be23ce38d8359d0a829",
+      "frozen_gate2_sha256": "4ae8bc61bf334817ce4b4964b1de55f6c3a15dae3f49db9ad56d0164d986efb4",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/vscode/language-configuration.json",
+      "sha256": "0b6b06557de680d55b5cdf1e30a864483767400671697092c18ac6884628a651",
+      "frozen_gate2_sha256": "0b6b06557de680d55b5cdf1e30a864483767400671697092c18ac6884628a651",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/vscode/package.json",
+      "sha256": "fb5e8159d1abd9ebf15ba9e4924f72000ad92b55837bbeab6c08b26694ea58e2",
+      "frozen_gate2_sha256": "fb5e8159d1abd9ebf15ba9e4924f72000ad92b55837bbeab6c08b26694ea58e2",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/vscode/server-path.js",
+      "sha256": "b283c4daada43f5b9600625a3dedf43ba806d22dd29c0c6dd3e451fa4ed582da",
+      "frozen_gate2_sha256": "9092395c6da6aabaaf5b92c9d8306a1a48993223daa4a23a5724848761c7878d",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/vscode/server-process.js",
+      "sha256": "b606be560d4c4876afd436ece181abd1a2852fbc8656d848d57d7a2ed6f32dee",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "editors/vscode/syntaxes/mql.tmLanguage.json",
+      "sha256": "8ee391353d5fe3aa04fbb0ada7f009abc5368ae2ce9ec6e3a1c22d9f9230eb09",
+      "frozen_gate2_sha256": "a15167224f4ce536db7529401703ff030c325809ad21b52a05c6964267f89513",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "editors/vscode/test/lifecycle.test.js",
+      "sha256": "851024c1df39803ac6cd57070b4d0bacfc5a50cadcb4020f63a3437ec72dfeb9",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "editors/vscode/test/server-path.test.js",
+      "sha256": "80b11287d4ea73838e56bfe414821e5a22244b29921690f1b169d379c6339159",
+      "frozen_gate2_sha256": "399fbdeefdfdf25b063545f90477b3afdbf02cb14e02538a3171e31c3265b1c1",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "examples/orders.mql",
+      "sha256": "71b2160dd9fd8baf2193418670755b591dd6b3b29a87b1e5d2cf757123204893",
+      "frozen_gate2_sha256": "71b2160dd9fd8baf2193418670755b591dd6b3b29a87b1e5d2cf757123204893",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "examples/slow-queries.mql",
+      "sha256": "5ac151fc40a7f943a9b79a928e23db13855ce5cb409140998142b30d6731c8c6",
+      "frozen_gate2_sha256": "5ac151fc40a7f943a9b79a928e23db13855ce5cb409140998142b30d6731c8c6",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/__init__.py",
+      "sha256": "a8503c63782616400e339ff9fbc9e6cdaf0f56e01b48d11d5f27a32069d85413",
+      "frozen_gate2_sha256": "a8503c63782616400e339ff9fbc9e6cdaf0f56e01b48d11d5f27a32069d85413",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/cli.py",
+      "sha256": "948c4db10b658b5fb95abda870813d6b99178ee848c1059a3b5d7025b277165f",
+      "frozen_gate2_sha256": "ab3c148a234cfb5b339b78752644ff36f44e4b632d88adcf45103cdb95ffcdd3",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/corpus.py",
+      "sha256": "2274cc15abbb10c9b218d4d01fe99590a9745ebec5dbc8562c536095ac1e25af",
+      "frozen_gate2_sha256": "7592d3dc6144427d4d609d3264b06346d40a37ad712daf0b1425eab223c31e3d",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/embed.py",
+      "sha256": "7e454eea13a9b98c7d20db32fa9d0535758e09a6c089e142e9e9cf0209d53bae",
+      "frozen_gate2_sha256": "cdb35208354805cb341dd221d6a0339633dddea0fde7d8bcdc1b49b984c44452",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/embed_onnx.py",
+      "sha256": "d80189ad567a65fc72bd5fa27f5c06d86fd0c5f1b4fcea2d4b8195bf47688ce3",
+      "frozen_gate2_sha256": "f1a633e6eaa967a11e20244692ab6cd41b73176ab4b22fe2a3cd29245a68d7a8",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/index.py",
+      "sha256": "d791eaef560c58ffa194495715b98ac530e6769827b7a258ab717a60b1b99fb8",
+      "frozen_gate2_sha256": "33882c802aeb99ac09363255c327eda44c9cfdc12b51bed4afaa856bf16ce022",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/mcp_server.py",
+      "sha256": "b001b1c0bedb0dad7105b551be68aa375cb62133cf60a021b476e10404383d41",
+      "frozen_gate2_sha256": "70eb5d528c36a780cfa12e13bb8a76db7c4d9637e0c4e0165cab4e04097fdd4e",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/mql/__init__.py",
+      "sha256": "06b44fc0495f43e46f20480f7fa826daf38776246f823753b7d9f8fc76dc9fe6",
+      "frozen_gate2_sha256": "06b44fc0495f43e46f20480f7fa826daf38776246f823753b7d9f8fc76dc9fe6",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/mql/analyze.py",
+      "sha256": "9b2c317b7e48005f86167fa0089c5f4cb13ab407ccf3eb4f3c12dce32701db32",
+      "frozen_gate2_sha256": "4f815b7701f630e84a6d45f053753353c5c9929e2b50f73e7ac082343981894f",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/mql/features.py",
+      "sha256": "43ccbe227cfc027ce900f653db83c9421f0aacfa962b874c9e7182930ddc4c7d",
+      "frozen_gate2_sha256": "0d4bfd52f1dc46001efc795d1f82a9f3b432921ce99bb595b1cd5a82938e5e9e",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/mql/normalize.py",
+      "sha256": "b826dd1e6b70b572208d09a30bfd1bbfd747fde789d4e755a6fbb2d7574a3707",
+      "frozen_gate2_sha256": "67acb6a35010e218e73453177134055e30eeb1ceeafca163b661602fab7a5f96",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/mql/operators.py",
+      "sha256": "f01325759ef559873c6422a434ba19f1e712d59e5acb9186801d49ca1b395bf9",
+      "frozen_gate2_sha256": "6c9efd4af3989a4bed28f8d4fc7eb9bf4023af5d9d4b6c3767ec56eea7715aa8",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/mql/optimize.py",
+      "sha256": "6cb7e77e8fb4693fade17305d73f629d5487ef790cdd16c9c25da22a35d19529",
+      "frozen_gate2_sha256": "9621430c2e3289e786d5ec21de5ddc3199c8883bbcbc3e38925f4f061aa53cfb",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/mql/parser.py",
+      "sha256": "35629e4b61c02cf222f69a73b62323d1fc3923fe78532e5eadfb71a8a09e38b4",
+      "frozen_gate2_sha256": "4d76edae10a7d8729a650ef1dd9f179874dabd0d8a35148d38a08b469b5e338c",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/mql/server.py",
+      "sha256": "7d511df1cf68d3209092140cd122d0cf6a19d1cf39cc807af850ddaa07374670",
+      "frozen_gate2_sha256": "c629f1b3f93a139cb616e8a1dd25a5a26c57f16e1d2990d3c427ad4e3c9460fe",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/providers.py",
+      "sha256": "983f6a5f0c84f95f988d90041e30308c8dd62362c507f7e0382ef7d1816fa6dc",
+      "frozen_gate2_sha256": "983f6a5f0c84f95f988d90041e30308c8dd62362c507f7e0382ef7d1816fa6dc",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/recipes.py",
+      "sha256": "51a5869b7a8966050575d4b5b6fd08343c91c3a9c9e31675b184bf061abbf08b",
+      "frozen_gate2_sha256": "40696e553ae5349ad5eb3d60a6e507c319e4bcf579fecb5b8e0d3332ed509d6f",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/safety.py",
+      "sha256": "85c319f3ebf61e8e40efed52cd6e9ca3e601fccc03c0c6c1812f21bba078bb5d",
+      "frozen_gate2_sha256": "979da24bfab67fb2d1d94fd2a0641e90188ff464dee032665d47adce15d6983c",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/search.py",
+      "sha256": "8299bfc15deebc985c96685bd597681c9aee74d3ded9f3f1acee8a090fc57dc2",
+      "frozen_gate2_sha256": "c095ba1b7e7f08607edafbb133943c038b951a0f6fe04ee1218fa23fb4ab6450",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/tui.py",
+      "sha256": "fa81556b807c6654575f792ba642c1e38f7481e15bd1bc9d9720cf047e87d043",
+      "frozen_gate2_sha256": "aae16a04218f93fe06d78169ac03e0695a917e761462ef2b4d47fdf6e07ecf9d",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/unicode61.py",
+      "sha256": "fca0c9533a0d20e97be3f595f20a5b06534ed317277a2697f4857cb73ed6513e",
+      "frozen_gate2_sha256": "8d60c69daf24ee08c4b07ed977cb8b550655f57453cdb27f996a2924175f1342",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "mdbx/webexport.py",
+      "sha256": "ebd122085d14a7e93bed2c6549beba6cc84ecfd79d17c85c6795f3d04cf49f57",
+      "frozen_gate2_sha256": "a4fb86d0f15943c6f45aeff90fd583909bc35bbdb86f06c06616fab923686acf",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "c0e8e54d87e5af9ad93a5505a43e22a08938ba6b11330ea06332528b16626b58",
+      "frozen_gate2_sha256": "c0e8e54d87e5af9ad93a5505a43e22a08938ba6b11330ea06332528b16626b58",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/check_chrome_doc_links.py",
+      "sha256": "edc8ee1419978c15148ea7b5c32b6719781fc49d518dad0a1387ac6aae6c2833",
+      "frozen_gate2_sha256": "603481e505a1b29cf9181a28345e8b6eafa1494c9a9da72294274034d8d1c677",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/check_doc_indexes.py",
+      "sha256": "32d1d829af8c76782bcbf31c3f5455ec29b26118c61f847d7d8a8c1f2be2edae",
+      "frozen_gate2_sha256": "93297f73bdb2eea076e23fb1373bd4fa28f777d5d400b175723de7375bb7f2d5",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/chrome_extension_autoupdate.py",
+      "sha256": "d908faf780fe502276b9f12c3c4ca6380fff6e5339a050db394b32b9a98e8ecd",
+      "frozen_gate2_sha256": "86f1f9ab7cfaa9315abab5e9936705d04a746e9959ff8d10ef827896d5bd2fba",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/ci_private_dependency.py",
+      "sha256": "1e3512a6b885cd3916dff6810f03ef42603ad6b322f46507606a3194b299db7b",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "scripts/corpus_autoupdate.py",
+      "sha256": "6c2abb0c25a63f05bb0bc3be376c001325d07dcaf0590443a9dc5feca9e6539b",
+      "frozen_gate2_sha256": "8c35b0384e3a60ab6daf178b440a38350bb7d223f36dddb98492d09acc30e205",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/gen_chrome_operators.py",
+      "sha256": "2da1938900457c297d1a607a7970ce00b3f2d03fa1634f3db0b140476f220830",
+      "frozen_gate2_sha256": "f8d602292c4e67462f4dfef7279812ce437b7e7637871f7754a5fd3c9ba2ecd1",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/gen_file_index.py",
+      "sha256": "2e048cfcb921a66f20f8f97cfd31965c903cffd7592aaa1e09d40ff101189dda",
+      "frozen_gate2_sha256": "d94f8af87c23b7eaa077f7a0037c8a9e7cab35f1129595fedf996fa210a76e42",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/gen_lint_golden.py",
+      "sha256": "ee7a3521cd073a59e4b1cee6585cb5a2e6993712b8326b2543c17a2ebbe16d9f",
+      "frozen_gate2_sha256": "c2834cbc50fd57cc3ac982874de6a231c94f6ca1632f05951fb951190fc4ce62",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/gen_optimizer_golden.py",
+      "sha256": "1c2926d3fbfc3717d1c310c28dbe0f3451c2fbc96670ad2c5f04cf0dded33ffe",
+      "frozen_gate2_sha256": "fcf74531301bae7557b61814c83853bc24941491664872efb76c0f3c4166eaac",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/gen_recipes_index.py",
+      "sha256": "13e154f1d1c68cc0ce271960bd5be351b76667bc2512a03a8321f66daea0074d",
+      "frozen_gate2_sha256": "6c2cfc95c041c66163f2841f39253ee458c07712b277277914a183a8e000b001",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/gen_search_golden.py",
+      "sha256": "992ad4cd4df7c39bdc46fd42dbf346f37cfd2b09b1929313217bc4556f8be466",
+      "frozen_gate2_sha256": "d482828e956c06208d94aad27f6843d722ea32be70ee6e998d4a4e487aa9f53d",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/gen_unicode61.py",
+      "sha256": "f95160348db2e588486994e445a5a0210d674d7e4acaf3555140a8336bdc3a26",
+      "frozen_gate2_sha256": "914af4276d8fe871b14d85e459b5903429f6037fb3a9b42ccbf3ea1f34baaf0c",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/glean_cli_helper.py",
+      "sha256": "217254f5145e695ff9e093955be51aad33253dbd6c0cae10d20db0bfa22d3492",
+      "frozen_gate2_sha256": "8e99e967de692bebc7e1628a106709de9493e122fa9b5e67132144e52dc9b356",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/install.sh",
+      "sha256": "703fddd5a3e5a69291a84ed72a36df51ca75ac9c883dc24ea87229d18220c5c0",
+      "frozen_gate2_sha256": "755316f5ddbc2532b87007be1307ee53ef68827a1f81c7b1fdfb65d246f4a9e1",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/maintenance_safety.py",
+      "sha256": "792e97151f04aaeb6b7b1d7a17b94d1f2b7466d8680d29e0599aacb171066cf2",
+      "frozen_gate2_sha256": "6f9a42484583866138dbf24c724bb515fae268db208b1452585d3e450130b161",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/make_chrome_icons.py",
+      "sha256": "dbff46a5f337f3d259df4682571d66cb5e47fb7a8d3e0568f17e8241db10ed4b",
+      "frozen_gate2_sha256": "dbff46a5f337f3d259df4682571d66cb5e47fb7a8d3e0568f17e8241db10ed4b",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/offline_test.py",
+      "sha256": "665259f263976835c8d97f750d426058ac0422086875703d3bbc87baedee23ff",
+      "frozen_gate2_sha256": "1f70cb9e3ad7c506b10f6f92bfcc8dbb24b95048c42c573c0336460b8245854f",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/package_chrome_extension.py",
+      "sha256": "d0c6c3ba95d4700c72f04faa43f5d04c8a15dd7af0e40aafde09d5dcaa768a91",
+      "frozen_gate2_sha256": "bcc02347313275e3880b1569273e6fccb6f0269196b5223527cc821423fd3466",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/redact_corpus.py",
+      "sha256": "2195d52e17c8ad23cd7027178d44c2ccd567f710a4e06657241eff85aee606a6",
+      "frozen_gate2_sha256": "6036f2619bc2fff58a4b6951164c2211bfbc10a4594c4dc0e566e465ad729c7f",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/rotate_workflow_logs.py",
+      "sha256": "15c68b76115dd83327a208865df52a53dccb7edbd62e5eb79d2dd952a4e27131",
+      "frozen_gate2_sha256": "629a81916203ce7c11e570f63814372c78c942be332ca1382236de493c5404ca",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/sweep_customers.py",
+      "sha256": "f463a4e2eb7ef058c086babb94a09f58ecfff26ee9c8ffb7f42893073d4581eb",
+      "frozen_gate2_sha256": "632c42914061237504bbdb2e4cda08b147128523895616e04ee16141934c0e83",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/sync_corpus.sh",
+      "sha256": "2f3093e77a7c40a9477294d14ceed1c0c13d8237a1ce2eee9b8d3f2271d7f853",
+      "frozen_gate2_sha256": "8a41726df3bda72b54dcd199a407529979c34766acd976d0e704d35cbaa9566d",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/sync_corpus_sources.py",
+      "sha256": "e23960b2878c55f587d7876abdfd554ad23fb489c4215fb4100eaaa4cd0e1759",
+      "frozen_gate2_sha256": "1a91f2246132c90796adac19746694506d6a0c9ea43593628ec952b350ddab2b",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/sync_corpus_transaction.py",
+      "sha256": "fa4ab73fcefd29bf87125c840abb0faaf9a294bda92b6973f64bd6f37fd2c080",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "scripts/test_isolation.py",
+      "sha256": "32b05ac65683d8701d59460337a58dca11462004f3ba23cc8dc0c3b8b7000154",
+      "frozen_gate2_sha256": "1b1d64f48ada6d6e2c6081c9367482ea41c8e7ad7883817045c9c7c36c4cc859",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "scripts/watch_and_index.sh",
+      "sha256": "0c79dcc7db40f2ff72d2ebc3188b50903f4d2820eb2045e178a605c09f713c2f",
+      "frozen_gate2_sha256": "691eacfba4816faa090cb7800d61fb57dda2fa888af45ab6a4f372a4390ef741",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "frozen_gate2_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/conftest.py",
+      "sha256": "cc8cc24412c75065ed349be804923deb67c95aa30ed545e79440befc71620e39",
+      "frozen_gate2_sha256": "cc8cc24412c75065ed349be804923deb67c95aa30ed545e79440befc71620e39",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_cdo_hardening.py",
+      "sha256": "95600bb6cb308f8dd00021255afe68991d95e29d5d3dc0c245cde8d1b8a01ffd",
+      "frozen_gate2_sha256": "db2c66af0ed3538dff7b7cb5d50c42af65662df5fe58cc85b5ff4d24ac8399fb",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_chrome_autoupdate.py",
+      "sha256": "1efe87a2cdad0fa988e80b3670917c81d65fc711cf4ce106a2cd38787ddd7f54",
+      "frozen_gate2_sha256": "ca7b3b63ba104e0e083d2277ed6405bcadccf3adb82b1e934ab5fb58786429b0",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_ci_public_install.py",
+      "sha256": "8b0dabd2ed91206e056d44816461d1a80890fd914ed64b681fcde52ab93f9106",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "tests/test_core.py",
+      "sha256": "7f0a387a8bf20d0c784bfb6b646b7e24d96e9eb1d11fb4a5c4c80b0f50aca30b",
+      "frozen_gate2_sha256": "b8b7a1daab054194924a0801c4de6ba9ecca86f787ca5598f5eed4a818edec70",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_core_preservation.py",
+      "sha256": "27af9003ae1bbc61ee4ef4a545028ed238db5725af1b17f10a259957438f6b27",
+      "frozen_gate2_sha256": "9d176d5698e3d6b8d1aa730a39e3269827f95389a759e5aafba40345e9e1f8e9",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_corpus_autoupdate.py",
+      "sha256": "234b9c38af2bcfb82021c31e94dbdeb076089248a1f2468c340303371cb83488",
+      "frozen_gate2_sha256": "fb9592af040b13908df1b0c79f47df6ba91becba7b9ed8ae14c681722300f499",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_corpus_generation.py",
+      "sha256": "095b21beab730e57f9643bf5178209f50b1e7ea941cf23a3b192c3f9cf3fcb49",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "tests/test_embed_backend.py",
+      "sha256": "7b07e3aebe19480cdee73241c0b6032523f7b138622f0814100439b8cfca18a1",
+      "frozen_gate2_sha256": "7b07e3aebe19480cdee73241c0b6032523f7b138622f0814100439b8cfca18a1",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_generator_preservation.py",
+      "sha256": "fe1603cd6d7ff70e1d1b8264ca422bdd833de0212222899c75cfe0063fc52a6f",
+      "frozen_gate2_sha256": "2cfe76bffaf5d2efaad03d21886986f6536bd429b071975e65cc723a8785cc9e",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_iteration2_python.py",
+      "sha256": "af714af28cfe27902ed2ef1ef0f4c68ed2807f490a70cec49cc820aa04921a44",
+      "frozen_gate2_sha256": "e608373823883551c62d5a880087a4adf68ff75dd88d3c5a36d136d529cbbbae",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_iteration2_scripts.py",
+      "sha256": "ca259e2e17209e3ee90645cfa61c2831a815829faa47e3ed7e23d4ef56fc69b3",
+      "frozen_gate2_sha256": "6e8d32d08d70fc043e4716ac92fac83bc4c97c58c627303a92b8b34fdfaf51ea",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_js_lint_parity.py",
+      "sha256": "a2f3dad422f98a50ffc1291e4f64a5e3deeaad241dacb7e485bb732d7cb0a1de",
+      "frozen_gate2_sha256": "4bb05c5816f7c9de719ba919ceda67edfc938eb6dfaddabf41d40d39bd5291f5",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_js_parity.py",
+      "sha256": "ee125b806663e7b78a8c4af12125e27c5577c0ff61592013eb6af8973188b0cc",
+      "frozen_gate2_sha256": "ee125b806663e7b78a8c4af12125e27c5577c0ff61592013eb6af8973188b0cc",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_lint_preservation.py",
+      "sha256": "9d69d31317560afb7fe45be7c66631ff539285c345b84ca5039656dc36f6aae1",
+      "frozen_gate2_sha256": "9d69d31317560afb7fe45be7c66631ff539285c345b84ca5039656dc36f6aae1",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_linux_offline_guard.py",
+      "sha256": "db8b01ebf7ca914a73d3304d901f286f0c6c3354e4b02f6f41ac9782bb685b66",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "tests/test_lsp_e2e.py",
+      "sha256": "d37832ca248d6526c545e2866fc4df9b2391d17f0087b20b6e6843b9af7b84f7",
+      "frozen_gate2_sha256": "18170449fe29f44d15a4a7be8f1dabe041d3da2020b2626b0b3d7b34509280f5",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_maintenance.py",
+      "sha256": "f033e876d9459aa6b6f3a81a7d1fb15805279f60e336edd228d8b795a70ec74d",
+      "frozen_gate2_sha256": "a00257a6c38df105364deaa69b11e15148c1028af92c8e096484e635afadca80",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_mcp.py",
+      "sha256": "cde900ce27d4ce7411ec33b035e705bb5963895182e0a632fc77b645449676d7",
+      "frozen_gate2_sha256": "d1b36bb210556efce8d6f4583ae020b0f2b7e5ebb7765ecc84a48b1911f69621",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_mql.py",
+      "sha256": "deeefa837321b2b53e6220aee57882709fdac729ebf3be823b82c771dca8570c",
+      "frozen_gate2_sha256": "167d3cc0addadd6ef8ab26e277e93583bcc6a1f709fe56fc010b38bf91ac59e3",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_normalize.py",
+      "sha256": "912c9159bc0e7cc6e9e126d378451365aceb208b230d60466e4aa2e114789e70",
+      "frozen_gate2_sha256": "ec878c321307b8bb7d0018893bb04ef47884695a844e1c517f30e854b3f8019c",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_optimize.py",
+      "sha256": "3531760b303fb7ada54307afb2bde59a17df0dce76bec6d575f912226ab9581c",
+      "frozen_gate2_sha256": "3531760b303fb7ada54307afb2bde59a17df0dce76bec6d575f912226ab9581c",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_postgate_core.py",
+      "sha256": "a8fb497b44ffeb8c8869e26bc8ba107ade0b4fe09137d4467487fc1d58904da4",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "tests/test_postgate_mql.py",
+      "sha256": "8b949dcf079b2e924c7352c0a7d9f2e01aecf4e94bec5faebda4775c8eeec820",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "tests/test_postgate_python.py",
+      "sha256": "f1708b63cd55e487fd2f53ffb1d66660fdf32fd0eca369c1bd063a2dbd5583e6",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "tests/test_providers.py",
+      "sha256": "e3f9216e84201a082475960ad6ba4f96afca4d17ff8216c43dc4200eeb643505",
+      "frozen_gate2_sha256": "88666b55b24d4127973c8ea285d10897260934252f7181a4fd33fe16f9ae7622",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_publication_preservation.py",
+      "sha256": "e42ec82afeaef8afa7788658ccb750b4117db747db38736555ee5442ee6684ae",
+      "frozen_gate2_sha256": null,
+      "coverage": "ordinary post-gate implementation/upstream review and regressions; no third blind gate"
+    },
+    {
+      "path": "tests/test_recipes.py",
+      "sha256": "21387d26fcf3dfa4aa5cb45e869b724017172f0e4970258b5500fce17cc5667f",
+      "frozen_gate2_sha256": "21387d26fcf3dfa4aa5cb45e869b724017172f0e4970258b5500fce17cc5667f",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_test_isolation.py",
+      "sha256": "6164d45f8d7eb6cbdcc8f9121bafaa3a54ee44d11fe9ac50778b9952bcba853a",
+      "frozen_gate2_sha256": "914f1e4ea1232154f7a039499486e13f690b3337387a415420a20fcb23184c11",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_tooling_integrity.py",
+      "sha256": "73ff9209c3c540715f5cc28391ff7f83d735c7df8e1a5e9a88951088e451a336",
+      "frozen_gate2_sha256": "2cbc1b36b9ff626d98ad1166f8c284f429bb0a5587400ccb9ce904294d19ef3b",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_tooling_regressions.py",
+      "sha256": "f99685721c633ad51452ecb1387043d57c5b51151e52fa56ba27fd3478907e9f",
+      "frozen_gate2_sha256": "b01a634dcec0cdd9e3097b03c75036df59139289f46b36e288bfb75469fd6654",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_tui.py",
+      "sha256": "18574ea2fa0b7356a160990ac33b7604c2f300483e7cc947c1d40f14a9d4cfac",
+      "frozen_gate2_sha256": "24963290d2d04ba7d33ec8e042c3da6ea750d6b1251f960ba92985c16939ec47",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_unicode61.py",
+      "sha256": "d5b8fa6e72a1582a7918af2760cb74591c07c36b8d77416b31ba23b5827f9677",
+      "frozen_gate2_sha256": "aa8e0d3f0e9e589afc3e4964272d69bc428bbe77687de1bb7cb70c7382a5e39a",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    },
+    {
+      "path": "tests/test_web_search.py",
+      "sha256": "7bb6b5d1d63936f1c60347c5aabff3345d625a2cb25da6dc341ea674cd38a136",
+      "frozen_gate2_sha256": "dc9c7d863f8257715f1e71c7b371b6e2da9bf5266fca03aeb605e141fb7d941e",
+      "coverage": "frozen 15-pass gate2 plus ordinary post-gate source repair/regressions"
+    }
+  ]
+}

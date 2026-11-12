@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the installable Chrome extension zip: dist/mongodb-expertise-chrome-<version>.zip.
 
-Steps: export the committed corpus and its search index into editors/chrome/data/ (``mdbx export-web``:
+Steps: export the committed corpus and its search index into invocation-owned scratch storage (``mdbx export-web``:
 chunks, BM25 postings, and int8 vectors when the local index has embeddings), then zip the runtime files
 (manifest, popup, app, background worker, lib/, icons/, data/). Tests, package.json, the README and
 screenshots stay out. Fails if manifest.json and package.json versions differ.
@@ -14,12 +14,21 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import io
 import json
-import shutil
+import re
 import subprocess
 import sys
+import tarfile
+import tempfile
 import zipfile
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from maintenance_safety import git_environment, lock, safe_bytes
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from mdbx.safety import publish_files
 
 ROOT = Path(__file__).resolve().parent.parent
 EXT = ROOT / "editors" / "chrome"
@@ -28,37 +37,53 @@ RUNTIME = ["manifest.json", "background.js", "popup.html", "popup.css", "popup.j
 RUNTIME_DIRS = {"lib": {".js"}, "icons": {".png"}, "data": {".json", ".bin"}}
 
 
-def build_data(vectors: bool) -> None:
+def build_data(vectors: bool, out: Path | None = None, *, commit: str | None = None):
     sys.path.insert(0, str(ROOT))
     from mdbx import index as idx
     from mdbx.webexport import export
 
-    if DATA.exists():
-        shutil.rmtree(DATA)
-    r = export(idx.default_corpus(), DATA, db=idx.default_db(), vectors=vectors)
+    with tempfile.TemporaryDirectory(prefix="mdbx-committed-corpus-") as temporary:
+        corpus = Path(temporary) / "corpus"
+        payload = subprocess.run(["git", "archive", commit or git_commit(full=True), "corpus"], cwd=ROOT, env=git_environment(), capture_output=True, timeout=120, check=True).stdout
+        with tarfile.open(fileobj=io.BytesIO(payload)) as archive:
+            for member in archive.getmembers():
+                relative = Path(member.name)
+                if relative.is_absolute() or ".." in relative.parts or not relative.parts or relative.parts[0] != "corpus" or not (member.isfile() or member.isdir()):
+                    raise ValueError("committed corpus contains an unsupported path")
+            for member in archive.getmembers():
+                target = Path(temporary) / member.name
+                if member.isdir():
+                    target.mkdir(parents=True, exist_ok=True)
+                else:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    with archive.extractfile(member) as source:
+                        target.write_bytes(source.read())
+        r = export(corpus, out or DATA, db=idx.default_db(), vectors=vectors, allow_untracked=True)
     note = f"; skipped {r.skipped_untracked} untracked (private) files" if r.skipped_untracked else ""
     print(f"search data: {r.chunks} chunks from {r.files} files, {r.terms} terms, {r.vectors} vectors{note}")
     if vectors and not r.vectors:
-        print("note: no embeddings found in the local index (run `mdbx index` with Ollama); keyword search only")
+        print("note: no embeddings found in the local index; keyword search only")
+    return r
 
 
-def git_commit() -> str:
+def git_commit(*, full=False) -> str:
     """Short SHA of HEAD, or "unknown" outside a git checkout."""
     try:
-        out = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short=12", "HEAD"], capture_output=True,
+        out = subprocess.run(["git", "-C", str(ROOT), "rev-parse", *( [] if full else ["--short=12"] ), "HEAD"], env=git_environment(), capture_output=True,
                              text=True, timeout=10, check=False)
     except (OSError, subprocess.SubprocessError):
         return "unknown"
     return out.stdout.strip() or "unknown"
 
 
-def write_build_stamp(version: str, *, data: bool, vectors: bool) -> dict:
+def write_build_stamp(version: str, *, data: bool, vectors: bool, out: Path | None = None, commit: str | None = None) -> dict:
     """data/build.json: what the extension's self-reload check compares (see lib/autoupdate.js)."""
-    DATA.mkdir(exist_ok=True)
-    stamp = {"version": version, "commit": git_commit(),
+    directory = out or DATA
+    directory.mkdir(parents=True, exist_ok=True)
+    stamp = {"version": version, "commit": commit if commit is not None else git_commit(),
              "built_at": dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
              "search_data": data, "vectors": vectors}
-    (DATA / "build.json").write_text(json.dumps(stamp, indent=2) + "\n", encoding="utf-8")
+    (directory / "build.json").write_text(json.dumps(stamp, indent=2) + "\n", encoding="utf-8")
     return stamp
 
 
@@ -67,43 +92,55 @@ def main() -> int:
     ap.add_argument("--no-vectors", action="store_true", help="omit embeddings (keyword search only)")
     ap.add_argument("--no-data", action="store_true", help="package without search data")
     a = ap.parse_args()
-    manifest = json.loads((EXT / "manifest.json").read_text(encoding="utf-8"))
-    pkg = json.loads((EXT / "package.json").read_text(encoding="utf-8"))
-    version = manifest["version"]
-    if pkg["version"] != version:
-        print(f"error: manifest.json {version} != package.json {pkg['version']}", file=sys.stderr)
+    try:
+        if EXT.is_symlink(): raise ValueError("extension directory is a symlink")
+        manifest_bytes = safe_bytes(EXT / "manifest.json", EXT)
+        manifest = json.loads(manifest_bytes)
+        pkg = json.loads(safe_bytes(EXT / "package.json", EXT))
+        if not isinstance(manifest, dict) or not isinstance(pkg, dict):
+            raise TypeError("invalid extension metadata")
+        version = manifest["version"]
+        if not isinstance(version, str) or not re.fullmatch(r"(?:0|[1-9][0-9]{0,4})(?:\.(?:0|[1-9][0-9]{0,4})){0,3}", version) or any(int(n) > 65535 for n in version.split(".")) or not any(int(n) for n in version.split(".")):
+            raise ValueError("invalid extension version")
+        if pkg.get("version") != version: raise ValueError("manifest and package versions differ")
+        out = ROOT / "dist" / f"mongodb-expertise-chrome-{version}.zip"
+        out.parent.mkdir(exist_ok=True)
+        if out.parent.is_symlink(): raise ValueError("dist directory is a symlink")
+        with lock(out.parent / ".chrome-package.lock"), tempfile.TemporaryDirectory(prefix="mdbx-package-") as scratch:
+            scratch = Path(scratch); exported = scratch / "data"; exported.mkdir()
+            commit = git_commit(full=True)
+            result = None if a.no_data else build_data(vectors=not a.no_vectors, out=exported, commit=commit)
+            stamp = write_build_stamp(version, data=not a.no_data, vectors=bool(result and result.vectors), out=exported, commit=commit[:12])
+            files = {name: safe_bytes(EXT / name, EXT) for name in RUNTIME if name != "manifest.json"}
+            manifest['mdbx_data'] = not a.no_data
+            files['manifest.json'] = (json.dumps(manifest, indent=2) + '\n').encode('utf-8')
+            for name, suffixes in RUNTIME_DIRS.items():
+                directory = exported if name == "data" else EXT / name
+                if directory.is_symlink(): raise ValueError("runtime input directory is a symlink")
+                if not directory.is_dir():
+                    raise ValueError("required runtime directory is missing")
+                for entry in sorted(directory.iterdir()):
+                    if entry.suffix not in suffixes: continue
+                    files[name + "/" + entry.name] = safe_bytes(entry, exported if name == "data" else EXT)
+            required_icons = set((manifest.get('icons') or {}).values())
+            action_icon = (manifest.get('action') or {}).get('default_icon', {})
+            required_icons.update(action_icon.values() if isinstance(action_icon, dict) else [action_icon])
+            if any(not isinstance(name, str) or name not in files for name in required_icons):
+                raise ValueError('manifest-required icon is missing')
+            temporary = scratch / "extension.zip"
+            with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED) as archive:
+                for name, content in files.items():
+                    info = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
+                    info.compress_type = zipfile.ZIP_DEFLATED; info.external_attr = 0o644 << 16
+                    archive.writestr(info, content)
+            publish_files(out.parent, {out.name: temporary.read_bytes(),
+                                       'build.json': json.dumps(stamp, indent=2).encode() + b"\n"},
+                          lock_name='chrome-package-outputs')
+        print(f"wrote {out.relative_to(ROOT)} ({len(files)} files)")
+        return 0
+    except (OSError, ValueError, TypeError, RuntimeError, KeyError, subprocess.SubprocessError):
+        print("error: extension package build failed; previous outputs preserved until publication", file=sys.stderr)
         return 1
-    if a.no_data:
-        if DATA.exists():
-            shutil.rmtree(DATA)
-    else:
-        try:
-            build_data(vectors=not a.no_vectors)
-        except RuntimeError as exc:
-            print(f"error: {exc}", file=sys.stderr)
-            return 1
-    stamp = write_build_stamp(version, data=not a.no_data, vectors=not (a.no_data or a.no_vectors))
-    print(f"build stamp: {stamp['version']} @ {stamp['commit']} ({stamp['built_at']})")
-    files = [EXT / f for f in RUNTIME]
-    for d, suffixes in RUNTIME_DIRS.items():
-        if (EXT / d).is_dir():
-            files += sorted(p for p in (EXT / d).iterdir() if p.suffix in suffixes)
-    missing = [str(f) for f in files if not f.is_file()]
-    if missing:
-        print("error: missing " + ", ".join(missing), file=sys.stderr)
-        return 1
-    out = ROOT / "dist" / f"mongodb-expertise-chrome-{version}.zip"
-    out.parent.mkdir(exist_ok=True)
-    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
-        for f in files:
-            info = zipfile.ZipInfo(f.relative_to(EXT).as_posix(), date_time=(2026, 1, 1, 0, 0, 0))  # reproducible
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = 0o644 << 16
-            z.writestr(info, f.read_bytes())
-    raw = sum(f.stat().st_size for f in files)
-    print(f"wrote {out.relative_to(ROOT)} ({len(files)} files, {raw / 1e6:.1f} MB unpacked, "
-          f"{out.stat().st_size / 1e6:.1f} MB zipped)")
-    return 0
 
 
 if __name__ == "__main__":

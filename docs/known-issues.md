@@ -13,17 +13,17 @@
 - `chrome.action.openPopup()` needs Chrome 127+; older versions open the report in a tab instead.
 
 - `mdbx index` rebuilds the keyword index from scratch every run (fast) but does not drop vectors for
-  changed text until the rebuild finishes; stale digests are pruned automatically.
-  Changing `MDBX_EMBED_MODEL` discards every vector on the next run (full re-embed).
+  changed text during preparation. Historical vector bytes are retained; changed heading inputs are marked ineligible for retrieval.
+  An explicit semantic build validates a complete candidate generation before replacing a different model.
 - Semantic search brute-forces all vectors; fine at ~10k chunks, would need an ANN index at 1M+.
 - Local-only corpus files (cannot be redacted): `uber-mongodb-skill.md`, memory-central rows, two internal
-  Atlas-diagnostics skill files, the ts-diag skill/llms set and the kb-backed-troubleshooting stubs.
-- Git history of this private repo contains an early version of `scripts/redact_corpus.py` with customer
-  names in its rules. **Do not flip this repo to public.** Publish by creating a fresh repository from a
-  squashed snapshot (no history) after the final manual review.
+  Atlas-diagnostics skill files, the [private reference omitted] skill/llms set and the kb-backed-troubleshooting stubs.
+- GitHub currently reports this repository as public. Older notes assumed private
+  visibility and identify historical privacy concerns. This maintenance did not
+  inspect customer corpus/history, change visibility or establish redistribution
+  clearance. Maintainer review remains necessary before new corpus publication.
 - Recipe citations are `path:line` against the corpus as of the redaction pass; line numbers drift if corpus
-  files are re-synced or edited. Recipes mark unconfirmed steps with "Verify in the current MongoDB docs:". The repo is private until a full customer-information sweep is done;
-  the sweep tool only checks built-in markers plus a denylist kept outside the repo.
+  files are re-synced or edited. Recipes mark unconfirmed steps with "Verify in the current MongoDB docs:". The sweep checks configured markers; it is not proof of exhaustive privacy review.
 - The VS Code extension is packaged and its pure logic is unit-tested, but it has not been exercised in an
   interactive VS Code session by automation; report problems with `mql.trace.server = verbose`.
 - `mql-lsp` is static: no server connection, schema or index awareness; the operator table is not versioned
@@ -44,4 +44,59 @@
   spread, or loops).
 - MCP uses the v2 SDK (`mcp.server.mcpserver.MCPServer`); v1 `FastMCP` code does not run on it.
 - Natural-language queries fall back from AND to OR keyword matching; very long queries can be noisy.
-- The TUI test covers keyword mode only (no Ollama in CI).
+- TUI tests use synthetic keyword/hybrid paths and stubbed embeddings; real Ollama and
+  interactive model performance remain outside this maintenance.
+
+- Short-section chunk metadata retains the historical format used by the frozen
+  search fixtures. A section can share a chunk with an adjacent section, so the
+  heading/line is an approximate anchor. A precise per-section format needs an
+  explicit cache/fixture migration; this maintenance preserves frozen vector bytes.
+- Existing unlabelled semantic vectors require an explicit provenance migration;
+  the builder refuses to assign them an inferred model identity. No live migration
+  or embedding generation was performed.
+- macOS offline checks use sandbox-exec; Ubuntu CI uses a temporary network namespace
+  with a non-root uid/gid. Other platforms fail closed. Network denial is paired with
+  synthetic preimport factories to prevent local model inference.
+
+- Secure corpus reads currently require POSIX no-follow directory descriptors and fail closed on unsupported platforms. Windows launcher resolution tests do not establish Windows corpus-read support.
+
+## Preserved serialization boundary (2026-11-12)
+
+Short parent-heading sections can report an approximate starting line, and tiny
+sibling sections can retain the previous breadcrumb. These two corroborated
+metadata defects are **BLOCKED: scope requires a separately authorized serialization
+migration**. Historical chunk_text and _merge_tiny remain exact; frozen search
+fixtures continue to verify production behavior. No copied legacy codec or fixture
+monkeypatch is used. The same scope also retains the current treatment of inline
+backtick fence openers and unbounded oversized breadcrumbs. Changing those chunk
+representations requires the same migration decision.
+
+Secure publication retains `.mdbx-recovery-*` displaced versions when an explicit
+expected-content update runs, including writes made later through an editor-held
+old inode. Stable `.mdbx-lock-*` files coordinate publishers. These ignored local
+artifacts preserve recovery evidence; users may inspect them before manual removal.
+
+The static optimizer also retains its existing strong warning for dotted key/value
+predicates without `$elemMatch` and numeric-looking string comparisons. Such input
+can be intentional for embedded objects or string schemas. The corroborated message/
+severity correction changes two ordinary optimizer expectation files outside the
+four-file authorization, so it is **BLOCKED by the current fixture scope**. Treat
+that advice as a prompt to inspect schema, rather than proof that a query is wrong.
+
+## Scoped operational limits after the post-gate repairs
+
+- Corpus synchronization validates a complete private staged generation before its
+  atomic publication. A flagged candidate withholds the whole generation, including
+  otherwise clean changes. This conservative failure behavior preserves the live
+  corpus; retry after the privacy configuration or input is corrected.
+- Redaction and transactional sync require a verified private metadata directory.
+  A linked-worktree `.git` file is unsupported by these maintenance paths and fails
+  before publication. Do not replace that check with an untrusted gitdir path.
+- Selection capture follows same-origin focused-frame ancestry. Cross-origin frame
+  ancestry cannot be inspected by that bounded probe; it retains the existing
+  selection fallback. Virtualized page editors can expose only their visible text.
+- Multi-file generated publications and expected-content updates retain ignored
+  recovery versions to preserve concurrent editor writes. Inspect these local
+  artifacts before a deliberate cleanup; this maintenance did not clean live data.
+- The maintained VSCode client remains on vscode-languageclient9.0.1. Its major11
+  migration is deferred; the cancellation repair follows the installed v9 contract.

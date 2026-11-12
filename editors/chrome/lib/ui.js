@@ -23,15 +23,27 @@ export function h(tag, attrs = {}, ...children) {
   return el;
 }
 
+const copies = new WeakMap();
+
 export async function copyText(text, btn) {
-  const label = btn.textContent;
+  const prior = copies.get(btn);
+  if (prior?.timer) clearTimeout(prior.timer);
+  const current = { label: prior?.label ?? btn.textContent, timer: null };
+  copies.set(btn, current);
+  let label;
   try {
     await navigator.clipboard.writeText(text);
-    btn.textContent = "Copied";
+    label = "Copied";
   } catch {
-    btn.textContent = "Copy failed";
+    label = "Copy failed";
   }
-  setTimeout(() => { btn.textContent = label; }, 1500);
+  if (copies.get(btn) !== current) return;
+  btn.textContent = label;
+  current.timer = setTimeout(() => {
+    if (copies.get(btn) !== current) return;
+    btn.textContent = current.label;
+    copies.delete(btn);
+  }, 1500);
 }
 
 export function copyButton(getText, label = "Copy") {
@@ -55,6 +67,7 @@ export function renderReport(rep, { refLink = () => null, extra = [] } = {}) {
   const counts = severityCounts(rep);
   const findings = rep.findings.filter((f) => !f.code.endsWith("-rewrite"));
   if (!rep.inputQueries) {
+    for (const finding of findings.filter(f => f.code === "syntax")) root.append(h("p", { class: "status error" }, finding.message));
     root.append(h("p", { class: "status error" },
       "No query found. Highlight or paste a mongosh query (db.coll.find(…), aggregate([…])), a slow-query log line, " +
       "a profiler entry, a { find: … } command, a filter or a pipeline."));
@@ -110,14 +123,26 @@ export function renderReport(rep, { refLink = () => null, extra = [] } = {}) {
 
 // ---- minimal, safe markdown for corpus pages
 
-const INLINE = /(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\((https?:\/\/[^)\s]+)\))/g;
+const INLINE = /(`[^`]+`|\*\*[^*]+\*\*|\[[^\[\]]+\]\((https?:\/\/))/g;
 
 function inline(text, mark) {
   const out = [];
-  let last = 0;
-  for (const m of text.matchAll(INLINE)) {
+  let last = 0, boundary = -1;
+  const tokens = new RegExp(INLINE.source, "g");
+  for (let m; (m = tokens.exec(text));) {
+    let tok = m[0];
+    if (m[2]) {
+      const urlStart = m.index + tok.length - m[2].length;
+      if (boundary < urlStart) {
+        boundary = urlStart;
+        while (boundary < text.length && text[boundary] !== ")" && !/\s/.test(text[boundary])) boundary++;
+      }
+      if (text[boundary] !== ")" || boundary === urlStart + m[2].length) continue;
+      tok = text.slice(m.index, boundary + 1);
+      tokens.lastIndex = boundary + 1;
+      m[2] = text.slice(urlStart, boundary);
+    }
     if (m.index > last) out.push(...marked(text.slice(last, m.index), mark));
-    const tok = m[0];
     if (tok.startsWith("`")) out.push(h("code", {}, tok.slice(1, -1)));
     else if (tok.startsWith("**")) out.push(h("strong", {}, ...marked(tok.slice(2, -2), mark)));
     else out.push(externalLink(m[2], tok.slice(1, tok.indexOf("]("))));
@@ -141,8 +166,33 @@ function marked(text, mark) {
   return out;
 }
 
+function beginMarkdownChunk(context, text, line) {
+  if (Number.isFinite(line)) {
+    if (context.nextLine !== line) context.orderedNext = null;
+    context.nextLine = line + text.split("\n").length;
+  }
+}
+
+/** Advance chunk context without allocating rendered nodes for preceding passages. */
+export function advanceMarkdownContext(text, { context, line } = {}) {
+  beginMarkdownChunk(context, text, line);
+  for (const row of text.split("\n")) {
+    const marker = /^\s*(`{3,}|~{3,})(.*)$/.exec(row);
+    if (context.fence) {
+      if (marker && marker[1][0] === context.fence[0] && marker[1].length >= context.fence.length && !marker[2].trim()) context.fence = null;
+      context.orderedNext = null;
+    } else if (marker) {
+      context.fence = marker[1]; context.orderedNext = null;
+    } else {
+      const number = /^\s*(\d+)\.\s+/.exec(row);
+      context.orderedNext = number ? (context.orderedNext ?? Number(number[1])) + 1 : null;
+    }
+  }
+}
+
 /** Render markdown-ish corpus text (headings, fences, lists, tables as text, inline code/bold/links). */
-export function renderMarkdown(text, { mark = null } = {}) {
+export function renderMarkdown(text, { mark = null, context = { fence: null }, line } = {}) {
+  beginMarkdownChunk(context, text, line);
   const frag = document.createDocumentFragment();
   const lines = text.split("\n");
   let i = 0;
@@ -158,33 +208,44 @@ export function renderMarkdown(text, { mark = null } = {}) {
   };
   while (i < lines.length) {
     const line = lines[i];
-    if (/^\s*```/.test(line)) {
-      flushPara(); flushList();
+    const opening = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
+    if (context.fence || opening) {
+      flushPara(); flushList(); context.orderedNext = null;
       const code = [];
-      i++;
-      while (i < lines.length && !/^\s*```/.test(lines[i])) code.push(lines[i++]);
-      i++;
-      frag.append(h("pre", {}, code.join("\n")));
+      if (!context.fence) { context.fence = opening[1]; i++; }
+      const delimiter = context.fence[0], size = context.fence.length;
+      while (i < lines.length) {
+        const closing = /^\s*(`+|~+)\s*$/.exec(lines[i]);
+        if (closing && closing[1][0] === delimiter && closing[1].length >= size) {
+          context.fence = null; i++; break;
+        }
+        code.push(lines[i++]);
+      }
+      if (code.length) frag.append(h("pre", {}, code.join("\n")));
       continue;
     }
     const hm = /^(#{1,6})\s+(.*)$/.exec(line);
     if (hm) {
-      flushPara(); flushList();
+      flushPara(); flushList(); context.orderedNext = null;
       frag.append(h(`h${Math.min(6, hm[1].length + 2)}`, {}, inline(hm[2], mark)));
     } else if (/^\s*([-*]|\d+\.)\s+/.test(line)) {
       flushPara();
-      if (!list) list = h(/^\s*\d+\./.test(line) ? "ol" : "ul", {});
+      const number = /^\s*(\d+)\./.exec(line);
+      const tag = number ? "OL" : "UL";
+      if (list && list.tagName !== tag) flushList();
+      if (!list) list = h(tag.toLowerCase(), number ? { start: String(context.orderedNext ?? Number(number[1])) } : {});
+      context.orderedNext = number ? (context.orderedNext ?? Number(number[1])) + 1 : null;
       list.append(h("li", {}, inline(line.replace(/^\s*([-*]|\d+\.)\s+/, ""), mark)));
     } else if (/^\s*\|/.test(line)) {
-      flushPara(); flushList();
+      flushPara(); flushList(); context.orderedNext = null;
       const rows = [];
       while (i < lines.length && /^\s*\|/.test(lines[i])) rows.push(lines[i++]);
       frag.append(h("pre", { class: "table" }, rows.join("\n")));
       continue;
     } else if (!line.trim()) {
-      flushPara(); flushList();
+      flushPara(); flushList(); context.orderedNext = null;
     } else {
-      flushList();
+      flushList(); context.orderedNext = null;
       para.push(line.trim());
     }
     i++;
@@ -195,8 +256,8 @@ export function renderMarkdown(text, { mark = null } = {}) {
 
 /** A regex that marks the search words of `query` (stopwords skipped, loose stemming by prefix), or null. */
 export function markFor(query) {
-  const words = (String(query).match(/[\p{L}\p{N}_$]{2,}/gu) || []).map((w) => w.replace(/^\$/, ""))
-    .filter((w) => w.length > 2 && !STOPWORDS.has(w.toLowerCase()) && !EXTRA_STOP.has(w.toLowerCase()))
-    .map((w) => w.slice(0, Math.max(3, w.length - 2)).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  return words.length ? new RegExp(`\\b(?:${words.join("|")})\\w*`, "giu") : null;
+  const words = (String(query).normalize("NFC").match(/[\p{L}\p{N}_$][\p{L}\p{N}\p{M}_$]*/gu) || []).map((w) => w.replace(/^\$/, ""))
+    .filter((w) => [...w].length > 2 && !STOPWORDS.has(w.toLowerCase()) && !EXTRA_STOP.has(w.toLowerCase()))
+    .map((w) => [...w].slice(0, Math.max(3, [...w].length - 2)).join("").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  return words.length ? new RegExp(`(?<![\\p{L}\\p{N}\\p{M}_])(?:${words.join("|")})[\\p{L}\\p{N}\\p{M}_]*`, "giu") : null;
 }

@@ -231,6 +231,16 @@
       "start": 1447
     },
     {
+      "code": "misplaced-operator",
+      "column": 44,
+      "end": 1510,
+      "fix": null,
+      "line": 28,
+      "message": "$eq is not an accumulator.",
+      "severity": "error",
+      "start": 1507
+    },
+    {
       "code": "unknown-operator",
       "column": 95,
       "end": 1688,
@@ -259,16 +269,6 @@
       "message": "$bogusId is not in the built-in operator table (it may be newer than this server).",
       "severity": "warning",
       "start": 1825
-    },
-    {
-      "code": "stage-shape",
-      "column": 85,
-      "end": 2145,
-      "fix": null,
-      "line": 35,
-      "message": "Field 'run' must be an accumulator expression such as { $sum: 1 }.",
-      "severity": "error",
-      "start": 2142
     },
     {
       "code": "stage-shape",

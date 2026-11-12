@@ -1,33 +1,69 @@
-# Testing
+# Offline verification
 
-`pytest -q` (asyncio auto mode). Suites:
-- `tests/test_core.py` — classification, chunking, FTS filters, stopwords, hybrid fallback without
-  Ollama, semantic ranking and resumability with fake embeddings, CLI index/search/stats.
-- `tests/test_tui.py` — Textual pilot: submits a keyword query and asserts hits (skipped without Textual).
+Use Python 3.11+ and Node 26 (`.node-version`). Install dependencies separately:
 
-- `tests/test_mql.py` — operator table, parser recovery, ~25 diagnostic rules (one test per rule), valid
-  queries produce no diagnostics, completion contexts, hover, outline.
-- `tests/test_lsp_e2e.py` — spawns `python -m mdbx.mql.server` and drives real stdio JSON-RPC: initialize,
-  didOpen → publishDiagnostics, codeAction, hover, completion, documentSymbol.
-- `tests/test_optimize.py` — static optimizer: one test per rule family (`$where`, regex, negation, `$in` thresholds,
-  `$or` -> `$in` rewrite, rooted `$or` + sort, degenerate range, `$expr`, cursor and group rules, `$match` hoisting),
-  ESR index recommendations, LSP `opt/` diagnostics and the `MDBX_LSP_OPTIMIZE=0` toggle, report/dict output,
-  `mdbx optimize`, no exception on garbage input, every `ref` exists in the corpus.
-- `tests/test_cdo_hardening.py` — embed (non-JSON body, ragged vectors, logged failures), `build_keyword` on a
-  missing corpus keeps the index, embed-model change purges vectors, query/index dimension mismatch falls back,
-  mixed-dimension vectors ignored, semantic filters not starved, recipe text read from the load root.
-- `tests/test_recipes.py` — recipe frontmatter, lookup, `-k recipe` search, CLI and MCP recipe tools.
-- `tests/test_normalize.py` — log line / getMore / profiler / command / bare-input normalization, extended JSON, P9 evidence findings, `to_dict` input block, goldens current.
-- `tests/test_js_parity.py` — runs `editors/chrome/test/batch.mjs` on ~400 inputs (every fixture cut at ~40 points, so half-typed queries exercise parser recovery) and requires identical output to Python; skipped without Node.
-- `tests/test_web_search.py` — `export-web`: untracked files never exported, corpus outside git refused, keyword ranking and bm25 scores equal SQLite FTS5, int8 vector round-trip, meta/recipes, CLI, search goldens current, JS search equals Python.
-- `tests/test_js_lint_parity.py` — JS linter equals Python on ~860 inputs (fixtures cut at ~40 points), `suggest()` equals difflib on 1,137 words, every diagnostic code has a golden, generated files current.
-- `editors/chrome/test/` — `cd editors/chrome && npm test` (node:test, 130 tests): search parity with `tests/fixtures/search/golden.json` (keyword, semantic, hybrid, filters), lint parity, optimizer parity, stemmer/tokenizer/snippet units, Ollama client errors, runtime-script syntax, manifest permissions, no HTML injection; earlier (optimizer extension): JS optimizer equals every golden (`apply`, `read_only` and the text report), selection picking, context-menu handoff, Markdown case note, docs-link coverage, manifest permissions, no HTML injection. `test/e2e.mjs` (opt-in, Playwright + Chromium) loads the unpacked extension and checks selection capture, the handoff, rendering and the clipboard, then (with packaged data) the popup corpus fallback, app search/facets/document view, recipes, lint, operators, about, optimizer corpus links and the right-click lint handoff.
-- `editors/vscode/test/` — `cd editors/vscode && npm test` (node:test): server-path resolution, manifest/grammar consistency.
-- `tests/test_mcp.py` — calls the MCP tool functions against a temp index (Ollama unreachable → keyword fallback); asserts the registered tool list and `mql_optimize`.
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -e '.[dev]'
+npm ci --ignore-scripts --prefix editors/vscode
+```
 
-Target: meaningful coverage of ranking, filtering and fallback paths, asserting on behaviour
-(returned sources, kinds, resumability), not a line-coverage percentage. CI (`.github/workflows/ci.yml`)
-gates on `ruff check .`, `pytest -q` on Python 3.11–3.13, `sweep_customers.py`, `rotate_workflow_logs.py --check`, an optimizer smoke test
-(`mdbx optimize --read-only examples/slow-queries.mql`, exit 1 allowed) the Chrome extension tests and zip build, and the doc-index path check.
-Current count: 150+ tests passing (`.venv/bin/pytest -q`).
-Real Ollama is never required by tests.
+On macOS and supported Linux CI runners, run every test/check through the process-tree egress wrapper:
+
+```sh
+python3 scripts/offline_test.py -- .venv/bin/python -m pytest -q
+python3 scripts/offline_test.py -- .venv/bin/python -m ruff check .
+python3 scripts/offline_test.py -- .venv/bin/python -m compileall -q mdbx scripts tests
+python3 scripts/offline_test.py -- npm test --prefix editors/chrome
+python3 scripts/offline_test.py -- npm test --prefix editors/vscode
+python3 scripts/offline_test.py -- .venv/bin/python scripts/package_chrome_extension.py --no-data
+python3 scripts/offline_test.py -- .venv/bin/python scripts/check_doc_indexes.py
+python3 scripts/offline_test.py -- .venv/bin/python scripts/rotate_workflow_logs.py --check
+```
+
+The wrapper denies outbound traffic for descendants, including loopback. An exact
+owned synthetic listener port may be allowed explicitly; never allow a real model,
+service or index endpoint. Python socket patches alone do not cover descendants.
+macOS uses sandbox-exec. Linux requires a non-root runner with passwordless sudo
+and unshare/setpriv; the child gets an isolated network namespace with only a
+down loopback interface, drops all groups/capabilities and returns to the runner
+uid/gid with NoNewPrivs. Nested execution reuses it only after kernel checks,
+including exactly empty or header-only IPv4 routes and inert IPv6 reject routes. Linux does not accept host fixture-
+port exceptions. Unsupported platforms fail closed. CI covers macOS and Ubuntu
+on Python 3.11, 3.12 and 3.13; dependency downloads precede isolated checks.
+
+Before product imports, scripts/test_isolation.py assigns a fresh process-only HOME,
+XDG/config/data/auth/model and temporary locations, forces cached synthetic ONNX/client factories,
+and installs the same protection for Python descendants. Artifact-validation tests
+explicitly restore the real loader with synthetic dependency factories and empty
+model directories; no real inference runs. No shared configuration is changed.
+
+Synthetic Git fixtures use owned empty system/global configuration, empty hooks and
+an explicit empty init/clone template. The shim strips every inherited GIT_* selector
+and numbered override before each command, then inspects effective and physical
+hooks before every fixture commit. Hostile-template regressions cover both initial
+and later commits. Repository delivery commits are separate: they preserve validation
+and registry hooks and suppress only the independently paused, hash-verified semantic
+post-commit action through command-scoped filtering.
+
+The suite covers index rollback/model identity, full-content deduplication, stale
+vector caches, finite embeddings, confined files and atomic writes; paired Python
+and JavaScript normalization/optimizer/lint contracts; stdio LSP deadlines and
+UTF-16 edits; CLI/MCP/TUI/provider-adapter behavior; synthetic updater, redaction,
+package promotion, rotation and source-ownership failures. Chrome tests evaluate
+actual app/popup scripts with controlled asynchronous DOM fixtures. VS Code tests
+exercise restart ownership, grammar and launcher resolution.
+
+Current exact results belong to the maintenance ledger and CI, rather than a
+hardcoded test count here. Optional private ai-auth integration can skip when the
+library is absent. A browser/interactive editor session, real provider credentials,
+model benchmarks, live corpus publication and service activation are separate
+checks and were not performed in this maintenance.
+
+Only static catalogs and relevant synthetic MQL goldens are refreshed. Frozen
+search fixtures and vectors remain byte-identical. Full pre-existing suites are
+must-pass gates; passing paired implementations alone does not establish query
+semantics or measured performance gains. The search fixture generator always uses
+the actual production chunker; frozen expectations have no compatibility codec.
+The four ordinary optimizer expectations changed under the narrow maintenance
+authorization; subsequent post-gate repairs preserve all expectation bytes.

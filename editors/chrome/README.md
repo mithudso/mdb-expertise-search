@@ -19,7 +19,7 @@ beyond the extension:
 
 | You want to… | Do this |
 |---|---|
-| Check a query or log line on the page | Highlight it → click the toolbar icon (or **Alt+Shift+O**, or right-click → **Optimize selected MQL**) |
+| Check a query or log line on the page | Highlight it → click the toolbar icon (or **Alt+Shift+O**). Right-click → **Optimize selected MQL** opens an identified handoff in a new tab |
 | Look something up from a case | Highlight an error message or question → click the icon: if it is not a query, the popup shows the best corpus passages. Or right-click → **Search MongoDB expertise for “…”** |
 | Search from the address bar | Type `mdb`, a space, then your question, then Enter |
 | Lint a selection | Right-click → **Lint selected MQL** |
@@ -60,7 +60,7 @@ Only the query text goes to that local Ollama; nothing leaves the machine.
 
 ## Privacy and permissions
 
-- Search, lint and the optimizer run inside the extension and make **no network requests**.
+- Keyword search, lint and the optimizer run inside the extension. If you enable semantic or hybrid search, query text goes over HTTP to your local Ollama.
 - `activeTab` + `scripting`: read the highlighted text **only when you click** the extension, its shortcut or
   a right-click item. No host permissions, no content scripts.
 - `contextMenus` (the right-click items), `storage` (`chrome.storage.session` for hand-offs and the last input,
@@ -115,7 +115,7 @@ about 15 minutes, with no clicks. Options: `--interval-min`, `--install-dir`, `-
 `--python` (an interpreter with `mdbx` + numpy; defaults to the one that ran `install-agent`).
 `--source release` skips the local build and downloads the keyword-only zip CI publishes on the rolling
 `chrome-latest` GitHub release (needs `gh auth login`). Settings: `~/.config/mdbx/chrome-autoupdate.json`;
-log: `~/Library/Logs/mdbx-chrome-autoupdate.log`. The extension itself still makes no network requests: it only
+log: `~/Library/Logs/mdbx-chrome-autoupdate.log`. The update check reads its local packaged file: it only
 reads its own `data/build.json`.
 
 ## Limits

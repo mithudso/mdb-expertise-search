@@ -144,6 +144,23 @@
 - Add `mdbx` MCP server (see `docs/known-issues.md`).
 - Redact private skill files so they can ship publicly.
 
+
+## v0.7.1 — 2026-11-12 maintenance
+
+Hardened paired MQL parsing/normalization/rewrites, local search/cache identity, editor races, file and updater preservation, privacy gates and fixture isolation. Added maintained documentation navigation and code-only CI packaging. Refreshed static indexes and synthetic MQL goldens only. See docs/repo-bootstrap-audit-2026-11-12.md for exact coverage, validation and retained limits.
+
+## v0.7.1 — 2026-11-12 maintenance
+
+Supported maintenance repairs preserve chunk serialization and approved search
+fixtures. Offline checks isolate descendants, scratch homes, synthetic providers
+and Git fixture templates/hooks. See the dated bootstrap and optimizer reports
+for scope, final verification and retained migration-dependent defects.
+
+
+## 2026-11-12 — selected maintenance repair continuation
+
+Applied corroborated preservation, index identity, parser/editor, updater and offline-test isolation repairs. Both blind gates remain spent; optimizer status is BLIND-AUDIT-DISSENT. Frozen chunk/search serialization and protected data remain unchanged. Integrated Python:666 passed,2 platform/model skips; Chrome280 and VSCode20 passed. Final upstream integration, CI and remote delivery evidence are tracked in PR7 and the external maintenance receipt.
+
 Version: 2026.11.12.2
 Delta: Preserve outstanding local changes and synchronize cross-system Git work.
 
@@ -154,3 +171,8 @@ Preserve the existing project-local MCP disable configuration. The server defini
 Git reconciliation is separate from paused optimization work. Preserve generated logs, local backups and concurrent work. Verification and delivery receipts are recorded by the fleet synchronization task TASK-1968. Verification: scoped local checks passed. Remaining: final commit, CI and verified remote delivery.
 
 CI initially failed before tests because the runner lacked access to private ollama-client. Configured a dedicated read-only deploy key for that dependency and stored it only as a repository Actions secret. Added strict SSH host verification using GitHub's HTTPS metadata and an exact dependency URL rewrite. The key cannot write to the dependency. Remaining: final CI and verified remote delivery.
+
+
+## 2026-11-12 — final supported repair validation
+
+Full local Python673 passed/2 platform/model skips; Chrome280 and VSCode20 passed. Ruff, syntax, catalog freshness, wheel and code-only packages passed. Actual Ubuntu CI identified exactly-empty route-file recognition, now covered by a red-to-green regression while all other kernel predicates remain. Real egress evidence uses fresh Python/Node descendants. Final six-job CI and verified remote delivery remain enforced by PR7. BLIND-AUDIT-DISSENT and serialization/schema limitations remain explicit.

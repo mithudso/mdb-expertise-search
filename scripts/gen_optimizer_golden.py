@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -26,9 +28,25 @@ FIXTURES = ROOT / "tests" / "fixtures" / "optimizer"
 
 
 def golden(text: str, name: str) -> str:
-    data = {"apply": to_dict(optimize(text)), "read_only": to_dict(optimize(text, apply=False)),
-            "report": format_report(optimize(text), name)}
-    return json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    applied = optimize(text)
+    data = {"apply": to_dict(applied), "read_only": to_dict(optimize(text, apply=False)),
+            "report": format_report(applied, name)}
+    return (json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8", "backslashreplace").decode("utf-8")
+
+
+def _atomic_write(path: Path, data: bytes) -> None:
+    name = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, prefix="." + path.name + ".", delete=False) as stream:
+            name = stream.name
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(name, path)
+        name = None
+    finally:
+        if name is not None:
+            Path(name).unlink(missing_ok=True)
 
 
 def main() -> int:
@@ -36,20 +54,23 @@ def main() -> int:
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--print", action="store_true", dest="show")
     a = ap.parse_args()
+    if not FIXTURES.is_dir() or not list(FIXTURES.glob("*.txt")):
+        print("missing or empty optimizer fixtures")
+        return 1
     stale = []
     for src in sorted(FIXTURES.glob("*.txt")):
         text = src.read_text(encoding="utf-8")
         out = src.with_suffix(".golden.json")
         want = golden(text, src.name)
         if a.show:
-            print(f"=========== {src.name}\n{format_report(optimize(text), src.name)}\n")
+            print(f"=========== {src.name.encode('unicode_escape').decode('ascii')}\n{format_report(optimize(text), src.name)}\n")
         if a.check:
             if not out.is_file() or out.read_text(encoding="utf-8") != want:
                 stale.append(out.name)
         else:
-            out.write_text(want, encoding="utf-8")
+            _atomic_write(out, want.encode("utf-8"))
     if a.check and stale:
-        print("stale goldens (run scripts/gen_optimizer_golden.py):", ", ".join(stale))
+        print("stale goldens (run scripts/gen_optimizer_golden.py):", ", ".join(name.encode("unicode_escape").decode("ascii") for name in stale))
         return 1
     return 0
 

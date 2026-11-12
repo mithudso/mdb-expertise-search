@@ -282,6 +282,16 @@
     },
     {
       "code": "bad-argument",
+      "column": 24,
+      "end": 2023,
+      "fix": null,
+      "line": 48,
+      "message": "$out expects a string or an object, got number.",
+      "severity": "error",
+      "start": 2022
+    },
+    {
+      "code": "bad-argument",
       "column": 15,
       "end": 2089,
       "fix": null,
@@ -289,6 +299,16 @@
       "message": "A pipeline must be an array of stages, not an object.",
       "severity": "error",
       "start": 2075
+    },
+    {
+      "code": "bad-argument",
+      "column": 15,
+      "end": 2112,
+      "fix": null,
+      "line": 52,
+      "message": "A pipeline must be an array of stages, got string.",
+      "severity": "error",
+      "start": 2106
     }
   ],
   "source": "tests/fixtures/lint/pipeline-positions.txt",

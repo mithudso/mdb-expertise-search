@@ -19,7 +19,7 @@
           "status": 1
         },
         "rationale": "[leading $match/$sort] ESR order: equality status.",
-        "shell": "db.orders.createIndex({ status: 1 })"
+        "shell": "db.getCollection(\"orders\").createIndex({ status: 1 })"
       }
     ],
     "input": {
@@ -67,7 +67,7 @@
           "status": 1
         },
         "rationale": "[leading $match/$sort] ESR order: equality status.",
-        "shell": "db.orders.createIndex({ status: 1 })"
+        "shell": "db.getCollection(\"orders\").createIndex({ status: 1 })"
       }
     ],
     "input": {
@@ -95,5 +95,5 @@
     ],
     "rewritten": null
   },
-  "report": "MQL optimizer (static audit) — mongosh-orders.txt: 2 queries, 1 low\n\nFindings:\n  mongosh-orders.txt:7:3: LOW [P6 sort-no-limit] $sort is a blocking stage (100 MB per stage, then spills). Unless an index supplies the order, follow it with $limit (top-k sort) or slim the stream first.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n\nRecommended indexes (recommend-only — build on non-prod first, check existing indexes):\n  db.orders.createIndex({ status: 1 })\n      [leading $match/$sort] ESR order: equality status.\n\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, totalDocsExamined/nReturned near 1, nReturned unchanged."
+  "report": "MQL optimizer (static audit) — mongosh-orders.txt: 2 queries, 1 low\n\nFindings:\n  mongosh-orders.txt:7:3: LOW [P6 sort-no-limit] $sort is a blocking stage (100 MB per stage, then spills). Unless an index supplies the order, follow it with $limit (top-k sort) or slim the stream first.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n\nRecommended indexes (recommend-only — build on non-prod first, check existing indexes):\n  db.getCollection(\"orders\").createIndex({ status: 1 })\n      [leading $match/$sort] ESR order: equality status.\n\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, totalDocsExamined/nReturned near 1, nReturned unchanged."
 }

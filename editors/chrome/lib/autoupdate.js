@@ -11,14 +11,15 @@ export const ALARM = "mdbx-autoupdate";
 export const INTERVAL_MINUTES = 5;
 export const SESSION_KEY = "autoupdateBuild";
 
-/** Stable identity of a build: the commit when known, else version + build time. */
+/** Package identity includes rebuild time and payload mode as well as the source revision. */
 export function buildId(info) {
   if (!info || typeof info !== "object") return "";
   const commit = String(info.commit || "").trim();
-  if (commit && commit !== "unknown") return commit;
+
   const version = String(info.version || "").trim();
   const built = String(info.built_at || "").trim();
-  return version || built ? `${version}@${built}` : "";
+  if (!version && !built) return commit && commit !== "unknown" ? commit : "";
+  return JSON.stringify([commit, version, built, info.vectors ?? null]);
 }
 
 /** True when a newer build id is present and differs from the one this worker started with. */
@@ -32,39 +33,66 @@ export async function readBuild(fetchImpl, runtime) {
     if (!res.ok) return null;
     return await res.json();
   } catch {
-    return null; // packaged without data/ (--no-data) or a transient read error
+    return null; // missing metadata, invalid JSON, or a transient local read error
   }
 }
 
 /**
  * Wire the alarm. `api` is the chrome namespace (injectable for tests); returns the handlers so tests
- * can drive them. Safe to call on every worker start: alarms.create replaces an existing alarm.
+ * can drive them. The stored baseline and existing alarm survive worker suspension.
  */
-export function startAutoUpdate(api = globalThis.chrome, fetchImpl = globalThis.fetch) {
+export function startAutoUpdate(api = globalThis.chrome, fetchImpl = globalThis.fetch, { schedule = setTimeout, retryDelay = 1000, maxRetries = 3 } = {}) {
   const { alarms, runtime, storage } = api;
   if (!alarms || !runtime || !storage?.session) return null;
 
-  async function remember() {
-    const info = await readBuild(fetchImpl, runtime);
-    const id = buildId(info);
-    if (id) await storage.session.set({ [SESSION_KEY]: id });
-    return id;
-  }
-
-  async function check() {
+  // Serialize initialization and alarm checks so neither can replace an outstanding baseline.
+  let queue = Promise.resolve();
+  let reloading = false;
+  let knownBaseline = "", baselinePersisted = false, identityReadFailed = false;
+  const serial = fn => {
+    const next = queue.then(fn);
+    queue = next.catch(() => {});
+    return next;
+  };
+  async function baseline() {
+    if (knownBaseline) {
+      if (!baselinePersisted) { await storage.session.set({ [SESSION_KEY]: knownBaseline }); baselinePersisted = true; }
+      return knownBaseline;
+    }
     const stored = (await storage.session.get(SESSION_KEY))?.[SESSION_KEY];
-    const started = stored || (await remember());
+    if (stored) { baselinePersisted = true; return (knownBaseline = stored); }
+    if (identityReadFailed) return "";
+    knownBaseline = buildId(await readBuild(fetchImpl, runtime));
+    if (!knownBaseline) identityReadFailed = true;
+    if (knownBaseline) { await storage.session.set({ [SESSION_KEY]: knownBaseline }); baselinePersisted = true; }
+    return knownBaseline;
+  }
+  const remember = () => serial(baseline);
+  const check = () => serial(async () => {
+    if (reloading) return false;
+    const started = await baseline();
     const current = buildId(await readBuild(fetchImpl, runtime));
-    if (shouldReload(started, current)) {
+    if ((identityReadFailed && current) || shouldReload(started, current)) {
       await storage.session.remove(SESSION_KEY);
       runtime.reload();
+      reloading = true;
       return true;
     }
     return false;
-  }
+  });
 
-  alarms.create(ALARM, { periodInMinutes: INTERVAL_MINUTES, delayInMinutes: 1 });
-  alarms.onAlarm.addListener((alarm) => (alarm?.name === ALARM ? check() : undefined));
-  remember();
-  return { remember, check };
+  // Register synchronously; every detached API boundary contains failures and permits a later retry.
+  alarms.onAlarm.addListener(alarm => alarm?.name === ALARM ? check().catch(() => false) : undefined);
+  async function ensureAlarm(attempt = 0) {
+    try {
+      if (!(await alarms.get(ALARM))) await alarms.create(ALARM, { periodInMinutes: INTERVAL_MINUTES, delayInMinutes: 1 });
+    } catch {
+      if (attempt < maxRetries) schedule(() => { void ensureAlarm(attempt + 1); }, retryDelay)?.unref?.();
+    }
+  }
+  const ready = Promise.all([
+    ensureAlarm(),
+    remember().catch(() => ""),
+  ]);
+  return { remember, check, ready };
 }

@@ -46,9 +46,31 @@
     (→ `scripts/sync_corpus.sh`, `scripts/corpus_autoupdate.py`, ONNX embedding parity test)
 14. "Write a small install script that does all of what you need with one command" (→ `scripts/install.sh`)
 
+
+## v0.7.1 — 2026-11-12 maintenance
+
+Requested full repository bootstrap and exhaustive maintained-source optimization in an isolated worktree, with protected data preserved, offline synthetic verification and checked PR delivery. Semantic generation and service activation remain separately scoped.
+
+## v0.7.1 — 2026-11-12 selected maintenance request
+
+Apply full repo-bootstrapper and repository-scope code-deep-optimizer to MDBx,
+preserve protected data and existing serialization, and deliver through verified
+remote-default contents. Correct only the four explicitly authorized synthetic
+optimizer expectations using independent semantics and separate behavior tests.
+
+
+## 2026-11-12 — selected maintenance scope
+
+Resume only mdb-expertise-search through verified PR delivery. Preserve the original five-iteration/two-gate caps, completed evidence and serialization freeze. Apply focused corroborated repairs with synthetic factories, scratch state, process-tree egress denial and isolated fixture Git hooks. Preserve unrelated work and live services/models/indexes.
+
 Version: 2026.11.12.2
 Delta: Preserve outstanding local changes and synchronize cross-system Git work.
 
 ## 2026-11-12 — Git reconciliation
 
 For all of my repos in this directory, get them up to date. commit anything outstanding and get current with the most recent branch, there was a lot of work done on other systems optimizing all of them.
+
+
+## 2026-11-12 — final delivery boundary
+
+Finish the supported repairs and existing PR7 through required CI, merge and exact remote-content verification. Preserve frozen search/chunk/vector identities and all protected data. Keep both spent blind gates and the original iteration cap; record residuals honestly. Sync only the clean compatible primary; clean only this task worktree after verified delivery; update supported hub metadata without activation.

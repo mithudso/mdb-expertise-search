@@ -2,13 +2,19 @@
 """Regenerate docs/RECIPES.md from the frontmatter of corpus/recipes/*.md."""
 from __future__ import annotations
 
+import html
+import json
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from mdbx import recipes
+
+sys.path.insert(0, str(ROOT / "scripts"))
+from maintenance_safety import atomic_write
 
 GROUPS = [
     ("Sharding", ["shard-a-collection", "reshard-a-collection", "convert-replica-set-to-sharded-cluster"]),
@@ -26,8 +32,33 @@ GROUPS = [
 ]
 
 
+
+def cell(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("|", "\\|").replace("\n", " ").replace("\r", " ")
+
+
+def row(recipe) -> str:
+    path = PurePosixPath(str(recipe.path))
+    if path.is_absolute() or ".." in path.parts:
+        raise ValueError("recipe path must be corpus-relative")
+    label = html.escape(cell(recipe.name), quote=False)
+    for marker in "*_[]":
+        label = label.replace(marker, "\\" + marker)
+    label = label.replace("\x60", "&#96;")
+    destination = quote(path.as_posix(), safe="/")
+    return f"| [{label}](../corpus/{destination}) | {cell(', '.join(recipe.applies_to)) or '-'} | {cell(recipe.summary)} |"
+
+
 def main() -> None:
-    items = {r.name: r for r in recipes.load(ROOT / "corpus")}
+    if not (ROOT / "corpus/recipes").is_dir():
+        raise ValueError("recipe source directory is missing")
+    items = {}
+    names = {}
+    for recipe in recipes.load(ROOT / "corpus", strict=True):
+        if recipe.name.lower() in names:
+            raise ValueError("duplicate recipe name or path: " + json.dumps([recipe.name, names[recipe.name.lower()].path, recipe.path], ensure_ascii=True))
+        names[recipe.name.lower()] = recipe
+        items[recipe.name] = recipe
     placed: set[str] = set()
     lines = [
         "# Recipes",
@@ -47,14 +78,17 @@ def main() -> None:
         lines += [f"## {title}", "", "| Recipe | Applies to | Summary |", "|---|---|---|"]
         for r in rows:
             placed.add(r.name)
-            lines.append(f"| [`{r.name}`](../corpus/recipes/{r.name}.md) | {', '.join(r.applies_to) or '-'} | {r.summary} |")
+            lines.append(row(r))
         lines.append("")
     extra = [r for n, r in items.items() if n not in placed]
     if extra:
         lines += ["## Other", "", "| Recipe | Applies to | Summary |", "|---|---|---|"]
-        lines += [f"| [`{r.name}`](../corpus/recipes/{r.name}.md) | {', '.join(r.applies_to) or '-'} | {r.summary} |" for r in extra]
+        lines += [row(r) for r in extra]
         lines.append("")
-    (ROOT / "docs" / "RECIPES.md").write_text("\n".join(lines))
+    output = ROOT / "docs" / "RECIPES.md"
+    if output.is_symlink():
+        raise ValueError("recipe index is a symlink")
+    atomic_write(output, "\n".join(lines).encode("utf-8"), root=ROOT)
     print(f"wrote docs/RECIPES.md ({len(items)} recipes)")
 
 

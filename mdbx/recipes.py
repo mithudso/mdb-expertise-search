@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import index as idx
+from .safety import open_confined
 
 _FM = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 
@@ -27,7 +28,8 @@ class Recipe:
     @property
     def text(self) -> str:
         base = self.root or idx.default_corpus()
-        return (base / self.path).read_text(encoding="utf-8", errors="replace")
+        with open_confined(base, self.path) as stream:
+            return stream.read()
 
 
 def _list_value(raw: str) -> list[str]:
@@ -49,13 +51,37 @@ def parse_frontmatter(text: str) -> dict[str, str]:
     return out
 
 
-def load(root: Path | None = None) -> list[Recipe]:
-    root = root or idx.default_corpus()
+def load(root: Path | None = None, *, strict: bool = False) -> list[Recipe]:
+    root = (root or idx.default_corpus()).resolve()
     recipes: list[Recipe] = []
     for p in sorted((root / "recipes").glob("*.md")):
         if p.name.lower() == "readme.md":
             continue
-        fm = parse_frontmatter(p.read_text(encoding="utf-8", errors="replace"))
+        relative = p.relative_to(root).as_posix()
+        try:
+            if not p.is_file():
+                continue
+            with open_confined(root, relative) as stream:
+                header = []
+                first = stream.readline(65537)
+                if first == "---\n":
+                    header.append(first)
+                    for _ in range(1024):
+                        line = stream.readline(65537)
+                        if len(line) > 65536:
+                            raise ValueError("recipe frontmatter line is too long")
+                        header.append(line)
+                        if line in {"---\n", "---"}:
+                            break
+                        if not line:
+                            raise ValueError("recipe frontmatter is incomplete")
+                    else:
+                        raise ValueError("recipe frontmatter exceeds the line budget")
+                fm = parse_frontmatter("".join(header))
+        except (OSError, UnicodeError, ValueError):
+            if strict:
+                raise ValueError("recipe metadata is unavailable or invalid") from None
+            continue  # unsafe entries cannot become recipes or hide valid regular recipes
         recipes.append(
             Recipe(
                 name=fm.get("name") or p.stem,
@@ -63,7 +89,7 @@ def load(root: Path | None = None) -> list[Recipe]:
                 summary=fm.get("summary", ""),
                 applies_to=_list_value(fm.get("applies_to", "")),
                 sources=_list_value(fm.get("sources", "")),
-                path=str(p.relative_to(root)),
+                path=relative,
                 root=root,
             )
         )
@@ -73,6 +99,8 @@ def load(root: Path | None = None) -> list[Recipe]:
 def find(name: str, root: Path | None = None) -> list[Recipe]:
     """Exact name match first, otherwise every recipe whose name/title contains ``name``."""
     needle = name.lower().strip()
+    if not needle.replace("-", " ").split():
+        return []
     items = load(root)
     exact = [r for r in items if r.name.lower() == needle]
     if exact:

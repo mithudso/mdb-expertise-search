@@ -3,15 +3,23 @@
 
 Built-in markers cover internal hosts, repos and support-case numbers. Add customer names to a
 denylist file OUTSIDE this repo (one regex per line): $MDBX_DENYLIST or ~/.config/mdbx/denylist.txt.
-Checks every non-ignored file under corpus/ (git ls-files), so private local-only files do not trip it.
+Checks tracked and non-ignored untracked files under corpus/. Ignored private files are excluded.
+All selected files must be readable UTF-8 text; unsupported or symlink entries fail the gate.
 """
 from __future__ import annotations
 
+import argparse
+import json
 import os
 import re
+import signal
 import subprocess
 import sys
+from contextlib import contextmanager
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from maintenance_safety import git_environment, safe_bytes
 
 ROOT = Path(__file__).resolve().parent.parent
 BUILTIN = [
@@ -37,42 +45,78 @@ def load_patterns() -> list[re.Pattern]:
     if path.is_file():
         pats += [ln.strip() for ln in path.read_text().splitlines() if ln.strip() and not ln.startswith("#")]
     else:
-        print(f"note: no denylist at {path}; only built-in markers checked", file=sys.stderr)
+        raise ValueError("selected denylist is unavailable")
     compiled = []
-    for p in pats:
+    for number, p in enumerate(pats, 1):
         try:
             compiled.append(re.compile(p, re.IGNORECASE if p not in BUILTIN else 0))
-        except re.error as exc:
-            sys.exit(f"error: invalid denylist regex {p!r}: {exc}")
+        except re.error:
+            raise ValueError("invalid denylist rule") from None
     return compiled
 
 
-def main() -> int:
-    files = subprocess.run(
-        ["git", "ls-files", "corpus"], cwd=ROOT, capture_output=True, text=True, check=True
-    ).stdout.splitlines()
-    # Also check files staged-but-untracked by including `git ls-files -o --exclude-standard`.
-    files += subprocess.run(
-        ["git", "ls-files", "-o", "--exclude-standard", "corpus"], cwd=ROOT, capture_output=True, text=True, check=True
-    ).stdout.splitlines()
-    pats = load_patterns()
-    hits = 0
-    scanned = 0
-    for rel in sorted(set(files)):
-        p = ROOT / rel
-        if p.suffix not in {".md", ".txt", ".json", ".jsonl"} or not p.is_file():
-            continue
-        scanned += 1
-        for n, line in enumerate(p.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
-            for pat in pats:
-                if pat.search(line):
-                    print(f"{rel}:{n}: /{pat.pattern}/ {line.strip()[:120]}")
-                    hits += 1
-    print(f"{hits} marker hit(s) in {scanned} file(s)")
-    if not scanned:  # a gate that checked nothing must not report success
-        print("error: no corpus files scanned (wrong cwd, or corpus/ missing?)", file=sys.stderr)
+MATCH_TIMEOUT = 2.0
+
+
+@contextmanager
+def match_deadline():
+    if not hasattr(signal, "setitimer"):
+        raise RuntimeError("bounded regular-expression scanning is unavailable")
+    def expired(_signum, _frame):
+        raise TimeoutError("denylist matching deadline exceeded")
+    old = signal.signal(signal.SIGALRM, expired)
+    previous = signal.setitimer(signal.ITIMER_REAL, MATCH_TIMEOUT)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, *previous)
+        signal.signal(signal.SIGALRM, old)
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0]); ap.add_argument("--json", action="store_true")
+    ap.add_argument("--corpus", type=Path)
+    args = ap.parse_args(argv)
+    corpus = args.corpus or ROOT / "corpus"
+    if corpus.is_symlink() or not corpus.is_dir() or corpus.name != "corpus":
+        print("error: corpus scan root is outside the repository", file=sys.stderr); return 2
+    try:
+        result = subprocess.run(["git", "-C", str(ROOT), "--work-tree", str(corpus.parent), "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", "corpus"],
+                                cwd=ROOT, capture_output=True, check=True, timeout=30, env=git_environment())
+        files = [value for value in os.fsdecode(result.stdout).split("\0") if value]
+        pats = load_patterns()
+    except (OSError, ValueError, subprocess.SubprocessError):
+        if args.json:
+            print(json.dumps({"status": "error", "files": [], "hits": [], "errors": ["scanner configuration or inventory failed"], "scanned": 0}))
+        else:
+            print("error: scanner configuration or inventory failed", file=sys.stderr)
         return 2
-    return 1 if hits else 0
+    hits = []; errors = []; scanned = 0
+    for rel in sorted(set(files)):
+        p = corpus.parent / rel
+        if args.corpus is not None and not p.exists():
+            continue  # A staged generation may intentionally omit a tracked deleted file.
+        try:
+            text = safe_bytes(p, corpus, max_bytes=16 * 1024 * 1024).decode("utf-8")
+        except (OSError, ValueError, UnicodeError):
+            errors.append(rel); continue
+        scanned += 1
+        try:
+            with match_deadline():
+                for rule, pat in enumerate(pats, 1):
+                    for match in pat.finditer(text):
+                        hits.append({"path": rel, "line": text.count("\n", 0, match.start()) + 1, "rule": rule})
+        except (TimeoutError, RuntimeError):
+            errors.append(rel)
+    status = "error" if errors or not scanned else "markers" if hits else "clean"
+    if args.json:
+        print(json.dumps({"status": status, "files": sorted({hit["path"] for hit in hits}), "hits": hits, "errors": errors, "scanned": scanned}))
+    else:
+        for hit in hits: print(f"{json.dumps(hit['path'])}:{hit['line']}: rule-{hit['rule']}")
+        print(f"{len(hits)} marker hit(s) in {scanned} file(s)")
+        if errors: print(f"error: {len(errors)} unreadable, unsupported or symlink input(s)", file=sys.stderr)
+        if not scanned: print("error: no corpus files scanned", file=sys.stderr)
+    return 2 if status == "error" else 1 if hits else 0
 
 
 if __name__ == "__main__":

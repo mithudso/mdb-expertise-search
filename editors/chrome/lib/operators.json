@@ -50,6 +50,9 @@
   },
   {
    "arg": "string",
+   "arguments": {
+    "accexpr": "object"
+   },
    "cats": [
     "acc",
     "stage"
@@ -74,7 +77,7 @@
    "name": "$densify"
   },
   {
-   "arg": "array",
+   "arg": "any",
    "cats": [
     "stage"
    ],
@@ -283,6 +286,9 @@
   },
   {
    "arg": "object",
+   "arguments": {
+    "text": "string"
+   },
    "cats": [
     "stage",
     "sub"
@@ -366,6 +372,9 @@
   },
   {
    "arg": "string|array",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "stage",
     "update"
@@ -391,6 +400,9 @@
   },
   {
    "arg": "array+",
+   "arguments": {
+    "expr": "array"
+   },
    "cats": [
     "expr",
     "qtop"
@@ -400,6 +412,9 @@
   },
   {
    "arg": "array+",
+   "arguments": {
+    "expr": "array"
+   },
    "cats": [
     "expr",
     "qtop"
@@ -442,7 +457,6 @@
   {
    "arg": "number",
    "cats": [
-    "expr",
     "qtop"
    ],
    "doc": "Matches a random fraction (0-1) of documents.",
@@ -466,6 +480,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -475,6 +492,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -484,6 +504,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -493,6 +516,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -502,6 +528,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -511,6 +540,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -520,6 +552,9 @@
   },
   {
    "arg": "array",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -597,7 +632,10 @@
    "name": "$elemMatch"
   },
   {
-   "arg": "int",
+   "arg": "nonneg",
+   "arguments": {
+    "expr": "any"
+   },
    "cats": [
     "expr",
     "query"
@@ -1219,8 +1257,7 @@
   {
    "arg": "object",
    "cats": [
-    "acc",
-    "expr"
+    "acc"
    ],
    "doc": "Custom JavaScript accumulator.",
    "name": "$accumulator"
@@ -1828,6 +1865,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "acc",
     "update"
@@ -1934,6 +1974,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "acc",
     "expr",
@@ -1953,6 +1996,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "acc",
     "expr",
@@ -1972,6 +2018,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "acc",
     "update"
@@ -2323,6 +2372,7 @@
    "$vectorSearch"
   ],
   "LAST_STAGE_ONLY": [
+   "$changeStreamSplitLargeEvent",
    "$merge",
    "$out"
   ],

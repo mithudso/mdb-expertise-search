@@ -20,20 +20,25 @@ Only files tracked by git are exported, so private, git-ignored corpus files nev
 """
 from __future__ import annotations
 
+import io
 import json
 import math
-import re
+import os
+import shutil
 import sqlite3
 import subprocess
 import time
-import unicodedata
+import uuid
 from array import array
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
 from . import __version__
 from . import corpus as corpusmod
 from . import recipes as recipemod
+from .safety import _directory, _same_directory, directory_lock
+from .unicode61 import raw_tokens
 
 #: column weights of bm25(chunks_fts, 4.0, 1.0, 2.0) in search.py (heading, text, source)
 W_HEADING, W_TEXT, W_SOURCE = 4, 1, 2
@@ -48,31 +53,6 @@ FORMAT = 1
 
 
 # ---- tokenizer: FTS5 unicode61 (remove_diacritics 2, tokenchars '_') + porter
-
-def _is_token_char(c: str) -> bool:
-    if c == "_":
-        return True
-    cat = unicodedata.category(c)
-    return cat[0] in "LN" or cat == "Co"
-
-
-def _fold(tok: str) -> str:
-    return "".join(ch for ch in unicodedata.normalize("NFD", tok) if not unicodedata.category(ch).startswith("M")).lower()
-
-
-def raw_tokens(text: str) -> list[str]:
-    """Lower-cased, diacritic-free tokens, split like FTS5 unicode61 with '_' as a token character."""
-    out, cur = [], []
-    for c in text:
-        if _is_token_char(c):
-            cur.append(c)
-        elif cur:
-            out.append(_fold("".join(cur)))
-            cur = []
-    if cur:
-        out.append(_fold("".join(cur)))
-    return [t for t in out if t]
-
 
 def tokens(text: str) -> list[str]:
     return [porter(t) for t in raw_tokens(text)]
@@ -205,15 +185,10 @@ def porter(w: str) -> str:
 # ---- query handling (mirrors search._terms)
 
 def query_terms(query: str) -> list[str]:
-    """Stemmed search terms: \\w+ words minus stopwords (all words if only stopwords), FTS5-tokenized."""
-    words = re.findall(r"\w+", query)
-    kept = [w for w in words if w.lower() not in STOPWORDS] or words
-    out: list[str] = []
-    for w in kept:
-        toks = tokens(w)
-        if toks:
-            out.append(toks[0])  # a \w+ word is a single FTS5 token (\w and the tokenizer agree on '_')
-    return out
+    """Unicode61 lexemes minus stopwords, then Porter stems; keep all-stopword queries."""
+    words = raw_tokens(query)
+    kept = [word for word in words if word not in STOPWORDS] or words
+    return [porter(word) for word in kept]
 
 
 # ---- export
@@ -222,7 +197,9 @@ def tracked_files(corpus_root: Path) -> set[str] | None:
     """Corpus-relative paths tracked by git, or None when the corpus is not inside a git checkout."""
     try:
         r = subprocess.run(["git", "-C", str(corpus_root), "ls-files", "-z", "--", "."],
-                           check=True, capture_output=True, text=True)
+                           check=True, capture_output=True, text=True, timeout=10)
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError('tracking enumeration timed out; export refused') from exc
     except (OSError, subprocess.CalledProcessError):
         return None
     return {p for p in r.stdout.split("\0") if p}
@@ -241,23 +218,120 @@ class ExportResult:
 
 def export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bool = True,
            allow_untracked: bool = False) -> ExportResult:
+    """Prepare a complete generation before replacing the previous output."""
+    corpus_root = Path(corpus_root)
+    if not corpus_root.is_dir():
+        raise RuntimeError('corpus directory is missing or unavailable')
+    source = corpus_root.resolve()
+    destination = Path(out).absolute()
+    resolved = destination.resolve()
+    if source.is_relative_to(resolved) or resolved.is_relative_to(source):
+        raise RuntimeError('export destination must not overlap its source corpus')
+    if db is not None and Path(db).resolve().is_relative_to(resolved):
+        raise RuntimeError('export destination must not contain the input database')
+    out = destination
+    parent = _directory(out.parent, create=True)
+    candidate = '.mdbx-export-' + uuid.uuid4().hex
+    backup = '.mdbx-previous-' + uuid.uuid4().hex
+    candidate_fd = None
+    published = False
+    try:
+        os.mkdir(candidate, mode=0o700, dir_fd=parent)
+        candidate_fd = os.open(candidate, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent)
+        result = _export(source, out.parent / candidate, db=db, vectors=vectors, allow_untracked=allow_untracked, directory_fd=candidate_fd)
+        os.fsync(candidate_fd)
+        with directory_lock(parent, out.name):
+            if not _same_directory(parent, out.parent):
+                raise RuntimeError('export output parent changed during preparation')
+            try:
+                info = os.stat(out.name, dir_fd=parent, follow_symlinks=False)
+            except FileNotFoundError:
+                info = None
+            import stat
+            if info is not None and not stat.S_ISDIR(info.st_mode):
+                raise RuntimeError('export output must be a regular directory')
+            if info is not None:
+                os.replace(out.name, backup, src_dir_fd=parent, dst_dir_fd=parent)
+            try:
+                os.replace(candidate, out.name, src_dir_fd=parent, dst_dir_fd=parent)
+                os.fsync(parent)
+                if not _same_directory(parent, out.parent):
+                    raise RuntimeError('export output parent moved; held directory retains the generation')
+                published = True
+            except BaseException:
+                if info is not None:
+                    try:
+                        os.stat(out.name, dir_fd=parent, follow_symlinks=False)
+                    except FileNotFoundError:
+                        os.replace(backup, out.name, src_dir_fd=parent, dst_dir_fd=parent)
+                raise
+        result.out = out
+        return result
+    finally:
+        try:
+            if candidate_fd is not None:
+                os.close(candidate_fd)
+            shutil.rmtree(candidate, dir_fd=parent, ignore_errors=True)
+            if published:
+                shutil.rmtree(backup, dir_fd=parent, ignore_errors=True)
+        finally:
+            os.close(parent)
+
+
+def _recipe_metadata(relative: str, text: str):
+    """Parse the loader's bounded header from the same bytes used for chunks."""
+    path = Path(relative)
+    if path.parent != Path('recipes') or path.suffix != '.md' or path.name.lower() == 'readme.md':
+        return None
+    with io.StringIO(text) as stream:
+        header = []
+        first = stream.readline(65537)
+        if first == "---\n":
+            header.append(first)
+            for _ in range(1024):
+                line = stream.readline(65537)
+                if len(line) > 65536:
+                    return None
+                header.append(line)
+                if line in {"---\n", "---"}:
+                    break
+                if not line:
+                    return None
+            else:
+                return None
+        fm = recipemod.parse_frontmatter("".join(header))
+    return {"name": fm.get("name") or path.stem,
+            "title": fm.get("title") or path.stem.replace("-", " ").title(),
+            "summary": fm.get("summary", ""),
+            "applies_to": recipemod._list_value(fm.get("applies_to", "")), "path": relative}
+
+
+def _export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bool = True,
+           allow_untracked: bool = False, directory_fd: int) -> ExportResult:
     """Write the web index for ``corpus_root`` into ``out``. Vectors come from ``db`` (by text digest)."""
     corpus_root = corpus_root.resolve()
-    tracked = None if allow_untracked else tracked_files(corpus_root)
-    if tracked is None and not allow_untracked:
-        raise RuntimeError(f"{corpus_root} is not in a git checkout; refusing to export (private files could "
-                           "leak). Pass allow_untracked=True / --allow-untracked for a corpus that is all public.")
-    rows, skipped, files = [], 0, set()
-    for path in corpusmod.iter_files(corpus_root):
-        rel = path.relative_to(corpus_root).as_posix()
-        if tracked is not None and rel not in tracked:
-            skipped += 1
-            continue
-        files.add(rel)
-        kind, source = corpusmod.classify(Path(rel))
-        text = path.read_text(encoding="utf-8", errors="replace")
-        for head, line, body in corpusmod.chunk_text(text):
-            rows.append((rel, source, kind, head or path.stem, line, body))
+    rows, skipped, files, recipe_metadata = [], 0, set(), []
+    with corpusmod.read_generation(corpus_root) as generation:
+        tracked = None if allow_untracked else tracked_files(corpus_root)
+        if tracked is None and not allow_untracked:
+            raise RuntimeError(f"{corpus_root} is not in a git checkout; refusing to export (private files could "
+                               "leak). Pass allow_untracked=True / --allow-untracked for a corpus that is all public.")
+        if not allow_untracked and not _same_directory(generation.descriptor, corpus_root):
+            raise RuntimeError('corpus changed while checking tracked files; retry the export')
+        for path in generation.files():
+            rel = path.relative_to(corpus_root).as_posix()
+            if tracked is not None and rel not in tracked:
+                skipped += 1
+                continue
+            files.add(rel)
+            kind, source = corpusmod.classify(Path(rel))
+            with generation.open(rel) as stream:
+                text = stream.read()
+            recipe = _recipe_metadata(rel, text)
+            if recipe is not None:
+                recipe_metadata.append(recipe)
+            for head, line, body in corpusmod.chunk_text(text):
+                rows.append((rel, source, kind, head or path.stem, line, body))
     if not files and skipped:
         raise RuntimeError(f"all {skipped} corpus files under {corpus_root} are untracked by git; commit them first "
                            "(or pass allow_untracked=True / --allow-untracked if every file may be shared)")
@@ -275,7 +349,9 @@ def export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: boo
                 counts[t] = counts.get(t, 0) + weight
         doclen.append(n)
         for t, w in counts.items():
-            postings.setdefault(t, []).append((i, min(w, 65535)))
+            if w > 65535:
+                raise ValueError('weighted term frequency exceeds export format; generation preserved')
+            postings.setdefault(t, []).append((i, w))
     terms = sorted(postings)
     ids, wts = array("I"), array("H")
     vocab = {}
@@ -293,15 +369,16 @@ def export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: boo
     dim = 0
     model = None
     if vectors and db is not None and Path(db).is_file():
-        con = sqlite3.connect(db)
-        try:
-            meta = dict(con.execute("SELECT key, value FROM meta").fetchall())
-            model = meta.get("embed_model")
-            stored = {d: (dm, v) for d, dm, v in con.execute("SELECT digest, dim, vec FROM vectors")}
-        finally:
-            con.close()
-        dims = [dm for dm, _v in stored.values()]
-        dim = max(set(dims), key=dims.count) if dims else 0
+        current_inputs = {}
+        for r in rows:
+            digest = corpusmod.Chunk(*r).digest
+            head, text = r[3], r[5]
+            if digest not in current_inputs or head < current_inputs[digest][0]:
+                current_inputs[digest] = (head, text)
+        expected = {digest: corpusmod.embedding_input_hash(head, text) for digest, (head, text) in current_inputs.items()}
+        model, stored = _cached_vectors(Path(db), expected)
+        dims = Counter(dm for dm, _ in stored.values())
+        dim = dims.most_common(1)[0][0] if dims else 0
         for r in rows:
             d = corpusmod.Chunk(*r).digest
             if d in vec_index:
@@ -320,7 +397,6 @@ def export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: boo
     else:
         row_vec = [-1] * len(rows)
 
-    out.mkdir(parents=True, exist_ok=True)
     paths = sorted({r[0] for r in rows})
     sources = sorted({r[1] for r in rows})
     kinds = sorted({r[2] for r in rows})
@@ -331,29 +407,21 @@ def export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: boo
         "paths": paths, "sources": sources, "kinds": kinds,
         "rows": [[pi[r[0]], si[r[1]], ki[r[2]], r[4], r[3], r[5], row_vec[i]] for i, r in enumerate(rows)],
     }
-    (out / "chunks.json").write_text(json.dumps(chunks_doc, ensure_ascii=False, separators=(",", ":")),
-                                     encoding="utf-8")
-    (out / "terms.json").write_text(json.dumps(vocab, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    _write_file(directory_fd, 'chunks.json', json.dumps(chunks_doc, ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
+    _write_file(directory_fd, 'terms.json', json.dumps(vocab, ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
     for name, arr in (("postings.bin", ids), ("weights.bin", wts), ("doclen.bin", doclen)):
         a = array(arr.typecode, arr)
         if a.itemsize > 1 and _big_endian():
             a.byteswap()
-        (out / name).write_bytes(a.tobytes())
-    vec_file = out / "vectors.bin"
+        _write_file(directory_fd, name, a.tobytes())
     if digests:
-        vec_file.write_bytes(bytes(vec_bytes))
-    elif vec_file.exists():
-        vec_file.unlink()
+        _write_file(directory_fd, 'vectors.bin', bytes(vec_bytes))
 
     by_source: dict[tuple[str, str], int] = {}
     for r in rows:
         by_source[(r[2], r[1])] = by_source.get((r[2], r[1]), 0) + 1
-    recipes = [
-        {"name": rc.name, "title": rc.title, "summary": rc.summary, "applies_to": rc.applies_to,
-         "path": rc.path if rc.path in pi else None}
-        for rc in recipemod.load(corpus_root)
-        if (rc.path in files)
-    ]
+    recipes = [{**recipe, "path": recipe["path"] if recipe["path"] in pi else None}
+               for recipe in recipe_metadata]
     meta_doc = {
         "format": FORMAT,
         "mdbx_version": __version__,
@@ -370,8 +438,51 @@ def export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: boo
         "vectors": {"count": len(digests), "dim": dim, "model": model, "scale": 127} if digests else None,
         "bm25": {"k1": K1, "b": B, "weights": {"heading": W_HEADING, "text": W_TEXT, "source": W_SOURCE}},
     }
-    (out / "meta.json").write_text(json.dumps(meta_doc, indent=1, ensure_ascii=False), encoding="utf-8")
+    _write_file(directory_fd, 'meta.json', json.dumps(meta_doc, indent=1, ensure_ascii=False).encode('utf-8'))
     return ExportResult(out, len(rows), len(terms), len(ids), len(digests), len(files), skipped)
+
+
+def _write_file(directory_fd, name, data):
+    fd = os.open(name, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o644, dir_fd=directory_fd)
+    with os.fdopen(fd, 'wb') as stream:
+        stream.write(data)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def _cached_vectors(db, expected):
+    """Read only relevant, proven inputs from a single read-only generation."""
+    con = None
+    try:
+        con = sqlite3.connect(db.resolve().as_uri() + '?mode=ro', uri=True)
+        con.execute('BEGIN')
+        meta = dict(con.execute('SELECT key,value FROM meta'))
+        model = meta.get('embed_model')
+        tables = {r[0] for r in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        if not model or 'vector_inputs' not in tables:
+            return model, {}
+        stored = {}
+        digests = list(expected)
+        for offset in range(0, len(digests), 500):
+            part = digests[offset:offset + 500]
+            marks = ','.join('?' * len(part))
+            invalid = ' AND v.digest NOT IN (SELECT digest FROM invalid_vectors)' if 'invalid_vectors' in tables else ''
+            sql = f'SELECT v.digest,v.dim,v.vec,vi.input_hash FROM vectors v JOIN vector_inputs vi ON vi.digest=v.digest WHERE v.digest IN ({marks}){invalid}'
+            for digest, dim, blob, known in con.execute(sql, part):
+                if known != expected[digest] or not isinstance(dim, int) or dim < 1 or not isinstance(blob, bytes) or len(blob) != dim * 4:
+                    continue
+                vector = array('f', blob)
+                if all(math.isfinite(x) for x in vector) and any(vector):
+                    norm = math.sqrt(math.fsum(float(x) * x for x in vector))
+                    if not math.isclose(norm, 1., rel_tol=1e-5, abs_tol=1e-8):
+                        blob = array('f', (x / norm for x in vector)).tobytes()
+                    stored[digest] = (dim, blob)
+        return model, stored
+    except sqlite3.Error as exc:
+        raise RuntimeError('vector cache unavailable; export refused') from exc
+    finally:
+        if con is not None:
+            con.close()
 
 
 def _big_endian() -> bool:
@@ -397,21 +508,38 @@ class WebHit:
 
 class WebIndex:
     def __init__(self, out: Path):
-        self.meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
-        c = json.loads((out / "chunks.json").read_text(encoding="utf-8"))
-        self.paths, self.sources, self.kinds, self.rows = c["paths"], c["sources"], c["kinds"], c["rows"]
-        self.vocab = json.loads((out / "terms.json").read_text(encoding="utf-8"))
-        self.ids = array("I", (out / "postings.bin").read_bytes())
-        self.wts = array("H", (out / "weights.bin").read_bytes())
-        self.doclen = array("I", (out / "doclen.bin").read_bytes())
+        from .safety import _read_bytes
+        out = Path(out)
+        parent = _directory(out.parent)
+        directory = None
+        try:
+            with directory_lock(parent, out.name):
+                directory = _directory(out)
+                def data(name):
+                    return _read_bytes(directory, name)
+                self.meta = json.loads(data('meta.json'))
+                c = json.loads(data('chunks.json'))
+                self.paths, self.sources, self.kinds, self.rows = c['paths'], c['sources'], c['kinds'], c['rows']
+                self.vocab = json.loads(data('terms.json'))
+                self.ids = array('I', data('postings.bin'))
+                self.wts = array('H', data('weights.bin'))
+                self.doclen = array('I', data('doclen.bin'))
+                try:
+                    self.vectors = data('vectors.bin')
+                except FileNotFoundError:
+                    self.vectors = b''
+        finally:
+            try:
+                if directory is not None:
+                    os.close(directory)
+            finally:
+                os.close(parent)
         if _big_endian():
             for a in (self.ids, self.wts, self.doclen):
                 a.byteswap()
         self.n = len(self.rows)
-        self.avgdl = (self.meta["total_tokens"] / self.n) if self.n else 0.0
-        vf = out / "vectors.bin"
-        self.vectors = vf.read_bytes() if vf.is_file() else b""
-        self.dim = (self.meta.get("vectors") or {}).get("dim", 0)
+        self.avgdl = self.meta['total_tokens'] / self.n if self.n else 0.0
+        self.dim = (self.meta.get('vectors') or {}).get('dim', 0)
 
     def hit(self, i: int, score: float, via: str) -> WebHit:
         r = self.rows[i]
@@ -421,13 +549,14 @@ class WebIndex:
         r = self.rows[i]
         if kind and self.kinds[r[2]] != kind:
             return False
-        return not (source and source.lower() not in self.sources[r[1]].lower())
+        return not (source and _ascii_lower(source) not in _ascii_lower(self.sources[r[1]]))
 
     def keyword_ranked(self, query: str, kind: str | None = None, source: str | None = None) -> list[tuple[int, float]]:
         terms = query_terms(query)
         if not terms:
             return []
-        uniq = list(dict.fromkeys(terms))
+        frequencies = Counter(terms)
+        uniq = list(frequencies)
         lists = []
         for t in uniq:
             v = self.vocab.get(t)
@@ -442,7 +571,7 @@ class WebIndex:
                 idf = math.log((self.n - df + 0.5) / (df + 0.5))
                 if idf <= 0:
                     idf = 1e-6
-                qtf = terms.count(t)  # a repeated query term counts once per occurrence, like repeated phrases
+                qtf = frequencies[t]  # a repeated query term counts once per occurrence, like repeated phrases
                 for j in range(off, off + df):
                     i = self.ids[j]
                     w = self.wts[j]
@@ -457,14 +586,18 @@ class WebIndex:
         return []
 
     def keyword(self, query: str, limit: int = 10, *, kind: str | None = None, source: str | None = None) -> list[WebHit]:
-        ranked = self.keyword_ranked(query, kind, source)[: limit * 3]
-        return dedupe([self.hit(i, s, "keyword") for i, s in ranked], limit)
+        _validate_limit(limit)
+        ranked = self.keyword_ranked(query, kind, source)
+        return dedupe((self.hit(i, s, "keyword") for i, s in ranked), limit)
 
     def semantic_vec(self, qv: list[float], limit: int = 10, *, kind: str | None = None,
                      source: str | None = None) -> list[WebHit]:
         """Rank by dot product of the int8 vectors with an L2-normalised query vector."""
-        if not self.vectors:
+        _validate_limit(limit)
+        if not limit or not self.vectors:
             return []
+        if len(qv) != self.dim or not all(math.isfinite(x) for x in qv):
+            raise ValueError("query vector dimension or values invalid")
         dim = self.dim
         best: dict[int, float] = {}
         mv = memoryview(self.vectors).cast("b")
@@ -474,11 +607,12 @@ class WebIndex:
                 continue
             base = vi * dim
             best[i] = sum(mv[base + k] * qv[k] for k in range(dim)) / 127.0
-        ranked = sorted(best.items(), key=lambda x: (-x[1], x[0]))[: limit * 3]
-        return dedupe([self.hit(i, s, "semantic") for i, s in ranked], limit)
+        ranked = sorted(best.items(), key=lambda x: (-x[1], x[0]))
+        return dedupe((self.hit(i, s, "semantic") for i, s in ranked), limit)
 
     def hybrid_vec(self, query: str, qv: list[float] | None, limit: int = 10, *, kind: str | None = None,
                    source: str | None = None) -> list[WebHit]:
+        _validate_limit(limit)
         kw = self.keyword(query, limit * 3, kind=kind, source=source)
         if qv is None:
             return kw[:limit]
@@ -499,11 +633,23 @@ class WebIndex:
         return dedupe(out, limit)
 
 
-def dedupe(hits: list[WebHit], limit: int) -> list[WebHit]:
+def _ascii_lower(text):
+    return text.translate(str.maketrans('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'))
+
+
+def _validate_limit(limit):
+    if not isinstance(limit, int) or isinstance(limit, bool) or limit < 0:
+        raise ValueError("limit must be nonnegative")
+
+
+def dedupe(hits, limit: int) -> list[WebHit]:
+    _validate_limit(limit)
+    if not limit:
+        return []
     seen: set[str] = set()
     out = []
     for h in hits:
-        key = " ".join(h.text.split())[:300]
+        key = " ".join(h.text.split())
         if key in seen:
             continue
         seen.add(key)

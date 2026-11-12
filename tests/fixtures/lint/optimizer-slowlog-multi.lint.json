@@ -1,5 +1,16 @@
 {
-  "diagnostics": [],
+  "diagnostics": [
+    {
+      "code": "syntax",
+      "column": 13,
+      "end": 14,
+      "fix": null,
+      "line": 0,
+      "message": "unexpected ':'",
+      "severity": "error",
+      "start": 13
+    }
+  ],
   "source": "tests/fixtures/optimizer/slowlog-multi.txt",
   "symbols": []
 }

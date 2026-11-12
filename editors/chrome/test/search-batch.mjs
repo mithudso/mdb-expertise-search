@@ -16,10 +16,20 @@ const idx = await loadIndex(read);
 let raw = "";
 process.stdin.setEncoding("utf8");
 for await (const c of process.stdin) raw += c;
-const pairs = (hits) => hits.map((h) => [h.id, h.score]);
-const out = JSON.parse(raw).map(({ q, qvec, ...opts }) => ({
-  keyword: pairs(idx.keyword(q, 10, opts)),
-  semantic: qvec ? pairs(idx.semanticVec(qvec, 10, opts)) : [],
-  hybrid: pairs(idx.hybridVec(q, qvec ?? null, 10, opts)),
-}));
+const pairs = (hits, position) => hits.map((h) => {
+  if (!Number.isFinite(h.score)) throw new Error(`batch position ${position}: nonfinite search score`);
+  return [h.id, h.score];
+});
+let queries;
+try { queries = JSON.parse(raw); } catch { throw new Error("Invalid JSON from stdin"); }
+const out = queries.map(({ q, qvec, ...opts }, position) => {
+  if (qvec !== undefined && (!Array.isArray(qvec) || !qvec.every(Number.isFinite) || (idx.vectors && qvec.length !== idx.dim))) {
+    throw new Error(`batch position ${position}: qvec must contain finite numbers with the index dimension`);
+  }
+  return {
+    keyword: pairs(idx.keyword(q, 10, opts), position),
+    semantic: qvec ? pairs(idx.semanticVec(qvec, 10, opts), position) : [],
+    hybrid: pairs(idx.hybridVec(q, qvec ?? null, 10, opts), position),
+  };
+});
 process.stdout.write(JSON.stringify(out));

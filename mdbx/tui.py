@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+import threading
 from pathlib import Path
 from typing import ClassVar
 
 try:
+    from rich.cells import cell_len, set_cell_size
     from rich.syntax import Syntax
     from rich.text import Text
     from textual import on, work
@@ -43,15 +45,18 @@ SIDE_CHROME = 10  # sidebar border/padding + option-list padding, border and scr
 def facet_label(source: str, n: int, width: int | None = None) -> Text:
     """ "source  (n)" with a dim count; if wider than ``width``, the source is cut to end in "…"."""
     count = f"  ({n})"
-    if width is not None and len(source) + len(count) > width:
-        source = source[: max(1, width - len(count) - 1)] + "…"
-    return Text.assemble(source, (count, "dim"), no_wrap=True, overflow="ellipsis")
+    if width is not None and cell_len(source) + cell_len(count) > width:
+        source = set_cell_size(source, max(0, width - cell_len(count) - 1)) + "…"
+    label = Text.assemble(source, (count, "dim"), no_wrap=True, overflow="ellipsis")
+    if width is not None:
+        label.truncate(max(0, width), overflow="ellipsis")
+    return label
 
 
 def side_width(longest_label: int, terminal_width: int) -> int:
     """Columns for the facet sidebar: the longest label plus chrome, capped at SIDE_MAX_SHARE."""
-    cap = max(SIDE_MIN, int(terminal_width * SIDE_MAX_SHARE))
-    return max(SIDE_MIN, min(longest_label + SIDE_CHROME, cap))
+    cap = max(1, int(terminal_width * SIDE_MAX_SHARE))
+    return min(cap, max(SIDE_MIN, longest_label + SIDE_CHROME))
 
 
 #: Quick-jump queries for common MongoDB topics (digit keys 1-9).
@@ -71,7 +76,7 @@ TOPICS = [
 class MdbxApp(App):
     TITLE = "mdbx — MongoDB expertise"
     CSS = """
-    #side { width: 30; min-width: 24; border-right: solid $primary-darken-2; }
+    #side { width: 30; min-width: 0; border-right: solid $primary-darken-2; }
     #side Static { padding: 0 1; color: $text-muted; }
     #main { width: 1fr; }
     #q { margin: 0 1; }
@@ -98,10 +103,16 @@ class MdbxApp(App):
         self.kind = 0
         self.source: str | None = None
         self.hits: list[srch.Hit] = []
-        self._store: srch.VectorStore | None = None
+        self._search_local = threading.local()
+        self._search_gate = threading.Lock()
         self._longest_facet = 0
         self._facet_rows: list[tuple[str, int, str]] = []  # (source, count, option id)
         self._facet_width: int | None = None
+        self._generation = 0
+
+    def on_unmount(self) -> None:
+        self._generation += 1
+        self.con.close()
 
     # ---- layout
     def compose(self) -> ComposeResult:
@@ -137,7 +148,10 @@ class MdbxApp(App):
         facets = self.query_one("#facets", OptionList)
         keep = facets.highlighted
         facets.clear_options()
-        facets.add_option(Option(Text("◉ all sources", no_wrap=True), id="__all__"))
+        all_sources = Text("◉ all sources", no_wrap=True)
+        if width is not None:
+            all_sources.truncate(max(0, width), overflow="ellipsis")
+        facets.add_option(Option(all_sources, id="__all__"))
         facets.add_options(Option(facet_label(s, n, width), id=oid) for s, n, oid in self._facet_rows)
         self._facet_width = width
         if keep is not None:
@@ -146,7 +160,7 @@ class MdbxApp(App):
     def _fit_side(self) -> None:
         width = side_width(self._longest_facet, self.size.width)
         self.query_one("#side").styles.width = width
-        usable = width - SIDE_CHROME
+        usable = max(0, width - SIDE_CHROME)
         target = usable if usable < self._longest_facet else None  # cut labels only when they cannot fit
         if target != self._facet_width:
             self._fill_facets(target)
@@ -160,7 +174,7 @@ class MdbxApp(App):
         kind = KINDS[self.kind] or "all kinds"
         scope = self.source or "all sources"
         self.query_one("#status", Static).update(
-            f"mode={MODES[self.mode]} · kind={kind} · scope={scope} · {extra}"
+            Text(f"mode={MODES[self.mode]} · kind={kind} · scope={scope} · {extra}")
         )
 
     def action_cycle_mode(self) -> None:
@@ -174,16 +188,42 @@ class MdbxApp(App):
     def action_recipes(self) -> None:
         """Show every recipe (empty query) or search within recipes when a query is typed."""
         self.kind = KINDS.index("recipe")
+        self._generation += 1
         self.source = None
         q = self.query_one("#q", Input).value
         if q.strip():
             self._search(q)
             return
-        hits = [
-            srch.Hit(-1, r.path, r.name, "recipe", r.title, 1, r.text, 0.0, "recipe", r.summary)
-            for r in recipemod.load()
-        ]
-        self._render_hits(hits, " · recipes (type to search within them)")
+        row = self.con.execute("SELECT value FROM meta WHERE key='corpus'").fetchone()
+        root = Path(row[0]) if row else idx.default_corpus()
+        return self._recipe_worker(root, self._generation)
+
+    @work(thread=True, exclusive=True, group="recipes")
+    def _recipe_worker(self, root: Path, generation: int) -> None:
+        hits = []
+        unavailable = False
+        try:
+            items = recipemod.load(root)
+        except (OSError, ValueError, UnicodeError):
+            items = []
+            unavailable = True
+        for recipe in items:
+            if generation != self._generation:
+                return
+            try:
+                # Recipe browsing uses a bounded preview; mdbx recipe exposes the full runbook.
+                with recipemod.open_confined(root, recipe.path) as stream:
+                    preview = stream.read(20_001)
+                if len(preview) > 20_000:
+                    preview = preview[:20_000] + "\n[Preview truncated; use mdbx recipe for the complete runbook.]"
+                hits.append(srch.Hit(-1, recipe.path, recipe.name, "recipe", recipe.title, 1,
+                                     preview, 0.0, "recipe", recipe.summary))
+            except (OSError, ValueError, UnicodeError):
+                unavailable = True
+        note = " · recipes (type to search within them)"
+        if unavailable:
+            note += " · some recipe files are unavailable; partial results"
+        self.call_from_thread(self._publish_hits, generation, hits, note)
 
     def action_focus_query(self) -> None:
         self.query_one("#q", Input).focus()
@@ -211,7 +251,10 @@ class MdbxApp(App):
     @on(OptionList.OptionSelected, "#facets")
     def _facet(self, event: OptionList.OptionSelected) -> None:
         oid = event.option.id
-        self.source = None if oid == "__all__" else oid.split("|", 1)[1]
+        self.source = None
+        if oid != "__all__" and oid is not None:
+            facet_kind, self.source = oid.split("|", 1)
+            self.kind = KINDS.index(facet_kind)
         self._rerun()
 
     @on(DataTable.RowHighlighted, "#results")
@@ -220,43 +263,81 @@ class MdbxApp(App):
             self._show(self.hits[event.cursor_row])
 
     # ---- search (worker thread so the UI never blocks on Ollama)
-    @work(thread=True, exclusive=True)
-    def _search(self, query: str) -> None:
+    def _search(self, query: str):
+        self._generation += 1
         if not query.strip():
+            self._render_hits([], " · enter a search query")
+            return None
+        return self._search_worker(query, self._generation, MODES[self.mode], KINDS[self.kind], self.source)
+
+    def _thread_search_state(self):
+        path = Path(self.db or idx.default_db()).absolute()
+        def identity():
+            try:
+                info = path.stat()
+                return str(path), info.st_dev, info.st_ino
+            except FileNotFoundError:
+                return str(path), None, None
+        state = getattr(self._search_local, "value", None)
+        if state is None or state["identity"] != identity():
+            if state is not None:
+                state["con"].close()
+            con = idx.connect(self.db)
+            state = {"identity": identity(), "con": con, "store": None}
+            self._search_local.value = state
+        return state
+
+    @work(thread=True, exclusive=True)
+    def _search_worker(self, query: str, generation: int, mode: str, kind: str | None, source: str | None) -> None:
+        if not query.strip() or generation != self._generation:
             return
-        self.call_from_thread(self._status, "searching…")
-        mode = MODES[self.mode]
+        self.call_from_thread(self._search_status, generation)
         note = ""
         hits: list[srch.Hit] = []
-        try:
-            con = idx.connect(self.db)  # sqlite connections are thread-bound
+        # Only one embedding request runs. Waiting superseded workers exit before loading/querying.
+        with self._search_gate:
+            if generation != self._generation:
+                return
             try:
-                if mode != "keyword" and (self._store is None or not len(self._store)):
-                    self._store = srch.VectorStore(con)
-                notes: list[str] = []
-                hits = srch.search(
-                    con, query, mode, 40, kind=KINDS[self.kind], source=self.source, notes=notes,
-                    **({"store": self._store} if mode != "keyword" else {}),
-                )
-                if notes:  # hybrid ran keyword-only because the embedder is down: say so in the status bar
-                    note = f" ⚠ {notes[0]}"
-            except embedmod.EmbedError as exc:
-                log.warning("semantic search unavailable, using keyword: %s", exc)
-                hits = srch.keyword(con, query, 40, kind=KINDS[self.kind], source=self.source)
-                note = f" (semantic unavailable: {exc}; showing keyword)"
-            finally:
-                con.close()
-        except sqlite3.Error as exc:  # an unhandled worker error would tear down the whole TUI
-            log.exception("search failed")
-            note = f" (search failed: {exc})"
-        self.call_from_thread(self._render_hits, hits, note)
+                state = self._thread_search_state()
+                con = state["con"]
+                try:
+                    if mode != "keyword" and state["store"] is None:
+                        state["store"] = srch.VectorStore(con)
+                    if generation != self._generation:
+                        return
+                    notes: list[str] = []
+                    hits = srch.search(
+                        con, query, mode, 40, kind=kind, source=source, source_exact=source is not None, notes=notes,
+                        **({"store": state["store"]} if mode != "keyword" else {}),
+                    )
+                    if notes:
+                        note = f" ⚠ {srch.fallback_note(embedmod.EmbedError('semantic backend unavailable'))}"
+                except embedmod.EmbedError:
+                    if generation != self._generation:
+                        return
+                    log.warning("semantic search unavailable, using keyword")
+                    hits = srch.keyword(con, query, 40, kind=kind, source=source, source_exact=source is not None)
+                    note = " (semantic search unavailable; showing keyword results only)"
+            except sqlite3.Error:
+                log.error("search failed")
+                note = " (search failed; retry)"
+        self.call_from_thread(self._publish_hits, generation, hits, note)
+
+    def _publish_hits(self, generation: int, hits: list[srch.Hit], note: str) -> None:
+        if generation == self._generation:
+            self._render_hits(hits, note)
+
+    def _search_status(self, generation: int) -> None:
+        if generation == self._generation:
+            self._status("searching…")
 
     def _render_hits(self, hits: list[srch.Hit], note: str) -> None:
         self.hits = hits
         table = self.query_one("#results", DataTable)
         table.clear()
         for h in hits:
-            table.add_row(f"{h.score:.3f}", h.kind, h.source, Text(h.heading.split(" > ")[-1][:60]))
+            table.add_row(f"{h.score:.3f}", Text(h.kind), Text(h.source), Text(h.heading.split(" > ")[-1][:60]))
         self._status(f"{len(hits)} results{note}")
         if hits:
             table.move_cursor(row=0)
@@ -272,4 +353,8 @@ class MdbxApp(App):
 
 
 def run(db: Path | None = None) -> None:
-    MdbxApp(db).run()
+    app = MdbxApp(db)
+    try:
+        app.run()
+    finally:
+        app.con.close()

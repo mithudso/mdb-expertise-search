@@ -1,19 +1,17 @@
 # Logging
 
-The CLI writes progress and errors to **stderr** (`index` progress, "semantic index skipped: …",
-"no results") and results to stdout, so `--json` output stays pipe-safe. There is no log file and no
-secret or query logging. The TUI surfaces status and Ollama failures in its status line. Embedding
-failures are raised as `EmbedError` and handled at the CLI/TUI boundary (keyword fallback).
+CLI progress/errors go to stderr and results to stdout. Python logging handlers
+remain host-owned. There is no application telemetry server or central dashboard.
 
-Python `logging` loggers (the package configures no handlers; the host application or `logging.basicConfig`
-decides where records go):
-
-| Logger | Records |
+| Surface | Current records and behavior |
 |---|---|
-| `mdbx.embed` | DEBUG per Ollama request (`POST <host>/api/embed model=... inputs=N`); WARNING when the request fails, the body is not JSON, or the response shape is wrong |
-| `mdbx.index` | WARNING when the embed model changed (vectors discarded) or when no chunks were found under the corpus |
-| `mdbx.search` | WARNING when inconsistent vectors are ignored (re-run `mdbx index`) |
-| `mdbx.tui` | WARNING when semantic search is unavailable (keyword fallback); exception log when a sqlite error aborts a search |
-| `mql-lsp` | Server events; WARNING (with traceback) if the optimizer fails and only lint diagnostics are published |
+| mdbx.embed | Model/input counts at DEBUG; safe failure class at WARNING. No raw provider exception, URL credentials or request text. |
+| mdbx.index | Counts/progress; failed preparation rolls back. Explicit semantic builds validate before publication. |
+| mdbx.search | Corrupt-vector counts and observable semantic fallback categories. Callers can surface notes without duplicate warnings. |
+| mdbx.tui | Safe status/fallback categories; worker-owned resources close on their owner thread. |
+| mql-lsp | Stdio protocol/server events and content-free optional-enrichment failures. Query text is never evaluated. |
+| Maintenance scripts | Safe bounded operation categories; privacy failures use opaque evidence rather than matched lines or private rules. |
 
-Request bodies (corpus text, queries) are never logged, only the model name and the number of inputs.
+Provider libraries and external CLIs have their own logging policies outside this
+repository. Review deployment logging separately before handling sensitive input.
+No security-response SLA or new retention policy is established by this document.

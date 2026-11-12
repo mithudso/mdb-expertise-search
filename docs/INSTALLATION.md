@@ -12,7 +12,7 @@ scripts/install.sh
 Manual steps:
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -e '.[all]'   # extras: tui, lsp, mcp
+python3 -m venv .venv && .venv/bin/pip install -e '.[all]'   # extras: tui, lsp, mcp; optional private Ollama client: ollama
 .venv/bin/mdbx index && .venv/bin/mdbx stats     # expect chunks > 0 (and vectors > 0 with Ollama)
 ```
 ## Semantic search without Ollama
@@ -62,8 +62,7 @@ running macOS 26+ with Apple Intelligence enabled (needs the Xcode Command Line 
 ### Glean CLI fallback
 
 When neither a Glean API token nor an OAuth session is configured, `mdbx glean` uses the Glean CLI through
-the helper script `scripts/glean_cli_helper.py` (same contract as the native-messaging hosts in
-mdb-case-assistant and tam-dashboard):
+the helper script `scripts/glean_cli_helper.py` (the provider library owns this helper contract):
 
 ```bash
 brew install gleanwork/tap/glean-cli          # the CLI; `glean auth login` signs in through the browser
@@ -74,3 +73,10 @@ python scripts/glean_cli_helper.py search "Atlas Private Link" --page-size 5
 
 Exit codes: 0 ok · 1 failed · 2 CLI not installed · 3 not authenticated. The helper retries transient
 network errors (i/o timeout, connection reset) and always prints one JSON object.
+
+
+Keyword-only installation (`pip install -e .` or `.[all]`) needs no private-library
+credentials. Install `.[ollama]` separately when you have access to that private
+repository. Routine maintenance uses `--skip-semantic`, no model download and no
+service installation. The convenience installer has broader effects; inspect its
+options before using it. Maintenance does not run it against live state.

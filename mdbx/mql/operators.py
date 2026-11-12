@@ -26,7 +26,7 @@ $collStats|stage|object|Returns collection statistics (must be the first stage).
 $count|stage,acc|string|Stage: counts documents into a named field. Accumulator: counts documents in a group.
 $currentOp|stage|object|Returns active operations (must be the first stage, run on admin).
 $densify|stage|object|Creates missing documents in a sequence of values.
-$documents|stage|array|Returns literal documents as the pipeline input (first stage).
+$documents|stage|any|Returns literal documents as the pipeline input (first stage).
 $facet|stage|object|Runs several sub-pipelines on the same input, one output field each.
 $fill|stage|object|Fills null or missing field values.
 $geoNear|stage|object|Returns documents ordered by proximity to a point (must be the first stage).
@@ -72,7 +72,7 @@ $nor|qtop|array+|Matches documents that fail all conditions.
 $comment|qtop|any|Attaches a comment to a query for logs and profiler.
 $expr|qtop|any|Uses aggregation expressions inside a query (can compare fields).
 $jsonSchema|qtop|object|Matches documents that validate against a JSON Schema.
-$sampleRate|qtop,expr|number|Matches a random fraction (0-1) of documents.
+$sampleRate|qtop|number|Matches a random fraction (0-1) of documents.
 $text|qtop|object|Text search on a text index; needs $search; must be the first $match in a pipeline.
 $where|qtop|any|Matches using a JavaScript expression (slow; avoid, not allowed in $match).
 # ---- query: field level
@@ -91,7 +91,7 @@ $options|query,sub|string|Regex flags (i, m, x, s) for $regex.
 $mod|query,expr|array2|Modulo: [divisor, remainder] (query) / remainder of division (expression).
 $all|query|array|Matches arrays containing all listed elements.
 $elemMatch|query,proj|object|Matches arrays with an element satisfying all conditions; also a projection operator.
-$size|query,expr|int|Matches arrays of the given length (query) / returns array length (expression).
+$size|query,expr|nonneg|Matches arrays of the given length (query) / returns array length (expression).
 $not|query,expr|any|Inverts an operator expression (query) / boolean NOT (expression).
 $bitsAllClear|query|any|Matches if all given bit positions are 0.
 $bitsAllSet|query|any|Matches if all given bit positions are 1.
@@ -170,7 +170,7 @@ $cmp|expr|array2|Compares two values: -1, 0 or 1.
 $cond|expr|any|If/then/else; array [if, then, else] or {if, then, else}.
 $ifNull|expr|array|First non-null value.
 $switch|expr|object|Multi-branch conditional with branches and default.
-$accumulator|expr,acc|object|Custom JavaScript accumulator.
+$accumulator|acc|object|Custom JavaScript accumulator.
 $function|expr|object|Custom JavaScript function (not allowed on Atlas free/shared tiers).
 $binarySize|expr|any|Size in bytes of a string or binary value.
 $bsonSize|expr|any|Size in bytes of a document as BSON.
@@ -332,6 +332,17 @@ class Operator:
     arg: str
     doc: str
 
+    def arg_for(self, context: str) -> str:
+        """Argument contracts for operators whose syntax depends on their context."""
+        if context == "expr" and self.name in {"$eq", "$gt", "$gte", "$lt", "$lte", "$ne", "$in"}:
+            return "array2"
+        if context == "expr" and self.name in {"$and", "$or"}:
+            return "array"
+        if context == "update" and self.name in {"$push", "$addToSet", "$min", "$max"}:
+            return "object"
+        return {("$search", "text"): "string", ("$size", "expr"): "any",
+                ("$count", "accexpr"): "object", ("$unset", "update"): "object"}.get((self.name, context), self.arg)
+
     def is_a(self, *cats: str) -> bool:
         return bool(self.cats & set(cats))
 
@@ -367,7 +378,7 @@ FIRST_STAGE_ONLY = frozenset({
     "$planCacheStats", "$listSampledQueries", "$queryStats", "$shardedDataDistribution",
     "$listSearchIndexes",
 })
-LAST_STAGE_ONLY = frozenset({"$out", "$merge"})
+LAST_STAGE_ONLY = frozenset({"$out", "$merge", "$changeStreamSplitLargeEvent"})
 NOT_IN_FACET = frozenset({
     "$collStats", "$facet", "$geoNear", "$indexStats", "$out", "$merge", "$planCacheStats",
     "$search", "$searchMeta", "$vectorSearch",

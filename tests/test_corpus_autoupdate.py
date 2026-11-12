@@ -24,7 +24,7 @@ echo "edited source text with mdb-tam" > corpus/kept.md
 
 
 def run(cwd: Path, *args: str) -> str:
-    return subprocess.run(args, cwd=cwd, check=True, capture_output=True, text=True).stdout
+    return subprocess.run(args, cwd=cwd, check=True, capture_output=True, text=True, timeout=30).stdout
 
 
 def make_origin(tmp: Path) -> Path:
@@ -32,6 +32,7 @@ def make_origin(tmp: Path) -> Path:
     (work / "scripts").mkdir(parents=True)
     (work / "corpus").mkdir()
     shutil.copy(ROOT / "scripts" / "sweep_customers.py", work / "scripts" / "sweep_customers.py")
+    shutil.copy(ROOT / "scripts" / "maintenance_safety.py", work / "scripts" / "maintenance_safety.py")
     (work / "scripts" / "sync_corpus.sh").write_text(FAKE_SYNC)
     (work / "corpus" / "kept.md").write_text("clean committed text\n")
     run(work, "git", "init", "-q", "-b", "main")
@@ -69,6 +70,9 @@ def test_run_update_pushes_clean_files_and_holds_back_flagged(tmp_path, monkeypa
         monkeypatch.setenv(git_env, "t@t")
     cfg = {"repo": str(origin), "branch": "main", "clone_dir": str(tmp_path / "clone"), "python": sys.executable}
 
+    clone = cu.ensure_clone(cfg)
+    run(clone, "git", "config", "user.name", "fixture")
+    run(clone, "git", "config", "user.email", "fixture@example.invalid")
     assert cu.run_update(cfg) == 0
 
     check = tmp_path / "check"
@@ -90,3 +94,88 @@ def test_run_update_refuses_without_denylist(tmp_path, monkeypatch):
     cfg = {"repo": str(make_origin(tmp_path)), "branch": "main", "clone_dir": str(tmp_path / "clone"),
            "python": sys.executable}
     assert cu.run_update(cfg) == 1
+
+
+def test_unowned_checkout_and_traversal_paths_are_preserved(tmp_path):
+    import pytest
+    origin = make_origin(tmp_path)
+    clone = tmp_path / "clone"
+    run(tmp_path, "git", "clone", "-q", str(origin), str(clone))
+    victim = tmp_path / "victim"; victim.write_text("keep")
+    before = run(clone, "git", "rev-parse", "HEAD")
+    cfg = {"clone_dir": str(clone), "repo": str(origin), "branch": "main"}
+    with pytest.raises(RuntimeError, match="not owned"): cu.ensure_clone(cfg)
+    assert run(clone, "git", "rev-parse", "HEAD") == before
+    assert (clone / "corpus/kept.md").read_text() == "clean committed text\n"
+    with pytest.raises(RuntimeError): cu.restore_committed(clone, ["corpus/../../victim"])
+    assert victim.read_text() == "keep"
+
+
+def test_sync_failure_aborts_before_gate_and_protected_missing_paths_restore(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    clone = tmp_path / "clone"; clone.mkdir(); deny = tmp_path / "deny"; deny.write_text("synthetic")
+    monkeypatch.setenv("MDBX_DENYLIST", str(deny)); monkeypatch.setattr(cu, "LOG_PATH", tmp_path / "log")
+    monkeypatch.setattr(cu, "ensure_clone", lambda cfg: clone); monkeypatch.setattr(cu, "reset_to_origin", lambda *a: None)
+    monkeypatch.setattr(cu, "run_sync", lambda *a, **k: SimpleNamespace(returncode=4, stdout="SYNTH_SECRET", stderr="SYNTH_SECRET"))
+    monkeypatch.setattr(cu, "sweep", lambda *a: (_ for _ in ()).throw(AssertionError("must abort before sweep")))
+    cfg = {"clone_dir": str(clone), "repo": "synthetic", "branch": "main", "python": sys.executable}
+    assert cu.run_update(cfg) == 1; assert "SYNTH_SECRET" not in (tmp_path / "log").read_text()
+
+
+def test_config_validation_lazy_origin_and_environment(tmp_path, monkeypatch):
+    import json
+    from types import SimpleNamespace
+
+    import pytest
+    cfgfile = tmp_path / "config"; monkeypatch.setattr(cu, "CONFIG_PATH", cfgfile)
+    cfgfile.write_text(json.dumps({"repo": "configured", "clone_dir": None}))
+    monkeypatch.setattr(cu, "origin_url", lambda: (_ for _ in ()).throw(AssertionError("unnecessary origin lookup")))
+    with pytest.raises((ValueError, RuntimeError)): cu.effective_config(SimpleNamespace())
+    cfgfile.write_text(json.dumps({"repo": "configured"})); monkeypatch.setenv("MDBX_DENYLIST", str(tmp_path / "deny"))
+    config = cu.effective_config(SimpleNamespace()); assert config["repo"] == "configured"
+    assert cu.agent_plist(config)["EnvironmentVariables"]["MDBX_DENYLIST"] == str(tmp_path / "deny")
+
+
+def test_rebased_outgoing_tree_is_swept_and_missing_protected_paths_restore(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    clone = tmp_path / "clone"; clone.mkdir(); deny = tmp_path / "deny"; deny.write_text("synthetic")
+    monkeypatch.setenv("MDBX_DENYLIST", str(deny)); monkeypatch.setattr(cu, "LOG_PATH", tmp_path / "log")
+    monkeypatch.setattr(cu, "ensure_clone", lambda cfg: clone); monkeypatch.setattr(cu, "reset_to_origin", lambda *a: None)
+    monkeypatch.setattr(cu, "run_sync", lambda *a, **k: SimpleNamespace(returncode=0, stdout="", stderr=""))
+    restored = []; monkeypatch.setattr(cu, "PROTECTED", ["corpus/missing.md"]); monkeypatch.setattr(cu, "restore_committed", lambda clone, files: restored.extend(files))
+    trace = []
+    sweeps = iter([(0, []), (0, []), (2, [])])
+    def sweep(*args):
+        trace.append("sweep")
+        return next(sweeps)
+    monkeypatch.setattr(cu, "sweep", sweep)
+    commands = []
+    def must(args, *other):
+        commands.append(args)
+        trace.append(args[0])
+        if args[0] == "status":
+            return " M corpus/good.md\n"
+        if args[0] == "rev-parse":
+            return "a" * 40
+        if args[0] == "diff-tree":
+            return "corpus/good.md\n"
+        return ""
+    def git(args, *other):
+        trace.append("pull-rebase" if args[:2] == ["pull", "--rebase"] else args[0])
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+    monkeypatch.setattr(cu, "must_git", must); monkeypatch.setattr(cu, "git", git)
+    assert cu.run_update({"clone_dir": str(clone), "branch": "main", "python": sys.executable}) == 1
+    assert restored == ["corpus/missing.md"]
+    assert trace.index("commit") < trace.index("pull-rebase") < len(trace) - 1
+    assert trace[-1] == "sweep"
+    assert not any(args[0] == "push" for args in commands)
+
+
+def test_sweep_crash_has_a_distinct_private_failure_category(tmp_path, monkeypatch, capsys):
+    from types import SimpleNamespace
+    monkeypatch.setattr(cu, "LOG_PATH", tmp_path / "log")
+    monkeypatch.setattr(cu.subprocess, "run", lambda *a, **k: SimpleNamespace(returncode=7, stdout="SYNTH_SECRET", stderr="SYNTH_SECRET"))
+    assert cu.sweep(tmp_path, sys.executable) == (2, [])
+    captured = capsys.readouterr()
+    output = captured.out + captured.err
+    assert "exit 7" in output and "SYNTH_SECRET" not in output

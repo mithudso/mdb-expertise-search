@@ -29,6 +29,7 @@ import datetime as dt
 import json
 import os
 import plistlib
+import re
 import shutil
 import subprocess
 import sys
@@ -36,9 +37,21 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from maintenance_safety import (
+    atomic_write,
+    exchange_entries,
+    git_environment,
+    lock,
+    mark_clone,
+    safe_bytes,
+    scrub,
+    verify_clone,
+)
+
 ROOT = Path(__file__).resolve().parent.parent
 HOME = Path.home()
-CONFIG_PATH = Path(os.environ.get("MDBX_AUTOUPDATE_CONFIG", HOME / ".config" / "mdbx" / "chrome-autoupdate.json"))
+CONFIG_PATH = Path(os.environ.get("MDBX_AUTOUPDATE_CONFIG", HOME / ".config" / "mdbx" / "chrome-autoupdate.json")).expanduser().absolute()
 DEFAULT_INSTALL_DIR = HOME / "Library" / "Application Support" / "mdbx" / "chrome-extension"
 DEFAULT_CLONE_DIR = HOME / "Library" / "Caches" / "mdbx" / "chrome-autoupdate" / "repo"
 LOG_PATH = HOME / "Library" / "Logs" / "mdbx-chrome-autoupdate.log"
@@ -54,7 +67,7 @@ STATE_KEYS = ("source", "repo", "branch", "install_dir", "clone_dir", "python", 
 
 
 def log(msg: str) -> None:
-    line = f"[{dt.datetime.now().isoformat(timespec='seconds')}] {msg}"
+    line = f"[{dt.datetime.now().isoformat(timespec='seconds')}] {scrub(msg)}"
     print(line, flush=True)
     try:
         LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -74,8 +87,7 @@ def load_config() -> dict:
 
 
 def save_config(cfg: dict) -> None:
-    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CONFIG_PATH.write_text(json.dumps({k: cfg[k] for k in STATE_KEYS if k in cfg}, indent=2) + "\n", encoding="utf-8")
+    atomic_write(CONFIG_PATH, (json.dumps({k: cfg[k] for k in STATE_KEYS if k in cfg}, indent=2) + "\n").encode(), 0o600)
 
 
 def origin_url(repo_dir: Path = ROOT) -> str:
@@ -94,14 +106,33 @@ def effective_config(args) -> dict:
         if val is not None:
             cfg[key] = str(val) if isinstance(val, Path) else val
     cfg.setdefault("source", "git")
-    cfg.setdefault("repo", origin_url() or DEFAULT_REPO)
+    if "repo" not in cfg: cfg["repo"] = origin_url() or DEFAULT_REPO
     cfg.setdefault("branch", "main")
     cfg.setdefault("install_dir", str(DEFAULT_INSTALL_DIR))
     cfg.setdefault("clone_dir", str(DEFAULT_CLONE_DIR))
     cfg.setdefault("python", sys.executable)
     cfg.setdefault("interval_min", 10)
     cfg.setdefault("no_vectors", False)
+    validate_config(cfg)
     return cfg
+
+
+def validate_config(cfg):
+    for key in ("repo", "branch", "install_dir", "clone_dir", "python", "source"):
+        if not isinstance(cfg.get(key), str) or not cfg[key].strip(): raise ValueError("invalid updater configuration")
+    if cfg["source"] not in {"git", "release"} or not isinstance(cfg.get("no_vectors"), bool): raise ValueError("invalid updater configuration")
+    if type(cfg.get("interval_min")) is not int or cfg["interval_min"] < 1: raise ValueError("invalid update interval")
+    cfg["clone_dir"] = str(Path(cfg["clone_dir"]).expanduser().resolve())
+    cfg["install_dir"] = str(Path(cfg["install_dir"]).expanduser().absolute())
+    check_install_location(Path(cfg["install_dir"]), Path(cfg["clone_dir"]))
+
+
+def check_install_location(install_dir: Path, clone_dir: Path | None = None, source: Path | None = None) -> None:
+    install = Path(install_dir).expanduser().resolve()
+    protected = [ROOT.resolve()]
+    protected.extend(Path(path).resolve() for path in (clone_dir, source) if path is not None)
+    if any(install == path or install.is_relative_to(path) or path.is_relative_to(install) for path in protected):
+        raise RuntimeError("installation overlaps a working or maintenance directory")
 
 
 # ---- build identity ----
@@ -133,60 +164,86 @@ def needs_update(installed: dict, upstream_commit: str, *, force: bool = False) 
 
 # ---- git source ----
 def git(args: list[str], cwd: Path, timeout: int = 300) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", *args], cwd=str(cwd), capture_output=True, text=True, timeout=timeout, check=False)
+    return subprocess.run(["git", *args], cwd=str(cwd), capture_output=True, text=True, timeout=timeout, check=False, env=git_environment())
 
 
 def ensure_clone(cfg: dict) -> Path:
-    clone = Path(cfg["clone_dir"])
-    if not (clone / ".git").is_dir():
-        clone.parent.mkdir(parents=True, exist_ok=True)
-        log(f"cloning {cfg['repo']} → {clone}")
-        res = subprocess.run(["git", "clone", "--branch", cfg["branch"], "--single-branch", cfg["repo"], str(clone)],
-                             capture_output=True, text=True, timeout=900, check=False)
-        if res.returncode != 0:
-            raise RuntimeError(f"git clone failed: {res.stderr.strip()[-400:]}")
-    return clone
+    clone = Path(cfg["clone_dir"]).resolve()
+    if clone == ROOT.resolve(): raise RuntimeError("refusing the working checkout as a maintenance clone")
+    if clone.exists(): return verify_clone(clone, cfg["repo"], ROOT, git)
+    clone.parent.mkdir(parents=True, exist_ok=True)
+    log("creating updater-owned clone")
+    stage = Path(tempfile.mkdtemp(prefix="." + clone.name + ".clone-", dir=clone.parent))
+    try:
+        res = subprocess.run(["git", "clone", "--branch", cfg["branch"], "--single-branch", "--", cfg["repo"], str(stage)],
+                             capture_output=True, text=True, timeout=900, check=False, env=git_environment())
+        if res.returncode:
+            raise RuntimeError("git clone failed")
+        mark_clone(stage, cfg["repo"])
+        verify_clone(stage, cfg["repo"], ROOT, git)
+        atomic_write(stage / ".git/mdbx-maintenance-owner.json",
+                     json.dumps({"path": str(clone), "repo": cfg["repo"]}).encode(), 0o600)
+        if clone.exists():
+            raise RuntimeError("clone destination appeared during preparation; source preserved")
+        os.rename(stage, clone)
+    finally:
+        if stage.exists():
+            shutil.rmtree(stage)
+    return verify_clone(clone, cfg["repo"], ROOT, git)
 
 
 def upstream_commit(cfg: dict) -> str:
     clone = ensure_clone(cfg)
-    res = git(["fetch", "--quiet", "origin", cfg["branch"]], clone)
+    res = git(["fetch", "--quiet", "origin", f"+refs/heads/{cfg['branch']}:refs/remotes/origin/{cfg['branch']}"], clone)
     if res.returncode != 0:
-        raise RuntimeError(f"git fetch failed: {res.stderr.strip()[-400:]}")
+        raise RuntimeError("git fetch failed")
     res = git(["rev-parse", "--short=12", f"origin/{cfg['branch']}"], clone)
+    if res.returncode or not re.fullmatch(r"[0-9a-f]{12,40}", res.stdout.strip()): raise RuntimeError("upstream revision lookup failed")
     return res.stdout.strip()
 
 
 def checkout_upstream(cfg: dict) -> str:
     clone = ensure_clone(cfg)
+    if git(["merge-base", "--is-ancestor", "HEAD", f"origin/{cfg['branch']}"], clone).returncode:
+        raise RuntimeError("unpublished maintenance commits exist; preserve them before resetting")
     res = git(["reset", "--hard", f"origin/{cfg['branch']}"], clone)
     if res.returncode != 0:
-        raise RuntimeError(f"git reset failed: {res.stderr.strip()[-400:]}")
-    return git(["rev-parse", "--short=12", "HEAD"], clone).stdout.strip()
+        raise RuntimeError("git reset failed")
+    revision = git(["rev-parse", "--short=12", "HEAD"], clone)
+    if revision.returncode or not re.fullmatch(r"[0-9a-f]{12,40}", revision.stdout.strip()): raise RuntimeError("checkout revision lookup failed")
+    return revision.stdout.strip()
 
 
-def build_from_clone(cfg: dict) -> Path:
+def build_from_clone(cfg: dict, destination: Path | None = None) -> Path:
     clone = Path(cfg["clone_dir"])
     argv = [cfg["python"], str(clone / "scripts" / "package_chrome_extension.py")]
     if cfg.get("no_vectors"):
         argv.append("--no-vectors")
-    env = dict(os.environ)
-    env.setdefault("MDBX_CORPUS", str(clone / "corpus"))
-    # the clone's own index: built once, then reused (vectors need Ollama; keyword-only otherwise)
+    env = git_environment()
+    env["MDBX_CORPUS"] = str(clone / "corpus")
+    # Refresh keyword data and retry missing vectors for the current corpus.
     db = clone / "data" / "mdbx.sqlite"
-    env.setdefault("MDBX_DB", str(db))
-    if not db.exists():
-        log("building the clone's search index (first run)")
-        idx = subprocess.run([cfg["python"], "-m", "mdbx.cli", "index"], cwd=str(clone), env=env,
-                             capture_output=True, text=True, timeout=3600, check=False)
-        if idx.returncode not in (0, 1):  # 1 = keyword index built, Ollama absent
-            raise RuntimeError(f"mdbx index failed: {(idx.stderr or idx.stdout).strip()[-400:]}")
+    env["MDBX_DB"] = str(db)
+    if any(path.is_symlink() for path in [clone / "corpus", db.parent, db]):
+        raise RuntimeError("clone corpus or index destination is a symlink")
+    log("refreshing the clone's search index")
+    index_command = [cfg["python"], "-m", "mdbx.cli", "index"]
+    if cfg.get("no_vectors"): index_command.append("--skip-semantic")
+    idx = subprocess.run(index_command, cwd=str(clone), env=env,
+                         capture_output=True, text=True, timeout=3600, check=False)
+    if idx.returncode not in (0, 1):  # 1 = keyword index built, Ollama absent
+        raise RuntimeError("mdbx index failed")
     log("packaging the extension from the clone")
     res = subprocess.run(argv, cwd=str(clone), env=env, capture_output=True, text=True, timeout=1800, check=False)
     if res.returncode != 0:
-        raise RuntimeError(f"package script failed: {(res.stderr or res.stdout).strip()[-600:]}")
-    log(res.stdout.strip().splitlines()[-1] if res.stdout.strip() else "packaged")
-    return clone / "editors" / "chrome"
+        raise RuntimeError("package script failed")
+    log("extension package prepared")
+    manifest = json.loads(safe_bytes(clone / "editors/chrome/manifest.json", clone))
+    version = manifest.get("version")
+    if not isinstance(version, str) or not re.fullmatch(r"[0-9]+(?:\.[0-9]+){0,3}", version): raise RuntimeError("invalid packaged version")
+    output = destination or Path(tempfile.mkdtemp(prefix="mdbx-built-extension-"))
+    unpack_archive(clone / "dist" / f"mongodb-expertise-chrome-{version}.zip", output)
+    return output
 
 
 # ---- release source ----
@@ -197,9 +254,11 @@ def release_commit(cfg: dict) -> str:
                               "--pattern", "build.json", "--dir", tmp, "--clobber"],
                              capture_output=True, text=True, timeout=120, check=False)
         if res.returncode != 0:
-            raise RuntimeError(f"gh release download failed: {res.stderr.strip()[-300:]}")
+            raise RuntimeError("gh release download failed")
         stamp = json.loads(Path(tmp, "build.json").read_text(encoding="utf-8"))
-    return str(stamp.get("commit") or "")
+    if not isinstance(stamp, dict) or not isinstance(stamp.get("commit"), str) or not stamp["commit"].strip():
+        raise RuntimeError("release metadata has no usable commit")
+    return stamp["commit"].strip()
 
 
 def download_release(cfg: dict, dest: Path) -> Path:
@@ -208,12 +267,11 @@ def download_release(cfg: dict, dest: Path) -> Path:
                           "--pattern", RELEASE_ASSET, "--dir", str(dest), "--clobber"],
                          capture_output=True, text=True, timeout=600, check=False)
     if res.returncode != 0:
-        raise RuntimeError(f"gh release download failed: {res.stderr.strip()[-300:]}")
+        raise RuntimeError("gh release download failed")
     unpacked = dest / "unpacked"
     if unpacked.exists():
         shutil.rmtree(unpacked)
-    with zipfile.ZipFile(dest / RELEASE_ASSET) as z:
-        z.extractall(unpacked)
+    unpack_archive(dest / RELEASE_ASSET, unpacked)
     return unpacked
 
 
@@ -234,31 +292,131 @@ def runtime_files(src: Path) -> list[Path]:
     return files
 
 
+MAX_ARCHIVE_BYTES = 512 * 1024 * 1024
+MAX_ARCHIVE_FILES = 4096
+
+
+def unpack_archive(path: Path, destination: Path) -> None:
+    destination.mkdir(parents=True, exist_ok=True)
+    try:
+        with zipfile.ZipFile(path) as archive:
+            entries = archive.infolist()
+            if len(entries) > MAX_ARCHIVE_FILES or sum(info.file_size for info in entries) > MAX_ARCHIVE_BYTES:
+                raise RuntimeError("extension archive exceeds extraction limits")
+            for info in entries:
+                rel = Path(info.filename)
+                if rel.is_absolute() or ".." in rel.parts or (info.external_attr >> 16) & 0o170000 == 0o120000:
+                    raise RuntimeError("unsafe extension archive entry")
+            archive.extractall(destination)
+    except zipfile.BadZipFile:
+        raise RuntimeError("extension archive is corrupt") from None
+
+
+def validate_runtime(src: Path) -> list[Path]:
+    try:
+        manifest = json.loads(safe_bytes(src / "manifest.json", src))
+        if not isinstance(manifest, dict) or manifest.get("manifest_version") != 3 or not isinstance(manifest.get("version"), str): raise ValueError()
+        files = runtime_files(src)
+        for name in RUNTIME_FILES: safe_bytes(src / name, src)
+        if any(name in manifest and not isinstance(manifest[name], dict) for name in ("icons", "background", "action")):
+            raise TypeError()
+        declared = list(manifest.get("icons", {}).values())
+        if manifest.get("background", {}).get("service_worker"): declared.append(manifest["background"]["service_worker"])
+        if manifest.get("action", {}).get("default_popup"): declared.append(manifest["action"]["default_popup"])
+        for name in declared:
+            if not isinstance(name, str): raise TypeError()
+            safe_bytes(src / name, src)
+        stamp = json.loads(safe_bytes(src / "data/build.json", src))
+        if not isinstance(stamp, dict) or not build_id(stamp) or stamp.get("version") != manifest["version"]: raise ValueError()
+        for path in files: safe_bytes(path, src)
+        pending = [path for path in files if path.suffix == ".js"]
+        visited = set()
+        while pending:
+            path = pending.pop()
+            relative = path.relative_to(src).as_posix()
+            if relative in visited:
+                continue
+            visited.add(relative)
+            text = safe_bytes(path, src).decode("utf-8")
+            for match in re.finditer(r"(?:from\s*|import\s*)[\"'](\.[^\"']+)[\"']", text):
+                dependency = path.parent / match.group(1)
+                rel = dependency.relative_to(src)
+                if ".." in rel.parts or dependency.suffix != ".js":
+                    raise ValueError()
+                safe_bytes(dependency, src)
+                if dependency not in files:
+                    raise ValueError()
+                pending.append(dependency)
+        return files
+    except (OSError, ValueError, TypeError, KeyError):
+        raise RuntimeError("extension runtime is incomplete or invalid") from None
+
+
+def recover_install(install: Path, journal: Path) -> None:
+    if not journal.exists(): return
+    try:
+        state = json.loads(journal.read_text())
+        backup, stage = Path(state["backup"]), Path(state["stage"])
+        for path, prefix in [(backup, "." + install.name + ".backup-"), (stage, "." + install.name + ".stage-")]:
+            if path.parent != install.parent or not path.name.startswith(prefix) or path.is_symlink(): raise ValueError()
+    except (ValueError, KeyError, TypeError): raise RuntimeError("ambiguous extension swap journal; preserve it for recovery") from None
+    if not install.exists() and backup.exists(): os.rename(backup, install)
+    if not install.exists(): raise RuntimeError("incomplete extension swap; backup preserved")
+    # Journal paths were created by this updater under the install lock.
+    if stage.exists(): shutil.rmtree(stage)
+    if backup.exists(): shutil.rmtree(backup)
+    journal.unlink()
+
+
 def sync_runtime(src: Path, install_dir: Path) -> int:
-    """Copy the runtime files into ``install_dir`` atomically (build next to it, then swap)."""
-    install_dir = Path(install_dir)
-    files = runtime_files(src)
-    if not any(f.name == "manifest.json" for f in files):
-        raise RuntimeError(f"no manifest.json under {src}")
-    staging = install_dir.with_name(install_dir.name + ".new")
-    backup = install_dir.with_name(install_dir.name + ".old")
-    for d in (staging, backup):
-        if d.exists():
-            shutil.rmtree(d)
-    staging.mkdir(parents=True)
-    for f in files:
-        rel = f.relative_to(src)
-        (staging / rel).parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(f, staging / rel)
-    if install_dir.exists():
-        os.rename(install_dir, backup)
-    os.rename(staging, install_dir)
-    if backup.exists():
-        shutil.rmtree(backup, ignore_errors=True)
+    """Stage and validate an owned replacement; roll back if publishing the staged directory fails."""
+    check_install_location(install_dir, source=src)
+    install_dir = Path(install_dir).absolute(); install_dir.parent.mkdir(parents=True, exist_ok=True)
+    if install_dir.is_symlink(): raise RuntimeError("installation directory is a symlink")
+    files = validate_runtime(src)
+    journal = install_dir.with_name("." + install_dir.name + ".swap.json")
+    recover_install(install_dir, journal)
+    stage = Path(tempfile.mkdtemp(prefix="." + install_dir.name + ".stage-", dir=install_dir.parent))
+    backup = Path(tempfile.mkdtemp(prefix="." + install_dir.name + ".backup-", dir=install_dir.parent)); backup.rmdir()
+    published = False
+    exchanged = False
+    try:
+        for path in files:
+            target = stage / path.relative_to(src); target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(safe_bytes(path, src))
+        validate_runtime(stage)
+        atomic_write(journal, json.dumps({"backup": str(backup), "stage": str(stage)}).encode(), 0o600)
+        if install_dir.exists():
+            exchange_entries(stage, install_dir, install_dir.parent)
+            exchanged = True
+            # The complete old generation stays under stage until the journaled backup rename.
+            os.rename(stage, backup)
+        else:
+            os.rename(stage, install_dir)
+        published = True
+        if backup.exists(): shutil.rmtree(backup)
+        journal.unlink()
+    finally:
+        if stage.exists() and not exchanged: shutil.rmtree(stage)
+        if not published and not exchanged and install_dir.exists() and not backup.exists(): journal.unlink(missing_ok=True)
     return len(files)
 
 
 def run_update(cfg: dict, *, force: bool = False) -> int:
+    clone, install = Path(cfg["clone_dir"]), Path(cfg["install_dir"])
+    check_install_location(install, clone)
+    try:
+        with lock(clone.with_name("." + clone.name + ".chrome-update.lock")), lock(install.with_name("." + install.name + ".install.lock")):
+            if install.is_symlink():
+                raise RuntimeError("installation directory is a symlink")
+            recover_install(install, install.with_name("." + install.name + ".swap.json"))
+            return _run_update(cfg, force=force)
+    except RuntimeError as error:
+        if str(error) != "maintenance operation is busy": raise
+        log("busy: another extension update is active"); return 0
+
+
+def _run_update(cfg: dict, *, force: bool = False) -> int:
     install_dir = Path(cfg["install_dir"])
     installed = read_stamp(install_dir)
     if cfg["source"] == "release":
@@ -272,11 +430,17 @@ def run_update(cfg: dict, *, force: bool = False) -> int:
     if cfg["source"] == "release":
         with tempfile.TemporaryDirectory(prefix="mdbx-rel-") as tmp:
             src = download_release(cfg, Path(tmp))
+            validate_runtime(src)
+            if build_id(read_stamp(src)) != target:
+                raise RuntimeError("release assets disagree about the expected commit")
             n = sync_runtime(src, install_dir)
     else:
         checkout_upstream(cfg)
-        src = build_from_clone(cfg)
-        n = sync_runtime(src, install_dir)
+        with tempfile.TemporaryDirectory(prefix="mdbx-local-build-") as output:
+            src = build_from_clone(cfg, destination=Path(output))
+            if needs_update(read_stamp(src), target):
+                raise RuntimeError("packaged runtime disagrees about the expected commit")
+            n = sync_runtime(src, install_dir)
     log(f"installed {n} files into {install_dir}; build {build_id(read_stamp(install_dir))}")
     return 0
 
@@ -304,22 +468,22 @@ def install_agent(cfg: dict) -> int:
     AGENT_PLIST.parent.mkdir(parents=True, exist_ok=True)
     with open(AGENT_PLIST, "wb") as fh:
         plistlib.dump(agent_plist(cfg), fh)
+    print("Running the first update now…")
+    try:
+        run_update(cfg, force=not Path(cfg["install_dir"]).exists())
+    except (RuntimeError, ValueError, OSError, subprocess.SubprocessError):
+        print("first update failed", file=sys.stderr)
+        return 1
     uid = os.getuid()
     subprocess.run(["launchctl", "bootout", f"gui/{uid}", str(AGENT_PLIST)], capture_output=True, check=False)
     res = subprocess.run(["launchctl", "bootstrap", f"gui/{uid}", str(AGENT_PLIST)], capture_output=True, text=True, check=False)
     if res.returncode != 0:
-        print(f"launchctl bootstrap failed: {res.stderr.strip()}", file=sys.stderr)
+        print("launchctl bootstrap failed", file=sys.stderr)
         return 1
     print(f"agent installed: {AGENT_PLIST} (every {cfg['interval_min']} min, source={cfg['source']})")
     print(f"config:          {CONFIG_PATH}")
     print(f"log:             {LOG_PATH}")
     print(f"extension dir:   {cfg['install_dir']}")
-    print("Running the first update now…")
-    try:
-        run_update(cfg, force=not Path(cfg["install_dir"]).exists())
-    except RuntimeError as exc:
-        print(f"first update failed: {exc}", file=sys.stderr)
-        return 1
     print(f"\nIn Chrome: chrome://extensions → Developer mode → Load unpacked → {cfg['install_dir']}")
     print("Later pushes to GitHub reach the extension automatically (agent ≤ interval, reload ≤ 5 min).")
     return 0
@@ -339,12 +503,12 @@ def status(cfg: dict) -> int:
     installed = read_stamp(Path(cfg["install_dir"]))
     try:
         target = release_commit(cfg) if cfg["source"] == "release" else upstream_commit(cfg)
-    except RuntimeError as exc:
-        target = f"? ({exc})"
+    except (RuntimeError, ValueError, OSError, subprocess.SubprocessError):
+        target = "? (upstream lookup failed)"
     agent = "installed" if AGENT_PLIST.exists() else "not installed"
     print(json.dumps({"install_dir": cfg["install_dir"], "installed_build": build_id(installed) or None,
                       "installed_version": installed.get("version"), "built_at": installed.get("built_at"),
-                      "upstream": target, "source": cfg["source"], "repo": cfg["repo"], "branch": cfg["branch"],
+                      "upstream": target, "source": cfg["source"], "repo": scrub(cfg["repo"]), "branch": cfg["branch"],
                       "agent": agent, "interval_min": cfg["interval_min"], "log": str(LOG_PATH)}, indent=2))
     return 0 if installed and isinstance(target, str) and not needs_update(installed, target) else 1
 
@@ -365,9 +529,19 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("status")
     r = sub.add_parser("run", help="one update pass")
     r.add_argument("--force", action="store_true")
-    a = ap.parse_args(argv)
-    cfg = effective_config(a)
+    raw = list(sys.argv[1:] if argv is None else argv)
+    front, rest = [], []
+    values = {"--repo", "--branch", "--clone-dir", "--python", "--interval-min", "--install-dir", "--source"}
+    while raw:
+        token = raw.pop(0)
+        if token in values:
+            front.append(token)
+            if raw: front.append(raw.pop(0))
+        elif token.split("=", 1)[0] in values or token == "--no-vectors": front.append(token)
+        else: rest.append(token)
+    a = ap.parse_args(front + rest)
     try:
+        cfg = effective_config(a)
         if a.cmd == "install-agent":
             return install_agent(cfg)
         if a.cmd == "uninstall-agent":
@@ -375,8 +549,8 @@ def main(argv: list[str] | None = None) -> int:
         if a.cmd == "status":
             return status(cfg)
         return run_update(cfg, force=a.force)
-    except RuntimeError as exc:
-        log(f"error: {exc}")
+    except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as exc:
+        log(f"error: {type(exc).__name__}; maintenance operation failed")
         return 1
 
 
