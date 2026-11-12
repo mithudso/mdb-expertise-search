@@ -274,3 +274,27 @@ The generic pytest socket mock is explicitly rejected as kernel evidence.
 After this correction the actual macOS full suite passed673 tests with2 skips;
 Ruff passed. Final full-matrix CI remains a required delivery gate at PR7.
 These are necessary ordinary CI repairs, with no third blind gate or budget reset.
+
+### Qualified IPv6 descendant-proof correction
+
+Actual CI43318681617 on9495b5d completed all12 real connection attempts across
+fresh Python-parent, Node-child and Python-child. Each phase returned
+ENETUNREACH for its two IPv4 cases and EADDRNOTAVAIL for its two IPv6 cases.
+Kernel7.0.0-1019-azure successfully reported zero IPv6 source-address entries.
+No connection succeeded or timed out. Linux source selection can return
+EADDRNOTAVAIL before a route error when it has no address candidate
+([primary source](https://github.com/torvalds/linux/blob/v6.12/net/ipv6/ip6_output.c#L1056-L1090)).
+The errno alone is ambiguous because connect can also report ephemeral-port
+exhaustion ([connect(2)](https://man7.org/linux/man-pages/man2/connect.2.html)).
+
+Only the test classifier changes: descendants collect outcomes and the parent
+requires all12 fixed phase/case pairs plus mandatory actual kernel attestation.
+EADDRNOTAVAIL qualifies only for an IPv6 connect with successfully read zero
+source addresses. IPv4, socket-stage, unknown case, failed attestation,
+unreadable/nonempty address table, missing errno, refusal, timeout and successful
+connect remain rejected. The production guard is unchanged. Six synthetic
+control sets exercise the qualified case and these rejection conditions.
+Final local Python validation passed686 tests with2 explicit platform/model skips;
+Ruff passed. Required final-head and postmerge matrix outcomes are recorded in
+PR7 and the external delivery receipt. Both blind slots remain spent and the
+optimizer remains BLIND-AUDIT-DISSENT.

@@ -228,7 +228,7 @@ inventory. The delivery owner reconciles any later additions before publication.
 | `scripts/sync_corpus_transaction.py` | `fa4ab73fcefd29bf87125c840abb0faaf9a294bda92b6973f64bd6f37fd2c080` | ordinary repair/test; outside frozen 145 |
 | `tests/test_ci_public_install.py` | `8b0dabd2ed91206e056d44816461d1a80890fd914ed64b681fcde52ab93f9106` | ordinary repair/test; outside frozen 145 |
 | `tests/test_corpus_generation.py` | `095b21beab730e57f9643bf5178209f50b1e7ea941cf23a3b192c3f9cf3fcb49` | ordinary repair/test; outside frozen 145 |
-| `tests/test_linux_offline_guard.py` | `20ac2f7cc12a45e5c81cf8c8070465a3e1078892fe3db4870962cdecf6c6ca92` | ordinary repair/test; outside frozen 145 |
+| `tests/test_linux_offline_guard.py` | `db8b01ebf7ca914a73d3304d901f286f0c6c3354e4b02f6f41ac9782bb685b66` | ordinary repair/test; outside frozen 145 |
 | `tests/test_postgate_core.py` | `a8fb497b44ffeb8c8869e26bc8ba107ade0b4fe09137d4467487fc1d58904da4` | ordinary repair/test; outside frozen 145 |
 | `tests/test_postgate_mql.py` | `8b949dcf079b2e924c7352c0a7d9f2e01aecf4e94bec5faebda4775c8eeec820` | ordinary repair/test; outside frozen 145 |
 | `tests/test_postgate_python.py` | `f1708b63cd55e487fd2f53ffb1d66660fdf32fd0eca369c1bd063a2dbd5583e6` | ordinary repair/test; outside frozen 145 |

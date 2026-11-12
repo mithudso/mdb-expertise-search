@@ -240,7 +240,9 @@ def _egress_probe():
     import inspect
 
     body = inspect.getsource(_blocked)
-    child = body + "\ntry:\n records = _blocked('python-child', collect=True)\n if any(row['code'] not in {'ENETUNREACH','EAFNOSUPPORT'} for row in records): raise SystemExit(1)\nexcept AssertionError:\n raise SystemExit(1)\n"
+    # Descendants collect kernel outcomes. The parent test classifies all twelve
+    # together with mandatory namespace attestation and source-table evidence.
+    child = body + "\ntry:\n _blocked('python-child', collect=True)\nexcept AssertionError:\n raise SystemExit(1)\n"
     node = """
 const net = require('node:net'), cp = require('node:child_process');
 const phase = 'node-child';
@@ -258,7 +260,6 @@ async function blocked(id, host, family) {
     let socket;
     try { socket = net.createConnection({host, port:9, family}); }
     catch (error) { emit(id, 'socket', 'error', error);
-      if (!['ENETUNREACH', 'EAFNOSUPPORT'].includes(error.code)) rejected = true;
       resolve(); return; }
     emit(id, 'connect', 'attempt');
     socket.setTimeout(1000);
@@ -266,8 +267,7 @@ async function blocked(id, host, family) {
     socket.on('timeout', () => { emit(id,'connect','timeout'); socket.destroy(); reject(Error('timeout')); });
     socket.on('error', error => {
       emit(id, 'connect', 'error', error);
-      if (!['ENETUNREACH', 'EAFNOSUPPORT'].includes(error.code)) rejected = true;
-      resolve(); // Collect all denied cases; the strict verdict follows the complete chain.
+      resolve(); // The attested parent classifies every recorded error.
     });
   });
 }
@@ -291,7 +291,7 @@ except subprocess.TimeoutExpired:
  spawn_event('timeout');raise SystemExit(1)
 except OSError as error:
  spawn_event('error',error.errno);raise SystemExit(1)
-if result.returncode or any(row['code'] not in {'ENETUNREACH','EAFNOSUPPORT'} for row in parent_records):
+if result.returncode:
  spawn_event('error');raise SystemExit(1)
 print(json.dumps({"home":os.environ["HOME"],"root":os.environ["MDBX_TEST_ISOLATION_ROOT"]}))
 """.replace('NODE', repr(node)).replace('CHILD', repr(child))
@@ -320,6 +320,36 @@ def _kernel_metadata(proc=Path('/proc')):
     return row
 
 
+def _kernel_denial_proven(event, *, isolated, metadata):
+    import errno
+
+    if isolated is not True or event.get('outcome') != 'error':
+        return False
+    if event.get('phase') not in {'python-parent', 'node-child', 'python-child'}:
+        return False
+    cases = {'doc-v4': 'ipv4', 'loopback-v4': 'ipv4',
+             'doc-v6': 'ipv6', 'loopback-v6': 'ipv6'}
+    if event.get('case') not in cases or cases[event['case']] != event.get('family'):
+        return False
+    if event.get('operation') not in {'socket', 'connect'}:
+        return False
+    number = event.get('errno')
+    if type(number) is not int:
+        return False
+    expected = {'ENETUNREACH': errno.ENETUNREACH, 'EAFNOSUPPORT': errno.EAFNOSUPPORT}
+    if event.get('code') in expected:
+        return abs(number) == expected[event['code']]
+    # Linux source selection can fail before reporting an unreachable route.
+    # Errno99 alone is ambiguous (it can also indicate ephemeral-port exhaustion).
+    # Only actual IPv6 connect outcomes in this attested, addressless namespace
+    # qualify; socket creation, IPv4, unreadable or nonempty tables never qualify.
+    return (event.get('code') == 'EADDRNOTAVAIL' and abs(number) == errno.EADDRNOTAVAIL
+            and event['family'] == 'ipv6' and event['operation'] == 'connect'
+            and metadata.get('ipv6_address_read') is True
+            and type(metadata.get('ipv6_address_entries')) is int
+            and metadata['ipv6_address_entries'] == 0)
+
+
 @pytest.mark.skipif(not sys.platform.startswith('linux'), reason='actual Linux namespace proof')
 def test_actual_linux_guard_is_inherited_by_python_and_node(tmp_path):
     import shutil
@@ -345,7 +375,11 @@ def test_actual_linux_guard_is_inherited_by_python_and_node(tmp_path):
     expected = {(phase, case) for phase in ['python-parent', 'node-child', 'python-child']
                 for case in ['doc-v4', 'loopback-v4', 'doc-v6', 'loopback-v6']}
     assert len(errors) == 12 and {(event['phase'], event['case']) for event in errors} == expected
-    assert all(event['code'] in {'ENETUNREACH', 'EAFNOSUPPORT'} for event in errors)
+    isolated = guard.linux_isolated()
+    metadata = _kernel_metadata()
+    assert isolated, guard.linux_isolation_diagnostic()
+    assert all(_kernel_denial_proven(event, isolated=isolated, metadata=metadata)
+               for event in errors), errors
 
 
 def test_failed_attestation_metadata_is_numeric_and_excludes_private_text(guard, isolated, monkeypatch):
@@ -501,3 +535,25 @@ def test_kernel_metadata_counts_only_and_preserves_unreadable_state(tmp_path, mo
     assert row['ipv6_address_read'] is False and 'ipv6_address_entries' not in row
     assert row['ipv6_address_error'] == {'type': 'FileNotFoundError', 'errno': 2}
     assert str(tmp_path) not in json.dumps(row)
+
+
+@pytest.mark.parametrize('phase,sign', [('python-parent', 1), ('node-child', -1), ('python-child', 1)])
+@pytest.mark.parametrize('case', ['doc-v6', 'loopback-v6'])
+def test_ipv6_no_source_denial_requires_attested_empty_source_table(phase, sign, case):
+    import errno
+
+    number = sign * errno.EADDRNOTAVAIL
+    event = {'phase': phase, 'case': case, 'family': 'ipv6', 'operation': 'connect',
+             'outcome': 'error', 'code': 'EADDRNOTAVAIL', 'errno': number}
+    metadata = {'ipv6_address_read': True, 'ipv6_address_entries': 0}
+    assert _kernel_denial_proven(event, isolated=True, metadata=metadata)
+    for changed in [{'family': 'ipv4'}, {'case': 'doc-v4'}, {'operation': 'socket'},
+                    {'outcome': 'connected'}, {'outcome': 'timeout'}, {'errno': None},
+                    {'code': 'ECONNREFUSED', 'errno': 111}, {'code': 'UNKNOWN'}]:
+        assert not _kernel_denial_proven(event | changed, isolated=True, metadata=metadata)
+    for unproven in [{}, {'ipv6_address_read': False, 'ipv6_address_entries': 0},
+                     {'ipv6_address_read': True},
+                     {'ipv6_address_read': True, 'ipv6_address_entries': 1},
+                     {'ipv6_address_read': True, 'ipv6_address_entries': False}]:
+        assert not _kernel_denial_proven(event, isolated=True, metadata=unproven)
+    assert not _kernel_denial_proven(event, isolated=False, metadata=metadata)

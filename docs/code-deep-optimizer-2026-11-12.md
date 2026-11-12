@@ -228,6 +228,30 @@ No optional feature expansion was requested or implemented. The delivered work r
 ## 9. Summary
 Status: **BLIND-AUDIT-DISSENT**; initial112, gate1 129 unique/130 hash reports, gate2 145/145;159 current runtime/config/test files including16 ordinary additions;3 optimizer repair iterations of5,2 blind gates of2; frozen serialization limitations and paired schema-advice dissent retained.
 
+### Qualified IPv6 descendant-proof correction
+
+Actual CI43318681617 on9495b5d completed all12 real connection attempts across
+fresh Python-parent, Node-child and Python-child. Each phase returned
+ENETUNREACH for its two IPv4 cases and EADDRNOTAVAIL for its two IPv6 cases.
+Kernel7.0.0-1019-azure successfully reported zero IPv6 source-address entries.
+No connection succeeded or timed out. Linux source selection can return
+EADDRNOTAVAIL before a route error when it has no address candidate
+([primary source](https://github.com/torvalds/linux/blob/v6.12/net/ipv6/ip6_output.c#L1056-L1090)).
+The errno alone is ambiguous because connect can also report ephemeral-port
+exhaustion ([connect(2)](https://man7.org/linux/man-pages/man2/connect.2.html)).
+
+Only the test classifier changes: descendants collect outcomes and the parent
+requires all12 fixed phase/case pairs plus mandatory actual kernel attestation.
+EADDRNOTAVAIL qualifies only for an IPv6 connect with successfully read zero
+source addresses. IPv4, socket-stage, unknown case, failed attestation,
+unreadable/nonempty address table, missing errno, refusal, timeout and successful
+connect remain rejected. The production guard is unchanged. Six synthetic
+control sets exercise the qualified case and these rejection conditions.
+Final local Python validation passed686 tests with2 explicit platform/model skips;
+Ruff passed. Required final-head and postmerge matrix outcomes are recorded in
+PR7 and the external delivery receipt. Both blind slots remain spent and the
+optimizer remains BLIND-AUDIT-DISSENT.
+
 ## 10. Snapshot, convergence and rollback
 These literal measured outputs are retained. Iteration 1 has 112 exact
 measurements; iteration 2 has 145. The latter emitted 142 CLEAN and 3 CONTINUE
@@ -384,7 +408,7 @@ and ratios remain in convergence-iteration2.json. No distance was estimated.
 | `tests/test_web_search.py` | 0.1162 | CLEAN |
 
 
-**FINAL_CONVERGENCE:** Canonical convergence_check.py ran separately for161 files:143 legacy runtime/config/test targets,2 legacy auxiliaries and16 ordinary additions. Exact output artifact SHA256 686cdeb94145d5666e1c5dffde49d031b72d2b59571a7f0114cc2073754bb9b0:158 local CLEAN,2 CONTINUE,1 NO-PROGRESS. The latter is corpus.py, whose current count includes four retained historical representation defects while the raw gate2 input had two rows; this is not an inferred performance regression. Paired optimizer files retain one schema-advice row each. Local checker labels do not supersede BLIND-AUDIT-DISSENT. Full per-file commands, exact ratios, hashes and outputs remain in convergence-iteration3.json; no whole-repository SequenceMatcher artifact or estimated distances were used.
+**FINAL_CONVERGENCE:** Canonical convergence_check.py ran separately for161 files:143 legacy runtime/config/test targets,2 legacy auxiliaries and16 ordinary additions. Exact output artifact SHA256 4b4b09fa582a603fe93436cda250fc8bedda453feba0ddfe420513cbb362f39b:158 local CLEAN,2 CONTINUE,1 NO-PROGRESS. The latter is corpus.py, whose current count includes four retained historical representation defects while the raw gate2 input had two rows; this is not an inferred performance regression. Paired optimizer files retain one schema-advice row each. Local checker labels do not supersede BLIND-AUDIT-DISSENT. Full per-file commands, exact ratios, hashes and outputs remain in convergence-iteration3.json; no whole-repository SequenceMatcher artifact or estimated distances were used.
 
 The external evidence preserves actual per-file measurements, hashes and count summary, and
 links the complete external output. Keep literal local checker labels separate
