@@ -16,9 +16,12 @@ import argparse
 import hashlib
 import json
 import math
+import os
+import shutil
 import sys
 import tempfile
-from contextlib import closing
+import uuid
+from contextlib import closing, contextmanager
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -26,6 +29,7 @@ sys.path.insert(0, str(ROOT))
 
 from mdbx import corpus as corpusmod
 from mdbx import index as idx
+from mdbx.safety import _directory, directory_lock
 from mdbx.webexport import WebIndex, export
 
 FIX = ROOT / "tests" / "fixtures" / "search"
@@ -71,6 +75,8 @@ def build(out_index: Path) -> dict:
 
             for c in corpusmod.iter_chunks(corpus_root):
                 vec = array.array("f", fake_vec(f"{c.heading}\n{c.text}"))
+                con.execute("INSERT OR REPLACE INTO vector_inputs VALUES (?,?)",
+                            (c.digest, corpusmod.embedding_input_hash(c.heading, c.text)))
                 con.execute("INSERT OR REPLACE INTO vectors(digest, dim, vec) VALUES (?,?,?)",
                             (c.digest, DIM, vec.tobytes()))
             con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model', 'fake-hash-32')")
@@ -78,7 +84,7 @@ def build(out_index: Path) -> dict:
         export(corpus_root, out_index, db=db, allow_untracked=True)
     meta = json.loads((out_index / "meta.json").read_text(encoding="utf-8"))
     meta["built_at"] = meta["mdbx_version"] = "fixture"  # keep the committed fixture stable across builds/releases
-    (out_index / "meta.json").write_text(json.dumps(meta, indent=1, ensure_ascii=False), encoding="utf-8")
+    (out_index / "meta.json").write_text(json.dumps(meta, indent=1, ensure_ascii=False), encoding="utf-8", newline="\n")
     wi = WebIndex(out_index)
 
     def dump(hits):
@@ -97,6 +103,49 @@ def build(out_index: Path) -> dict:
             "hybrid": dump(wi.hybrid_vec(q, qv, 10, **kw)),
         })
     return {"dim": DIM, "results": results}
+
+
+@contextmanager
+def _pair_lock():
+    parent = _directory(FIX)
+    try:
+        with directory_lock(parent, 'search-fixture-pair'):
+            yield
+    finally:
+        os.close(parent)
+
+
+def publish_pair(staged: Path) -> None:
+    """Keep the previous pair recoverable if either replacement fails."""
+    with _pair_lock():
+        backups, published = {}, []
+        try:
+            for name in ('index', 'golden.json'):
+                target = FIX / name
+                if target.exists():
+                    backup = FIX / ('.mdbx-recovery-' + uuid.uuid4().hex)
+                    os.replace(target, backup)
+                    backups[name] = backup
+                os.replace(staged / name, target)
+                published.append(name)
+        except BaseException:
+            for name in reversed(('index', 'golden.json')):
+                target = FIX / name
+                if name in published:
+                    if target.is_dir():
+                        shutil.rmtree(target)
+                    else:
+                        target.unlink()
+                if name in backups:
+                    # A failed restoration deliberately leaves its recovery copy.
+                    os.replace(backups[name], target)
+            raise
+        else:
+            for backup in backups.values():
+                if backup.is_dir():
+                    shutil.rmtree(backup)
+                else:
+                    backup.unlink()
 
 
 def main() -> int:
@@ -119,9 +168,12 @@ def main() -> int:
             print("stale search fixtures (run scripts/gen_search_golden.py):", ", ".join(stale))
             return 1
         return 0
-    data = build(FIX / "index")
-    (FIX / "golden.json").write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8")
-    print(f"wrote {FIX / 'golden.json'} ({len(data['results'])} queries) and {FIX / 'index'}")
+    with tempfile.TemporaryDirectory(prefix=".mdbx-golden-", dir=FIX) as temporary:
+        staged = Path(temporary)
+        data = build(staged / "index")
+        (staged / "golden.json").write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8", newline="\n")
+        publish_pair(staged)
+    print("wrote search fixtures")
     return 0
 
 

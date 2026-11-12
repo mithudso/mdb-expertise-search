@@ -81,11 +81,16 @@ def build_context(hits, limit_chars: int = MAX_CONTEXT_CHARS) -> tuple[str, list
         prefix = json.dumps(metadata, ensure_ascii=False, separators=(",", ":"))[:-1] + ',"text":'
         if len(prefix) + 3 > room:
             continue
-        body = h.text[:room - len(prefix) - 3]
-        encoded = json.dumps(body, ensure_ascii=False)
-        while len(prefix) + len(encoded) + 1 > room:
-            body = body[:max(0, len(body) - (len(prefix) + len(encoded) + 1 - room))]
-            encoded = json.dumps(body, ensure_ascii=False)
+        lo, hi = 0, min(len(h.text), room - len(prefix) - 3)
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
+            if len(prefix) + len(json.dumps(h.text[:mid], ensure_ascii=False)) + 1 <= room:
+                lo = mid
+            else:
+                hi = mid - 1
+        if lo == 0 and h.text:
+            continue
+        encoded = json.dumps(h.text[:lo], ensure_ascii=False)
         part = prefix + encoded + "}"
         parts.append(part)
         sources.append({"n": i, "source": h.source, "heading": h.heading, "location": h.location,

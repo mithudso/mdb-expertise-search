@@ -9,7 +9,7 @@ Accepted input, in the order it is recognised:
 * raw command documents (``{ find: "orders", filter: {...}, sort: {...} }``, ``aggregate``, ``count``,
   ``distinct``, ``update``, ``delete``, ``findAndModify``);
 * a bare filter (``{ status: "A" }``) or a bare pipeline (``[{ $match: ... }]``) — audited against a
-  placeholder collection named ``collection``.
+  unknown collection; recommendations omit ordinary source indexes.
 
 Values are copied from the source text, so relaxed JSON and mongosh literals survive. Extended-JSON
 wrappers (``{"$date": ...}``, ``{"$oid": ...}``, ``{"$numberLong": ...}``) become mongosh literals.
@@ -62,12 +62,18 @@ def normalize(text: str) -> Normalized:
         return Normalized(text, "mongosh", [])
     queries: list[Query] = []
     unknown = bool(errors)
+    error_index = 0
+    errors.sort(key=lambda e: e.start)
     for st in statements:
         node = st.node
+        if st.decl:
+            return Normalized(text, "mongosh", [])
         if node.kind not in {"object", "array"}:
             unknown = True
             continue
-        if any(error.start < node.end and node.start < error.end for error in errors):
+        while error_index < len(errors) and errors[error_index].end <= node.start:
+            error_index += 1
+        if error_index < len(errors) and errors[error_index].start < node.end:
             return Normalized(text, "mongosh", [])
         if node.kind == "object":
             q = _from_object(text, node)
@@ -336,34 +342,36 @@ def _lit(text: str, node: Node) -> str:
 
 
 def _one_line(s: str) -> str:
-    # Keep line terminators when comment markers occur. They can also occur inside regex literals;
-    # preserving the layout is safer than guessing whether a slash starts a comment.
+    # A comment's line ending is significant. Preserve layout when markers occur.
     if "//" in s or "/*" in s:
         return s.strip()
-    # Collapse newlines and indentation outside strings when no comment boundary can be extended.
-    res, i, quote = [], 0, None
-    while i < len(s):
-        ch = s[i]
-        if quote:
-            res.append(ch)
-            if ch == "\\" and i + 1 < len(s):
-                res.append(s[i + 1])
-                i += 2
-                continue
-            if ch == quote:
-                quote = None
-        elif ch in "\"'`":
-            quote = ch
-            res.append(ch)
-        elif ch in "\r\n\u2028\u2029":
-            while i + 1 < len(s) and s[i + 1] in " \t\r\n":
-                i += 1
-            if res and res[-1] not in " [{(":
-                res.append(" ")
+    statements, errors = parse(s)
+    if errors:
+        return s.strip()
+    protected = []
+    for statement in statements:
+        for node in statement.node.walk():
+            if node.kind in {"string", "regex"}:
+                protected.append((node.start, node.end))
+            protected.extend((prop.key_start, prop.key_end) for prop in node.props if prop.quoted)
+    literal_ends = dict(protected)
+    out, index = [], 0
+    while index < len(s):
+        if index in literal_ends:
+            end = literal_ends[index]
+            out.append(s[index:end])
+            index = end
+            continue
+        char = s[index]
+        if char in "\r\n\u2028\u2029":
+            while index + 1 < len(s) and s[index + 1] in " \t\r\n":
+                index += 1
+            if out and out[-1][-1] not in " [{(":
+                out.append(" ")
         else:
-            res.append(ch)
-        i += 1
-    return "".join(res).strip()
+            out.append(char)
+        index += 1
+    return "".join(out).strip()
 
 
 def _ejson_edits(text: str, node: Node, edits: list[tuple[int, int, str]]) -> None:

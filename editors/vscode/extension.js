@@ -15,8 +15,10 @@ function serialize(work) {
 
 async function stopClient() {
   const outgoing = client;
-  client = undefined;
-  if (outgoing) await outgoing.dispose();
+  if (outgoing) {
+    await outgoing.dispose();
+    if (client === outgoing) client = undefined;
+  }
 }
 
 async function startClient() {
@@ -35,8 +37,8 @@ async function startClient() {
   try {
     await next.start();
   } catch (err) {
-    if (client === next) client = undefined;
     await next.dispose();
+    if (client === next) client = undefined;
     vscode.window.showErrorMessage('MQL: could not start the language server. Install the lsp extra or set mql.server.path.');
   }
 }

@@ -7,6 +7,11 @@ import pytest
 from mdbx import embed, embed_onnx
 
 
+@pytest.fixture(autouse=True)
+def _default_model(monkeypatch):
+    monkeypatch.setenv('MDBX_EMBED_MODEL',embed.DEFAULT_MODEL)
+
+
 def _fake_onnx(texts, *, prefix="search_document: "):
     return np.tile(np.array([[1.0, 0.0]], dtype=np.float32), (len(texts), 1))
 
@@ -71,9 +76,17 @@ def test_onnx_mode_skips_ollama_and_rejects_other_models(monkeypatch):
 def test_missing_model_files_surface_as_embed_error(monkeypatch, tmp_path):
     monkeypatch.setenv("MDBX_EMBED_BACKEND", "onnx")
     monkeypatch.setenv("MDBX_ONNX_MODEL", str(tmp_path))  # empty dir: no model.onnx
+    reached=[]
+    real=embed_onnx._resolve
+    def resolve(**kwargs):
+        reached.append(True)
+        return real(**kwargs)
+    monkeypatch.setattr(embed_onnx,'_resolve',resolve)
+    monkeypatch.setattr(embed_onnx,'_runtime',embed_onnx._runtime_original)
     embed_onnx._runtime.cache_clear()
     with pytest.raises(embed.EmbedError, match=r"model\.onnx|not installed"):
         embed.embed(["a"])
+    assert reached
     assert embed_onnx.available() is False
 
 

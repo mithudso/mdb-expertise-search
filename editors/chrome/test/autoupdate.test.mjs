@@ -88,10 +88,12 @@ test("a build without data/build.json never reloads", async () => {
 test("worker restart preserves the baseline and existing alarm schedule", async () => {
   const { api, fetchImpl, session, created } = fakeChrome([{ commit: "new" }]);
   session[SESSION_KEY] = "old";
-  api.alarms.get = async name => { assert.equal(name, ALARM); return { name, scheduledTime: 123 }; };
+  const lookups = [];
+  api.alarms.get = async name => { lookups.push(name); return { name, scheduledTime: 123 }; };
   const handlers = startAutoUpdate(api, fetchImpl);
   await handlers.ready;
   assert.equal(session[SESSION_KEY], "old");
+  assert.deepEqual(lookups, [ALARM]);
   assert.deepEqual(created, []);
   assert.equal(await handlers.check(), true);
 });

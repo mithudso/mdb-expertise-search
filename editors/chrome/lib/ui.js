@@ -154,7 +154,7 @@ function marked(text, mark) {
 }
 
 /** Render markdown-ish corpus text (headings, fences, lists, tables as text, inline code/bold/links). */
-export function renderMarkdown(text, { mark = null } = {}) {
+export function renderMarkdown(text, { mark = null, context = { fence: null } } = {}) {
   const frag = document.createDocumentFragment();
   const lines = text.split("\n");
   let i = 0;
@@ -170,13 +170,20 @@ export function renderMarkdown(text, { mark = null } = {}) {
   };
   while (i < lines.length) {
     const line = lines[i];
-    if (/^\s*```/.test(line)) {
+    const opening = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
+    if (context.fence || opening) {
       flushPara(); flushList();
       const code = [];
-      i++;
-      while (i < lines.length && !/^\s*```/.test(lines[i])) code.push(lines[i++]);
-      i++;
-      frag.append(h("pre", {}, code.join("\n")));
+      if (!context.fence) { context.fence = opening[1]; i++; }
+      const delimiter = context.fence[0], size = context.fence.length;
+      while (i < lines.length) {
+        const closing = /^\s*(`+|~+)\s*$/.exec(lines[i]);
+        if (closing && closing[1][0] === delimiter && closing[1].length >= size) {
+          context.fence = null; i++; break;
+        }
+        code.push(lines[i++]);
+      }
+      if (code.length) frag.append(h("pre", {}, code.join("\n")));
       continue;
     }
     const hm = /^(#{1,6})\s+(.*)$/.exec(line);
@@ -211,7 +218,7 @@ export function renderMarkdown(text, { mark = null } = {}) {
 /** A regex that marks the search words of `query` (stopwords skipped, loose stemming by prefix), or null. */
 export function markFor(query) {
   const words = (String(query).normalize("NFC").match(/[\p{L}\p{N}_$][\p{L}\p{N}\p{M}_$]*/gu) || []).map((w) => w.replace(/^\$/, ""))
-    .filter((w) => w.length > 2 && !STOPWORDS.has(w.toLowerCase()) && !EXTRA_STOP.has(w.toLowerCase()))
-    .map((w) => w.slice(0, Math.max(3, w.length - 2)).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    .filter((w) => [...w].length > 2 && !STOPWORDS.has(w.toLowerCase()) && !EXTRA_STOP.has(w.toLowerCase()))
+    .map((w) => [...w].slice(0, Math.max(3, [...w].length - 2)).join("").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
   return words.length ? new RegExp(`(?<![\\p{L}\\p{N}\\p{M}_])(?:${words.join("|")})[\\p{L}\\p{N}\\p{M}_]*`, "giu") : null;
 }

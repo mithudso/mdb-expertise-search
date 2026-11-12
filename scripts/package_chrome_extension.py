@@ -14,10 +14,12 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import io
 import json
 import re
 import subprocess
 import sys
+import tarfile
 import tempfile
 import zipfile
 from pathlib import Path
@@ -37,7 +39,16 @@ def build_data(vectors: bool, out: Path | None = None):
     from mdbx import index as idx
     from mdbx.webexport import export
 
-    r = export(idx.default_corpus(), out or DATA, db=idx.default_db(), vectors=vectors)
+    with tempfile.TemporaryDirectory(prefix="mdbx-committed-corpus-") as temporary:
+        corpus = Path(temporary) / "corpus"
+        payload = subprocess.run(["git", "archive", "HEAD", "corpus"], cwd=ROOT, capture_output=True, timeout=120, check=True).stdout
+        with tarfile.open(fileobj=io.BytesIO(payload)) as archive:
+            for member in archive.getmembers():
+                relative = Path(member.name)
+                if relative.is_absolute() or ".." in relative.parts or not relative.parts or relative.parts[0] != "corpus" or not (member.isfile() or member.isdir()):
+                    raise ValueError("committed corpus contains an unsupported path")
+            archive.extractall(temporary, filter="data")
+        r = export(corpus, out or DATA, db=idx.default_db(), vectors=vectors, allow_untracked=True)
     note = f"; skipped {r.skipped_untracked} untracked (private) files" if r.skipped_untracked else ""
     print(f"search data: {r.chunks} chunks from {r.files} files, {r.terms} terms, {r.vectors} vectors{note}")
     if vectors and not r.vectors:
@@ -73,10 +84,13 @@ def main() -> int:
     a = ap.parse_args()
     try:
         if EXT.is_symlink(): raise ValueError("extension directory is a symlink")
-        manifest = json.loads(safe_bytes(EXT / "manifest.json", EXT))
+        manifest_bytes = safe_bytes(EXT / "manifest.json", EXT)
+        manifest = json.loads(manifest_bytes)
         pkg = json.loads(safe_bytes(EXT / "package.json", EXT))
+        if not isinstance(manifest, dict) or not isinstance(pkg, dict):
+            raise TypeError("invalid extension metadata")
         version = manifest["version"]
-        if not isinstance(version, str) or not re.fullmatch(r"(?:0|[1-9][0-9]{0,4})(?:\.(?:0|[1-9][0-9]{0,4})){0,3}", version) or any(int(n) > 65535 for n in version.split(".")):
+        if not isinstance(version, str) or not re.fullmatch(r"(?:0|[1-9][0-9]{0,4})(?:\.(?:0|[1-9][0-9]{0,4})){0,3}", version) or any(int(n) > 65535 for n in version.split(".")) or not any(int(n) for n in version.split(".")):
             raise ValueError("invalid extension version")
         if pkg.get("version") != version: raise ValueError("manifest and package versions differ")
         out = ROOT / "dist" / f"mongodb-expertise-chrome-{version}.zip"
@@ -86,11 +100,13 @@ def main() -> int:
             scratch = Path(scratch); exported = scratch / "data"; exported.mkdir()
             result = None if a.no_data else build_data(vectors=not a.no_vectors, out=exported)
             stamp = write_build_stamp(version, data=not a.no_data, vectors=bool(result and result.vectors), out=exported)
-            files = {name: safe_bytes(EXT / name, EXT) for name in RUNTIME}
+            files = {name: safe_bytes(EXT / name, EXT) for name in RUNTIME if name != "manifest.json"}
+            files["manifest.json"] = manifest_bytes
             for name, suffixes in RUNTIME_DIRS.items():
                 directory = exported if name == "data" else EXT / name
                 if directory.is_symlink(): raise ValueError("runtime input directory is a symlink")
-                if not directory.exists(): continue
+                if not directory.is_dir():
+                    raise ValueError("required runtime directory is missing")
                 for entry in sorted(directory.iterdir()):
                     if entry.suffix not in suffixes: continue
                     files[name + "/" + entry.name] = safe_bytes(entry, exported if name == "data" else EXT)
@@ -100,11 +116,22 @@ def main() -> int:
                     info = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
                     info.compress_type = zipfile.ZIP_DEFLATED; info.external_attr = 0o644 << 16
                     archive.writestr(info, content)
-            atomic_write(out, temporary.read_bytes())
-            atomic_write(out.parent / "build.json", json.dumps(stamp, indent=2).encode() + b"\n")
+            metadata = out.parent / "build.json"
+            old_zip = safe_bytes(out, ROOT) if out.exists() else None
+            old_metadata = safe_bytes(metadata, ROOT) if metadata.exists() else None
+            try:
+                atomic_write(out, temporary.read_bytes(), root=ROOT)
+                atomic_write(metadata, json.dumps(stamp, indent=2).encode() + b"\n", root=ROOT)
+            except BaseException:
+                for target, previous in [(out, old_zip), (metadata, old_metadata)]:
+                    if previous is None:
+                        target.unlink(missing_ok=True)
+                    else:
+                        atomic_write(target, previous, root=ROOT)
+                raise
         print(f"wrote {out.relative_to(ROOT)} ({len(files)} files)")
         return 0
-    except (OSError, ValueError, RuntimeError, KeyError):
+    except (OSError, ValueError, TypeError, RuntimeError, KeyError, subprocess.SubprocessError):
         print("error: extension package build failed; previous outputs preserved until publication", file=sys.stderr)
         return 1
 

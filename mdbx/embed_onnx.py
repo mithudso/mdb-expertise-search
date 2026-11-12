@@ -33,16 +33,22 @@ class OnnxUnavailable(RuntimeError):
 
 def _local_dir() -> Path | None:
     raw = os.environ.get("MDBX_ONNX_MODEL")
-    return Path(raw).expanduser() if raw else None
+    try:
+        return Path(raw).expanduser() if raw else None
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise OnnxUnavailable('MDBX_ONNX_MODEL could not be resolved') from exc
 
 
 def _resolve(*, download: bool) -> tuple[Path, Path]:
     """Return (model.onnx, tokenizer.json), downloading only when ``download`` is true."""
     local = _local_dir()
     if local is not None:
-        model, tok = local / "model.onnx", local / TOKENIZER_FILE
-        if not (model.is_file() and tok.is_file()):
-            raise OnnxUnavailable(f"MDBX_ONNX_MODEL={local} must contain model.onnx and tokenizer.json")
+        try:
+            model, tok = local / "model.onnx", local / TOKENIZER_FILE
+            if not (model.is_file() and tok.is_file()):
+                raise OnnxUnavailable('MDBX_ONNX_MODEL must contain model.onnx and tokenizer.json')
+        except (OSError, ValueError) as exc:
+            raise OnnxUnavailable('MDBX_ONNX_MODEL files could not be validated') from exc
         return model, tok
     try:
         from huggingface_hub import hf_hub_download

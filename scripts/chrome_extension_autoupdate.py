@@ -38,11 +38,19 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from maintenance_safety import atomic_write, lock, mark_clone, safe_bytes, scrub, verify_clone
+from maintenance_safety import (
+    atomic_write,
+    git_environment,
+    lock,
+    mark_clone,
+    safe_bytes,
+    scrub,
+    verify_clone,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 HOME = Path.home()
-CONFIG_PATH = Path(os.environ.get("MDBX_AUTOUPDATE_CONFIG", HOME / ".config" / "mdbx" / "chrome-autoupdate.json"))
+CONFIG_PATH = Path(os.environ.get("MDBX_AUTOUPDATE_CONFIG", HOME / ".config" / "mdbx" / "chrome-autoupdate.json")).expanduser().absolute()
 DEFAULT_INSTALL_DIR = HOME / "Library" / "Application Support" / "mdbx" / "chrome-extension"
 DEFAULT_CLONE_DIR = HOME / "Library" / "Caches" / "mdbx" / "chrome-autoupdate" / "repo"
 LOG_PATH = HOME / "Library" / "Logs" / "mdbx-chrome-autoupdate.log"
@@ -78,8 +86,7 @@ def load_config() -> dict:
 
 
 def save_config(cfg: dict) -> None:
-    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CONFIG_PATH.write_text(json.dumps({k: cfg[k] for k in STATE_KEYS if k in cfg}, indent=2) + "\n", encoding="utf-8")
+    atomic_write(CONFIG_PATH, (json.dumps({k: cfg[k] for k in STATE_KEYS if k in cfg}, indent=2) + "\n").encode(), 0o600)
 
 
 def origin_url(repo_dir: Path = ROOT) -> str:
@@ -114,7 +121,8 @@ def validate_config(cfg):
         if not isinstance(cfg.get(key), str) or not cfg[key].strip(): raise ValueError("invalid updater configuration")
     if cfg["source"] not in {"git", "release"} or not isinstance(cfg.get("no_vectors"), bool): raise ValueError("invalid updater configuration")
     if type(cfg.get("interval_min")) is not int or cfg["interval_min"] < 1: raise ValueError("invalid update interval")
-    for key in ("clone_dir", "install_dir"): cfg[key] = str(Path(cfg[key]).expanduser().resolve())
+    cfg["clone_dir"] = str(Path(cfg["clone_dir"]).expanduser().resolve())
+    cfg["install_dir"] = str(Path(cfg["install_dir"]).expanduser().absolute())
 
 
 # ---- build identity ----
@@ -146,7 +154,7 @@ def needs_update(installed: dict, upstream_commit: str, *, force: bool = False) 
 
 # ---- git source ----
 def git(args: list[str], cwd: Path, timeout: int = 300) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", *args], cwd=str(cwd), capture_output=True, text=True, timeout=timeout, check=False)
+    return subprocess.run(["git", *args], cwd=str(cwd), capture_output=True, text=True, timeout=timeout, check=False, env=git_environment())
 
 
 def ensure_clone(cfg: dict) -> Path:
@@ -173,6 +181,8 @@ def upstream_commit(cfg: dict) -> str:
 
 def checkout_upstream(cfg: dict) -> str:
     clone = ensure_clone(cfg)
+    if git(["merge-base", "--is-ancestor", "HEAD", f"origin/{cfg['branch']}"], clone).returncode:
+        raise RuntimeError("unpublished maintenance commits exist; preserve them before resetting")
     res = git(["reset", "--hard", f"origin/{cfg['branch']}"], clone)
     if res.returncode != 0:
         raise RuntimeError("git reset failed")
@@ -224,7 +234,9 @@ def release_commit(cfg: dict) -> str:
         if res.returncode != 0:
             raise RuntimeError("gh release download failed")
         stamp = json.loads(Path(tmp, "build.json").read_text(encoding="utf-8"))
-    return str(stamp.get("commit") or "")
+    if not isinstance(stamp, dict) or not isinstance(stamp.get("commit"), str) or not stamp["commit"].strip():
+        raise RuntimeError("release metadata has no usable commit")
+    return stamp["commit"].strip()
 
 
 def download_release(cfg: dict, dest: Path) -> Path:
@@ -260,12 +272,15 @@ def runtime_files(src: Path) -> list[Path]:
 
 def unpack_archive(path: Path, destination: Path) -> None:
     destination.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(path) as archive:
-        for info in archive.infolist():
-            rel = Path(info.filename)
-            if rel.is_absolute() or ".." in rel.parts or (info.external_attr >> 16) & 0o170000 == 0o120000:
-                raise RuntimeError("unsafe extension archive entry")
-        archive.extractall(destination)
+    try:
+        with zipfile.ZipFile(path) as archive:
+            for info in archive.infolist():
+                rel = Path(info.filename)
+                if rel.is_absolute() or ".." in rel.parts or (info.external_attr >> 16) & 0o170000 == 0o120000:
+                    raise RuntimeError("unsafe extension archive entry")
+            archive.extractall(destination)
+    except zipfile.BadZipFile:
+        raise RuntimeError("extension archive is corrupt") from None
 
 
 def validate_runtime(src: Path) -> list[Path]:
@@ -274,6 +289,8 @@ def validate_runtime(src: Path) -> list[Path]:
         if not isinstance(manifest, dict) or manifest.get("manifest_version") != 3 or not isinstance(manifest.get("version"), str): raise ValueError()
         files = runtime_files(src)
         for name in RUNTIME_FILES: safe_bytes(src / name, src)
+        if any(name in manifest and not isinstance(manifest[name], dict) for name in ("icons", "background", "action")):
+            raise TypeError()
         declared = list(manifest.get("icons", {}).values())
         if manifest.get("background", {}).get("service_worker"): declared.append(manifest["background"]["service_worker"])
         if manifest.get("action", {}).get("default_popup"): declared.append(manifest["action"]["default_popup"])
@@ -338,6 +355,9 @@ def run_update(cfg: dict, *, force: bool = False) -> int:
     clone, install = Path(cfg["clone_dir"]), Path(cfg["install_dir"])
     try:
         with lock(clone.with_name("." + clone.name + ".chrome-update.lock")), lock(install.with_name("." + install.name + ".install.lock")):
+            if install.is_symlink():
+                raise RuntimeError("installation directory is a symlink")
+            recover_install(install, install.with_name("." + install.name + ".swap.json"))
             return _run_update(cfg, force=force)
     except RuntimeError as error:
         if str(error) != "maintenance operation is busy": raise
@@ -358,6 +378,9 @@ def _run_update(cfg: dict, *, force: bool = False) -> int:
     if cfg["source"] == "release":
         with tempfile.TemporaryDirectory(prefix="mdbx-rel-") as tmp:
             src = download_release(cfg, Path(tmp))
+            validate_runtime(src)
+            if build_id(read_stamp(src)) != target:
+                raise RuntimeError("release assets disagree about the expected commit")
             n = sync_runtime(src, install_dir)
     else:
         checkout_upstream(cfg)

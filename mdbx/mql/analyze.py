@@ -7,6 +7,7 @@ against that context; completion later reuses the same labels to decide which op
 from __future__ import annotations
 
 import math
+import unicodedata
 from dataclasses import dataclass, field
 
 from . import operators as ops
@@ -113,7 +114,7 @@ class Analyzer:
         self.done: set[int] = set()
         self.contexts: set[tuple[int, str]] = set()
         self.pipelines: set[tuple[int, bool, bool]] = set()
-        self.var_ctx: dict[str, list[str]] = {}
+        self.var_ctx: dict[int, list[str]] = {}
         self.vars: dict[str, Node] = {}
 
     # ---- reporting
@@ -122,7 +123,8 @@ class Analyzer:
         return Diag(e.start, e.end, ERROR, "syntax", e.message)
 
     def add(self, start: int, end: int, sev: str, code: str, msg: str, fix: str | None = None) -> None:
-        self.diags.append(Diag(start, max(end, start + 1), sev, code, msg, fix))
+        self.diags.append(Diag(start, max(end, start + 1), sev, code,
+                               "".join(f"\\x{ord(c):02x}" if unicodedata.category(c) in {"Cc", "Cf"} else c for c in msg), fix))
 
     def on_prop(self, p: Prop, sev: str, code: str, msg: str, fix: str | None = None) -> None:
         self.add(p.key_start, p.key_end, sev, code, msg, fix)
@@ -161,7 +163,7 @@ class Analyzer:
             node = st.node
             if st.decl:
                 self.vars[st.decl] = node
-            ctx = self.var_ctx.get(st.decl or "")
+            ctx = self.var_ctx.get(id(node))
             if ctx:
                 for use_ctx in ctx:
                     self.value(node, use_ctx)
@@ -175,7 +177,10 @@ class Analyzer:
         return Result(self.text, self.statements, self.diags, self.objects, self.arrays, self.symbols())
 
     def collect_vars(self) -> None:
+        bindings: dict[str, Node] = {}
         for st in self.statements:
+            if st.decl:
+                bindings[st.decl] = st.node
             for c in st.node.walk():
                 if c.kind != "call" or c.target is None or c.target.kind != "member":
                     continue
@@ -184,7 +189,10 @@ class Analyzer:
                     continue
                 for i, a in enumerate(c.items):
                     if a.kind == "ident" and i < len(spec) and spec[i] != "-":
-                        contexts = self.var_ctx.setdefault(str(a.value), [])
+                        binding = bindings.get(str(a.value))
+                        if binding is None:
+                            continue
+                        contexts = self.var_ctx.setdefault(id(binding), [])
                         if spec[i] not in contexts:
                             contexts.append(spec[i])
 
@@ -213,7 +221,8 @@ class Analyzer:
         if key in self.contexts:
             return
         self.contexts.add(key)
-        self.done.add(id(node))
+        if node.kind != "call":
+            self.done.add(id(node))
         if ctx == "pipeline":
             self.pipeline(node)
         elif ctx == "query":
@@ -361,7 +370,7 @@ class Analyzer:
                 self.on_prop(p, ERROR, "misplaced-operator",
                              f"{p.key} must be at the top level of the query, not inside a field.")
                 continue
-            if not op.is_a("query", "sub", "proj"):
+            if not op.is_a("query", "sub"):
                 self.on_prop(p, WARNING, "misplaced-operator", f"{p.key} is not a field query operator.")
                 continue
             name = p.key
@@ -371,7 +380,10 @@ class Analyzer:
                 self.arg(p, ops.Operator(name, op.cats, "array", op.doc))
             elif name == "$not":
                 if v is not None and v.kind == "object":
-                    self.qops(v, in_match=in_match, first=first)
+                    if not v.props or any(not q.key.startswith("$") for q in v.props):
+                        self.add(v.start, v.end, ERROR, "bad-argument", "$not expects an operator expression or a regex.")
+                    else:
+                        self.qops(v, in_match=in_match, first=first)
                 elif v is not None and v.kind not in {"regex", *_DYNAMIC}:
                     self.add(v.start, v.end, ERROR, "bad-argument", "$not expects an operator expression or a regex.")
             elif name == "$elemMatch":
@@ -437,6 +449,8 @@ class Analyzer:
                 self.on_prop(p, WARNING, "misplaced-operator", f"{p.key} is not an aggregation expression operator.")
                 continue
             v = p.value
+            if v is not None and op.arg_for("expr") != "array2":
+                self.arg(p, ops.Operator(op.name, op.cats, op.arg_for("expr"), op.doc))
             if p.key in {"$literal", "$function", "$accumulator"} or v is None:
                 continue
             if p.key == "$cond" and v.kind == "array" and len(v.items) != 3:
@@ -450,7 +464,7 @@ class Analyzer:
         self.objects.append((obj, label))
         self.dups(obj)
         flags: list[tuple[Prop, bool, bool]] = []
-        self.collect_proj(obj, flags, top=True)
+        self.collect_proj(obj, flags, top=True, find_projection=label == "proj")
         if project:
             inc = [(p, f) for p, f, top in flags if f and not (top and p.key == "_id")]
             exc = [(p, f) for p, f, top in flags if not f and not (top and p.key == "_id")]
@@ -459,7 +473,7 @@ class Analyzer:
                     self.on_prop(p, ERROR, "projection-mix",
                                  "Cannot mix exclusion with inclusion in one projection (only _id may differ).")
 
-    def collect_proj(self, obj: Node, flags: list[tuple[Prop, bool, bool]], *, top: bool) -> None:
+    def collect_proj(self, obj: Node, flags: list[tuple[Prop, bool, bool]], *, top: bool, find_projection: bool = False) -> None:
         for p in obj.props:
             v = p.value
             if p.key.startswith("$"):
@@ -473,10 +487,13 @@ class Analyzer:
                 flags.append((p, bool(v.value), top))
             elif v.kind == "object" and not any(q.key.startswith("$") for q in v.props):
                 self.objects.append((v, "fields"))
-                self.collect_proj(v, flags, top=False)
+                self.collect_proj(v, flags, top=False, find_projection=find_projection)
             else:
                 flags.append((p, True, top))
-                self.expr(v)
+                if find_projection and v.kind == "object" and len(v.props) == 1 and v.props[0].key == "$elemMatch":
+                    self.qops(v)
+                else:
+                    self.expr(v)
 
     # ---- $group / $sort
     def group(self, obj: Node) -> None:
@@ -510,8 +527,10 @@ class Analyzer:
             self.unknown(a, "accumulator")
         elif not op.is_a("acc"):
             self.on_prop(a, ERROR, "misplaced-operator", f"{a.key} is not an accumulator.")
-        elif a.value is not None and a.key not in {"$accumulator"}:
-            self.expr(a.value)
+        elif a.value is not None:
+            self.arg(a, ops.Operator(op.name, op.cats, op.arg_for("accexpr"), op.doc))
+            if a.key != "$accumulator":
+                self.expr(a.value)
 
     def window_output(self, p: Prop) -> None:
         v = p.value
@@ -554,6 +573,8 @@ class Analyzer:
                 continue
             if v.kind == "number" and v.value in (1, -1):
                 continue
+            if v.kind == "object":
+                self.objects.append((v, "sort-meta"))
             if v.kind == "object" and len(v.props) == 1 and v.props[0].key == "$meta":
                 continue
             if v.kind == "string" and not strict_strings and v.value in {"asc", "desc", "ascending", "descending"}:
@@ -692,6 +713,11 @@ class Analyzer:
         v = p.value
         name = p.key
         if v is None:
+            return
+        # A plain object is a known non-array value. Operator objects may resolve to arrays.
+        if name == "$documents" and v.kind == "object" and (
+                len(v.props) != 1 or not v.props[0].key.startswith("$")):
+            self.arg(p, ops.Operator(op.name, op.cats, "array", op.doc))
             return
         free_form = {"$sortByCount", "$redact", "$replaceWith", "$unionWith", "$out", "$merge", "$unwind", "$unset"}
         if (name not in free_form or name in {"$out", "$merge", "$unionWith"}) and not self.arg(p, op):
@@ -848,11 +874,13 @@ class Analyzer:
             if label is None:
                 continue
             kids: list[Symbol] = []
+            covered_end = -1
             for n in st.node.walk():
-                if n.kind == "array" and id(n) in self.stage_syms and not any(
-                    k.start <= n.start and n.end <= k.end for k in kids
-                ):
-                    kids.extend(self.stage_syms[id(n)])
+                if n.kind == "array" and id(n) in self.stage_syms and n.start >= covered_end:
+                    children = self.stage_syms[id(n)]
+                    kids.extend(children)
+                    if children:
+                        covered_end = max(child.end for child in children)
             out.append(Symbol(label, kind, st.start, st.end, kids))
         return out
 

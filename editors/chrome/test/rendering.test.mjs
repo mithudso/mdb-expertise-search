@@ -19,7 +19,8 @@ test("repeated copy feedback restores the original label and ignores stale write
 test("Unicode query words highlight whole non-Latin words", () => {
   const p = pageFixture("lib/ui.js");
   const fragment = p.renderMarkdown("Проверка индексов 数据库 검색어", { mark: p.markFor("индексы 数据库 검색어") });
-  assert.equal(fragment.querySelectorAll("mark").length, 3);
+  assert.deepEqual(fragment.querySelectorAll("mark").map(n => n.textContent), ["индексов", "数据库", "검색어"]);
+  assert.equal(fragment.textContent, "Проверка индексов 数据库 검색어");
 });
 
 test("list type changes and ordered start numbers preserve structure", () => {
@@ -28,6 +29,7 @@ test("list type changes and ordered start numbers preserve structure", () => {
   assert.deepEqual(fragment.children.map(n => n.tagName), ["OL", "UL", "OL"]);
   assert.equal(fragment.children[0].getAttribute("start"), "3");
   assert.equal(fragment.children[2].getAttribute("start"), "7");
+  assert.deepEqual(fragment.children.map(list => list.children.map(n => [n.tagName, n.textContent])), [[["LI", "three"], ["LI", "four"]], [["LI", "bullet"]], [["LI", "seven"]]]);
 });
 
 test("unmatched opening brackets do not rescan every remaining suffix", () => {

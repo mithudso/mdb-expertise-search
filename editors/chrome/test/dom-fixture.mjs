@@ -29,7 +29,8 @@ class SyntheticNode {
   get children() { return this.nodes.filter(n => n.tagName); }
   get textContent() { return this._text + this.nodes.map(n => n.textContent).join(""); }
   set textContent(text) { this.nodes = []; this._text = String(text); }
-  append(...nodes) { for (const n of nodes.flat(Infinity)) { if (n instanceof SyntheticNode && n.fragment) this.append(...n.nodes); else this.nodes.push(n instanceof SyntheticNode ? n : new SyntheticNode("", String(n))); } }
+  append(...nodes) { for (const n of nodes.flat(Infinity)) { if (n instanceof SyntheticNode && n.fragment) { for (const child of n.nodes) this.append(child); } else this.nodes.push(n instanceof SyntheticNode ? n : new SyntheticNode("", String(n))); } }
+  prepend(...nodes) { const prior = this.nodes; this.nodes = []; this.append(...nodes); this.nodes.push(...prior); }
   replaceChildren(...nodes) { this.nodes = []; this._text = ""; this.append(...nodes); }
   setAttribute(key, value) { this.attrs[key] = String(value); if (key.startsWith("data-")) this.dataset[key.slice(5)] = String(value); }
   getAttribute(key) { return this.attrs[key] ?? null; }

@@ -2,6 +2,7 @@
 import json
 import os
 import queue
+import re
 import subprocess
 import sys
 import threading
@@ -26,7 +27,11 @@ def _read_frame(stream) -> dict:
         headers.extend(char)
         if len(headers) > 8192:
             raise ValueError("LSP header exceeds test protocol bound")
-    length = int(next(h for h in headers.split(b"\r\n") if h.lower().startswith(b"content-length")).split(b":")[1])
+    matches = [re.fullmatch(rb"Content-Length:[ \t]*([0-9]+)", header, re.IGNORECASE)
+               for header in headers.split(b"\r\n") if header.lower().startswith(b"content-length")]
+    if len(matches) != 1 or matches[0] is None:
+        raise ValueError("LSP frame needs exactly one valid Content-Length header")
+    length = int(matches[0].group(1))
     if not 0 <= length <= 8 * 1024 * 1024:
         raise ValueError("LSP body exceeds test protocol bound")
     body = bytearray()
@@ -50,10 +55,14 @@ def read_msg(proc, deadline=None, phase="read"):
         proc._mql_reader = threading.Thread(target=reader, daemon=True)
         proc._mql_reader.start()
     remaining = (deadline if deadline is not None else time.monotonic() + 10) - time.monotonic()
+    if remaining <= 0:
+        raise TimeoutError(f"LSP {phase} timed out; child status={proc.poll()}")
     try:
-        message = proc._mql_messages.get(timeout=max(0, remaining))
+        message = proc._mql_messages.get(timeout=remaining)
     except queue.Empty:
         raise TimeoutError(f"LSP {phase} timed out; child status={proc.poll()}") from None
+    if deadline is not None and time.monotonic() > deadline:
+        raise TimeoutError(f"LSP {phase} timed out; child status={proc.poll()}")
     if isinstance(message, Exception):
         raise RuntimeError(f"LSP {phase} failed ({type(message).__name__}); child status={proc.poll()}") from None  # noqa: TRY004 - transported protocol failure
     return message
@@ -87,7 +96,10 @@ def close_process(proc):
     finally:
         for stream in (proc.stdin, proc.stdout):
             if stream is not None:
-                stream.close()
+                try:
+                    stream.close()
+                except OSError:
+                    pass
         reader = getattr(proc, "_mql_reader", None)
         if reader is not None:
             reader.join(timeout=1)
@@ -139,6 +151,8 @@ def test_lsp_session(tmp_path):
         comp = request(proc, 4, "textDocument/completion", {"textDocument": {"uri": uri}, "position": {"line": 1, "character": 7}})
         labels = {i["label"] for i in comp["result"]["items"]}
         assert "$match" in labels
+        item = next(i for i in comp["result"]["items"] if i["label"] == "$match")
+        assert item["insertTextFormat"] == 1 and item["textEdit"]["newText"] == "$match"
 
         syms = request(proc, 5, "textDocument/documentSymbol", {"textDocument": {"uri": uri}})
         assert syms["result"][0]["name"] == "db.c.aggregate"
@@ -182,3 +196,36 @@ def test_protocol_filters_notifications_and_accepts_option_capabilities(monkeypa
     ])
     monkeypatch.setitem(globals(), "read_msg", lambda *args: next(messages))
     assert diagnostics(None, "wanted", 1) == ["current"]
+
+@pytest.mark.parametrize("header", [
+    b"Content-Length-Junk: 2", b"Content-Length: 2:9",
+    b"Content-Length: 2\r\nContent-Length: 2",
+])
+def test_protocol_rejects_malformed_length_headers(header):
+    import io
+    with pytest.raises(ValueError, match="valid Content-Length"):
+        _read_frame(io.BytesIO(header + b"\r\n\r\n{}"))
+
+
+def test_protocol_expired_deadline_rejects_queued_response():
+    from types import SimpleNamespace
+    process = SimpleNamespace(_mql_messages=queue.Queue(), poll=lambda: 0)
+    process._mql_messages.put({"id": 7})
+    with pytest.raises(TimeoutError):
+        read_msg(process, time.monotonic() - 1)
+
+
+def test_protocol_cleanup_closes_remaining_stream_and_joins_after_broken_pipe():
+    from types import SimpleNamespace
+    calls = []
+    class Broken:
+        def close(self):
+            calls.append("stdin")
+            raise BrokenPipeError("synthetic")
+    process = SimpleNamespace(
+        poll=lambda: 0, wait=lambda **kw: calls.append("wait"),
+        stdin=Broken(), stdout=SimpleNamespace(close=lambda: calls.append("stdout")),
+        _mql_reader=SimpleNamespace(join=lambda **kw: calls.append("join")),
+    )
+    close_process(process)
+    assert calls == ["wait", "stdin", "stdout", "join"]

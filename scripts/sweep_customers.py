@@ -12,8 +12,10 @@ import argparse
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -53,6 +55,24 @@ def load_patterns() -> list[re.Pattern]:
     return compiled
 
 
+MATCH_TIMEOUT = 2.0
+
+
+@contextmanager
+def match_deadline():
+    if not hasattr(signal, "setitimer"):
+        raise RuntimeError("bounded regular-expression scanning is unavailable")
+    def expired(_signum, _frame):
+        raise TimeoutError("denylist matching deadline exceeded")
+    old = signal.signal(signal.SIGALRM, expired)
+    previous = signal.setitimer(signal.ITIMER_REAL, MATCH_TIMEOUT)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, *previous)
+        signal.signal(signal.SIGALRM, old)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0]); ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
@@ -61,8 +81,8 @@ def main(argv=None) -> int:
         print("error: corpus scan root is outside the repository", file=sys.stderr); return 2
     files = []
     for extra in ([], ["-o", "--exclude-standard"]):
-        result = subprocess.run(["git", "ls-files", "-z", *extra, "--", "corpus"], cwd=ROOT, capture_output=True, text=True, check=True)
-        files.extend(x for x in result.stdout.split("\0") if x)
+        result = subprocess.run(["git", "ls-files", "-z", *extra, "--", "corpus"], cwd=ROOT, capture_output=True, check=True, timeout=30)
+        files.extend(x for x in os.fsdecode(result.stdout).split("\0") if x)
     pats = load_patterns(); hits = []; errors = []; scanned = 0
     for rel in sorted(set(files)):
         p = ROOT / rel
@@ -71,9 +91,13 @@ def main(argv=None) -> int:
         except (OSError, ValueError, UnicodeError):
             errors.append(rel); continue
         scanned += 1
-        for number, line in enumerate(text.splitlines(), 1):
-            for rule, pat in enumerate(pats, 1):
-                if pat.search(line): hits.append({"path": rel, "line": number, "rule": rule})
+        try:
+            with match_deadline():
+                for number, line in enumerate(text.splitlines(), 1):
+                    for rule, pat in enumerate(pats, 1):
+                        if pat.search(line): hits.append({"path": rel, "line": number, "rule": rule})
+        except (TimeoutError, RuntimeError):
+            errors.append(rel)
     status = "error" if errors or not scanned else "markers" if hits else "clean"
     if args.json:
         print(json.dumps({"status": status, "files": sorted({hit["path"] for hit in hits}), "hits": hits, "errors": errors, "scanned": scanned}))

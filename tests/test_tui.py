@@ -153,3 +153,50 @@ async def test_review_tui_selected_recipes_shutdown_and_old_search(tmp_path,monk
     finally:
         release.set()
         app.con.close()
+
+
+@pytest.mark.asyncio
+async def test_empty_query_clears_active_state_and_private_failure_is_opaque(tmp_path, monkeypatch, caplog):
+    import sqlite3
+
+    from mdbx import index
+    from mdbx import tui as t
+    db = tmp_path / "synthetic.sqlite"
+    con = index.connect(db); con.close()
+    def unavailable(*args, **kwargs):
+        raise t.embedmod.EmbedError("SYNTHETIC_SECRET")
+    def failed(*args, **kwargs):
+        raise sqlite3.OperationalError("synthetic sqlite failure")
+    monkeypatch.setattr(t.srch, "search", unavailable)
+    monkeypatch.setattr(t.srch, "keyword", failed)
+    app = t.MdbxApp(db)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        worker = app._search("synthetic")
+        await worker.wait()
+        assert "SYNTHETIC_SECRET" not in caplog.text
+        assert "SYNTHETIC_SECRET" not in str(app.query_one("#status").render())
+        app._status("searching…")
+        app._search("")
+        assert app.hits == []
+        assert "searching" not in str(app.query_one("#status").render())
+
+
+@pytest.mark.asyncio
+async def test_facet_selection_passes_exact_kind_and_source(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from mdbx import index
+    from mdbx import tui as t
+    db = tmp_path / "synthetic.sqlite"
+    con = index.connect(db); con.close()
+    seen = []
+    monkeypatch.setattr(t.srch, "search", lambda *args, **kwargs: (seen.append(kwargs), [])[1])
+    app = t.MdbxApp(db)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        app.query_one("#q").value = "synthetic"
+        app._facet(SimpleNamespace(option=SimpleNamespace(id="recipe|selected")))
+        await app.workers.wait_for_complete()
+        assert seen and seen[-1]["kind"] == "recipe"
+        assert seen[-1]["source"] == "selected" and seen[-1]["source_exact"] is True

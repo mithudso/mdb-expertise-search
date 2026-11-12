@@ -112,7 +112,7 @@ def test_esr_index_and_covered():
     rep = optimize("db.o.find({ c: 1, t: { $gt: 5 } }, { c: 1, s: 1, t: 1, _id: 0 }).sort({ s: -1 }).limit(5)")
     rec = rep.indexes[0]
     assert rec.shell() == 'db.getCollection("o").createIndex({ c: 1, s: -1, t: 1 })'
-    assert "ERS" in rec.rationale and "PROJECTION_COVERED" in rec.rationale
+    assert "ERS" in rec.rationale and "May cover the projection" in rec.rationale and "Confirm coverage with explain()" in rec.rationale
     assert "add _id: 0" not in rec.rationale
 
 
@@ -291,9 +291,17 @@ def test_example_join_and_coverage_contracts():
 def test_recommendation_deduplication_is_linear(monkeypatch):
     import importlib
     module = importlib.import_module('mdbx.mql.optimize')
-    calls = []
-    original = module.IndexRec.shell
-    monkeypatch.setattr(module.IndexRec, 'shell', lambda self: (calls.append(1), original(self))[1])
+    comparisons = []
+    class Name(str):
+        def __eq__(self, other):
+            comparisons.append(1)
+            return super().__eq__(other)
+        __hash__ = str.__hash__
     n = 200
-    report = optimize(';\n'.join(f'db.c{i}.find({{a:1}})' for i in range(n)), apply=False)
-    assert len(report.indexes) == n and len(calls) <= 4*n
+    audit = module._Audit('')
+    for repeat in range(2):
+        for i in range(n):
+            target = module.Target('find', Name(f'c{i}'), 'find', 0, 0)
+            audit._emit(target, [module._Pred('a', 'eq')], None, None, '')
+    assert len(audit.indexes) == n
+    assert len(comparisons) <= 4 * n

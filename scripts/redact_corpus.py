@@ -12,7 +12,9 @@ Files that cannot be redacted are listed in PRIVATE_FILES and in .gitignore; the
 """
 from __future__ import annotations
 
+import contextlib
 import importlib.util
+import io
 import os
 import re
 import subprocess
@@ -20,7 +22,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from maintenance_safety import atomic_write, safe_bytes
+from maintenance_safety import replace_preserving, safe_bytes
 
 ROOT = Path(__file__).resolve().parent.parent
 CORPUS = ROOT / "corpus"
@@ -40,8 +42,8 @@ PRIVATE_FILES = [
 #: (pattern, replacement) applied with re.sub to every text file.
 GENERIC_REGEX: list[tuple[re.Pattern, str]] = [
     # stop at quotes/brackets so a path inside JSON or a markdown link keeps its closing delimiter
-    (re.compile(r"/Users/[A-Za-z0-9._-]+/[^\s\"'`)\]>,]*"), "<local-path>"),
-    (re.compile(r"~/\.(?:claude|global-ai-hub)/[^\s\"'`)\]>,]*"), "<local-path>"),
+    (re.compile(r"/Users/[A-Za-z0-9._-]+/[^\s\\\"'`)\]>,]*"), "<local-path>"),
+    (re.compile(r"~/\.(?:claude|global-ai-hub)/[^\s\\\"'`)\]>,]*"), "<local-path>"),
     (re.compile(r"[ \t]*\(HELP-\d+\)"), ""),
     (re.compile(r"\bHELP-\d+\b"), "<ticket>"),
     (re.compile(r"(?<![\w.-])[\w.-]*\.corp\.mongodb\.com\b"), "internal.example.com"),
@@ -54,10 +56,20 @@ def load_private() -> tuple[list[tuple[str, str]], str | None]:
     if not path.is_file():
         print(f"note: no private redaction rules at {path}; generic rules only", file=sys.stderr)
         return [], None
-    spec = importlib.util.spec_from_file_location("mdbx_private_redactions", path)
-    mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
-    spec.loader.exec_module(mod)  # type: ignore[union-attr]
-    return list(getattr(mod, "RULES", [])), getattr(mod, "PATCH", None)
+    try:
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            spec = importlib.util.spec_from_file_location("mdbx_private_redactions", path)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            rules = getattr(mod, "RULES", [])
+            patch = getattr(mod, "PATCH", None)
+        if not isinstance(rules, (list, tuple)) or any(not isinstance(rule, (list, tuple)) or len(rule) != 2 or not isinstance(rule[0], str) or not rule[0] or not isinstance(rule[1], str) for rule in rules):
+            raise ValueError()
+        if patch is not None and not isinstance(patch, str):
+            raise ValueError()
+        return list(rules), patch
+    except (Exception, SystemExit):  # noqa: BLE001 - private executable configuration must not escape
+        raise ValueError("private redaction configuration is invalid") from None
 
 
 def redact_text(text: str, rules: list[tuple[str, str]]) -> str:
@@ -75,7 +87,10 @@ def is_private(rel: str) -> bool:
 def main() -> int:
     if CORPUS.is_symlink() or not CORPUS.resolve().is_relative_to(ROOT.resolve()):
         print("error: corpus copy is outside the repository", file=sys.stderr); return 1
-    rules, patch = load_private()
+    try:
+        rules, patch = load_private()
+    except ValueError:
+        print("error: private redaction configuration is invalid", file=sys.stderr); return 1
     if any(not isinstance(old, str) or not old or not isinstance(new, str) for old, new in rules):
         print("error: invalid private redaction rule", file=sys.stderr); return 1
     replacements = [new for _, new in rules] + [new for _, new in GENERIC_REGEX]
@@ -101,22 +116,32 @@ def main() -> int:
     for p, original, new in plan:
         if safe_bytes(p, CORPUS) != original:
             print("error: redaction input changed; retry", file=sys.stderr); return 1
-        atomic_write(p, new, p.stat().st_mode & 0o777)
-    # Validate the configured private patch after generic redaction, matching the patch contract. Never print patch diagnostics.
-    patch_applied = False
+        try:
+            recovery = replace_preserving(p, new, CORPUS, original, p.stat().st_mode & 0o777)
+            recovery.unlink()
+        except (OSError, ValueError, RuntimeError):
+            print("error: redaction publication failed; source or recovery data preserved", file=sys.stderr); return 1
+    # Check each file patch independently so refreshed and already-patched families can coexist.
     if patch:
-        if not Path(patch).is_file():
-            print("error: configured private patch is missing", file=sys.stderr); return 1
-        result = subprocess.run(["git", "apply", "--check", str(patch)], cwd=ROOT, capture_output=True, text=True, check=False)
-        if result.returncode:
-            reverse = subprocess.run(["git", "apply", "--reverse", "--check", str(patch)], cwd=ROOT, capture_output=True, text=True, check=False)
-            if reverse.returncode:
-                print("error: configured private patch rejected", file=sys.stderr); return 1
-            patch_applied = True
-    if patch and not patch_applied:
-        result = subprocess.run(["git", "apply", str(patch)], cwd=ROOT, capture_output=True, text=True, check=False)
-        if result.returncode:
-            print("error: configured private patch failed", file=sys.stderr); return 1
+        try:
+            payload = Path(patch).read_bytes()
+            pieces = re.split(rb"(?m)(?=^diff --git )", payload)
+            pieces = [piece for piece in pieces if piece.strip() and (piece.startswith(b"diff --git ") or b"--- " in piece)]
+            if not pieces:
+                raise ValueError()
+            pending = []
+            for piece in pieces:
+                options = {"cwd": ROOT, "input": piece, "capture_output": True, "timeout": 30}
+                forward = subprocess.run(["git", "apply", "--check", "-"], check=False, **options)
+                if forward.returncode == 0:
+                    pending.append(piece)
+                elif subprocess.run(["git", "apply", "--reverse", "--check", "-"], check=False, **options).returncode:
+                    raise ValueError()
+            for piece in pending:
+                if subprocess.run(["git", "apply", "-"], cwd=ROOT, input=piece, capture_output=True, timeout=30, check=False).returncode:
+                    raise ValueError()
+        except (OSError, ValueError, subprocess.SubprocessError):
+            print("error: configured private patch rejected", file=sys.stderr); return 1
     print(f"{len(plan)} file(s) changed", file=sys.stderr)
     return 0
 

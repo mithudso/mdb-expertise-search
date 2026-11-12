@@ -22,7 +22,7 @@ def root(tmp_path, monkeypatch):
     (tmp_path / "recipes").mkdir()
     (tmp_path / "recipes" / "shard-a-collection.md").write_text(RECIPE)
     (tmp_path / "recipes" / "atlas-private-link.md").write_text(
-        RECIPE.replace("shard-a-collection", "atlas-private-link").replace("Shard a collection", "Add Atlas Private Link")
+        RECIPE.replace("shard-a-collection", "atlas-private-link").replace("Shard a collection", "Add Atlas Private Link").replace('sh.shardCollection("mydb.orders", { customerId: "hashed" })', 'atlas networking privateLink create')
     )
     monkeypatch.setenv("MDBX_CORPUS", str(tmp_path))
     return tmp_path
@@ -66,7 +66,8 @@ def test_cli_recipes(root, capsys):
     out = capsys.readouterr().out
     assert "shard-a-collection" in out and "[atlas/self-managed]" in out
     assert cli.main(["recipes", "private"]) == 0
-    assert "atlas-private-link" in capsys.readouterr().out
+    filtered = capsys.readouterr().out
+    assert "atlas-private-link" in filtered and "shard-a-collection" not in filtered
     assert cli.main(["recipe", "shard", "a", "collection"]) == 0
     assert "# Shard a collection" in capsys.readouterr().out
     assert cli.main(["recipe", "zzz"]) == 1
@@ -78,7 +79,10 @@ def test_mcp_recipe_tools(root):
 
     assert {r["name"] for r in m.mdb_recipes()} == {"atlas-private-link", "shard-a-collection"}
     assert [r["name"] for r in m.mdb_recipes("link")] == ["atlas-private-link"]
-    assert "sh.shardCollection" in m.mdb_recipe("shard a collection")
+    selected = m.mdb_recipe("shard a collection")
+    assert "sh.shardCollection" in selected and "privateLink create" not in selected
+    selected = m.mdb_recipe("atlas private link")
+    assert "privateLink create" in selected and "sh.shardCollection" not in selected
     with pytest.raises(ValueError):
         m.mdb_recipe("nope")
 

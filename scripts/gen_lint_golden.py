@@ -20,6 +20,9 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from array import array
+from bisect import bisect_left, bisect_right
+from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -31,12 +34,30 @@ LINT = ROOT / "tests" / "fixtures" / "lint"
 OPTIMIZER = ROOT / "tests" / "fixtures" / "optimizer"
 
 
+@lru_cache(maxsize=1)
+def _positions(text: str):
+    starts, ends, astral = array("Q", [0]), array("Q"), array("Q")
+    i = 0
+    while i < len(text):
+        if ord(text[i]) > 0xFFFF:
+            astral.append(i)
+        if text[i] in "\r\n":
+            ends.append(i)
+            if text[i:i + 2] == "\r\n":
+                i += 1
+            starts.append(i + 1)
+        i += 1
+    ends.append(len(text))
+    return starts, ends, astral
+
+
 def position(text: str, offset: int) -> tuple[int, int]:
-    """0-based line and UTF-16 column of ``offset`` (mdbx.mql.server.offset_to_position)."""
+    """0-based line and UTF-16 column, preserving CRLF and lone surrogates."""
+    starts, ends, astral = _positions(text)
     offset = max(0, min(offset, len(text)))
-    line = text.count("\n", 0, offset)
-    line_start = text.rfind("\n", 0, offset) + 1
-    return line, len(text[line_start:offset].encode("utf-16-le")) // 2
+    line = bisect_right(starts, offset) - 1
+    end = min(offset, ends[line])
+    return line, end - starts[line] + bisect_left(astral, end) - bisect_left(astral, starts[line])
 
 
 def symbol_dict(s: Symbol) -> dict:
@@ -63,7 +84,7 @@ def inputs() -> list[tuple[Path, Path]]:
 
 
 def golden(src: Path) -> str:
-    data = {"source": src.relative_to(ROOT).as_posix(), **lint_dict(src.read_text(encoding="utf-8"))}
+    data = {"source": src.relative_to(ROOT).as_posix(), **lint_dict(src.read_bytes().decode("utf-8"))}
     return json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
 
 

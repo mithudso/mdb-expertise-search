@@ -22,7 +22,7 @@ QUERIES = ["compound index sort", "shard key chunk", "why is my compound index n
 
 
 def _git(cwd: Path, *args: str) -> None:
-    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True)
+    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, timeout=10)
 
 
 @pytest.fixture()
@@ -75,22 +75,22 @@ def test_keyword_ranking_equals_sqlite_fts5(tmp_path):
 
 
 def test_vectors_roundtrip_int8(tmp_path):
-    corpus = FIX / "corpus"
-    db = tmp_path / "v.sqlite"
-    con = index.connect(db)
-    index.build_keyword(con, corpus)
-    digests = [r[0] for r in con.execute("SELECT DISTINCT digest FROM chunks")]
-    vec = array("f", [0.6, -0.8] + [0.0] * 6)
-    con.executemany("INSERT INTO vectors VALUES (?,?,?)", [(d, 8, vec.tobytes()) for d in digests])
-    con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model','m8')")
-    con.commit()
-    r = export(corpus, tmp_path / "web", db=db, allow_untracked=True)
-    assert r.vectors == len(digests)
-    wi = WebIndex(tmp_path / "web")
-    assert wi.meta["vectors"] == {"count": len(digests), "dim": 8, "model": "m8", "scale": 127}
-    q = [0.6, -0.8] + [0.0] * 6
-    hits = wi.semantic_vec(q, 3)
-    assert hits and abs(hits[0].score - (76 * 0.6 + 102 * 0.8) / 127) < 1e-9  # round(0.6*127)=76, round(0.8*127)=102
+    from mdbx import corpus as corpusmod
+    corpus=tmp_path/'synthetic';corpus.mkdir()
+    (corpus/'one.md').write_text('distinct alpha')
+    (corpus/'two.md').write_text('distinct beta')
+    db=tmp_path/'v.sqlite'; con=index.connect(db)
+    index.build_keyword(con,corpus)
+    for chunk in corpusmod.iter_chunks(corpus):
+        value=1. if chunk.path=='one.md' else -1.
+        vector=array('f',[value,0.])
+        con.execute('INSERT INTO vectors VALUES(?,?,?)',(chunk.digest,2,vector.tobytes()))
+        con.execute('INSERT INTO vector_inputs VALUES(?,?)',(chunk.digest,corpusmod.embedding_input_hash(chunk.heading,chunk.text)))
+    con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model','m2')");con.commit()
+    result=export(corpus,tmp_path/'web',db=db,allow_untracked=True)
+    assert result.vectors==2
+    hits=WebIndex(tmp_path/'web').semantic_vec([1.,0.],3)
+    assert [(h.path,h.score) for h in hits]==[('one.md',1.),('two.md',-1.)]
 
 
 def test_tokenizer_and_stemmer():

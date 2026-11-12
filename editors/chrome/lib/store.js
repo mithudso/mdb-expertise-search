@@ -6,15 +6,26 @@ import { SearchIndex } from "./textsearch.js";
  * resolves to null. Returns a SearchIndex, or null when the extension was packaged without data.
  */
 export async function loadIndex(read) {
-  const meta = await read("meta.json", "json");
-  if (!meta) return null;
+  const safeRead = async (name, kind) => {
+    try { return await read(name, kind); }
+    catch (error) {
+      if (error instanceof SyntaxError) throw new Error(`Invalid packaged ${name}`);
+      throw error;
+    }
+  };
+  const meta = await safeRead("meta.json", "json");
+  if (meta === null) return null;
   const [chunks, vocab, ids, wts, doclen, vectors] = await Promise.all([
-    read("chunks.json", "json"), read("terms.json", "json"), read("postings.bin", "bytes"),
-    read("weights.bin", "bytes"), read("doclen.bin", "bytes"), meta.vectors ? read("vectors.bin", "bytes") : null,
+    safeRead("chunks.json", "json"), safeRead("terms.json", "json"), safeRead("postings.bin", "bytes"),
+    safeRead("weights.bin", "bytes"), safeRead("doclen.bin", "bytes"), meta.vectors ? safeRead("vectors.bin", "bytes") : null,
   ]);
   const invalid = name => { throw new Error(`Invalid or inconsistent packaged ${name}`); };
   const whole = n => Number.isSafeInteger(n) && n >= 0;
   if (!meta || typeof meta !== "object" || !Number.isFinite(meta.total_tokens) || meta.total_tokens < 0) invalid("meta.json");
+  if (meta.sources !== undefined && (!Array.isArray(meta.sources) || !meta.sources.every(s => s && typeof s === "object" && typeof s.source === "string" && typeof s.kind === "string" && whole(s.chunks)))) invalid("meta.json");
+  if (meta.recipes !== undefined && (!Array.isArray(meta.recipes) || !meta.recipes.every(r => r && typeof r === "object" && ["name", "title", "summary", "path"].every(k => typeof r[k] === "string") && (r.applies_to === undefined || (Array.isArray(r.applies_to) && r.applies_to.every(v => typeof v === "string")))))) invalid("meta.json");
+  if (meta.by_kind !== undefined && (!meta.by_kind || typeof meta.by_kind !== "object" || Array.isArray(meta.by_kind) || !Object.values(meta.by_kind).every(whole))) invalid("meta.json");
+  for (const k of ["chunks", "files", "terms", "postings"]) if (meta[k] !== undefined && !whole(meta[k])) invalid("meta.json");
   if (!chunks || !["paths", "sources", "kinds", "rows"].every(k => Array.isArray(chunks[k]))) invalid("chunks.json");
   for (const field of ["paths", "sources", "kinds"]) if (!chunks[field].every(x => typeof x === "string")) invalid("chunks.json");
   if (!vocab || typeof vocab !== "object" || Array.isArray(vocab)) invalid("terms.json");
@@ -56,7 +67,8 @@ export async function loadIndex(read) {
       !whole(r[3]) || r[3] < 1 || typeof r[4] !== "string" || typeof r[5] !== "string" ||
       !Number.isSafeInteger(r[6]) || r[6] < -1 || (r[6] !== -1 && r[6] >= vectorCount)) invalid("chunks.json");
   }
-  return new SearchIndex({ meta, chunks, vocab, ids: postings, wts: weights, doclen: lengths, vectors: vectorData });
+  const completeMeta = { sources: [], recipes: [], by_kind: {}, files: chunks.paths.length, chunks: chunks.rows.length, terms: Object.keys(vocab).length, postings: postings.length, ...meta };
+  return new SearchIndex({ meta: completeMeta, chunks, vocab, ids: postings, wts: weights, doclen: lengths, vectors: vectorData });
 }
 
 /** Reader for extension pages: fetches files packaged under data/. */

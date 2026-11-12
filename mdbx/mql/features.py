@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 from . import operators as ops
 from .analyze import METHODS, Result
+from .parser import Parser
 
 _WORD = re.compile(r"\$\$?[A-Za-z_]\w*|[A-Za-z_]\w*")
 
@@ -74,7 +75,10 @@ def hover_markdown(word: str, expertise: Callable[[str], list[str]] | None = Non
     op = ops.get(word)
     if op is None:
         return None
-    md = f"**{op.name}** · {categories(op)}\n\n{op.doc}\n\n_Argument:_ `{op.arg}`"
+    contracts = {label: op.arg_for(ctx) for label, ctx in [("stage", "pipeline-item"), ("expression", "expr"), ("accumulator", "accexpr"), ("update", "update")]
+                 if {"stage": "stage", "expression": "expr", "accumulator": "acc", "update": "update"}[label] in op.cats}
+    argument = f"`{op.arg}`" if len(set(contracts.values())) <= 1 else "; ".join(f"{label}: `{arg}`" for label, arg in contracts.items())
+    md = f"**{op.name}** · {categories(op)}\n\n{op.doc}\n\n_Argument:_ {argument}"
     if expertise:
         try:
             rel = expertise(op.name)
@@ -120,7 +124,7 @@ def _candidates(label: str) -> list[ops.Operator]:
         return [o for o in all_ops if o.name in ops.UPDATE_PIPELINE_STAGES]
     if label == "pipeline-item":
         return [o for o in all_ops if "stage" in o.cats]
-    if label == "sort":
+    if label == "sort-meta":
         return [ops.OPERATORS["$meta"]]
     if label == "geo":
         return [o for o in all_ops if o.name in _GEO_SUBS]
@@ -153,16 +157,24 @@ def completions(result: Result, offset: int) -> list[Completion]:
                 for n, d in ops.VARIABLES.items()]
     for st in result.statements:
         for value in st.node.walk():
-            if value.kind in {"string", "regex"} and value.start < offset < value.end:
+            if value.kind in {"string", "regex"} and value.start < offset < value.end or (value.kind == "string" and not value.closed and value.start < offset <= value.end):
                 return []
-    chain_start = start
-    while chain_start and (text[chain_start - 1].isalnum() or text[chain_start - 1] in "_$."):
-        chain_start -= 1
-    chain = text[chain_start:offset]
-    method = re.fullmatch(r"(?:[A-Za-z_]\w*\.){2,}([A-Za-z]*)", chain)
+    method = False
+    for st in result.statements:
+        for member in st.node.walk():
+            if member.kind != "member" or not member.name_start <= start <= member.end:
+                continue
+            receiver = member.target
+            root = receiver
+            while root is not None and root.target is not None:
+                root = root.target
+            if receiver is not None and receiver.kind in {"member", "call"} and root is not None and root.kind == "ident" and root.value == "db":
+                method = True
     if method:
-        suffix = text[end:].lstrip()
-        return [Completion(n, "method", "collection method", "", n if suffix.startswith("(") else f"{n}($0)",
+        tail = Parser(text[end:])
+        tail.ws()
+        called = tail.i < tail.n and tail.s[tail.i] == "("
+        return [Completion(n, "method", "collection method", "", n if called else f"{n}($0)",
                            start, end) for n in sorted(METHODS) if n.startswith(prefix)]
     hit = _innermost(result, offset)
     pipeline = None
@@ -196,7 +208,11 @@ def completions(result: Result, offset: int) -> list[Completion]:
         colon_start = key_prop.key_end
     else:
         colon_start = end
-    with_value = not text[colon_start:].lstrip().startswith(":")
+    tail = Parser(text[colon_start:])
+    tail.ws()
+    with_value = not (tail.i < tail.n and tail.s[tail.i] == ":")
+    if key_prop is not None and key_prop.quoted and with_value:
+        start, end = key_prop.key_start, key_prop.key_end
     out = [_op_completion(o, start, end, label, with_value=with_value) for o in _candidates(label)]
     for key in _PLAIN_KEYS.get(label, []):
         out.append(Completion(key, "key", f"{label} option", "", f"{key}: $0" if with_value else key, start, end))

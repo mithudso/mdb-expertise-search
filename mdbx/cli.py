@@ -45,7 +45,7 @@ def cmd_index(args) -> int:
                 idx.build_semantic(con, _say)
             except embedmod.EmbedError as exc:
                 _say(f"semantic index skipped: {srch.fallback_note(exc)}")
-                _say("keyword index is ready; start Ollama and re-run `mdbx index` to add vectors")
+                _say("keyword index is ready; cache the ONNX model with `mdbx embed-fetch`, or install the ollama extra and start Ollama, then re-run `mdbx index`")
                 return 1
         return 0
 
@@ -67,8 +67,8 @@ def cmd_search(args) -> int:
         try:
             hits = srch.search(con, " ".join(args.query), args.mode, args.limit,
                                kind=args.kind, source=args.source, notes=notes)
-        except embedmod.EmbedError as exc:
-            _say(f"error: {srch.fallback_note(exc)}")
+        except embedmod.EmbedError:
+            _say("error: semantic search is unavailable; no results were returned")
             _say("semantic search needs the embedder: start Ollama (`ollama serve`, model nomic-embed-text) "
                  "or use `-m keyword`")
             return 1
@@ -104,12 +104,12 @@ def cmd_stats(args) -> int:
             print(json.dumps(s, indent=2))
             return 0
         for k, v in s.items():
-            print(f"{k:>12}: {v}")
+            print(_terminal(f"{k:>12}: {v}"))
         if args.sources:
             for r in con.execute(
                 "SELECT source, kind, COUNT(*) n FROM chunks GROUP BY source, kind ORDER BY n DESC"
             ):
-                print(f"  {r['n']:>6}  {r['kind']:<7} {r['source']}")
+                print(_terminal(f"  {r['n']:>6}  {r['kind']:<7} {r['source']}"))
         return 0
 
 
@@ -153,7 +153,7 @@ def cmd_recipes(args) -> int:
     width = max(len(r.name) for r in items)
     for r in items:
         tag = "/".join(r.applies_to) or "-"
-        print(f"{r.name:<{width}}  [{tag}]  {r.summary}")
+        print(_terminal(f"{r.name:<{width}}  [{tag}]  {r.summary}"))
     return 0
 
 
@@ -192,7 +192,7 @@ def cmd_lint(args) -> int:
     for d in res.diagnostics:
         line = bisect_right(starts, d.start)
         col = d.start - starts[line - 1] + 1
-        print(f"{args.file}:{line}:{col}: {d.severity}: {d.message} [{d.code}]")
+        print(_terminal(f"{args.file}:{line}:{col}: {d.severity}: {d.message} [{d.code}]"))
     return 1 if any(d.severity == "error" for d in res.diagnostics) else 0
 
 
@@ -203,8 +203,8 @@ def cmd_export_web(args) -> int:
     db = Path(args.db) if args.db else idx.default_db()
     try:
         r = export(root, Path(args.out), db=db, vectors=not args.no_vectors, allow_untracked=args.allow_untracked)
-    except RuntimeError as exc:
-        print(f"mdbx export-web: {exc}", file=sys.stderr)
+    except (OSError, ValueError, RuntimeError):
+        print("mdbx export-web: export failed; check the source and destination", file=sys.stderr)
         return 2
     print(f"wrote {r.out}: {r.chunks} chunks from {r.files} files, {r.terms} terms, {r.postings} postings, "
           f"{r.vectors} vectors" + (f"; skipped {r.skipped_untracked} untracked (private) files" if r.skipped_untracked else ""))

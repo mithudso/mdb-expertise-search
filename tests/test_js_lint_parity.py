@@ -163,10 +163,14 @@ for(const n of [0,-1]) {assert.throws(()=>getCloseMatches('x',['x'],n),RangeErro
 for(const c of [-0.01,1.01,NaN]) assert.throws(()=>getCloseMatches('x',['x'],1,c),RangeError);
 const count=128, text='x\n'.repeat(count);
 const ds=Array.from({length:count},(_,i)=>({start:2*i,end:2*i+1,severity:'error',code:'synthetic',message:'synthetic',fix:null}));
-const prior=String.prototype.indexOf; let scans=0;
-String.prototype.indexOf=function(needle,...args){ if(needle==='\n'&&String(this)===text)scans++;return Reflect.apply(prior,this,[needle,...args]); };
-try { assert.deepEqual(diagnosticsToDicts(text,ds).map(d=>[d.line,d.column]),ds.map((_,i)=>[i,0])); assert.ok(scans<=4*count, String(scans)); }
-finally {String.prototype.indexOf=prior;}
+let reads=0;
+const watched=new Proxy(new String(text), {get(target,key) {
+ if(typeof key==='string' && /^[0-9]+$/.test(key)) reads++;
+ const value=Reflect.get(target,key,target);
+ return typeof value==='function' ? value.bind(target) : value;
+}});
+assert.deepEqual(diagnosticsToDicts(watched,ds).map(d=>[d.line,d.column]),ds.map((_,i)=>[i,0]));
+assert.ok(reads>0 && reads<=6*text.length, String(reads));
 """
     result = subprocess.run(['node', '--input-type=module', '-e', script], cwd=ROOT, check=False,
                             capture_output=True, encoding='utf-8', timeout=30)

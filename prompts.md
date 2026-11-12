@@ -50,3 +50,10 @@
 ## v0.7.1 — 2026-11-12 maintenance
 
 Requested full repository bootstrap and exhaustive maintained-source optimization in an isolated worktree, with protected data preserved, offline synthetic verification and checked PR delivery. Semantic generation and service activation remain separately scoped.
+
+## v0.7.1 — 2026-11-12 selected maintenance request
+
+Apply full repo-bootstrapper and repository-scope code-deep-optimizer to MDBx,
+preserve protected data and existing serialization, and deliver through verified
+remote-default contents. Correct only the four explicitly authorized synthetic
+optimizer expectations using independent semantics and separate behavior tests.

@@ -27,14 +27,19 @@ service or index endpoint. Python socket patches alone do not cover descendants.
 Other platforms require an equivalent network sandbox; the wrapper fails closed
 when macOS sandbox-exec is unavailable.
 
-Before collection, tests/conftest.py assigns scratch application paths, clears only
-its own cached ONNX runtime and replaces loading with a synthetic unavailable
-runtime. Backend tests use synthetic vectors/sessions. Real ONNX inference is
-excluded from the conventional suite even if the host has a downloaded model.
-The known semantic-only Git post-commit hook is filtered in inherited command
-scope; other validation hooks are preserved. Synthetic commits disable signing
-and reject inherited foreign Git repository selectors. No HOME/CODEX_HOME override
-or persistent Git configuration is needed.
+Before product imports, scripts/test_isolation.py assigns a fresh process-only HOME,
+XDG/config/data/auth/model locations, forces cached synthetic ONNX/client factories,
+and installs the same protection for Python descendants. Artifact-validation tests
+explicitly restore the real loader with synthetic dependency factories and empty
+model directories; no real inference runs. No shared configuration is changed.
+
+Synthetic Git fixtures use owned empty system/global configuration, empty hooks and
+an explicit empty init/clone template. The shim strips every inherited GIT_* selector
+and numbered override before each command, then inspects effective and physical
+hooks before every fixture commit. Hostile-template regressions cover both initial
+and later commits. Repository delivery commits are separate: they preserve validation
+and registry hooks and suppress only the independently paused, hash-verified semantic
+post-commit action through command-scoped filtering.
 
 The suite covers index rollback/model identity, full-content deduplication, stale
 vector caches, finite embeddings, confined files and atomic writes; paired Python

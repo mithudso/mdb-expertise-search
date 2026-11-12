@@ -1,11 +1,9 @@
 # Development
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'   # dev pulls in all extras
-.venv/bin/pytest -q
-.venv/bin/ruff check .
-.venv/bin/mdbx index --skip-semantic     # fast: keyword only
-.venv/bin/mdbx index                      # + embeddings (needs Ollama + nomic-embed-text)
+python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'   # public development extras; provider/model extras are opt-in
+python3 scripts/offline_test.py -- .venv/bin/python -m pytest -q
+python3 scripts/offline_test.py -- .venv/bin/python -m ruff check .
 ```
 
 | Env var | Default | Meaning |
@@ -13,9 +11,13 @@ python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'   # dev pulls in all 
 | `MDBX_DB` | `./data/mdbx.sqlite` | Index file |
 | `MDBX_CORPUS` | `./corpus` | Corpus root |
 | `MDBX_OLLAMA_HOST` / `OLLAMA_HOST` | `http://127.0.0.1:11434` | Embedding backend |
-| `MDBX_EMBED_MODEL` | `nomic-embed-text` | Embedding model; changing it makes the next `mdbx index` discard all vectors and re-embed |
+| `MDBX_EMBED_MODEL` | `nomic-embed-text` | Embedding model; an explicitly requested semantic build stages and validates a replacement generation before publication |
 | `MDBX_LSP_OPTIMIZE` | `1` | Set `0` to stop `mql-lsp` publishing optimizer (`opt/*`) diagnostics |
 | `MDBX_CONCEPTS_SRC` | `~/.global-ai-hub/llms-concepts` | `scripts/sync_corpus.sh` only: source of the `mongodb-*.llms` fact families |
+
+Explicit corpus synchronization and semantic indexing operate on data. They are separate
+from offline development checks; use them only for an authorized data refresh. See
+[TESTING.md](TESTING.md) for scratch-state, fixture-hook and no-model protections.
 
 ## Scripts
 - `python scripts/rotate_workflow_logs.py [--check] [--max-bytes N] [--keep N]` — moves all but the newest 3 `## v...`
@@ -42,11 +44,11 @@ Customer-safety: `scripts/redact_corpus.py` then `scripts/sweep_customers.py` be
 (put customer-name regexes in `~/.config/mdbx/denylist.txt`, never in the repo).
 
 ## VS Code extension
-`cd editors/vscode && npm install && npm test && npx vsce package` builds `mql-vscode-0.1.0.vsix` (git-ignored).
+`npm ci --ignore-scripts --prefix editors/vscode`, then the guarded checks in [TESTING.md](TESTING.md), and `editors/vscode/node_modules/.bin/vsce package` builds `mql-vscode-0.1.0.vsix` (git-ignored).
 
 ## Troubleshooting
 - `semantic index skipped: cannot reach Ollama` — start Ollama and run `ollama pull nomic-embed-text`.
 - Empty results — run `mdbx stats`; zero chunks means `mdbx index` has not run or `MDBX_CORPUS` is wrong.
-- Changed the embedding model — run `mdbx index`; it discards the old vectors and re-embeds (`embed model changed ...` on stderr).
+- Changed the embedding model — run `mdbx index`; the explicit semantic build validates a complete replacement before changing stored vectors.
 - `corpus directory not found` — `build_keyword` now refuses a missing `MDBX_CORPUS` instead of emptying the index.
 - Refresh the file index docs: `python scripts/gen_file_index.py`; verify with `python scripts/check_doc_indexes.py`.

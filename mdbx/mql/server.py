@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import sys
+from array import array
 from bisect import bisect_left, bisect_right
 from functools import lru_cache
 
@@ -48,37 +50,64 @@ def _u16(s: str) -> int:
     return sum(2 if ord(ch) > 0xFFFF else 1 for ch in s)
 
 
-@lru_cache(maxsize=8)
+@lru_cache(maxsize=1)
 def _positions(text: str):
-    starts, ends, units = [0], [], [0]
+    # One compact current snapshot. Store only line boundaries and supplementary code points.
+    starts, ends, astral = array("Q", [0]), array("Q"), array("Q")
     i = 0
-    for ch in text:
-        units.append(units[-1] + (2 if ord(ch) > 0xFFFF else 1))
     while i < len(text):
-        if text[i] in "\r\n":
+        ch = text[i]
+        if ord(ch) > 0xFFFF:
+            astral.append(i)
+        if ch in "\r\n":
             ends.append(i)
-            if text[i] == "\r" and text[i:i + 2] == "\r\n":
+            if ch == "\r" and text[i:i + 2] == "\r\n":
                 i += 1
             starts.append(i + 1)
         i += 1
     ends.append(len(text))
-    return starts, ends, units
+    return starts, ends, astral
 
 
 def offset_to_position(text: str, offset: int) -> types.Position:
     offset = max(0, min(offset, len(text)))
-    starts, ends, units = _positions(text)
+    starts, ends, astral = _positions(text)
     line = bisect_right(starts, offset) - 1
-    return types.Position(line=line, character=units[min(offset, ends[line])] - units[starts[line]])
+    end = min(offset, ends[line])
+    extra = bisect_left(astral, end) - bisect_left(astral, starts[line])
+    return types.Position(line=line, character=end - starts[line] + extra)
 
 
 def position_to_offset(text: str, pos: types.Position) -> int:
-    starts, ends, units = _positions(text)
+    starts, ends, astral = _positions(text)
     line = max(0, pos.line)
     if line >= len(starts):
         return len(text)
-    target = units[starts[line]] + max(0, pos.character)
-    return bisect_left(units, min(target, units[ends[line]]), starts[line], ends[line] + 1)
+    lo, hi = starts[line], ends[line]
+    base = bisect_left(astral, lo)
+    target = max(0, pos.character)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        units = mid - starts[line] + bisect_left(astral, mid) - base
+        if units < target:
+            lo = mid + 1
+        else:
+            hi = mid
+    return lo
+
+
+def _diagnostic_key(d):
+    fix = (d.data or {}).get("fix") if isinstance(d.data, dict) else None
+    if not isinstance(fix, str) or set(d.data) != {"fix"}:
+        return None
+    return (d.range.start.line, d.range.start.character, d.range.end.line, d.range.end.character,
+            d.code, d.source, d.message, fix)
+
+
+def _plain_snippet(text: str) -> str:
+    text = re.sub(r"(?<!\\)\$\{[0-9]+:([^{}]*)\}", lambda m: m.group(1), text)
+    text = re.sub(r"(?<!\\)\$(?:[0-9]+|\{[0-9]+\})", "", text)
+    return re.sub(r"\\([\\$}])", r"\1", text)
 
 
 def to_diagnostic(text: str, d: Diag) -> types.Diagnostic:
@@ -173,6 +202,7 @@ def build_server() -> LanguageServer:
     @server.feature(types.TEXT_DOCUMENT_DID_CLOSE)
     def did_close(params: types.DidCloseTextDocumentParams) -> None:
         results.pop(params.text_document.uri, None)
+        _positions.cache_clear()
         server.text_document_publish_diagnostics(
             types.PublishDiagnosticsParams(uri=params.text_document.uri, diagnostics=[])
         )
@@ -181,6 +211,10 @@ def build_server() -> LanguageServer:
     def completion(params: types.CompletionParams) -> types.CompletionList:
         res = current(params.text_document.uri)
         off = position_to_offset(res.text, params.position)
+        capability = server.client_capabilities.text_document
+        completion_cap = capability.completion if capability is not None else None
+        item_cap = completion_cap.completion_item if completion_cap is not None else None
+        snippets = bool(item_cap is not None and item_cap.snippet_support)
         items = []
         for c in features.completions(res, off):
             items.append(types.CompletionItem(
@@ -188,9 +222,9 @@ def build_server() -> LanguageServer:
                 kind=_COMPLETION_KIND[c.kind],
                 detail=c.detail,
                 documentation=types.MarkupContent(types.MarkupKind.Markdown, c.doc) if c.doc else None,
-                insert_text_format=types.InsertTextFormat.Snippet,
+                insert_text_format=types.InsertTextFormat.Snippet if snippets else types.InsertTextFormat.PlainText,
                 text_edit=types.TextEdit(
-                    types.Range(offset_to_position(res.text, c.start), offset_to_position(res.text, c.end)), c.insert
+                    types.Range(offset_to_position(res.text, c.start), offset_to_position(res.text, c.end)), c.insert if snippets else _plain_snippet(c.insert)
                 ),
                 filter_text=c.label,
                 sort_text=("0" if c.kind in {"stage", "key"} else "1") + c.label,
@@ -234,13 +268,14 @@ def build_server() -> LanguageServer:
         doc = server.workspace.get_text_document(uri)
         res = analyze(doc.source)
         valid = [to_diagnostic(res.text, d) for d in [*res.diagnostics, *optimizer_diagnostics(res.text)]]
+        valid_keys = {_diagnostic_key(d) for d in valid}
+        valid_keys.discard(None)
         actions = []
         for d in params.context.diagnostics:
             fix = (d.data or {}).get("fix") if isinstance(d.data, dict) else None
             if not isinstance(fix, str) or not fix or d.source not in {"mql", "mql-optimizer"}:
                 continue
-            if not any(d.range == own.range and d.code == own.code and d.source == own.source
-                       and d.message == own.message and d.data == own.data for own in valid):
+            if _diagnostic_key(d) not in valid_keys:
                 continue
             actions.append(types.CodeAction(
                 title=f"Replace with {fix}" if len(fix) <= 60 and "\n" not in fix else "Apply optimizer rewrite",

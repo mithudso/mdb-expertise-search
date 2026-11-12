@@ -7,7 +7,7 @@
   {
     "path": ".env.example",
     "purpose": "docs/config",
-    "bytes": 441
+    "bytes": 595
   },
   {
     "path": ".gitattributes",
@@ -52,12 +52,12 @@
   {
     "path": ".github/workflows/ci.yml",
     "purpose": "docs/config",
-    "bytes": 1921
+    "bytes": 3365
   },
   {
     "path": ".gitignore",
     "purpose": "docs/config",
-    "bytes": 882
+    "bytes": 968
   },
   {
     "path": ".mcp.json",
@@ -172,7 +172,7 @@
   {
     "path": "docs/TESTING.md",
     "purpose": "docs/config",
-    "bytes": 3113
+    "bytes": 3484
   },
   {
     "path": "docs/archive/.gitkeep",
@@ -207,7 +207,7 @@
   {
     "path": "docs/known-issues.md",
     "purpose": "docs/config",
-    "bytes": 5502
+    "bytes": 6502
   },
   {
     "path": "docs/logging.md",
@@ -227,7 +227,7 @@
   {
     "path": "docs/repo-bootstrap-audit-2026-11-12.md",
     "purpose": "docs/config",
-    "bytes": 4132
+    "bytes": 4220
   },
   {
     "path": "docs/requirements.md",
@@ -252,22 +252,22 @@
   {
     "path": "editors/chrome/app.css",
     "purpose": "docs/config",
-    "bytes": 10211
+    "bytes": 10222
   },
   {
     "path": "editors/chrome/app.html",
     "purpose": "docs/config",
-    "bytes": 6729
+    "bytes": 6798
   },
   {
     "path": "editors/chrome/app.js",
     "purpose": "docs/config",
-    "bytes": 22888
+    "bytes": 23897
   },
   {
     "path": "editors/chrome/background.js",
     "purpose": "docs/config",
-    "bytes": 2238
+    "bytes": 2589
   },
   {
     "path": "editors/chrome/icons/icon128.png",
@@ -292,17 +292,17 @@
   {
     "path": "editors/chrome/lib/analyze.js",
     "purpose": "docs/config",
-    "bytes": 40200
+    "bytes": 41311
   },
   {
     "path": "editors/chrome/lib/autoupdate.js",
     "purpose": "docs/config",
-    "bytes": 3583
+    "bytes": 4138
   },
   {
     "path": "editors/chrome/lib/capture.js",
     "purpose": "docs/config",
-    "bytes": 3015
+    "bytes": 3094
   },
   {
     "path": "editors/chrome/lib/docs.js",
@@ -312,7 +312,7 @@
   {
     "path": "editors/chrome/lib/normalize.js",
     "purpose": "docs/config",
-    "bytes": 15549
+    "bytes": 15844
   },
   {
     "path": "editors/chrome/lib/operators-data.js",
@@ -332,32 +332,37 @@
   {
     "path": "editors/chrome/lib/optimize.js",
     "purpose": "docs/config",
-    "bytes": 44542
+    "bytes": 46604
   },
   {
     "path": "editors/chrome/lib/parser.js",
     "purpose": "docs/config",
-    "bytes": 16494
+    "bytes": 17282
   },
   {
     "path": "editors/chrome/lib/report.js",
     "purpose": "docs/config",
-    "bytes": 4535
+    "bytes": 4536
   },
   {
     "path": "editors/chrome/lib/store.js",
     "purpose": "docs/config",
-    "bytes": 4541
+    "bytes": 5884
   },
   {
     "path": "editors/chrome/lib/textsearch.js",
     "purpose": "docs/config",
-    "bytes": 14321
+    "bytes": 13797
   },
   {
     "path": "editors/chrome/lib/ui.js",
     "purpose": "docs/config",
-    "bytes": 9165
+    "bytes": 9590
+  },
+  {
+    "path": "editors/chrome/lib/unicode61.js",
+    "purpose": "docs/config",
+    "bytes": 21440
   },
   {
     "path": "editors/chrome/manifest.json",
@@ -377,12 +382,12 @@
   {
     "path": "editors/chrome/popup.html",
     "purpose": "docs/config",
-    "bytes": 1917
+    "bytes": 2052
   },
   {
     "path": "editors/chrome/popup.js",
     "purpose": "docs/config",
-    "bytes": 6603
+    "bytes": 6947
   },
   {
     "path": "editors/chrome/screenshot-app.png",
@@ -402,7 +407,7 @@
   {
     "path": "editors/chrome/test/autoupdate.test.mjs",
     "purpose": "docs/config",
-    "bytes": 5832
+    "bytes": 5885
   },
   {
     "path": "editors/chrome/test/batch.mjs",
@@ -412,32 +417,37 @@
   {
     "path": "editors/chrome/test/browser-context.mjs",
     "purpose": "docs/config",
-    "bytes": 1022
+    "bytes": 1138
   },
   {
     "path": "editors/chrome/test/browser-context.test.mjs",
     "purpose": "docs/config",
-    "bytes": 1418
+    "bytes": 2461
   },
   {
     "path": "editors/chrome/test/debug-app.mjs",
     "purpose": "docs/config",
-    "bytes": 1450
+    "bytes": 2373
   },
   {
     "path": "editors/chrome/test/dom-fixture.mjs",
     "purpose": "docs/config",
-    "bytes": 7787
+    "bytes": 7932
   },
   {
     "path": "editors/chrome/test/e2e.mjs",
     "purpose": "docs/config",
-    "bytes": 10562
+    "bytes": 10838
   },
   {
     "path": "editors/chrome/test/integrity.test.mjs",
     "purpose": "docs/config",
-    "bytes": 7450
+    "bytes": 7720
+  },
+  {
+    "path": "editors/chrome/test/language-boundaries.test.mjs",
+    "purpose": "docs/config",
+    "bytes": 4550
   },
   {
     "path": "editors/chrome/test/lint-batch.mjs",
@@ -447,22 +457,32 @@
   {
     "path": "editors/chrome/test/lint-parity.test.mjs",
     "purpose": "docs/config",
-    "bytes": 2824
+    "bytes": 2848
+  },
+  {
+    "path": "editors/chrome/test/normalization-boundaries.test.mjs",
+    "purpose": "docs/config",
+    "bytes": 2752
+  },
+  {
+    "path": "editors/chrome/test/optimizer-boundaries.test.mjs",
+    "purpose": "docs/config",
+    "bytes": 4768
   },
   {
     "path": "editors/chrome/test/page-races.test.mjs",
     "purpose": "docs/config",
-    "bytes": 10597
+    "bytes": 14074
   },
   {
     "path": "editors/chrome/test/parity.test.mjs",
     "purpose": "docs/config",
-    "bytes": 10982
+    "bytes": 11331
   },
   {
     "path": "editors/chrome/test/rendering.test.mjs",
     "purpose": "docs/config",
-    "bytes": 2231
+    "bytes": 2571
   },
   {
     "path": "editors/chrome/test/run-tests.mjs",
@@ -472,17 +492,27 @@
   {
     "path": "editors/chrome/test/search-batch.mjs",
     "purpose": "docs/config",
-    "bytes": 1306
+    "bytes": 1400
   },
   {
     "path": "editors/chrome/test/search-parity.test.mjs",
     "purpose": "docs/config",
-    "bytes": 4565
+    "bytes": 4931
+  },
+  {
+    "path": "editors/chrome/test/search-rendering-boundaries.test.mjs",
+    "purpose": "docs/config",
+    "bytes": 5926
+  },
+  {
+    "path": "editors/chrome/test/ui-boundaries.test.mjs",
+    "purpose": "docs/config",
+    "bytes": 6575
   },
   {
     "path": "editors/chrome/test/ui.test.mjs",
     "purpose": "docs/config",
-    "bytes": 7759
+    "bytes": 7946
   },
   {
     "path": "editors/helix-languages.toml",
@@ -512,12 +542,12 @@
   {
     "path": "editors/vscode/extension.js",
     "purpose": "docs/config",
-    "bytes": 1869
+    "bytes": 1906
   },
   {
     "path": "editors/vscode/language-configuration.json",
     "purpose": "docs/config",
-    "bytes": 546
+    "bytes": 910
   },
   {
     "path": "editors/vscode/package-lock.json",
@@ -532,17 +562,17 @@
   {
     "path": "editors/vscode/server-path.js",
     "purpose": "docs/config",
-    "bytes": 745
+    "bytes": 916
   },
   {
     "path": "editors/vscode/syntaxes/mql.tmLanguage.json",
     "purpose": "docs/config",
-    "bytes": 4224
+    "bytes": 4843
   },
   {
     "path": "editors/vscode/test/server-path.test.js",
     "purpose": "docs/config",
-    "bytes": 4713
+    "bytes": 8912
   },
   {
     "path": "examples/orders.mql",
@@ -567,7 +597,7 @@
   {
     "path": "mdbx/corpus.py",
     "purpose": "Corpus discovery, classification, chunking",
-    "bytes": 4858
+    "bytes": 5436
   },
   {
     "path": "mdbx/embed.py",
@@ -577,12 +607,12 @@
   {
     "path": "mdbx/embed_onnx.py",
     "purpose": "In-process nomic-embed-text ONNX embedder",
-    "bytes": 5264
+    "bytes": 5564
   },
   {
     "path": "mdbx/index.py",
     "purpose": "SQLite schema + keyword/semantic index builds",
-    "bytes": 7983
+    "bytes": 10857
   },
   {
     "path": "mdbx/mcp_server.py",
@@ -642,12 +672,12 @@
   {
     "path": "mdbx/safety.py",
     "purpose": "docs/config",
-    "bytes": 3724
+    "bytes": 8386
   },
   {
     "path": "mdbx/search.py",
     "purpose": "Keyword, semantic, hybrid ranking",
-    "bytes": 9751
+    "bytes": 11980
   },
   {
     "path": "mdbx/tui.py",
@@ -655,9 +685,14 @@
     "bytes": 12491
   },
   {
+    "path": "mdbx/unicode61.py",
+    "purpose": "docs/config",
+    "bytes": 23792
+  },
+  {
     "path": "mdbx/webexport.py",
     "purpose": "docs/config",
-    "bytes": 21862
+    "bytes": 24469
   },
   {
     "path": "memory.md",
@@ -702,7 +737,7 @@
   {
     "path": "scripts/gen_file_index.py",
     "purpose": "Regenerate this index",
-    "bytes": 3758
+    "bytes": 4458
   },
   {
     "path": "scripts/gen_lint_golden.py",
@@ -722,7 +757,12 @@
   {
     "path": "scripts/gen_search_golden.py",
     "purpose": "docs/config",
-    "bytes": 5073
+    "bytes": 6925
+  },
+  {
+    "path": "scripts/gen_unicode61.py",
+    "purpose": "docs/config",
+    "bytes": 7168
   },
   {
     "path": "scripts/glean_cli_helper.py",
@@ -747,7 +787,7 @@
   {
     "path": "scripts/offline_test.py",
     "purpose": "docs/config",
-    "bytes": 956
+    "bytes": 1355
   },
   {
     "path": "scripts/package_chrome_extension.py",
@@ -780,6 +820,11 @@
     "bytes": 5004
   },
   {
+    "path": "scripts/test_isolation.py",
+    "purpose": "docs/config",
+    "bytes": 10019
+  },
+  {
     "path": "scripts/watch_and_index.sh",
     "purpose": "Reindex on corpus changes (fswatch/inotifywait)",
     "bytes": 855
@@ -792,7 +837,7 @@
   {
     "path": "tests/conftest.py",
     "purpose": "docs/config",
-    "bytes": 3874
+    "bytes": 1484
   },
   {
     "path": "tests/fixtures/lint/clean.lint.json",
@@ -1040,74 +1085,9 @@
     "bytes": 1151
   },
   {
-    "path": "tests/fixtures/search/corpus/llms/mongodb-query-shape-optimization.llms/llms-facts.txt",
-    "purpose": "docs/config",
-    "bytes": 1265
-  },
-  {
-    "path": "tests/fixtures/search/corpus/recipes/shard-a-collection.md",
-    "purpose": "docs/config",
-    "bytes": 575
-  },
-  {
-    "path": "tests/fixtures/search/corpus/skills/mongodb-atlas-expert/SKILL.md",
-    "purpose": "docs/config",
-    "bytes": 672
-  },
-  {
-    "path": "tests/fixtures/search/corpus/skills/mongodb-expert/references/indexes.md",
-    "purpose": "docs/config",
-    "bytes": 913
-  },
-  {
-    "path": "tests/fixtures/search/corpus/skills/mongodb-expert/references/sharding.md",
-    "purpose": "docs/config",
-    "bytes": 666
-  },
-  {
-    "path": "tests/fixtures/search/golden.json",
-    "purpose": "docs/config",
-    "bytes": 69535
-  },
-  {
-    "path": "tests/fixtures/search/index/chunks.json",
-    "purpose": "docs/config",
-    "bytes": 5327
-  },
-  {
-    "path": "tests/fixtures/search/index/doclen.bin",
-    "purpose": "docs/config",
-    "bytes": 56
-  },
-  {
-    "path": "tests/fixtures/search/index/meta.json",
-    "purpose": "docs/config",
-    "bytes": 1048
-  },
-  {
-    "path": "tests/fixtures/search/index/postings.bin",
-    "purpose": "docs/config",
-    "bytes": 1784
-  },
-  {
-    "path": "tests/fixtures/search/index/terms.json",
-    "purpose": "docs/config",
-    "bytes": 4018
-  },
-  {
-    "path": "tests/fixtures/search/index/vectors.bin",
-    "purpose": "docs/config",
-    "bytes": 448
-  },
-  {
-    "path": "tests/fixtures/search/index/weights.bin",
-    "purpose": "docs/config",
-    "bytes": 892
-  },
-  {
     "path": "tests/test_cdo_hardening.py",
     "purpose": "Embed/index/search hardening tests",
-    "bytes": 4796
+    "bytes": 5943
   },
   {
     "path": "tests/test_chrome_autoupdate.py",
@@ -1117,7 +1097,12 @@
   {
     "path": "tests/test_core.py",
     "purpose": "Core unit tests",
-    "bytes": 10091
+    "bytes": 11098
+  },
+  {
+    "path": "tests/test_core_preservation.py",
+    "purpose": "docs/config",
+    "bytes": 17669
   },
   {
     "path": "tests/test_corpus_autoupdate.py",
@@ -1127,7 +1112,12 @@
   {
     "path": "tests/test_embed_backend.py",
     "purpose": "docs/config",
-    "bytes": 3648
+    "bytes": 4056
+  },
+  {
+    "path": "tests/test_generator_preservation.py",
+    "purpose": "docs/config",
+    "bytes": 4552
   },
   {
     "path": "tests/test_js_lint_parity.py",
@@ -1147,7 +1137,7 @@
   {
     "path": "tests/test_maintenance.py",
     "purpose": "docs/config",
-    "bytes": 8913
+    "bytes": 8800
   },
   {
     "path": "tests/test_mcp.py",
@@ -1180,6 +1170,11 @@
     "bytes": 3614
   },
   {
+    "path": "tests/test_test_isolation.py",
+    "purpose": "docs/config",
+    "bytes": 9935
+  },
+  {
     "path": "tests/test_tooling_integrity.py",
     "purpose": "docs/config",
     "bytes": 9487
@@ -1195,8 +1190,13 @@
     "bytes": 5763
   },
   {
+    "path": "tests/test_unicode61.py",
+    "purpose": "docs/config",
+    "bytes": 4681
+  },
+  {
     "path": "tests/test_web_search.py",
     "purpose": "docs/config",
-    "bytes": 6885
+    "bytes": 6986
   }
 ]

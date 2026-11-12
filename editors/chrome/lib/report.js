@@ -32,7 +32,7 @@ function fence(code, lang = "js") {
 
 // Flatten line breaks so input cannot create paragraphs, headings or list items in case notes.
 function literal(value) {
-  return String(value).replace(/\s+/gu, " ").replace(/[\\`*_{}\[\]()<>#+.!|~-]/g, "\\$&");
+  return String(value).replace(/\s+/gu, " ").replace(/[&\\`*_{}\[\]()<>#+.!|~-]/g, "\\$&");
 }
 
 function inlineCode(value) {

@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import logging
-import re
+import os
 import sqlite3
+import threading
 from collections import Counter
 from contextlib import closing
 from dataclasses import dataclass, field
@@ -11,6 +12,8 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from . import embed as embedmod
+from .index import _valid_cached, read_snapshot
+from .unicode61 import raw_tokens
 
 log = logging.getLogger("mdbx.search")
 
@@ -42,8 +45,8 @@ _STOP = frozenset(
 
 def _terms(query: str) -> list[str]:
     """Word tokens of ``query`` minus stopwords; keeps all tokens if nothing else remains."""
-    words = re.findall(r"\w+", query)
-    kept = [w for w in words if w.lower() not in _STOP]
+    words = raw_tokens(query)
+    kept = [w for w in words if w not in _STOP]
     return kept or words
 
 
@@ -51,12 +54,15 @@ def _fts_query(terms: list[str], op: str) -> str:
     return f" {op} ".join(f'"{t}"' for t in terms)
 
 
-def _filters(kind: str | None, source: str | None) -> tuple[str, list]:
+def _filters(kind: str | None, source: str | None, source_exact: bool = False) -> tuple[str, list]:
     clauses, params = [], []
     if kind:
         clauses.append("c.kind = ?")
         params.append(kind)
-    if source:
+    if source and source_exact:
+        clauses.append("c.source = ?")
+        params.append(source)
+    elif source:
         clauses.append("c.source LIKE ? ESCAPE '!'")
         params.append("%" + source.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%")
     return (" AND " + " AND ".join(clauses)) if clauses else "", params
@@ -69,6 +75,7 @@ def keyword(
     *,
     kind: str | None = None,
     source: str | None = None,
+    source_exact: bool = False,
 ) -> list[Hit]:
     _limit(limit)
     if limit == 0:
@@ -76,7 +83,7 @@ def keyword(
     terms = _terms(query)
     if not terms:
         return []
-    extra, fparams = _filters(kind, source)
+    extra, fparams = _filters(kind, source, source_exact)
     sql = (
         "SELECT c.*, bm25(chunks_fts, 4.0, 1.0, 2.0) AS rank, "
         "snippet(chunks_fts, 1, '[', ']', ' … ', 24) AS snip "
@@ -99,24 +106,52 @@ class VectorStore:
     """In-memory matrix of chunk vectors, loaded once per process."""
 
     def __init__(self, con: sqlite3.Connection):
-        rows = con.execute(
+        self._lock = threading.RLock()
+        self.refresh(con)
+
+    def refresh(self, con: sqlite3.Connection):
+        with self._lock:
+            self._refresh(con)
+
+    def _refresh(self, con):
+        with read_snapshot(con):
+            revision = _revision(con)
+            rows = con.execute(
             "SELECT c.id, c.digest, v.dim, v.vec FROM chunks c JOIN vectors v ON v.digest = c.digest WHERE c.digest NOT IN (SELECT digest FROM invalid_vectors) ORDER BY c.id"
-        ).fetchall()
+            ).fetchall()
         # Skip corrupt blobs and vectors left over from a model with another dimension.
-        good = [r for r in rows if r["dim"] > 0 and len(r["vec"]) == 4 * r["dim"] and np.isfinite(np.frombuffer(r["vec"], dtype=np.float32)).all() and np.any(np.frombuffer(r["vec"], dtype=np.float32))]
+        good = [r for r in rows if _valid_cached(r['dim'], r['vec'])]
         if good:
             dim = Counter(r["dim"] for r in good).most_common(1)[0][0]
             good = [r for r in good if r["dim"] == dim]
         if len(good) != len(rows):
             log.warning("ignored %d inconsistent vector(s); re-run `mdbx index`", len(rows) - len(good))
         rows = good
-        self.revision = _revision(con)
-        self.ids = np.array([r["id"] for r in rows], dtype=np.int64)
-        self.matrix = (
-            np.vstack([np.frombuffer(r["vec"], dtype=np.float32) for r in rows])
+        ids = np.array([r["id"] for r in rows], dtype=np.int64)
+        matrix = (
+            np.vstack([_unit_vector(np.frombuffer(r['vec'], dtype=np.float32)) for r in rows])
             if rows
             else np.zeros((0, 0), dtype=np.float32)
         )
+        self._state = (revision, ids, matrix)
+
+    @property
+    def revision(self):
+        return self._state[0]
+
+    @property
+    def ids(self):
+        return self._state[1]
+
+    @property
+    def matrix(self):
+        return self._state[2]
+
+    def state_for(self, con):
+        with self._lock:
+            if self.revision != _revision(con):
+                self._refresh(con)
+            return self._state
 
     def __len__(self) -> int:
         return len(self.ids)
@@ -129,46 +164,68 @@ def semantic(
     *,
     kind: str | None = None,
     source: str | None = None,
+    source_exact: bool = False,
     store: VectorStore | None = None,
 ) -> list[Hit]:
     _limit(limit)
     if limit == 0:
         return []
+    model = embedmod.model()
+    with read_snapshot(con):
+        store, _ = _ready_store(con, store)
+    # The external call does not hold a database snapshot or a writer lock.
+    qv = embedmod.embed_query(query)
+    if embedmod.model() != model:
+        raise embedmod.EmbedError('query model changed during embedding; retry')
+    with read_snapshot(con):
+        return _semantic_snapshot(con, qv, limit, kind=kind, source=source, source_exact=source_exact, store=store)
+
+
+def _semantic_snapshot(con, qv, limit, *, kind, source, source_exact, store):
+    store, (_, ids, matrix) = _ready_store(con, store)
+    if qv.ndim != 1 or not np.isfinite(qv).all() or not np.any(qv):
+        raise embedmod.EmbedError("query embedding is invalid")
+    if qv.shape[0] != matrix.shape[1]:
+        raise embedmod.EmbedError(
+            f"query embedding has {qv.shape[0]} dims but the index has {matrix.shape[1]} — "
+            "was the embed model changed? re-run `mdbx index`"
+        )
+    sims = np.clip(matrix @ _unit_vector(qv), -1., 1.)
+    order = np.argsort(-sims)
+    extra, fparams = _filters(kind, source, source_exact)
+    if extra:
+        allowed = [r[0] for r in con.execute(f"SELECT c.id FROM chunks c WHERE 1=1{extra}", fparams)]
+        order = order[np.isin(ids, allowed)[order]]
+    def hits():
+        batch = min(500, max(32, limit * 2))
+        for offset in range(0, len(order), batch):
+            part = order[offset:offset + batch]
+            wanted = [int(ids[i]) for i in part]
+            marks = ','.join('?' * len(wanted))
+            rows = {r['id']: r for r in con.execute(f'SELECT * FROM chunks WHERE id IN ({marks})', wanted)}
+            for i in part:
+                row = rows.get(int(ids[i]))
+                if row is not None:
+                    yield Hit(row['id'], row['path'], row['source'], row['kind'], row['heading'], row['line'], row['text'], float(sims[i]), 'semantic', _lead(row['text']))
+    return _dedupe(hits(), limit)
+
+
+def _ready_store(con, store):
     identity = con.execute("SELECT value FROM meta WHERE key='embed_model'").fetchone()
     if identity is None or identity[0] != embedmod.model():
         raise embedmod.EmbedError("index model identity does not match the active model")
-    if store is None or store.revision != _revision(con):
+    if store is None:
         store = VectorStore(con)
-    if not len(store):
+    state = store.state_for(con)
+    if not len(state[1]):
         raise embedmod.EmbedError("no vectors indexed — run `mdbx index`")
-    qv = embedmod.embed_query(query)
-    if qv.ndim != 1 or not np.isfinite(qv).all() or not np.any(qv):
-        raise embedmod.EmbedError("query embedding is invalid")
-    if qv.shape[0] != store.matrix.shape[1]:
-        raise embedmod.EmbedError(
-            f"query embedding has {qv.shape[0]} dims but the index has {store.matrix.shape[1]} — "
-            "was the embed model changed? re-run `mdbx index`"
-        )
-    sims = store.matrix @ qv
-    order = np.argsort(-sims)
-    extra, fparams = _filters(kind, source)
-    if extra:  # restrict before ranking so a filter cannot be starved by unrelated top matches
-        allowed = [r[0] for r in con.execute(f"SELECT c.id FROM chunks c WHERE 1=1{extra}", fparams)]
-        order = order[np.isin(store.ids, allowed)[order]]
-    ranked = [(int(store.ids[i]), float(sims[i])) for i in order]
-    rows: dict[int, sqlite3.Row] = {}
-    for i in range(0, len(ranked), 500):  # stay under SQLite's bound-variable limit
-        ids = [rid for rid, _ in ranked[i : i + 500]]
-        marks = ",".join("?" * len(ids))
-        for row in con.execute(f"SELECT * FROM chunks WHERE id IN ({marks})", ids):
-            rows[row["id"]] = row
-    hits = [
-        Hit(row["id"], row["path"], row["source"], row["kind"], row["heading"], row["line"],
-            row["text"], sim, "semantic", _lead(row["text"]))
-        for rid, sim in ranked
-        if (row := rows.get(rid)) is not None
-    ]
-    return _dedupe(hits, limit)
+    return store, state
+
+
+def _unit_vector(vector):
+    wide = np.asarray(vector, dtype=np.float64)
+    scaled = wide / np.max(np.abs(wide))
+    return (scaled / np.linalg.norm(scaled)).astype(np.float32)
 
 
 def hybrid(
@@ -178,6 +235,7 @@ def hybrid(
     *,
     kind: str | None = None,
     source: str | None = None,
+    source_exact: bool = False,
     store: VectorStore | None = None,
     notes: list[str] | None = None,
 ) -> list[Hit]:
@@ -190,9 +248,10 @@ def hybrid(
     _limit(limit)
     if limit == 0:
         return []
-    kw = keyword(con, query, limit * 3, kind=kind, source=source)
+    candidates = min(10000, limit * 3)
+    kw = keyword(con, query, candidates, kind=kind, source=source, source_exact=source_exact)
     try:
-        sm = semantic(con, query, limit * 3, kind=kind, source=source, store=store)
+        sm = semantic(con, query, candidates, kind=kind, source=source, source_exact=source_exact, store=store)
     except embedmod.EmbedError as exc:
         msg = fallback_note(exc)
         # a caller that passed `notes` will show the message itself; only silent callers get the WARNING
@@ -266,5 +325,14 @@ def _limit(value: int) -> None:
 
 
 def _revision(con):
-    # total_changes sees local updates; data_version sees commits from other connections.
-    return (id(con), con.total_changes, con.execute("PRAGMA data_version").fetchone()[0])
+    # A persistent revision covers every relevant table mutation across readers,
+    # including changes made by other connections. Legacy read-only stores use
+    # the conservative connection-specific token until upgraded by connect().
+    if con.execute("SELECT 1 FROM sqlite_master WHERE name='store_revision'").fetchone():
+        value = con.execute('SELECT value FROM store_revision WHERE id=1').fetchone()[0]
+        filename = con.execute('PRAGMA database_list').fetchone()[2]
+        if filename:
+            info = os.stat(filename)
+            return (info.st_dev, info.st_ino, value)
+        return (id(con), value)
+    return (id(con), con.total_changes, con.execute('PRAGMA data_version').fetchone()[0])

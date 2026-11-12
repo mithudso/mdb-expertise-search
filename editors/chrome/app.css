@@ -107,7 +107,7 @@ textarea { font: 13px/1.45 var(--mono); width: 100%; resize: vertical; }
 .doc .chunk.target { border-left-color: var(--accent); background: var(--accent-soft); border-radius: 0 6px 6px 0; }
 
 /* recipes, operators */
-.cards { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.cards { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 10px; }
 .cards li { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px; cursor: pointer; }
 .cards li:hover { border-color: var(--accent); }
 .cards h3 { margin: 0 0 4px; font-size: 15px; }

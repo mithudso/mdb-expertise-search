@@ -23,21 +23,21 @@ from __future__ import annotations
 import json
 import math
 import os
-import re
 import shutil
 import sqlite3
 import subprocess
-import tempfile
 import time
-import unicodedata
+import uuid
 from array import array
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
 from . import __version__
 from . import corpus as corpusmod
 from . import recipes as recipemod
-from .safety import open_confined
+from .safety import _directory, _same_directory, directory_lock, open_confined
+from .unicode61 import raw_tokens
 
 #: column weights of bm25(chunks_fts, 4.0, 1.0, 2.0) in search.py (heading, text, source)
 W_HEADING, W_TEXT, W_SOURCE = 4, 1, 2
@@ -52,31 +52,6 @@ FORMAT = 1
 
 
 # ---- tokenizer: FTS5 unicode61 (remove_diacritics 2, tokenchars '_') + porter
-
-def _is_token_char(c: str) -> bool:
-    if c == "_":
-        return True
-    cat = unicodedata.category(c)
-    return cat[0] in "LN" or cat == "Co"
-
-
-def _fold(tok: str) -> str:
-    return "".join(ch for ch in unicodedata.normalize("NFD", tok) if not unicodedata.category(ch).startswith("M")).lower()
-
-
-def raw_tokens(text: str) -> list[str]:
-    """Lower-cased, diacritic-free tokens, split like FTS5 unicode61 with '_' as a token character."""
-    out, cur = [], []
-    for c in text:
-        if _is_token_char(c) or (cur and unicodedata.category(c).startswith("M")):
-            cur.append(c)
-        elif cur:
-            out.append(_fold("".join(cur)))
-            cur = []
-    if cur:
-        out.append(_fold("".join(cur)))
-    return [t for t in out if t]
-
 
 def tokens(text: str) -> list[str]:
     return [porter(t) for t in raw_tokens(text)]
@@ -209,15 +184,10 @@ def porter(w: str) -> str:
 # ---- query handling (mirrors search._terms)
 
 def query_terms(query: str) -> list[str]:
-    """Stemmed search terms: \\w+ words minus stopwords (all words if only stopwords), FTS5-tokenized."""
-    words = re.findall(r"\w+", query)
-    kept = [w for w in words if w.lower() not in STOPWORDS] or words
-    out: list[str] = []
-    for w in kept:
-        toks = tokens(w)
-        if toks:
-            out.append(toks[0])  # a \w+ word is a single FTS5 token (\w and the tokenizer agree on '_')
-    return out
+    """Unicode61 lexemes minus stopwords, then Porter stems; keep all-stopword queries."""
+    words = raw_tokens(query)
+    kept = [word for word in words if word not in STOPWORDS] or words
+    return [porter(word) for word in kept]
 
 
 # ---- export
@@ -227,6 +197,8 @@ def tracked_files(corpus_root: Path) -> set[str] | None:
     try:
         r = subprocess.run(["git", "-C", str(corpus_root), "ls-files", "-z", "--", "."],
                            check=True, capture_output=True, text=True, timeout=10)
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError('tracking enumeration timed out; export refused') from exc
     except (OSError, subprocess.CalledProcessError):
         return None
     return {p for p in r.stdout.split("\0") if p}
@@ -246,35 +218,67 @@ class ExportResult:
 def export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bool = True,
            allow_untracked: bool = False) -> ExportResult:
     """Prepare a complete generation before replacing the previous output."""
-    out = Path(out)
-    if out.is_symlink() or (out.exists() and not out.is_dir()):
-        raise ValueError("export output must be a regular directory")
-    out.parent.mkdir(parents=True, exist_ok=True)
-    candidate = Path(tempfile.mkdtemp(prefix='.mdbx-export-', dir=out.parent))
-    backup = Path(tempfile.mkdtemp(prefix='.mdbx-previous-', dir=out.parent))
-    backup.rmdir()
+    corpus_root = Path(corpus_root)
+    if not corpus_root.is_dir():
+        raise RuntimeError('corpus directory is missing or unavailable')
+    source = corpus_root.resolve()
+    destination = Path(out).absolute()
+    resolved = destination.resolve()
+    if source.is_relative_to(resolved) or resolved.is_relative_to(source):
+        raise RuntimeError('export destination must not overlap its source corpus')
+    if db is not None and Path(db).resolve().is_relative_to(resolved):
+        raise RuntimeError('export destination must not contain the input database')
+    out = destination
+    parent = _directory(out.parent, create=True)
+    candidate = '.mdbx-export-' + uuid.uuid4().hex
+    backup = '.mdbx-previous-' + uuid.uuid4().hex
+    candidate_fd = None
+    published = False
     try:
-        result = _export(corpus_root, candidate, db=db, vectors=vectors, allow_untracked=allow_untracked)
-        if out.is_symlink():
-            raise ValueError("export output changed during preparation")
-        had_output = out.exists()
-        if had_output:
-            os.replace(out, backup)
-        try:
-            os.replace(candidate, out)
-        except BaseException:
-            if had_output:
-                os.replace(backup, out)
-            raise
+        os.mkdir(candidate, mode=0o700, dir_fd=parent)
+        candidate_fd = os.open(candidate, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent)
+        result = _export(source, out.parent / candidate, db=db, vectors=vectors, allow_untracked=allow_untracked, directory_fd=candidate_fd)
+        os.fsync(candidate_fd)
+        with directory_lock(parent, out.name):
+            if not _same_directory(parent, out.parent):
+                raise RuntimeError('export output parent changed during preparation')
+            try:
+                info = os.stat(out.name, dir_fd=parent, follow_symlinks=False)
+            except FileNotFoundError:
+                info = None
+            import stat
+            if info is not None and not stat.S_ISDIR(info.st_mode):
+                raise RuntimeError('export output must be a regular directory')
+            if info is not None:
+                os.replace(out.name, backup, src_dir_fd=parent, dst_dir_fd=parent)
+            try:
+                os.replace(candidate, out.name, src_dir_fd=parent, dst_dir_fd=parent)
+                os.fsync(parent)
+                if not _same_directory(parent, out.parent):
+                    raise RuntimeError('export output parent moved; held directory retains the generation')
+                published = True
+            except BaseException:
+                if info is not None:
+                    try:
+                        os.stat(out.name, dir_fd=parent, follow_symlinks=False)
+                    except FileNotFoundError:
+                        os.replace(backup, out.name, src_dir_fd=parent, dst_dir_fd=parent)
+                raise
         result.out = out
         return result
     finally:
-        shutil.rmtree(candidate, ignore_errors=True)
-        shutil.rmtree(backup, ignore_errors=True)
+        try:
+            if candidate_fd is not None:
+                os.close(candidate_fd)
+            shutil.rmtree(candidate, dir_fd=parent, ignore_errors=True)
+            if published:
+                shutil.rmtree(backup, dir_fd=parent, ignore_errors=True)
+        finally:
+            os.close(parent)
 
 
 def _export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bool = True,
-           allow_untracked: bool = False) -> ExportResult:
+           allow_untracked: bool = False, directory_fd: int) -> ExportResult:
     """Write the web index for ``corpus_root`` into ``out``. Vectors come from ``db`` (by text digest)."""
     corpus_root = corpus_root.resolve()
     tracked = None if allow_untracked else tracked_files(corpus_root)
@@ -328,23 +332,16 @@ def _export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bo
     dim = 0
     model = None
     if vectors and db is not None and Path(db).is_file():
-        con = sqlite3.connect(db)
-        try:
-            con.execute("BEGIN")
-            meta = dict(con.execute("SELECT key, value FROM meta").fetchall())
-            model = meta.get("embed_model")
-            stored = {d: (dm, v) for d, dm, v in con.execute("SELECT digest, dim, vec FROM vectors")}
-            if con.execute("SELECT 1 FROM sqlite_master WHERE name='invalid_vectors'").fetchone():
-                invalid = {r[0] for r in con.execute("SELECT digest FROM invalid_vectors")}
-                stored = {d: value for d, value in stored.items() if d not in invalid}
-        finally:
-            con.close()
-        relevant = {corpusmod.Chunk(*r).digest for r in rows}
-        stored = {d: (dm, v) for d, (dm, v) in stored.items() if d in relevant and dm > 0 and len(v) == dm * 4 and all(math.isfinite(x) for x in array("f", v)) and any(array("f", v))}
-        if not model:
-            stored = {}
-        dims = [dm for dm, _v in stored.values()]
-        dim = max(set(dims), key=dims.count) if dims else 0
+        current_inputs = {}
+        for r in rows:
+            digest = corpusmod.Chunk(*r).digest
+            head, text = r[3], r[5]
+            if digest not in current_inputs or head < current_inputs[digest][0]:
+                current_inputs[digest] = (head, text)
+        expected = {digest: corpusmod.embedding_input_hash(head, text) for digest, (head, text) in current_inputs.items()}
+        model, stored = _cached_vectors(Path(db), expected)
+        dims = Counter(dm for dm, _ in stored.values())
+        dim = dims.most_common(1)[0][0] if dims else 0
         for r in rows:
             d = corpusmod.Chunk(*r).digest
             if d in vec_index:
@@ -363,7 +360,6 @@ def _export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bo
     else:
         row_vec = [-1] * len(rows)
 
-    out.mkdir(parents=True, exist_ok=True)
     paths = sorted({r[0] for r in rows})
     sources = sorted({r[1] for r in rows})
     kinds = sorted({r[2] for r in rows})
@@ -374,19 +370,15 @@ def _export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bo
         "paths": paths, "sources": sources, "kinds": kinds,
         "rows": [[pi[r[0]], si[r[1]], ki[r[2]], r[4], r[3], r[5], row_vec[i]] for i, r in enumerate(rows)],
     }
-    (out / "chunks.json").write_text(json.dumps(chunks_doc, ensure_ascii=False, separators=(",", ":")),
-                                     encoding="utf-8")
-    (out / "terms.json").write_text(json.dumps(vocab, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    _write_file(directory_fd, 'chunks.json', json.dumps(chunks_doc, ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
+    _write_file(directory_fd, 'terms.json', json.dumps(vocab, ensure_ascii=False, separators=(',', ':')).encode('utf-8'))
     for name, arr in (("postings.bin", ids), ("weights.bin", wts), ("doclen.bin", doclen)):
         a = array(arr.typecode, arr)
         if a.itemsize > 1 and _big_endian():
             a.byteswap()
-        (out / name).write_bytes(a.tobytes())
-    vec_file = out / "vectors.bin"
+        _write_file(directory_fd, name, a.tobytes())
     if digests:
-        vec_file.write_bytes(bytes(vec_bytes))
-    elif vec_file.exists():
-        vec_file.unlink()
+        _write_file(directory_fd, 'vectors.bin', bytes(vec_bytes))
 
     by_source: dict[tuple[str, str], int] = {}
     for r in rows:
@@ -413,8 +405,51 @@ def _export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bo
         "vectors": {"count": len(digests), "dim": dim, "model": model, "scale": 127} if digests else None,
         "bm25": {"k1": K1, "b": B, "weights": {"heading": W_HEADING, "text": W_TEXT, "source": W_SOURCE}},
     }
-    (out / "meta.json").write_text(json.dumps(meta_doc, indent=1, ensure_ascii=False), encoding="utf-8")
+    _write_file(directory_fd, 'meta.json', json.dumps(meta_doc, indent=1, ensure_ascii=False).encode('utf-8'))
     return ExportResult(out, len(rows), len(terms), len(ids), len(digests), len(files), skipped)
+
+
+def _write_file(directory_fd, name, data):
+    fd = os.open(name, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o644, dir_fd=directory_fd)
+    with os.fdopen(fd, 'wb') as stream:
+        stream.write(data)
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def _cached_vectors(db, expected):
+    """Read only relevant, proven inputs from a single read-only generation."""
+    con = None
+    try:
+        con = sqlite3.connect(db.resolve().as_uri() + '?mode=ro', uri=True)
+        con.execute('BEGIN')
+        meta = dict(con.execute('SELECT key,value FROM meta'))
+        model = meta.get('embed_model')
+        tables = {r[0] for r in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        if not model or 'vector_inputs' not in tables:
+            return model, {}
+        stored = {}
+        digests = list(expected)
+        for offset in range(0, len(digests), 500):
+            part = digests[offset:offset + 500]
+            marks = ','.join('?' * len(part))
+            invalid = ' AND v.digest NOT IN (SELECT digest FROM invalid_vectors)' if 'invalid_vectors' in tables else ''
+            sql = f'SELECT v.digest,v.dim,v.vec,vi.input_hash FROM vectors v JOIN vector_inputs vi ON vi.digest=v.digest WHERE v.digest IN ({marks}){invalid}'
+            for digest, dim, blob, known in con.execute(sql, part):
+                if known != expected[digest] or not isinstance(dim, int) or dim < 1 or not isinstance(blob, bytes) or len(blob) != dim * 4:
+                    continue
+                vector = array('f', blob)
+                if all(math.isfinite(x) for x in vector) and any(vector):
+                    norm = math.sqrt(math.fsum(float(x) * x for x in vector))
+                    if not math.isclose(norm, 1., rel_tol=1e-5, abs_tol=1e-8):
+                        blob = array('f', (x / norm for x in vector)).tobytes()
+                    stored[digest] = (dim, blob)
+        return model, stored
+    except sqlite3.Error as exc:
+        raise RuntimeError('vector cache unavailable; export refused') from exc
+    finally:
+        if con is not None:
+            con.close()
 
 
 def _big_endian() -> bool:

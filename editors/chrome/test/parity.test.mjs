@@ -102,7 +102,10 @@ test("synthetic: command batches, write methods and semantic options survive", (
   }
   assert.ok(normalize('{op:"remove",ns:"d.c",command:{q:{a:1},limit:{$numberInt:"1"}}}').text.includes('.deleteOne('));
   const batch = normalize('{attr:{command:{delete:"c",deletes:[{q:{a:1},limit:1},{q:{a:2},limit:1}]},docsExamined:100}}');
-  assert.ok(batch.queries.every((q) => Object.keys(q.evidence).length === 0));
+  assert.equal(batch.kind, "log");
+  assert.equal(batch.queries.length, 2);
+  assert.deepEqual(batch.queries.map(q => q.evidence), [{}, {}]);
+  assert.match(batch.queries[0].text, /a:1/); assert.match(batch.queries[1].text, /a:2/);
   for (const source of ['{find:"c",filter:{},tailable:true}',
     '{delete:"c",deletes:[{q:{a:1},limit:1},{q:{a:2},limit:2}]}']) assert.equal(normalize(source).text, source);
 });
@@ -182,8 +185,11 @@ test("synthetic: fixture loading normalizes CRLF and CR inputs", () => {
       writeFileSync(base + '.txt', text.replaceAll('\n', i % 2 ? '\r' : '\r\n'));
       writeFileSync(base + '.golden.json', JSON.stringify({ apply:{text}, read_only:{text}, report:'' }));
     }
-    const result = spawnSync(process.execPath, ['--test', '--test-name-pattern',
-      'fixtures exist|matches Python', target], { cwd:root, encoding:'utf8', timeout:10000 });
+    const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
+    const result = spawnSync(process.execPath, ['--test', '--test-reporter=tap', '--test-name-pattern',
+      'fixtures exist|matches Python', target], { cwd:root, encoding:'utf8', timeout:10000, env });
     assert.equal(result.status, 0, result.error?.message ?? result.stdout + result.stderr);
+    assert.match(result.stdout, /# pass 25\b/);
+    assert.doesNotMatch(result.stderr, /recursive/i);
   } finally { rmSync(root, { recursive:true, force:true }); }
 });

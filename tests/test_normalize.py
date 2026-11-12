@@ -118,12 +118,15 @@ def test_every_batch_statement_and_semantic_options_survive():
         source = json.dumps({verb:'c',key:[dict(q={'a':a},**extra) for a in (1,2)]})
         normalized = normalize(source)
         assert len(normalized.queries) == 2 and normalized.text.count('.'+method+'(') == 2
-        assert '"a": 2' in normalized.text
+        assert ['"a": 1' in normalized.queries[0].text, '"a": 2' in normalized.queries[1].text] == [True, True]
     assert '.collation({locale:"en",strength:2})' in normalize('{find:"c",filter:{name:"a"},collation:{locale:"en",strength:2}}').text
     assert '{skip: 2, limit: 1}' in normalize('{count:"c",query:{a:1},skip:2,limit:1}').text
     assert '{upsert: true}' in normalize('{update:"c",updates:[{q:{a:1},u:{$set:{b:2}},upsert:true}]}').text
     source = '{attr:{command:{delete:"c",deletes:[{q:{a:1},limit:1},{q:{a:2},limit:1}]},docsExamined:100}}'
-    assert all(not q.evidence for q in normalize(source).queries)
+    result = normalize(source)
+    assert result.kind == "log" and len(result.queries) == 2
+    assert [q.evidence for q in result.queries] == [{}, {}]
+    assert "a:1" in result.queries[0].text and "a:2" in result.queries[1].text
     source = '{delete:"c",deletes:[{q:{a:1},limit:2}]}'
     assert normalize(source).text == source
 

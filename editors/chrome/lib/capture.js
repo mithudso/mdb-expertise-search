@@ -54,7 +54,8 @@ export async function saveHandoff(session, payload, now = Date.now(), id = crypt
   const entries = await session.get(null);
   const stale = Object.keys(entries).filter(k => k.startsWith(HANDOFF_PREFIX) && !freshPending(entries[k], now));
   if (stale.length) await session.remove(stale);
-  await session.set({ [HANDOFF_PREFIX + id]: { ...payload, text: clamp(payload.text).text, ts: now } });
+  const bounded = clamp(payload.text);
+  await session.set({ [HANDOFF_PREFIX + id]: { ...payload, ...bounded, truncated: Boolean(payload.truncated || bounded.truncated), ts: now } });
   return id;
 }
 

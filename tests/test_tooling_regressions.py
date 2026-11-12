@@ -84,6 +84,7 @@ def recipe_generator(tmp_path, monkeypatch):
     main = module["main"]
     monkeypatch.setitem(main.__globals__, "ROOT", tmp_path)
     (tmp_path / "docs").mkdir()
+    (tmp_path / "corpus/recipes").mkdir(parents=True)
     return main, module["recipes"], tmp_path / "docs/RECIPES.md"
 
 
@@ -134,9 +135,10 @@ def test_glean_helper_distinguishes_package_and_dependency_failure(monkeypatch, 
     with pytest.raises(SystemExit) as exc:
         runpy.run_path(str(ROOT / "scripts/glean_cli_helper.py"), run_name="__main__")
     assert exc.value.code == code
-    payload = json.loads(capsys.readouterr().out)
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
     assert payload["error"] == message and payload["code"] == code
-    assert "synthetic private payload" not in json.dumps(payload)
+    assert "synthetic private payload" not in captured.out + captured.err
 
 
 def test_sync_sources_reconcile_owned_files_without_writing_symlink_target(tmp_path):
@@ -171,7 +173,7 @@ def test_sync_shell_gates_hide_payload_and_pin_index_root(tmp_path):
     subprocess.run(["git", "-c", "init.templateDir=", "init", "-q", str(tmp_path)], check=True, capture_output=True)
     scripts = tmp_path / "scripts"
     scripts.mkdir()
-    for name in ("sync_corpus.sh", "sync_corpus_sources.py"):
+    for name in ("sync_corpus.sh", "sync_corpus_sources.py", "maintenance_safety.py"):
         if (ROOT / "scripts" / name).exists():
             shutil.copyfile(ROOT / "scripts" / name, scripts / name)
     (scripts / "redact_corpus.py").write_text("print('redaction ok')\n")
@@ -180,7 +182,8 @@ def test_sync_shell_gates_hide_payload_and_pin_index_root(tmp_path):
     skills.mkdir(parents=True)
     (skills / "note.md").write_text("synthetic documentation")
     executable(tmp_path / ".venv/bin/mdbx", 'printf "%s\\n" "$@" > "$INDEX_ARGS"')
-    env = {**os.environ, "MDBX_SKILLS_SRC": str(skills.parent), "MDBX_LLMS_SRC": str(tmp_path / "empty"),
+    deny = tmp_path / "deny"; deny.write_text("# synthetic\n")
+    env = {**os.environ, "MDBX_SKIP_INDEX": "0", "MDBX_DENYLIST": str(deny), "MDBX_SKILLS_SRC": str(skills.parent), "MDBX_LLMS_SRC": str(tmp_path / "empty"),
            "MDBX_MONGODB_DOCS_LLMS": str(tmp_path / "empty/docs"), "MDBX_CONCEPTS_SRC": str(tmp_path / "empty/concepts"),
            "MDBX_CORPUS": str(tmp_path / "alternate"), "INDEX_ARGS": str(tmp_path / "index-args")}
     result = subprocess.run(["/bin/bash", str(scripts / "sync_corpus.sh")], env=env,
@@ -197,7 +200,7 @@ def test_sync_publication_rejects_unscanned_candidates(tmp_path, monkeypatch):
     corpus = tmp_path / "corpus"
     corpus.mkdir()
     (corpus / "unsafe.csv").write_text("synthetic only")
-    monkeypatch.setattr(module["subprocess"], "run", lambda *args, **kwargs: SimpleNamespace(stdout="corpus/unsafe.csv\\0"))
+    monkeypatch.setattr(module["subprocess"], "run", lambda *args, **kwargs: SimpleNamespace(stdout=b"corpus/unsafe.csv\0"))
     with pytest.raises(ValueError, match="not inspected"):
         module["check_publication"](corpus)
 

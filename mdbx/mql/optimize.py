@@ -18,6 +18,8 @@ from __future__ import annotations
 import json
 import math
 import re
+import unicodedata
+from bisect import bisect_right
 from dataclasses import dataclass, field
 
 from .normalize import Normalized, _coll_ref, normalize
@@ -115,7 +117,9 @@ class Report:
 
 
 def _key(k: str) -> str:
-    return k if re.fullmatch(r"[A-Za-z_$][\w$]*", k) else json.dumps(k)
+    if k == "__proto__":
+        return "[" + json.dumps(k) + "]"
+    return k if re.fullmatch(r"[A-Za-z_$][A-Za-z0-9_$]*", k) else json.dumps(k)
 
 
 @dataclass
@@ -126,8 +130,9 @@ class _Pred:
 
 
 class _Audit:
-    def __init__(self, text: str):
+    def __init__(self, text: str, collections: dict | None = None):
         self.text = text
+        self.collections = collections or {}
         self.statements, self.errors = parse(text)
         self.vars: dict[str, Node] = {}
         self.findings: list[Finding] = []
@@ -156,20 +161,39 @@ class _Audit:
 
     # ---- target discovery
     def run(self) -> None:
+        bindings = {st.decl: st.node for st in self.statements if st.decl}
+        uses = {name: [] for name in bindings}
+        safe_refs = set()
+        for st in self.statements:
+            for node in st.node.walk():
+                if node.kind == "ident" and str(node.value) in uses:
+                    uses[str(node.value)].append(node)
+                if node.kind == "call" and node.target is not None and node.target.kind == "member":
+                    method = str(node.target.value)
+                    if method in TARGET_METHODS or method in {"sort", "projection"}:
+                        safe_refs.update(id(arg) for arg in node.items if arg.kind == "ident")
+        unsafe = [node for name, node in bindings.items()
+                  if len(uses[name]) != 1 or any(id(use) not in safe_refs for use in uses[name])]
         for st in self.statements:
             if st.decl and not self.errors:
                 self.vars[st.decl] = st.node
             self.statement(st)
+        for finding in self.findings:
+            if any(node.start <= finding.start and finding.end <= node.end for node in unsafe):
+                finding.fix = None
+        for error in self.errors:
+            self.findings.append(Finding(error.start, max(error.end, error.start + 1), HIGH,
+                                         "syntax", "P0", "Incomplete analysis: " + error.message))
 
     def statement(self, st: Statement) -> None:
         tops = [c for c in st.node.walk() if c.kind == "call"]
         inner: set[int] = set()
-        for c in tops:  # calls that are the callee of an outer chain call are not chain heads
-            t = c.target
-            while t is not None and t.kind in {"member", "call"}:
-                if t.kind == "call":
-                    inner.add(id(t))
-                t = t.target
+        for c in tops:  # Mark only the immediate callee call; each AST edge is visited once.
+            target = c.target
+            if target is not None and target.kind == "member":
+                target = target.target
+            if target is not None and target.kind == "call":
+                inner.add(id(target))
         for c in tops:
             if id(c) not in inner:
                 self.chain(c)
@@ -217,6 +241,8 @@ class _Audit:
             t.sort = self.resolve(t.chain["sort"].items[0])
         if "projection" in t.chain and t.chain["projection"].items:
             t.projection = self.resolve(t.chain["projection"].items[0])
+        if t.start in self.collections:
+            t.collection = self.collections[t.start]
         self.targets.append(t)
         self.audit_target(t, base)
 
@@ -423,7 +449,7 @@ class _Audit:
             clash = any(q.key == f for q in parent.props)
             self.add((p.start, p.end), MEDIUM, "or-to-in", "P4",
                      f"$or of equalities on one field ({f}) is an $in: one index scan with point bounds instead "
-                     "of a subplan per branch, and sort-compatible.",
+                     "of a subplan per branch. Sort support depends on the operand count and index.",
                      fix=None if clash else f"{_key(f)}: {{ $in: [{vals}] }}")
             return
         if rooted and has_sort:
@@ -520,7 +546,7 @@ class _Audit:
             order = [s[2] for s in stages]
             order.insert(j, order.pop(i))
             fix = None
-            if len(stages) == len(arr.items):
+            if len(stages) == len(arr.items) and all(_construction_safe(stage[2]) for stage in stages[j:i + 1]):
                 fix = self._rebuild_array(arr, order)
             moved_over = ", ".join(s[0] for s in stages[j:i])
             self.add((item.start, item.end), MEDIUM, "match-not-early", "P5",
@@ -575,7 +601,7 @@ class _Audit:
         if frm is not None and frm.kind == "string" and ff is not None and ff.kind == "string" \
                 and ff.value != "_id":  # _id is always indexed
             self.indexes.append(IndexRec(str(frm.value), [(str(ff.value), 1)],
-                                         f"$lookup from {t.collection} probes {frm.value}.{ff.value} once per "
+                                         f"$lookup from {t.collection if t.collection is not None else 'an unspecified collection'} probes {frm.value}.{ff.value} once per "
                                          "input document; without this index each probe is a collection scan."))
         elif "pipeline" in opts and "localField" not in opts:
             self.add(item, LOW, "lookup-pipeline", "P5",
@@ -641,10 +667,10 @@ class _Audit:
         if any(p.kind == "in" for p in preds) and srt:
             rationale += " $in under 201 values keeps the sort index-backed via SORT_MERGE."
         cover = _projection_fields(proj)
-        if cover and set(cover) <= {k for k, _ in keys} and proj is not None:
+        if cover and set(cover) <= {k for k, _ in keys} and proj is not None and not _coverage_blocked(t.filter):
             excl = any(p.key == "_id" and _num(p.value) == 0 for p in proj.props)
-            rationale += " Covers the projection" + ("" if excl else " if you add _id: 0") + \
-                " (PROJECTION_COVERED, 0 documents examined)."
+            rationale += " May cover the projection" + ("" if excl else " if you add _id: 0") + \
+                "; null equality, multikey values and schema details can require document reads. Confirm coverage with explain()."
         if why:
             rationale = f"[{why}] " + rationale
         rec = IndexRec(t.collection, keys, rationale)
@@ -656,7 +682,7 @@ class _Audit:
             self.indexes.append(rec)
 
     def recommend_pipeline(self, t: Target, stages: list) -> None:
-        if not stages or stages[0][0] not in {"$match", "$sort"}:
+        if t.kind == "watch" or not stages or stages[0][0] not in {"$match", "$sort"}:
             return
         preds: list[_Pred] = []
         sort = None
@@ -666,8 +692,9 @@ class _Audit:
                 sort = stages[1][1]
         else:
             sort = stages[0][1]
-        fake = Target("find", t.collection, "aggregate", t.start, t.end)
-        self._emit(fake, preds, sort, None, "leading $match/$sort")
+        leading = stages[0][1] if stages[0][0] == "$match" else None
+        fake = Target("find", t.collection, "aggregate", t.start, t.end, filter=leading)
+        self.recommend(fake, preds, sort, None, "leading $match/$sort")
 
 
 def _num(n: Node | None) -> float | None:
@@ -709,10 +736,45 @@ def _constant_expr(node: Node) -> bool:
     return False
 
 
-def _is_eq_value(v: Node) -> bool:
-    if v.kind in _EQ_KINDS:
+def _coverage_blocked(query: Node | None) -> bool:
+    if query is None or query.kind != "object":
+        return False
+
+    def field_blocks(value: Node | None) -> bool:
+        if value is None:
+            return False
+        if value.kind in {"null", "array"}:
+            return True
+        if value.kind != "object":
+            return False
+        return any(
+            prop.key == "$elemMatch"
+            or (prop.key == "$eq" and prop.value is not None and prop.value.kind in {"null", "array"})
+            or (prop.key == "$not" and field_blocks(prop.value))
+            for prop in value.props
+        )
+
+    for prop in query.props:
+        if prop.key in {"$and", "$or", "$nor"} and prop.value is not None and prop.value.kind == "array":
+            if any(_coverage_blocked(branch) for branch in prop.value.items):
+                return True
+        elif not prop.key.startswith("$") and field_blocks(prop.value):
+            return True
+    return False
+
+
+def _construction_safe(node: Node) -> bool:
+    if node.kind in {"string", "number", "bool", "null", "regex"}:
         return True
-    return v.kind == "object" and not any(p.key.startswith("$") for p in v.props)
+    if node.kind == "array":
+        return all(_construction_safe(item) for item in node.items)
+    if node.kind == "object":
+        return all(prop.value is not None and _construction_safe(prop.value) for prop in node.props)
+    return False
+
+
+def _is_eq_value(v: Node) -> bool:
+    return _construction_safe(v) and (v.kind != "object" or not any(p.key.startswith("$") for p in v.props))
 
 
 def _uniq(items) -> list[str]:
@@ -773,11 +835,16 @@ def _produced(stage: tuple) -> set[str]:
         return {str(p.value.value).split(".")[0] for p in v.props
                 if p.key == "as" and p.value is not None and p.value.kind == "string"} or {"*"}
     if name == "$unwind":
-        path = v.value if v.kind == "string" else next(
-            (p.value.value for p in v.props if p.key == "path" and p.value is not None), None)
-        extra = {str(p.value.value).split(".")[0] for p in (v.props if v.kind == "object" else [])
-                 if p.key == "includeArrayIndex" and p.value is not None}
-        return ({str(path).lstrip("$").split(".")[0]} if path else {"*"}) | extra
+        if v.kind == "string":
+            return {str(v.value).lstrip("$").split(".")[0]}
+        if v.kind != "object":
+            return {"*"}
+        fields = [p.value for p in v.props if p.key in {"path", "includeArrayIndex"}]
+        if not fields or any(n is None or n.kind != "string" for n in fields):
+            return {"*"}
+        if not any(p.key == "path" for p in v.props):
+            return {"*"}
+        return {str(n.value).lstrip("$").split(".")[0] for n in fields}
     if name == "$unset":
         names = [v] if v.kind == "string" else v.items if v.kind == "array" else []
         return {str(n.value).split(".")[0] for n in names} if names and all(n.kind == "string" for n in names) else {"*"}
@@ -872,12 +939,12 @@ def optimize(text: str, *, apply: bool = True, max_iters: int = 3) -> Report:
     evidence_by_start = {}
     offset = 0
     for query in norm.queries:
-        evidence_by_start[offset] = query.evidence
+        evidence_by_start[offset] = query
         offset += len(query.text) + 1
     iters = 0
     while True:
         iters += 1
-        audit = _Audit(current)
+        audit = _Audit(current, {start: query.collection for start, query in evidence_by_start.items()})
         audit.run()
         if iters == 1:
             n_input = len(audit.targets)
@@ -901,7 +968,8 @@ def optimize(text: str, *, apply: bool = True, max_iters: int = 3) -> Report:
         applied += chosen
         current = new
     for target in audit.targets:
-        target.evidence = evidence_by_start.get(target.start, {})
+        query = evidence_by_start.get(target.start)
+        target.evidence = query.evidence if query is not None else {}
         if target.evidence:
             audit.findings += _evidence_findings(target.evidence, target.start, target.end)
     audit.findings.sort(key=lambda f: (SEVERITY_ORDER[f.severity], f.start))
@@ -913,6 +981,7 @@ def format_report(rep: Report, name: str = "<input>") -> str:
     """Human-readable report (used by `mdbx optimize`)."""
     out: list[str] = []
     t = rep.text
+    position = _positioner(t)
     counts = {s: sum(1 for f in rep.findings if f.severity == s) for s in SEVERITY_ORDER}
     out.append(f"MQL optimizer (static audit) — {name}: {rep.input_queries} quer{'y' if rep.input_queries == 1 else 'ies'}, "
                + (", ".join(f"{n} {s}" for s, n in counts.items() if n) or "no open findings")
@@ -936,8 +1005,8 @@ def format_report(rep: Report, name: str = "<input>") -> str:
         for f in rep.findings:
             if f.fix is not None and f.code.endswith("-rewrite"):
                 continue
-            line = t.count("\n", 0, f.start) + 1
-            col = f.start - (t.rfind("\n", 0, f.start) + 1) + 1
+            point = position(f.start)
+            line, col = point["line"], point["column"]
             out.append(f"  {name}:{line}:{col}: {f.severity.upper()} [{f.pass_id} {f.code}] {f.message}")
             if f.ref:
                 out.append(f"      read more: mdbx show {f.ref}")
@@ -949,14 +1018,25 @@ def format_report(rep: Report, name: str = "<input>") -> str:
         out.append("\nRewritten query:\n" + rep.text.rstrip())
     out.append("\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, "
                "totalDocsExamined/nReturned near 1, nReturned unchanged.")
-    return "\n".join(out)
+    return "".join(f"\\x{ord(ch):02x}" if unicodedata.category(ch) in {"Cc", "Cf"} and ch not in "\n\t" else ch
+                   for ch in "\n".join(out))
+
+
+def _positioner(text: str):
+    starts = [0] + [i + 1 for i, ch in enumerate(text) if ch == "\n"]
+
+    def position(offset: int) -> dict:
+        offset = max(0, min(offset, len(text)))
+        line = bisect_right(starts, offset)
+        return {"line": line, "column": offset - starts[line - 1] + 1}
+
+    return position
 
 
 def to_dict(rep: Report) -> dict:
     t = rep.text
 
-    def pos(off: int) -> dict:
-        return {"line": t.count("\n", 0, off) + 1, "column": off - (t.rfind("\n", 0, off) + 1) + 1}
+    pos = _positioner(t)
 
     return {
         "input": {"kind": rep.input_kind, "interpreted": rep.interpreted},

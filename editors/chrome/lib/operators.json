@@ -74,7 +74,7 @@
    "name": "$densify"
   },
   {
-   "arg": "array",
+   "arg": "any",
    "cats": [
     "stage"
    ],
@@ -1218,8 +1218,7 @@
   {
    "arg": "object",
    "cats": [
-    "acc",
-    "expr"
+    "acc"
    ],
    "doc": "Custom JavaScript accumulator.",
    "name": "$accumulator"
@@ -2322,6 +2321,7 @@
    "$vectorSearch"
   ],
   "LAST_STAGE_ONLY": [
+   "$changeStreamSplitLargeEvent",
    "$merge",
    "$out"
   ],

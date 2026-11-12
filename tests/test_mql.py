@@ -234,6 +234,12 @@ def test_pipeline_registration_uses_constant_time_membership():
     from mdbx.mql.analyze import Analyzer
     class CountedArrays(list):
         visits = 0
+        def __contains__(self, target):
+            for item in list.__iter__(self):
+                self.visits += 1
+                if item == target:
+                    return True
+            return False
         def __iter__(self):
             for item in super().__iter__():
                 self.visits += 1
@@ -365,6 +371,8 @@ def test_lsp_optional_lookup_runtime_failure(monkeypatch, tmp_path):
     monkeypatch.setattr(mdbx, 'search', N(keyword=Mock(side_effect=AssertionError('unexpected search'))), raising=False)
     lookup = s.make_expertise_lookup()
     assert lookup is not None and lookup('$match') == []
+    mdbx.index.connect.assert_called_once_with(db)
+    mdbx.search.keyword.assert_not_called()
 
 def test_completion_long_suffix_uses_linear_prefix_scan(monkeypatch):
     # All completion regexes must be anchored full matches; suffix discovery scans backwards.

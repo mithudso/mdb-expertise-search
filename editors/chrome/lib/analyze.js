@@ -68,9 +68,16 @@ function kindOk(node, kind) {
       const v = Number(node.value);
       if (!Number.isFinite(v)) continue;
       if (k === "number") return true;
-      if (!Number.isInteger(v) || v < -(2 ** 63) || v >= 2 ** 63) continue;
-      if (k === "posint" && v <= 0) continue;
-      if (k === "nonneg" && v < 0) continue;
+      const exact = node.exactInteger === undefined ? null : BigInt(node.exactInteger);
+      if (exact !== null) {
+        if (exact < -(1n << 63n) || exact >= (1n << 63n)) continue;
+        if (k === "posint" && exact <= 0n) continue;
+        if (k === "nonneg" && exact < 0n) continue;
+      } else {
+        if (!Number.isInteger(v) || v < -(2 ** 63) || v >= 2 ** 63) continue;
+        if (k === "posint" && v <= 0) continue;
+        if (k === "nonneg" && v < 0) continue;
+      }
       return true;
     }
   }
@@ -448,6 +455,8 @@ class Analyzer {
       if (p.key === "$literal" || p.key === "$function" || p.key === "$accumulator" || v === null) continue;
       if (p.key === "$cond" && v.kind === "array" && v.items.length !== 3) {
         this.add(v.start, v.end, ERROR, "bad-argument", "$cond array form needs exactly 3 elements [if, then, else].");
+      } else if (op.arg === "object" && !kindOk(v, "object")) {
+        this.add(v.start, v.end, ERROR, "bad-argument", `${p.key} expects an object, got ${v.kind}.`);
       } else if (op.arg === "array2" && !kindOk(v, "array2")) {
         this.add(v.start, v.end, ERROR, "bad-argument", `${p.key} expects exactly 2 arguments.`);
       }
@@ -460,7 +469,7 @@ class Analyzer {
     this.objects.push([obj, label]);
     this.dups(obj);
     const flags = [];
-    this.collectProj(obj, flags, true);
+    this.collectProj(obj, flags, true, label === "proj");
     if (project) {
       const inc = flags.filter(([p, f, top]) => f && !(top && p.key === "_id"));
       const exc = flags.filter(([p, f, top]) => !f && !(top && p.key === "_id"));
@@ -473,7 +482,7 @@ class Analyzer {
     }
   }
 
-  collectProj(obj, flags, top = false) {
+  collectProj(obj, flags, top = false, findProjection = false) {
     for (const p of obj.props) {
       const v = p.value;
       if (p.key.startsWith("$")) {
@@ -487,10 +496,11 @@ class Analyzer {
         flags.push([p, truthy(v.value), top]);
       } else if (v.kind === "object" && !v.props.some((q) => q.key.startsWith("$"))) {
         this.objects.push([v, "fields"]);
-        this.collectProj(v, flags);
+        this.collectProj(v, flags, false, findProjection);
       } else {
         flags.push([p, true, top]);
-        this.expr(v);
+        if (findProjection && v.kind === "object" && v.props.length === 1 && v.props[0].key === "$elemMatch" && v.props[0].value?.kind === "object") this.query(v.props[0].value);
+        else this.expr(v);
       }
     }
   }
@@ -723,6 +733,11 @@ class Analyzer {
     const v = p.value;
     const name = p.key;
     if (v === null) return;
+    if (name === "$documents" && v.kind === "object" &&
+        (v.props.length !== 1 || !v.props[0].key.startsWith("$"))) {
+      this.arg(p, new ops.Operator(op.name, op.cats, "array", op.doc));
+      return;
+    }
     if ((!FREE_FORM.has(name) || ["$out", "$merge", "$unionWith"].includes(name)) && !this.arg(p, op)) return;
     if (name === "$match") {
       if (v.kind === "object") {
@@ -860,10 +875,17 @@ class Analyzer {
       const label = st.decl ? st.decl : chainName(st.node);
       if (label === null) continue;
       const kids = [];
-      for (const n of st.node.walk()) {
-        if (n.kind === "array" && this.stageSyms.has(n) && !kids.some((k) => k.start <= n.start && n.end <= k.end)) {
-          kids.push(...this.stageSyms.get(n));
+      const pending = [st.node], covered = new Set();
+      while (pending.length) {
+        const n = pending.pop();
+        if (covered.has(n)) continue;
+        if (n.kind === "array" && this.stageSyms.has(n)) {
+          for (const symbol of this.stageSyms.get(n)) kids.push(symbol);
+          for (const item of n.items) covered.add(item);
         }
+        const children = [...n.props.filter(p => p.value !== null).map(p => p.value), ...n.items];
+        if (n.target !== null) children.push(n.target);
+        for (let i = children.length - 1; i >= 0; i--) pending.push(children[i]);
       }
       out.push(new Symbol_(label, kind, st.start, st.end, kids));
     }

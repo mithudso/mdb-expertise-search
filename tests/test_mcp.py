@@ -96,7 +96,9 @@ def test_review_mcp_show_validates_range_and_bounds_reads(env):
     path.write_text('head\n'+'tail\n'*10000)
     assert m.mdb_show('huge.md',1,1) == 'head'
     path.unlink()
-    path.symlink_to(env.parent/'outside.txt')
+    outside = env.parent/'outside.txt'
+    outside.write_text('synthetic outside sentinel')
+    path.symlink_to(outside)
     with pytest.raises(ValueError):
         m.mdb_show('huge.md')
 
@@ -127,10 +129,11 @@ def test_review_mcp_show_does_not_consume_unrequested_tail(env,monkeypatch):
     from mdbx import safety
     class Budget(io.StringIO):
         used=0
-        def readline(self,size=-1):
-            text=super().readline(size)
+        def read(self,size=-1):
+            assert 0 < size <= 8192
+            text=super().read(size)
             self.used+=len(text)
-            assert self.used<=4096
+            assert self.used<=8192
             return text
     stream=Budget('head\n'+'tail\n'*10000)
     @contextmanager
@@ -138,4 +141,4 @@ def test_review_mcp_show_does_not_consume_unrequested_tail(env,monkeypatch):
         yield stream
     monkeypatch.setattr(safety,'open_confined',opened)
     assert m.mdb_show('synthetic.md',1,1)=='head'
-    assert stream.used==5
+    assert stream.used==8192

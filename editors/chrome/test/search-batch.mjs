@@ -17,7 +17,9 @@ let raw = "";
 process.stdin.setEncoding("utf8");
 for await (const c of process.stdin) raw += c;
 const pairs = (hits) => hits.map((h) => [h.id, h.score]);
-const out = JSON.parse(raw).map(({ q, qvec, ...opts }, position) => {
+let queries;
+try { queries = JSON.parse(raw); } catch { throw new Error("Invalid JSON from stdin"); }
+const out = queries.map(({ q, qvec, ...opts }, position) => {
   if (qvec !== undefined && (!Array.isArray(qvec) || !qvec.every(Number.isFinite) || (idx.vectors && qvec.length !== idx.dim))) {
     throw new Error(`batch position ${position}: qvec must contain finite numbers with the index dimension`);
   }

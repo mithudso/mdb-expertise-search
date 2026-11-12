@@ -26,7 +26,7 @@ $collStats|stage|object|Returns collection statistics (must be the first stage).
 $count|stage,acc|string|Stage: counts documents into a named field. Accumulator: counts documents in a group.
 $currentOp|stage|object|Returns active operations (must be the first stage, run on admin).
 $densify|stage|object|Creates missing documents in a sequence of values.
-$documents|stage|array|Returns literal documents as the pipeline input (first stage).
+$documents|stage|any|Returns literal documents as the pipeline input (first stage).
 $facet|stage|object|Runs several sub-pipelines on the same input, one output field each.
 $fill|stage|object|Fills null or missing field values.
 $geoNear|stage|object|Returns documents ordered by proximity to a point (must be the first stage).
@@ -170,7 +170,7 @@ $cmp|expr|array2|Compares two values: -1, 0 or 1.
 $cond|expr|any|If/then/else; array [if, then, else] or {if, then, else}.
 $ifNull|expr|array|First non-null value.
 $switch|expr|object|Multi-branch conditional with branches and default.
-$accumulator|expr,acc|object|Custom JavaScript accumulator.
+$accumulator|acc|object|Custom JavaScript accumulator.
 $function|expr|object|Custom JavaScript function (not allowed on Atlas free/shared tiers).
 $binarySize|expr|any|Size in bytes of a string or binary value.
 $bsonSize|expr|any|Size in bytes of a document as BSON.
@@ -335,7 +335,7 @@ class Operator:
     def arg_for(self, context: str) -> str:
         """Argument contracts for operators whose syntax depends on their context."""
         return {("$search", "text"): "string", ("$size", "expr"): "any",
-                ("$count", "accexpr"): "object"}.get((self.name, context), self.arg)
+                ("$count", "accexpr"): "object", ("$unset", "update"): "object"}.get((self.name, context), self.arg)
 
     def is_a(self, *cats: str) -> bool:
         return bool(self.cats & set(cats))
@@ -372,7 +372,7 @@ FIRST_STAGE_ONLY = frozenset({
     "$planCacheStats", "$listSampledQueries", "$queryStats", "$shardedDataDistribution",
     "$listSearchIndexes",
 })
-LAST_STAGE_ONLY = frozenset({"$out", "$merge"})
+LAST_STAGE_ONLY = frozenset({"$out", "$merge", "$changeStreamSplitLargeEvent"})
 NOT_IN_FACET = frozenset({
     "$collStats", "$facet", "$geoNear", "$indexStats", "$out", "$merge", "$planCacheStats",
     "$search", "$searchMeta", "$vectorSearch",

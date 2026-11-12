@@ -41,7 +41,7 @@ def test_js_matches_python_on_prefixes():
     mismatches = []
     for text, got in zip(texts, js, strict=True):
         want = {"apply": to_dict(optimize(text)), "read_only": to_dict(optimize(text, apply=False))}
-        if json.dumps(got, sort_keys=True) != json.dumps(want, sort_keys=True):
+        if not _typed_equal(got, want):
             mismatches.append(text[-80:])
     assert not mismatches, f"{len(mismatches)} of {len(texts)} differ; e.g. …{mismatches[0]!r}"
 
@@ -52,5 +52,20 @@ def test_optimizer_parity_requires_fixtures(tmp_path, monkeypatch):
         _inputs()
 
 
+def _typed_equal(left, right):
+    if isinstance(left, bool) or isinstance(right, bool):
+        return type(left) is type(right) and left == right
+    if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+        return left == right
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, dict):
+        return left.keys() == right.keys() and all(_typed_equal(left[key], right[key]) for key in left)
+    if isinstance(left, list):
+        return len(left) == len(right) and all(_typed_equal(a, b) for a, b in zip(left, right, strict=True))
+    return left == right
+
+
 def test_json_comparison_preserves_boolean_number_types():
-    assert json.dumps({"iterations": True}, sort_keys=True) != json.dumps({"iterations": 1}, sort_keys=True)
+    assert not _typed_equal({"iterations": True}, {"iterations": 1})
+    assert _typed_equal({"docsExamined": 1.0}, {"docsExamined": 1})

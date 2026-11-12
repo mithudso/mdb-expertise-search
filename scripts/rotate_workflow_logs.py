@@ -16,11 +16,10 @@ import os
 import re
 import stat
 import sys
-import uuid
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from maintenance_safety import atomic_write, lock, safe_bytes
+from maintenance_safety import atomic_write, lock, replace_preserving, safe_bytes
 
 ROOT = Path(__file__).resolve().parent.parent
 LOGS = ["memory.md", "prompts.md"]
@@ -52,24 +51,20 @@ def rotate(p: Path, max_bytes: int, keep: int, check: bool) -> bool:
         if archive.is_symlink() or (archive.exists() and os.path.samefile(p, archive)):
             raise ValueError("archive aliases the workflow log")
         previous = safe_bytes(archive, ROOT) if archive.exists() else b""
-        # Keep a copied snapshot and retain the original inode. A writer with an already-open
-        # descriptor can append after publication; the inode backup preserves those bytes too.
         import hashlib
-        snapshot = archive.with_name(archive.name + ".source-" + hashlib.sha256(original).hexdigest()[:16])
-        if not snapshot.exists(): atomic_write(snapshot, original, stat.S_IMODE(before.st_mode))
+        identity = hashlib.sha256(original).hexdigest()
+        snapshot = archive.with_name(archive.name + ".source-" + identity[:16])
+        if not snapshot.exists():
+            atomic_write(snapshot, original, stat.S_IMODE(before.st_mode), root=ROOT)
+        marker = ("<!-- mdbx-rotation:" + identity + " -->\n").encode()
         separator = b"\n" if previous and not previous.endswith(b"\n") else b""
-        atomic_write(archive, previous + separator + text[kept_until:].encode())
-        inode_backup = archive.with_name(archive.name + ".inode-" + uuid.uuid4().hex)
-        os.link(p, inode_backup, follow_symlinks=False)
-        retained_inode = inode_backup.lstat()
-        current_inode = p.lstat()
-        expected = (before.st_dev, before.st_ino)
-        if not stat.S_ISREG(retained_inode.st_mode) or (retained_inode.st_dev, retained_inode.st_ino) != expected or (current_inode.st_dev, current_inode.st_ino) != expected:
-            inode_backup.unlink()
-            raise RuntimeError("workflow log inode changed; source preserved")
-        if safe_bytes(p, ROOT) != original or p.stat().st_ino != before.st_ino:
-            raise RuntimeError("workflow log changed during rotation; source preserved")
-        atomic_write(p, retained.encode(), stat.S_IMODE(before.st_mode))
+        archive_mode = stat.S_IMODE(before.st_mode)
+        if archive.exists():
+            archive_mode &= stat.S_IMODE(archive.stat().st_mode)
+        if marker not in previous:
+            atomic_write(archive, previous + separator + marker + text[kept_until:].encode(), archive_mode, root=ROOT)
+        # Atomic exchange retains the actual displaced inode, including a concurrent editor save.
+        replace_preserving(p, retained.encode(), ROOT, original, stat.S_IMODE(before.st_mode))
     print(f"{p.name}: moved {len(starts) - keep} section(s)")
     return True
 

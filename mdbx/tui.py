@@ -172,7 +172,7 @@ class MdbxApp(App):
         kind = KINDS[self.kind] or "all kinds"
         scope = self.source or "all sources"
         self.query_one("#status", Static).update(
-            f"mode={MODES[self.mode]} · kind={kind} · scope={scope} · {extra}"
+            Text(f"mode={MODES[self.mode]} · kind={kind} · scope={scope} · {extra}")
         )
 
     def action_cycle_mode(self) -> None:
@@ -194,10 +194,14 @@ class MdbxApp(App):
             return
         row = self.con.execute("SELECT value FROM meta WHERE key='corpus'").fetchone()
         root = Path(row[0]) if row else idx.default_corpus()
-        hits = [
-            srch.Hit(-1, r.path, r.name, "recipe", r.title, 1, r.text, 0.0, "recipe", r.summary)
-            for r in recipemod.load(root)
-        ]
+        hits = []
+        try:
+            for recipe in recipemod.load(root):
+                hits.append(srch.Hit(-1, recipe.path, recipe.name, "recipe", recipe.title, 1,
+                                     recipe.text, 0.0, "recipe", recipe.summary))
+        except (OSError, ValueError, UnicodeError):
+            self._render_hits([], " · recipe files are unavailable; retry")
+            return
         self._render_hits(hits, " · recipes (type to search within them)")
 
     def action_focus_query(self) -> None:
@@ -226,7 +230,10 @@ class MdbxApp(App):
     @on(OptionList.OptionSelected, "#facets")
     def _facet(self, event: OptionList.OptionSelected) -> None:
         oid = event.option.id
-        self.source = None if oid == "__all__" else oid.split("|", 1)[1]
+        self.source = None
+        if oid != "__all__" and oid is not None:
+            facet_kind, self.source = oid.split("|", 1)
+            self.kind = KINDS.index(facet_kind)
         self._rerun()
 
     @on(DataTable.RowHighlighted, "#results")
@@ -237,6 +244,9 @@ class MdbxApp(App):
     # ---- search (worker thread so the UI never blocks on Ollama)
     def _search(self, query: str):
         self._generation += 1
+        if not query.strip():
+            self._render_hits([], " · enter a search query")
+            return None
         return self._search_worker(query, self._generation, MODES[self.mode], KINDS[self.kind], self.source)
 
     @work(thread=True, exclusive=True)
@@ -249,24 +259,23 @@ class MdbxApp(App):
         try:
             con = idx.connect(self.db)  # sqlite connections are thread-bound
             try:
-                if mode != "keyword" and (self._store is None or not len(self._store)):
-                    self._store = srch.VectorStore(con)
+                store = srch.VectorStore(con) if mode != "keyword" else None
                 notes: list[str] = []
                 hits = srch.search(
-                    con, query, mode, 40, kind=kind, source=source, notes=notes,
-                    **({"store": self._store} if mode != "keyword" else {}),
+                    con, query, mode, 40, kind=kind, source=source, source_exact=source is not None, notes=notes,
+                    **({"store": store} if mode != "keyword" else {}),
                 )
                 if notes:  # hybrid ran keyword-only because the embedder is down: say so in the status bar
                     note = f" ⚠ {srch.fallback_note(embedmod.EmbedError('semantic backend unavailable'))}"
-            except embedmod.EmbedError as exc:
+            except embedmod.EmbedError:
                 log.warning("semantic search unavailable, using keyword")
-                hits = srch.keyword(con, query, 40, kind=kind, source=source)
-                note = f" ({srch.fallback_note(exc)})"
+                hits = srch.keyword(con, query, 40, kind=kind, source=source, source_exact=source is not None)
+                note = " (semantic search unavailable; showing keyword results only)"
             finally:
                 con.close()
-        except sqlite3.Error as exc:  # an unhandled worker error would tear down the whole TUI
-            log.exception("search failed")
-            note = f" (search failed: {exc})"
+        except sqlite3.Error:  # an unhandled worker error would tear down the whole TUI
+            log.error("search failed")
+            note = " (search failed; retry)"
         self.call_from_thread(self._publish_hits, generation, hits, note)
 
     def _publish_hits(self, generation: int, hits: list[srch.Hit], note: str) -> None:

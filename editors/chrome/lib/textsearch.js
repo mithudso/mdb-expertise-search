@@ -6,46 +6,19 @@
 // uses the exported int8 vectors; hybrid fuses both with reciprocal-rank fusion (k = 60).
 // The index files are written by `mdbx export-web`; tests/fixtures/search/golden.json pins the output.
 
+import { rawTokenSpans } from "./unicode61.js";
+export { rawTokenSpans };
+
 export const K1 = 1.2;
 export const B = 0.75;
 export const RRF_K = 60;
 export const STOPWORDS = new Set(["a", "an", "and", "are", "as", "at", "be", "but", "by", "do", "does", "for", "from", "how",
   "i", "if", "in", "is", "it", "my", "of", "on", "or", "so", "that", "the", "this", "to", "was", "what", "when", "where",
   "which", "why", "with", "you", "your", "can", "not"]);
-const TOKEN_CHAR = /[\p{L}\p{N}\p{Co}_]/u;
-const WORD = /[\p{L}\p{N}_][\p{L}\p{N}\p{M}_]*/gu;
 const PORTER_MAX = 64;
 const enc = new TextEncoder();
 
 // ---- tokenizer
-
-function fold(tok) {
-  return tok.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-}
-
-/** Lower-cased, diacritic-free tokens (FTS5 unicode61 with '_' as a token character), with offsets. */
-export function rawTokenSpans(text) {
-  const out = [];
-  let cur = "";
-  let start = 0;
-  let i = 0;
-  for (const c of text) {
-    if (TOKEN_CHAR.test(c) || (cur && /\p{M}/u.test(c))) {
-      if (!cur) start = i;
-      cur += c;
-    } else if (cur) {
-      const t = fold(cur);
-      if (t) out.push([t, start, i]);
-      cur = "";
-    }
-    i += c.length;
-  }
-  if (cur) {
-    const t = fold(cur);
-    if (t) out.push([t, start, i]);
-  }
-  return out;
-}
 
 export function tokens(text) {
   return rawTokenSpans(text).map(([t]) => porter(t));
@@ -63,6 +36,7 @@ function cons(w, i) {
 }
 
 function measure(w) {
+  w = Array.from(w);
   let n = 0, i = 0;
   const ln = w.length;
   while (i < ln && cons(w, i)) i++;
@@ -76,15 +50,18 @@ function measure(w) {
 }
 
 function hasVowel(w) {
+  w = Array.from(w);
   for (let i = 0; i < w.length; i++) if (!cons(w, i)) return true;
   return false;
 }
 
 function doubleCons(w) {
+  w = Array.from(w);
   return w.length >= 2 && w[w.length - 1] === w[w.length - 2] && cons(w, w.length - 1);
 }
 
 function cvc(w) {
+  w = Array.from(w);
   if (w.length < 3) return false;
   const n = w.length;
   return cons(w, n - 3) && !cons(w, n - 2) && cons(w, n - 1) && !"wxy".includes(w[n - 1]);
@@ -121,7 +98,7 @@ export function porter(w) {
   }
   if (extra) {
     if (w.endsWith("at") || w.endsWith("bl") || w.endsWith("iz")) w += "e";
-    else if (doubleCons(w) && !"lsz".includes(w[w.length - 1])) w = w.slice(0, -1);
+    else if (doubleCons(w) && !"lsz".includes([...w].at(-1))) w = [...w].slice(0, -1).join("");
     else if (measure(w) === 1 && cvc(w)) w += "e";
   }
   // step 1c
@@ -161,16 +138,11 @@ export function porter(w) {
 
 /** Stemmed search terms: words minus stopwords (all words if only stopwords). */
 export function queryTerms(query) {
-  const words = String(query).match(WORD) || [];
-  const kept = words.filter((w) => !STOPWORDS.has(w.toLowerCase()));
-  const use = kept.length ? kept : words;
-  const out = [];
-  for (const w of use) {
-    const t = tokens(w);
-    if (t.length) out.push(t[0]);
-  }
-  return out;
+  const words = rawTokenSpans(String(query)).map(([word]) => word);
+  const kept = words.filter(word => !STOPWORDS.has(word));
+  return (kept.length ? kept : words).map(porter);
 }
+
 
 // ---- index
 
@@ -210,7 +182,9 @@ export class SearchIndex {
   keywordRanked(query, kind = null, source = null) {
     const terms = queryTerms(query);
     if (!terms.length) return [];
-    const uniq = [...new Set(terms)];
+    const frequencies = new Map();
+    for (const term of terms) frequencies.set(term, (frequencies.get(term) || 0) + 1);
+    const uniq = [...frequencies.keys()];
     for (const mode of ["AND", "OR"]) {
       const scores = new Map();
       const present = new Map();
@@ -220,7 +194,7 @@ export class SearchIndex {
         const [df, off] = v;
         let idf = Math.log((this.n - df + 0.5) / (df + 0.5));
         if (idf <= 0) idf = 1e-6;
-        const qtf = terms.filter((x) => x === t).length;
+        const qtf = frequencies.get(t);
         for (let j = off; j < off + df; j++) {
           const i = this.ids[j];
           const w = this.wts[j];
@@ -371,7 +345,7 @@ export async function embedQuery(query, { host = "http://127.0.0.1:11434", model
       throw new EmbedError(`cannot reach Ollama (${ctrl.signal.aborted || err?.name === "AbortError" ? "timed out" : "connection failed"})`);
     }
   if (res.status === 403) {
-    throw new EmbedError("Ollama refused the extension (HTTP 403). Allow it with OLLAMA_ORIGINS=chrome-extension://* and restart Ollama.");
+    throw new EmbedError("Ollama refused the extension (HTTP 403). Set OLLAMA_ORIGINS to this extension's exact origin using About-page help, then restart Ollama.");
   }
   if (!res.ok) throw new EmbedError(`Ollama /api/embed returned HTTP ${res.status}`);
   let data;
@@ -390,5 +364,6 @@ export async function embedQuery(query, { host = "http://127.0.0.1:11434", model
   return scaled.map(x => x / norm);
   } finally {
     clearTimeout(timer);
+    ctrl.abort();
   }
 }

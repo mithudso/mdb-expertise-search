@@ -145,10 +145,11 @@ def test_review_cli_atomic_rewrite_preserves_original(tmp_path,monkeypatch):
     path.write_text(source)
     def fail(*args,**kwargs):
         raise OSError('synthetic replace failure')
-    monkeypatch.setattr(os,'replace',fail)
+    monkeypatch.setattr(os,'rename',fail)
     assert cli.main(['optimize','--write',str(path)]) == 2
     assert path.read_text() == source
-    assert list(tmp_path.iterdir()) == [path]
+    assert not list(tmp_path.glob('.mdbx-temporary-*'))
+    assert all(item == path or item.name.startswith('.mdbx-') for item in tmp_path.iterdir())
 
 
 def test_review_cli_connections_close_and_controls_escape(tmp_path,monkeypatch,capsys):
@@ -163,49 +164,78 @@ def test_review_cli_connections_close_and_controls_escape(tmp_path,monkeypatch,c
     assert '\x1b' not in capsys.readouterr().out
 
 
-def test_review_cli_show_replacement_cannot_escape(tmp_path,monkeypatch,capsys):
-    from mdbx import cli
+def test_review_cli_show_replacement_cannot_escape(tmp_path, monkeypatch, capsys):
+    import os
+
+    from mdbx import cli, safety
     root=tmp_path/'corpus'; root.mkdir()
     inside=root/'a.md'; inside.write_text('inside')
     outside=tmp_path/'outside.txt'; outside.write_text('SYNTHETIC_OUTSIDE_CONTENT')
-    real=Path.is_file
-    def swap(path):
-        result=real(path)
-        if path==inside and result:
+    assert cli.main(['show','a.md','--corpus',str(root)]) == 0
+    assert capsys.readouterr().out.strip() == 'inside'
+    real=os.open
+    attacked=[]
+    def swap(name, flags, *args, **kwargs):
+        if name == 'a.md' and not attacked:
+            attacked.append(True)
             inside.unlink(); inside.symlink_to(outside)
-        return result
-    monkeypatch.setattr(Path,'is_file',swap)
-    assert cli.main(['show','a.md','--corpus',str(root)]) in (0,2)
+        return real(name, flags, *args, **kwargs)
+    monkeypatch.setattr(safety.os, 'open', swap)
+    assert cli.main(['show','a.md','--corpus',str(root)]) == 2
+    assert attacked == [True]
     assert 'SYNTHETIC_OUTSIDE_CONTENT' not in capsys.readouterr().out
 
 
-def test_review_lint_positions_are_linear(monkeypatch,capsys):
+class PositionMeter(str):
+    work=0
+    def __getitem__(self, key):
+        result=super().__getitem__(key)
+        if isinstance(key, slice):
+            self.work += len(result)
+        return result
+    def count(self, sub, start=0, end=None):
+        end=len(self) if end is None else end
+        self.work += end-start
+        return super().count(sub,start,end)
+
+
+def _position_case():
+    from types import SimpleNamespace
+    text=PositionMeter('x\n'*1000)
+    diagnostics=[SimpleNamespace(start=i*2,severity='error',code='synthetic',message='bad',fix=None) for i in range(1000)]
+    return text, SimpleNamespace(diagnostics=diagnostics)
+
+
+def test_position_meter_detects_quadratic_prefix_copies():
+    text, report = _position_case()
+    for diagnostic in report.diagnostics:
+        text[:diagnostic.start].count('\n')
+    assert text.work > 100*len(text)
+
+
+def test_review_lint_positions_are_linear(monkeypatch, capsys):
     import importlib
     from types import SimpleNamespace
 
     from mdbx import cli
     analyzer=importlib.import_module('mdbx.mql.analyze')
-    class Meter(str):
-        work=0
-        def count(self,sub,start=0,end=None):
-            end=len(self) if end is None else end
-            self.work+=end-start
-            return super().count(sub,start,end)
-    text=Meter('x\n'*1000)
-    diagnostics=[SimpleNamespace(start=i*2,severity='error',code='synthetic',message='bad',fix=None) for i in range(1000)]
+    text, report = _position_case()
     monkeypatch.setattr(cli.sys,'stdin',SimpleNamespace(read=lambda:text))
-    monkeypatch.setattr(analyzer,'analyze',lambda _:SimpleNamespace(diagnostics=diagnostics))
+    monkeypatch.setattr(analyzer,'analyze',lambda _:report)
     assert cli.main(['lint','-']) == 1
     assert capsys.readouterr().out.splitlines() == [f'-:{i+1}:1: error: bad [synthetic]' for i in range(1000)]
-    assert text.work<=4*len(text)
-    try:
-        from mdbx import mcp_server as m
-    except ImportError:
-        return
-    text.work=0
-    monkeypatch.setattr(m,'analyze',lambda _:SimpleNamespace(diagnostics=diagnostics))
-    assert m.mql_lint(text)[-1]['line']==1000
-    assert text.work<=4*len(text)
+    assert text.work <= 4*len(text)
+
+
+def test_review_mcp_positions_are_linear(monkeypatch):
+    import importlib.util
+    if importlib.util.find_spec('mcp') is None:
+        pytest.skip('optional mcp package not installed')
+    from mdbx import mcp_server as module
+    text, report = _position_case()
+    monkeypatch.setattr(module,'analyze',lambda _:report)
+    assert module.mql_lint(text)[-1]['line'] == 1000
+    assert text.work <= 4*len(text)
 
 
 def test_review_hybrid_outage_with_synthetic_vectors(tmp_path,monkeypatch,capsys):
@@ -229,5 +259,5 @@ def test_review_hybrid_outage_with_synthetic_vectors(tmp_path,monkeypatch,capsys
     assert cli.main(['--db',str(tmp_path/'outage.sqlite'),'search','shard','key'])==0
     assert 'warning: semantic search unavailable' in capsys.readouterr().err
     assert cli.main(['--db',str(tmp_path/'outage.sqlite'),'search','-m','semantic','shard','key'])==1
-    assert 'error: semantic search unavailable' in capsys.readouterr().err
+    assert 'error: semantic search is unavailable; no results were returned' in capsys.readouterr().err
     assert calls==['shard key']*4

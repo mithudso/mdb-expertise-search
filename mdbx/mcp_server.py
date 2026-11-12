@@ -43,7 +43,7 @@ def mdb_search(
     """Search the MongoDB expertise corpus.
 
     mode: hybrid (keyword + semantic, default), keyword (BM25) or semantic (embeddings).
-    kind: skill, llms or memory. source: substring of a skill / llms set name (e.g. "mongodb-expert").
+    kind: skill, llms, memory or recipe. source: substring of a skill / llms set name (e.g. "mongodb-expert").
     Returns hits with path, line, heading, source, kind, score and the chunk text.
     """
     if mode not in {"hybrid", "keyword", "semantic"}:
@@ -152,7 +152,10 @@ def mql_operator(name: str) -> dict:
     op = ops.get(key)
     if op is None:
         return {"found": False, "suggestions": ops.suggest(key)}
-    return {"found": True, "name": op.name, "categories": sorted(op.cats), "argument": op.arg, "doc": op.doc}
+    contracts = {context: op.arg_for(label) for context, label in [("query", "query"), ("proj", "projection"), ("stage", "pipeline-item"), ("expr", "expr"), ("acc", "accexpr"), ("update", "update")] if context in op.cats}
+    return {"found": True, "name": op.name, "categories": sorted(op.cats),
+            "argument": op.arg if len(set(contracts.values())) <= 1 else None,
+            "arguments": contracts, "doc": op.doc}
 
 
 def run() -> None:

@@ -35,7 +35,14 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from maintenance_safety import confined_corpus_path, lock, mark_clone, scrub, verify_clone
+from maintenance_safety import (
+    confined_corpus_path,
+    git_environment,
+    lock,
+    mark_clone,
+    scrub,
+    verify_clone,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 HOME = Path.home()
@@ -71,8 +78,8 @@ def load_config() -> dict:
 
 
 def save_config(cfg: dict) -> None:
-    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CONFIG_PATH.write_text(json.dumps({k: cfg[k] for k in STATE_KEYS if k in cfg}, indent=2) + "\n", encoding="utf-8")
+    from maintenance_safety import atomic_write
+    atomic_write(CONFIG_PATH, (json.dumps({k: cfg[k] for k in STATE_KEYS if k in cfg}, indent=2) + "\n").encode(), 0o600)
 
 
 def origin_url() -> str:
@@ -109,7 +116,7 @@ def validate_config(cfg):
 
 
 def git(args: list[str], cwd: Path, timeout: int = 300) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", *args], cwd=str(cwd), capture_output=True, text=True, timeout=timeout, check=False)
+    return subprocess.run(["git", *args], cwd=str(cwd), capture_output=True, text=True, timeout=timeout, check=False, env=git_environment())
 
 
 def must_git(args: list[str], cwd: Path, what: str) -> str:
@@ -125,7 +132,7 @@ def ensure_clone(cfg: dict) -> Path:
     if clone.exists(): return verify_clone(clone, cfg["repo"], ROOT, git)
     clone.parent.mkdir(parents=True, exist_ok=True)
     log("creating updater-owned clone")
-    res = subprocess.run(["git", "clone", "--branch", cfg["branch"], "--single-branch", "--", cfg["repo"], str(clone)], capture_output=True, text=True, timeout=900, check=False)
+    res = subprocess.run(["git", "clone", "--branch", cfg["branch"], "--single-branch", "--", cfg["repo"], str(clone)], capture_output=True, text=True, timeout=900, check=False, env=git_environment())
     if res.returncode: raise RuntimeError("git clone failed")
     mark_clone(clone, cfg["repo"])
     return verify_clone(clone, cfg["repo"], ROOT, git)
@@ -133,13 +140,16 @@ def ensure_clone(cfg: dict) -> Path:
 
 def reset_to_origin(clone: Path, branch: str) -> None:
     must_git(["fetch", "--quiet", "origin", f"+refs/heads/{branch}:refs/remotes/origin/{branch}"], clone, "git fetch")
+    pending = git(["merge-base", "--is-ancestor", "HEAD", f"origin/{branch}"], clone)
+    if pending.returncode:
+        raise RuntimeError("unpublished maintenance commits exist; preserve or publish them before resetting")
     must_git(["reset", "--hard", f"origin/{branch}"], clone, "git reset")
     must_git(["clean", "-fdq", "corpus"], clone, "git clean")
 
 
-def sweep(clone: Path, python: str) -> tuple[int, list[str]]:
+def sweep(clone: Path, python: str, environment: dict | None = None) -> tuple[int, list[str]]:
     res = subprocess.run([python, str(clone / "scripts" / "sweep_customers.py"), "--json"], cwd=str(clone),
-                         capture_output=True, text=True, timeout=600, check=False, env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"))
+                         capture_output=True, text=True, timeout=600, check=False, env=git_environment(dict(os.environ, **(environment or {}), PYTHONDONTWRITEBYTECODE="1")))
     try:
         result = json.loads(res.stdout)
         if result.get("status") not in {"clean", "markers"} or res.returncode not in (0, 1): raise ValueError()
@@ -182,17 +192,25 @@ def _run_update(cfg: dict, *, dry_run: bool = False) -> int:
     if not denylist.is_file():  # built-in markers do not catch customer names; refuse to publish without the list
         log(f"abort: customer denylist {denylist} missing; nothing synced")
         return 1
-    if not (HOME / ".config" / "mdbx" / "redactions.py").is_file():
-        log("warning: ~/.config/mdbx/redactions.py missing; only generic redaction rules apply")
-    env = dict(os.environ, **cfg.get("environment", {}), MDBX_SKIP_INDEX="1", PYTHONDONTWRITEBYTECODE="1")
-    sync = subprocess.run(["bash", str(clone / "scripts" / "sync_corpus.sh")], cwd=str(clone), env=env,
-                          capture_output=True, text=True, timeout=1800, check=False)
+    redactions = Path(cfg.get("environment", {}).get("MDBX_REDACTIONS", os.environ.get("MDBX_REDACTIONS", HOME / ".config" / "mdbx" / "redactions.py")))
+    if not redactions.is_file():
+        log("warning: selected private redaction rules are missing; only generic rules apply")
+    env = dict(os.environ, **cfg.get("environment", {}), MDBX_SKIP_INDEX="1", MDBX_UPDATER_HOLDBACK="1", PYTHONDONTWRITEBYTECODE="1")
+    try:
+        sync = subprocess.run(["bash", str(clone / "scripts" / "sync_corpus.sh")], cwd=str(clone), env=git_environment(env),
+                              capture_output=True, text=True, timeout=1800, check=False)
+    except (OSError, subprocess.SubprocessError):
+        log("abort: source sync could not finish; generated changes discarded")
+        reset_to_origin(clone, cfg["branch"])
+        return 1
     log(f"sync_corpus.sh exit {sync.returncode}")
-    if sync.returncode:
-        log("abort: source sync failed; nothing committed"); return 1
+    if sync.returncode not in (0, 3):
+        log("abort: source sync failed; generated changes discarded")
+        reset_to_origin(clone, cfg["branch"])
+        return 1
     restore_committed(clone, PROTECTED)
     for attempt in (1, 2):
-        rc, hits = sweep(clone, py)
+        rc, hits = sweep(clone, py, cfg.get("environment", {}))
         if rc == 0:
             break
         if attempt == 2 or not hits:
@@ -220,7 +238,7 @@ def _run_update(cfg: dict, *, dry_run: bool = False) -> int:
     if pull.returncode != 0:
         git(["rebase", "--abort"], clone)
         raise RuntimeError("git pull --rebase failed")
-    rc, _hits = sweep(clone, py)
+    rc, _hits = sweep(clone, py, cfg.get("environment", {}))
     if rc:
         log(f"abort: outgoing rebased tree failed sweep (exit {rc}); nothing pushed"); return 1
     must_git(["push", "origin", f"HEAD:{cfg['branch']}"], clone, "git push")

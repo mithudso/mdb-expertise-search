@@ -36,7 +36,10 @@ function isIntegral(v) {
 }
 
 export function scalar(n) {
-  if (n.kind === "number") return Number.isFinite(n.value) ? n.value : null;
+  if (n.kind === "number") {
+    if (n.exactInteger !== undefined && !Number.isSafeInteger(n.value)) return n.exactInteger;
+    return Number.isFinite(n.value) ? n.value : null;
+  }
   if (n.kind === "string" || n.kind === "bool") return n.value;
   if (n.kind === "object") {
     const p = props(n);
@@ -117,33 +120,38 @@ function ejsonEdits(text, node, edits) {
 }
 
 function oneLine(s) {
-  // A slash can begin a regex or a comment. Keep line terminators when either may be present.
+  // A comment's line ending is significant. Keep the original layout when markers occur.
   if (s.includes("//") || s.includes("/*")) return s.trim();
-  const res = [];
-  let i = 0;
-  let quote = null;
-  while (i < s.length) {
-    const ch = s[i];
-    if (quote) {
-      res.push(ch);
-      if (ch === "\\" && i + 1 < s.length) {
-        res.push(s[i + 1]);
-        i += 2;
-        continue;
-      }
-      if (ch === quote) quote = null;
-    } else if (ch === '"' || ch === "'" || ch === "`") {
-      quote = ch;
-      res.push(ch);
-    } else if ("\r\n\u2028\u2029".includes(ch)) {
-      while (i + 1 < s.length && " \t\r\n".includes(s[i + 1])) i += 1;
-      if (res.length && !" [{(".includes(res[res.length - 1])) res.push(" ");
-    } else {
-      res.push(ch);
+  const [statements, errors] = parse(s);
+  if (errors.length) return s.trim();
+  const protectedSpans = [];
+  for (const statement of statements) {
+    for (const node of statement.node.walk()) {
+      if (node.kind === "string" || node.kind === "regex") protectedSpans.push([node.start, node.end]);
+      for (const prop of node.props) if (prop.quoted) protectedSpans.push([prop.keyStart, prop.keyEnd]);
     }
-    i += 1;
   }
-  return res.join("").trim();
+  protectedSpans.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const out = [];
+  let position = 0;
+  const copyGap = (end) => {
+    while (position < end) {
+      const ch = s[position];
+      if ("\r\n\u2028\u2029".includes(ch)) {
+        while (position + 1 < end && " \t\r\n".includes(s[position + 1])) position += 1;
+        if (out.length && !" [{(".includes(out[out.length - 1].at(-1))) out.push(" ");
+      } else out.push(ch);
+      position += 1;
+    }
+  };
+  for (const [start, end] of protectedSpans) {
+    if (start < position) continue;
+    copyGap(start);
+    out.push(s.slice(start, end));
+    position = end;
+  }
+  copyGap(s.length);
+  return out.join("").trim();
 }
 
 function lit(text, node) {
@@ -311,10 +319,13 @@ export function normalize(text) {
   if (statements.some((st) => dbCall(st.node))) return { text, kind: "mongosh", queries: [], changed: false };
   const queries = [];
   let unknown = errors.length > 0;
+  const intervals = [...errors].sort((a, b) => a.start - b.start);
+  let errorIndex = 0;
   for (const st of statements) {
     const node = st.node;
     if (node.kind !== "object" && node.kind !== "array") { unknown = true; continue; }
-    if (errors.some((error) => error.start < node.end && node.start < error.end)) return { text, kind: "mongosh", queries: [], changed: false };
+    while (errorIndex < intervals.length && intervals[errorIndex].end <= node.start) errorIndex++;
+    if (errorIndex < intervals.length && intervals[errorIndex].start < node.end) return { text, kind: "mongosh", queries: [], changed: false };
     let q = null;
     if (node.kind === "object") {
       q = fromObject(text, node);
@@ -323,7 +334,7 @@ export function normalize(text) {
       q = [{ text: `db.${PLACEHOLDER}.aggregate(${lit(text, node)})`, kind: "pipeline", collection: null, evidence: {} }];
     }
     if (q === null) return { text, kind: "mongosh", queries: [], changed: false };
-    queries.push(...q);
+    for (const query of q) queries.push(query);
   }
   if (!queries.length || (unknown && queries.some((q) => q.kind !== "log" && q.kind !== "profile"))) return { text, kind: "mongosh", queries: [], changed: false };
   return { text: queries.map((q) => q.text).join("\n") + "\n", kind: queries[0].kind, queries, changed: true };

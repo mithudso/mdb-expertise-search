@@ -39,5 +39,24 @@ jobs:
           import json, subprocess, sys
           r = subprocess.run([sys.executable, '-m', 'mdbx.cli', 'optimize', '--json', '--read-only', 'examples/slow-queries.mql'], capture_output=True, text=True, timeout=30)
           assert r.returncode in (0, 1), r.stderr
-          assert isinstance(json.loads(r.stdout), dict)
+          report = json.loads(r.stdout)
+          def fields(row, expected):
+              return isinstance(row, dict) and all(
+                  key in row and type(row[key]) in (kind if isinstance(kind, tuple) else (kind,))
+                  for key, kind in expected.items())
+          assert fields(report, {'input': dict, 'queries': list, 'findings': list, 'applied': list,
+                                 'indexes': list, 'rewritten': type(None), 'iterations': int})
+          assert fields(report['input'], {'kind': str, 'interpreted': (str, type(None))})
+          query_types = {'kind': str, 'method': str, 'collection': (str, type(None)),
+                         'line': int, 'column': int, 'evidence': dict}
+          assert report['queries'] and all(fields(query, query_types) for query in report['queries'])
+          finding_types = {'severity': str, 'code': str, 'pass': str, 'message': str,
+                           'ref': (str, type(None)), 'line': int, 'column': int}
+          assert all(fields(finding, finding_types) for finding in report['findings'])
+          index_types = {'collection': str, 'keys': dict, 'shell': str, 'rationale': str}
+          assert all(fields(index, index_types) for index in report['indexes'])
+          assert report['applied'] == [] and report['rewritten'] is None
+          assert report['iterations'] >= 0
+          if r.returncode == 1:
+              assert any(finding['severity'] in ('blocking', 'high') for finding in report['findings'])
           PY

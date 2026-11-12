@@ -16,13 +16,17 @@ SRC = (ROOT / "editors" / "chrome" / "lib" / "docs.js").read_text(encoding="utf-
 
 
 def urls() -> list[str]:
-    literal = r"""(["'])(.*?)\1"""
+    literal = r"""(["'`])((?:\\.|(?!\1).)*?)\1"""
     base_match = re.search(r"const\s+M\s*=\s*" + literal, SRC)
     if base_match is None:
         raise ValueError("docs URL base constant is missing")
     base = base_match.group(2)
+    if "${" in base:
+        raise ValueError("dynamic documentation URL base cannot be checked")
     found = {base + match.group(2) for match in re.finditer(r"\bM\s*\+\s*" + literal, SRC)}
     found |= {match.group(2) for match in re.finditer(literal, SRC) if match.group(2).startswith("https://")} - {base}
+    if any("${" in url for url in found):
+        raise ValueError("dynamic documentation URLs cannot be checked")
     return sorted(found)
 
 

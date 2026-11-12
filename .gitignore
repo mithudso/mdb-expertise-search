@@ -30,3 +30,6 @@ editors/vscode/node_modules/
 
 # Chrome extension search data (built by scripts/package_chrome_extension.py)
 editors/chrome/data/
+
+# Owned atomic publication staging, locks and recoverable displaced versions
+.mdbx-*

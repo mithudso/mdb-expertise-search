@@ -11,6 +11,9 @@ sys.path.insert(0, str(ROOT))
 
 from mdbx import recipes
 
+sys.path.insert(0, str(ROOT / "scripts"))
+from maintenance_safety import atomic_write
+
 GROUPS = [
     ("Sharding", ["shard-a-collection", "reshard-a-collection", "convert-replica-set-to-sharded-cluster"]),
     ("Networking", ["atlas-private-link", "atlas-network-peering", "private-connectivity-troubleshooting"]),
@@ -33,7 +36,7 @@ def cell(value: str) -> str:
 
 
 def row(recipe) -> str:
-    path = PurePosixPath(str(recipe.path).replace("\\", "/"))
+    path = PurePosixPath(str(recipe.path))
     if path.is_absolute() or ".." in path.parts:
         raise ValueError("recipe path must be corpus-relative")
     label = cell(recipe.name).replace("[", "\\[").replace("]", "\\]").replace("\x60", "&#96;")
@@ -42,10 +45,14 @@ def row(recipe) -> str:
 
 
 def main() -> None:
+    if not (ROOT / "corpus/recipes").is_dir():
+        raise ValueError("recipe source directory is missing")
     items = {}
+    names = {}
     for recipe in recipes.load(ROOT / "corpus"):
-        if recipe.name in items:
-            raise ValueError(f"duplicate recipe name {recipe.name!r}: {items[recipe.name].path}, {recipe.path}")
+        if recipe.name.lower() in names:
+            raise ValueError(f"duplicate recipe name {recipe.name!r}: {names[recipe.name.lower()].path}, {recipe.path}")
+        names[recipe.name.lower()] = recipe
         items[recipe.name] = recipe
     placed: set[str] = set()
     lines = [
@@ -73,7 +80,10 @@ def main() -> None:
         lines += ["## Other", "", "| Recipe | Applies to | Summary |", "|---|---|---|"]
         lines += [row(r) for r in extra]
         lines.append("")
-    (ROOT / "docs" / "RECIPES.md").write_text("\n".join(lines), encoding="utf-8")
+    output = ROOT / "docs" / "RECIPES.md"
+    if output.is_symlink():
+        raise ValueError("recipe index is a symlink")
+    atomic_write(output, "\n".join(lines).encode("utf-8"), root=ROOT)
     print(f"wrote docs/RECIPES.md ({len(items)} recipes)")
 
 

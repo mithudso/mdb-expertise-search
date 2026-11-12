@@ -66,7 +66,7 @@ def main() -> int:
             return 1
         return 0
     for p, text in want.items():
-        p.write_text(text, encoding="utf-8")
+        p.write_bytes(text.encode("utf-8"))
     return 0
 
 

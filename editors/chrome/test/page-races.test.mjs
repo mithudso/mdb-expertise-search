@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { pageFixture, backgroundFixture, deferred, flush, sessionStore } from "./dom-fixture.mjs";
-import { saveHandoff, consumeHandoff, HANDOFF_PREFIX } from "../lib/capture.js";
+import { MAX_INPUT, saveHandoff, consumeHandoff, HANDOFF_PREFIX } from "../lib/capture.js";
 
 function index() {
   return { n: 1, vectors: true, dim: 2, meta: { files: 1, vectors: { model: "synthetic" } }, facets: () => [],
@@ -21,7 +21,11 @@ test("new searches and empty submissions supersede pending embeddings and captur
   old.resolve([1, 0]); await first;
   assert.equal(p.state.q, "new query"); assert.match(p.$("results").textContent, /new query/);
   assert.doesNotMatch(p.$("results").textContent, /old query/); assert.deepEqual(calls, []);
-  await p.runSearch("");
+  const pending = deferred(); p.deps.embedQuery = () => pending.promise;
+  p.state.mode = "hybrid";
+  const stale = p.runSearch("stale query"); await flush();
+  await p.runSearch(""); pending.resolve([1, 0]); await stale;
+  assert.equal(p.$("search-status").textContent, ""); assert.equal(p.state.hits.length, 0);
   assert.equal(p.state.q, ""); assert.equal(p.state.selected, -1); assert.equal(p.$("results").textContent, ""); assert.equal(p.$("detail").textContent, "");
   p.go("search", { q: "" }); assert.equal(new URLSearchParams(p.location.hash.split("?")[1]).get("q"), "");
 });
@@ -82,8 +86,13 @@ test("popup stale corpus completion cannot replace a report or empty and failed 
   p.run("old selection"); await flush();
   p.run("db.c.find({})"); const report = p.$("result").textContent;
   d.resolve(index()); await flush(); assert.equal(p.$("result").textContent, report);
-  fail = true; p.run("bad query"); assert.ok(p.$("result").hidden); assert.equal(p.$("result").textContent, "");
-  p.run(""); assert.ok(p.$("result").hidden);
+  for (const replacement of ["", "bad query"]) {
+    const pending = deferred(); p.deps.getIndex = () => pending.promise;
+    fail = false; p.run("old corpus selection"); await flush();
+    fail = replacement !== ""; p.run(replacement);
+    pending.resolve(index()); await flush();
+    assert.ok(p.$("result").hidden); assert.equal(p.$("result").textContent, "");
+  }
 });
 
 test("popup distinguishes failed and absent index and preserves Unicode navigation", async () => {
@@ -96,6 +105,9 @@ test("popup distinguishes failed and absent index and preserves Unicode navigati
   await p.renderCorpusHits("a".repeat(299) + "😀");
   await p.$("result").querySelector("button").emit("click");
   assert.equal(p.opened.length, 1); assert.match(p.opened[0].url, /app.html#search\?q=/);
+  assert.equal(new URLSearchParams(p.opened[0].url.split("?")[1]).get("q"), "a".repeat(299));
+  await p.renderCorpusHits("a😀"); await p.$("result").querySelector("button").emit("click");
+  assert.equal(new URLSearchParams(p.opened.at(-1).url.split("?")[1]).get("q"), "a😀");
 });
 
 test("handoff keys retain each selection and remove only their own entry", async () => {
@@ -148,12 +160,29 @@ test("background launches route simultaneous handoffs by their own identity", as
   ]);
   const ids = b.opened.map(({ url }) => new URLSearchParams(url.split("?")[1]).get("handoff"));
   assert.equal(new Set(ids).size, 3);
-  const texts = await Promise.all(ids.map(async id => (await consumeHandoff(b.session, id)).text));
-  assert.deepEqual(new Set(texts), new Set(["first selection", "second selection", "third selection"]));
+  const consumed = [];
+  for (const { url } of b.opened) {
+    const destination = url.includes("popup.html") ? "popup.js" : "app.js";
+    const page = pageFixture(destination, { hash: new URL(url).hash });
+    page.chrome.storage.session = b.session;
+    if (destination === "popup.js") {
+      const payload = await page.readSelection(); consumed.push(payload.text);
+      assert.equal(payload.text, "third selection"); assert.match(url, /popup.html#tab\?/);
+    } else {
+      assert.match(url, /app.html#lint\?/);
+      const id = new URLSearchParams(new URL(url).hash.split("?")[1]).get("handoff");
+      assert.equal(b.session.values[HANDOFF_PREFIX + id].tab, "lint");
+      assert.equal(await page.consumePending(), true); consumed.push(page.$("lint-input").value);
+    }
+  }
+  assert.deepEqual(new Set(consumed), new Set(["first selection", "second selection", "third selection"]));
   assert.deepEqual(Object.keys(b.session.values), []);
   await b.handlers.click({ menuItemId: "mdb-search-selection", selectionText: "a".repeat(499) + "😀" });
   assert.doesNotThrow(() => decodeURIComponent(b.opened.at(-1).url));
   assert.ok(b.opened.at(-1).url.includes("#search?q="));
+  assert.equal(new URLSearchParams(b.opened.at(-1).url.split("?")[1]).get("q"), "a".repeat(499));
+  await b.handlers.click({ menuItemId: "mdb-search-selection", selectionText: "a😀" });
+  assert.equal(new URLSearchParams(b.opened.at(-1).url.split("?")[1]).get("q"), "a😀");
 });
 
 test("explicit empty route clears prior results before a pending index load", async () => {
@@ -163,4 +192,28 @@ test("explicit empty route clears prior results before a pending index load", as
   const routing = p.route(); await flush();
   assert.equal(p.state.q, ""); assert.equal(p.$("results").textContent, ""); assert.equal(p.state.selected, -1);
   loading.resolve(index()); await routing;
+});
+
+test("bounded handoff provenance reaches popup status and both app tools", async () => {
+  const popup = pageFixture("popup.js", { hash: "#tab?handoff=bounded" });
+  await saveHandoff(popup.chrome.storage.session, {text: "x".repeat(MAX_INPUT + 1)}, Date.now(), "bounded");
+  const pending = await popup.readSelection(); assert.equal(pending.truncated, true);
+  popup.run(pending.text, pending.from, pending.truncated); await flush();
+  assert.match(popup.$("status").textContent, /first 200,000/);
+  const last = await popup.readSelection(); assert.equal(last.truncated, true); assert.equal(last.text.length, MAX_INPUT);
+  for (const tab of ["lint", "optimize"]) {
+    const app = pageFixture("app.js", { hash: `#${tab}?handoff=bounded`, deps: { optimize: () => ({inputQueries:0,findings:[],applied:[]}) } });
+    await saveHandoff(app.chrome.storage.session, {text: "x".repeat(MAX_INPUT + 1), tab}, Date.now(), "bounded");
+    assert.equal(await app.consumePending(), true);
+    assert.match(app.$(tab === "lint" ? "lint-out" : "opt-out").textContent, /first 200,000/);
+  }
+});
+
+test("document rendering carries fence context across unchanged corpus chunks", async () => {
+  const chunks = [{id:0,line:1,heading:"synthetic",text:"```js\nfirst"}, {id:1,line:3,heading:"synthetic",text:"second\n```\nAfter"}];
+  const idx = index(); idx.document = () => ({path:"synthetic.md",source:"test",kind:"doc",chunks});
+  const app = pageFixture("app.js", {deps:{getIndex:async()=>idx}});
+  await app.showDocument("synthetic.md", 3, "second");
+  assert.deepEqual(app.$("doc").querySelectorAll("pre").map(n=>n.textContent), ["first", "second"]);
+  assert.ok(app.$("doc").querySelectorAll("p").some(n=>n.textContent === "After"));
 });

@@ -42,16 +42,8 @@
         "keys": {
           "storeId": 1
         },
-        "rationale": "$lookup from collection probes stores.storeId once per input document; without this index each probe is a collection scan.",
+        "rationale": "$lookup from an unspecified collection probes stores.storeId once per input document; without this index each probe is a collection scan.",
         "shell": "db.getCollection(\"stores\").createIndex({ storeId: 1 })"
-      },
-      {
-        "collection": "collection",
-        "keys": {
-          "region": 1
-        },
-        "rationale": "[leading $match/$sort] ESR order: equality region.",
-        "shell": "db.getCollection(\"collection\").createIndex({ region: 1 })"
       }
     ],
     "input": {
@@ -61,7 +53,7 @@
     "iterations": 2,
     "queries": [
       {
-        "collection": "collection",
+        "collection": null,
         "column": 1,
         "evidence": {},
         "kind": "aggregate",
@@ -117,7 +109,7 @@
         "keys": {
           "storeId": 1
         },
-        "rationale": "$lookup from collection probes stores.storeId once per input document; without this index each probe is a collection scan.",
+        "rationale": "$lookup from an unspecified collection probes stores.storeId once per input document; without this index each probe is a collection scan.",
         "shell": "db.getCollection(\"stores\").createIndex({ storeId: 1 })"
       }
     ],
@@ -128,7 +120,7 @@
     "iterations": 1,
     "queries": [
       {
-        "collection": "collection",
+        "collection": null,
         "column": 1,
         "evidence": {},
         "kind": "aggregate",
@@ -138,5 +130,5 @@
     ],
     "rewritten": null
   },
-  "report": "MQL optimizer (static audit) — bare-pipeline.txt: 1 query, 2 high, 1 medium; 1 rewrite(s) applied in 1 iteration(s)\n\nInterpreted the input (bare pipeline (collection name unknown)) as:\ndb.collection.aggregate([{ \"$lookup\": { \"from\": \"stores\", \"localField\": \"storeId\", \"foreignField\": \"storeId\", \"as\": \"store\" } }, { \"$match\": { \"region\": \"EMEA\" } }, { \"$sort\": { \"amount\": -1 } }, { \"$group\": { \"_id\": \"$storeId\", \"sales\": { \"$push\": \"$$ROOT\" } } }, { \"$project\": { \"top\": { \"$slice\": [\"$sales\", 3] } } }, { \"$sample\": { \"size\": 5 } } ])\n\nApplied rewrites (result-preserving):\n  ✓ [P5 match-not-early-rewrite] Move $match ahead of $lookup.\n\nFindings:\n  bare-pipeline.txt:1:241: HIGH [P5 group-root] $push: \"$$ROOT\" carries whole documents into $group memory (100 MB per stage). $project only the fields you need first.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  bare-pipeline.txt:1:241: HIGH [P5 push-then-slice] sales builds an unbounded array with $push and a later stage slices it. Use a bounded accumulator ($firstN / $lastN / $topN / $bottomN, 5.2+) so the discarded elements are never held in memory.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  bare-pipeline.txt:1:322: MEDIUM [P5 sample-not-first] $sample uses a random cursor only as the first stage; later it reads and sorts the whole input randomly.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n\nRecommended indexes (recommend-only — build on non-prod first, check existing indexes):\n  db.getCollection(\"stores\").createIndex({ storeId: 1 })\n      $lookup from collection probes stores.storeId once per input document; without this index each probe is a collection scan.\n  db.getCollection(\"collection\").createIndex({ region: 1 })\n      [leading $match/$sort] ESR order: equality region.\n\nRewritten query:\ndb.collection.aggregate([{ \"$match\": { \"region\": \"EMEA\" } }, { \"$lookup\": { \"from\": \"stores\", \"localField\": \"storeId\", \"foreignField\": \"storeId\", \"as\": \"store\" } }, { \"$sort\": { \"amount\": -1 } }, { \"$group\": { \"_id\": \"$storeId\", \"sales\": { \"$push\": \"$$ROOT\" } } }, { \"$project\": { \"top\": { \"$slice\": [\"$sales\", 3] } } }, { \"$sample\": { \"size\": 5 } } ])\n\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, totalDocsExamined/nReturned near 1, nReturned unchanged."
+  "report": "MQL optimizer (static audit) — bare-pipeline.txt: 1 query, 2 high, 1 medium; 1 rewrite(s) applied in 1 iteration(s)\n\nInterpreted the input (bare pipeline (collection name unknown)) as:\ndb.collection.aggregate([{ \"$lookup\": { \"from\": \"stores\", \"localField\": \"storeId\", \"foreignField\": \"storeId\", \"as\": \"store\" } }, { \"$match\": { \"region\": \"EMEA\" } }, { \"$sort\": { \"amount\": -1 } }, { \"$group\": { \"_id\": \"$storeId\", \"sales\": { \"$push\": \"$$ROOT\" } } }, { \"$project\": { \"top\": { \"$slice\": [\"$sales\", 3] } } }, { \"$sample\": { \"size\": 5 } } ])\n\nApplied rewrites (result-preserving):\n  ✓ [P5 match-not-early-rewrite] Move $match ahead of $lookup.\n\nFindings:\n  bare-pipeline.txt:1:241: HIGH [P5 group-root] $push: \"$$ROOT\" carries whole documents into $group memory (100 MB per stage). $project only the fields you need first.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  bare-pipeline.txt:1:241: HIGH [P5 push-then-slice] sales builds an unbounded array with $push and a later stage slices it. Use a bounded accumulator ($firstN / $lastN / $topN / $bottomN, 5.2+) so the discarded elements are never held in memory.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n  bare-pipeline.txt:1:322: MEDIUM [P5 sample-not-first] $sample uses a random cursor only as the first stage; later it reads and sorts the whole input randomly.\n      read more: mdbx show skills/mongodb-expert/references/mongodb-aggregation-pipeline.md\n\nRecommended indexes (recommend-only — build on non-prod first, check existing indexes):\n  db.getCollection(\"stores\").createIndex({ storeId: 1 })\n      $lookup from an unspecified collection probes stores.storeId once per input document; without this index each probe is a collection scan.\n\nRewritten query:\ndb.collection.aggregate([{ \"$match\": { \"region\": \"EMEA\" } }, { \"$lookup\": { \"from\": \"stores\", \"localField\": \"storeId\", \"foreignField\": \"storeId\", \"as\": \"store\" } }, { \"$sort\": { \"amount\": -1 } }, { \"$group\": { \"_id\": \"$storeId\", \"sales\": { \"$push\": \"$$ROOT\" } } }, { \"$project\": { \"top\": { \"$slice\": [\"$sales\", 3] } } }, { \"$sample\": { \"size\": 5 } } ])\n\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, totalDocsExamined/nReturned near 1, nReturned unchanged."
 }

@@ -16,7 +16,7 @@ import { withBrowserContext, screenshotPaths } from "./browser-context.mjs";
 import { grabSelection } from "../lib/capture.js";
 
 const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright");
-const extDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const extDir = resolve(process.env.MDBX_EXTENSION_DIR || resolve(dirname(fileURLToPath(import.meta.url)), ".."));
 const shot = process.argv[2];
 
 const LOG = '{"t":{"$date":"2026-10-14T09:12:44Z"},"msg":"Slow query","attr":{"ns":"shop.orders","command":' +
@@ -78,7 +78,9 @@ await withBrowserContext(chromium, "mql-ext-", {
   await popup.click("#input-label");
   await popup.click("#example");
   await popup.waitForFunction(() => document.getElementById("status").textContent.includes("example"));
-  assert.match(await popup.textContent("#result"), /scanned : returned/);
+  const example = await popup.textContent("#result");
+  assert.match(example, /1843220/); assert.match(example, /4981 ms/);
+  assert.match(example, /log-collscan/); assert.match(example, /customerId: 1, createdAt: -1/);
   console.log("ok  'Try an example' renders evidence, findings, indexes");
 
   // 4. copy as Markdown
@@ -104,7 +106,7 @@ await withBrowserContext(chromium, "mql-ext-", {
   });
   if (!hasData) {
     appSkipped = true;
-    console.log("skip app checks: no data/ packaged (run scripts/package_chrome_extension.py)");
+    console.log("skip app checks: no data/ packaged (set MDBX_EXTENSION_DIR to an unpacked extension with data/)");
   } else {
     await sw.evaluate(async () => chrome.storage.session.set({ "selectionHandoff:search-test": { text: "shard key jumbo chunks balancer", ts: Date.now() } }));
     const pop2 = await ctx.newPage();
@@ -125,7 +127,7 @@ await withBrowserContext(chromium, "mql-ext-", {
     assert.ok((await app.locator("#detail .md").count()) === 1, "detail pane shows the first passage");
     assert.ok((await app.locator("#sources li").count()) > 20, "area facets listed");
     const source = await app.locator("#results li .src").first().textContent();
-    await app.locator("#sources li").filter({ has: app.locator(".name", { hasText: source }) }).first().click();
+    await app.locator("#sources li").filter({ has: app.getByText(source, { exact: true }) }).first().click();
     await app.waitForFunction(() => /area /.test(document.getElementById("search-status").textContent));
     assert.ok((await app.locator("#results li .src").allTextContents()).every(value => value === source), "every filtered hit belongs to the chosen source");
     console.log(`ok  app search: ${n} results, detail pane, ${await app.locator("#sources li").count()} area facets, facet narrowing`);
@@ -144,6 +146,7 @@ await withBrowserContext(chromium, "mql-ext-", {
     await app.waitForSelector("#lint-out .diag");
     assert.match(await app.textContent("#lint-out"), /unknown-operator/);
     await app.goto(`chrome-extension://${extId}/app.html#operators`);
+    await app.waitForSelector("#tab-operators:not([hidden]) #ops li");
     const operatorCount = await app.locator("#ops li").count();
     await app.fill("#op-filter", "$lookup");
     assert.ok((await app.locator("#ops li").count()) < operatorCount, "operator filter removes nonmatching rows");

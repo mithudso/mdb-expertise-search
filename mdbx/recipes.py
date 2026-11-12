@@ -60,8 +60,19 @@ def load(root: Path | None = None) -> list[Recipe]:
         relative = p.relative_to(root).as_posix()
         try:
             with open_confined(root, relative) as stream:
-                fm = parse_frontmatter(stream.read())
-        except ValueError:
+                header = []
+                first = stream.readline(65537)
+                if first == "---\n":
+                    header.append(first)
+                    for _ in range(1024):
+                        line = stream.readline(65537)
+                        if len(line) > 65536:
+                            raise ValueError("recipe frontmatter line is too long")
+                        header.append(line)
+                        if line in {"---\n", "---"} or not line:
+                            break
+                fm = parse_frontmatter("".join(header))
+        except (OSError, UnicodeError, ValueError):
             continue  # unsafe entries cannot become recipes or hide valid regular recipes
         recipes.append(
             Recipe(
@@ -80,6 +91,8 @@ def load(root: Path | None = None) -> list[Recipe]:
 def find(name: str, root: Path | None = None) -> list[Recipe]:
     """Exact name match first, otherwise every recipe whose name/title contains ``name``."""
     needle = name.lower().strip()
+    if not needle.replace("-", " ").split():
+        return []
     items = load(root)
     exact = [r for r in items if r.name.lower() == needle]
     if exact:

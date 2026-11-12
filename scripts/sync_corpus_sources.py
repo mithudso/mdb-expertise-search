@@ -9,6 +9,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from maintenance_safety import atomic_write, lock
+
 ROOT = Path(__file__).resolve().parent.parent
 TEXT_SUFFIXES = {".md", ".txt", ".json", ".jsonl"}  # inspected by both privacy gates
 
@@ -22,6 +24,11 @@ def reject_destination_symlinks(destination: Path) -> None:
 
 
 def sync_tree(source: Path, destination: Path, state_path: Path, *, facts_only: bool = False) -> None:
+    with lock(Path(state_path).with_suffix(".lock")):
+        _sync_tree(source, destination, state_path, facts_only=facts_only)
+
+
+def _sync_tree(source: Path, destination: Path, state_path: Path, *, facts_only: bool = False) -> None:
     source, destination, state_path = Path(source), Path(destination), Path(state_path)
     if not source.is_dir():
         return  # an unavailable source does not authorize deletion
@@ -46,15 +53,27 @@ def sync_tree(source: Path, destination: Path, state_path: Path, *, facts_only: 
         relative = Path(name)
         if relative.is_absolute() or ".." in relative.parts:
             raise ValueError("invalid source ownership state")
-    destination.mkdir(parents=True, exist_ok=True)
-    for path in files:
-        target = destination / path.relative_to(source)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(path, target, follow_symlinks=True)
-    for name in set(previous) - current:
+    # Reserve every path before copying. A failed copy remains owned and recoverable next time.
+    manifest[key] = sorted(set(previous) | current)
+    atomic_write(state_path, (json.dumps(manifest, sort_keys=True) + "\n").encode(), 0o600)
+    for name in sorted(set(previous) - current, key=lambda value: (-len(Path(value).parts), value)):
         obsolete = destination / name
         if obsolete.is_file():
             obsolete.unlink()
+        parent = obsolete.parent
+        while parent != destination and parent.is_relative_to(destination):
+            try:
+                parent.rmdir()
+            except OSError:
+                break
+            parent = parent.parent
+    destination.mkdir(parents=True, exist_ok=True)
+    for path in files:
+        target = destination / path.relative_to(source)
+        if target.is_dir():
+            target.rmdir()  # Never delete unowned contents during a directory-to-file transition.
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, target, follow_symlinks=True)
     manifest[key] = sorted(current)
     state_path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=state_path.parent, delete=False) as stream:
@@ -76,9 +95,9 @@ def check_publication(corpus: Path) -> None:
     corpus = corpus.absolute()
     result = subprocess.run(
         ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", corpus.name],
-        cwd=corpus.parent, capture_output=True, check=True, encoding="utf-8", errors="surrogateescape",
+        cwd=corpus.parent, capture_output=True, check=True, timeout=30,
     )
-    for relative in result.stdout.split("\\0"):
+    for relative in os.fsdecode(result.stdout).split("\0"):
         if not relative:
             continue
         candidate = corpus.parent / relative

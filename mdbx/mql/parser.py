@@ -81,7 +81,7 @@ class Parser:
         s, n = self.s, self.n
         while self.i < n:
             c = s[self.i]
-            if c.isspace():
+            if c.isspace() or c == "\ufeff":
                 self.i += 1
             elif s.startswith("//", self.i):
                 m = _LINE_END.search(s, self.i)
@@ -124,6 +124,7 @@ class Parser:
 
     def statement(self) -> Statement | None:
         start = self.i
+        initial_errors = len(self.errors)
         m = _IDENT.match(self.s, self.i)
         decl = None
         if m and m.group() in _DECL:
@@ -144,6 +145,8 @@ class Parser:
             return None
         # a trailing token that is not ; or newline-separated start of a new statement
         self.ws()
+        if node.kind in {"object", "array"} and len(self.errors) == initial_errors and self.i < self.n and self.s[self.i] != ";" and not _LINE_END.search(self.s, node.end, self.i):
+            self.err(self.i, self.i + 1, "expected a statement separator")
         return Statement(node, start, node.end, decl)
 
     def resync(self) -> None:
@@ -249,6 +252,9 @@ class Parser:
             if self.s.startswith(("//", "/*"), self.i):
                 self.ws()
                 continue
+            if c == "/":
+                self.regex()
+                continue
             if c in "{[(":
                 stack.append({"{": "}", "[": "]", "(": ")"}[c])
             elif c in "}])":
@@ -306,6 +312,7 @@ class Parser:
         start = self.i
         self.i += 1
         buf: list[str] = []
+        dynamic = False
         while self.i < self.n:
             c = self.s[self.i]
             if c == "\\" and self.i + 1 < self.n:
@@ -319,7 +326,7 @@ class Parser:
                 if nxt in {"u", "x"}:
                     width = 4 if nxt == "u" else 2
                     if nxt == "u" and self.i < self.n and self.s[self.i] == "{":
-                        close = self.s.find("}", self.i + 1)
+                        close = self.s.find("}", self.i + 1, self.i + 8)
                         digits = self.s[self.i + 1:close] if close >= 0 else ""
                         valid = bool(re.fullmatch(r"[0-9a-fA-F]{1,6}", digits)) and int(digits, 16) <= 0x10FFFF
                         if valid:
@@ -338,10 +345,15 @@ class Parser:
                     self.err(escape_start, self.i, "unsupported numeric string escape")
                 buf.append({"n": "\n", "t": "\t", "r": "\r", "b": "\b", "f": "\f", "v": "\v", "0": "\0"}.get(nxt, nxt))
                 continue
+            if q == "`" and self.s.startswith("${", self.i):
+                dynamic = True
             if c == q:
                 self.i += 1
+                if dynamic:
+                    self.err(start, self.i, "unsupported template interpolation")
+                    return Node("error", start, self.i)
                 return Node("string", start, self.i, "".join(buf).encode("utf-16-le", "surrogatepass").decode("utf-16-le", "surrogatepass"))
-            if c in "\n\r\u2028\u2029" and q != "`":
+            if c in "\n\r" and q != "`":
                 break
             buf.append(c)
             self.i += 1
@@ -354,6 +366,8 @@ class Parser:
         in_class = False
         while j < self.n:
             c = self.s[j]
+            if c in "\n\r\u2028\u2029" or (c == "\\" and j + 1 < self.n and self.s[j + 1] in "\n\r\u2028\u2029"):
+                break
             if c == "\\":
                 j += 2
                 continue
@@ -367,7 +381,7 @@ class Parser:
                 j = self.n
                 break
             j += 1
-        if j >= self.n:
+        if j >= self.n or self.s[j] != "/":
             self.err(start, min(self.n, start + 1), "unterminated regular expression")
             self.i = min(self.n, start + 1)
             return Node("error", start, self.i)

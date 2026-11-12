@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 import re
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -40,6 +41,14 @@ class Chunk:
         return hashlib.sha1(self.text.encode("utf-8")).hexdigest()
 
 
+def embedding_input(heading: str, text: str) -> str:
+    return f'{heading}\n{text}'[:2400]
+
+
+def embedding_input_hash(heading: str, text: str) -> str:
+    return hashlib.sha256(embedding_input(heading, text).encode('utf-8')).hexdigest()
+
+
 def classify(rel: Path) -> tuple[str, str]:
     """Return ``(kind, source)`` for a corpus-relative path."""
     parts = rel.parts
@@ -55,9 +64,16 @@ def classify(rel: Path) -> tuple[str, str]:
 
 
 def iter_files(root: Path) -> Iterator[Path]:
-    for p in sorted(root.rglob("*")):
-        if not p.is_symlink() and p.is_file() and p.suffix in TEXT_SUFFIXES and not p.name.startswith("."):
-            yield p
+    def failed(error):
+        raise error
+    paths = []
+    for directory, children, filenames in os.walk(root, onerror=failed, followlinks=False):
+        children[:] = sorted(name for name in children if not (Path(directory) / name).is_symlink())
+        for name in filenames:
+            p = Path(directory) / name
+            if not p.is_symlink() and p.is_file() and p.suffix in TEXT_SUFFIXES and not p.name.startswith('.'):
+                paths.append(p)
+    yield from sorted(paths)
 
 
 def chunk_text(text: str, *, max_chars: int = MAX_CHUNK_CHARS) -> list[tuple[str, int, str]]:

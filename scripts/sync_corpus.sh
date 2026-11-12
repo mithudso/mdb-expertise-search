@@ -7,9 +7,20 @@ SKILLS="${MDBX_SKILLS_SRC:-$HOME/.claude/skills}"
 LLMS_SRC="${MDBX_LLMS_SRC:-$HOME/dev/skills-explorer/llms}"
 DOCS_SRC="${MDBX_MONGODB_DOCS_LLMS:-$HOME/dev/llms-explorer/outputs/exports/mongodb.com.llms}"
 
+gate_log="$(mktemp)"
+trap 'rm -f "$gate_log"' EXIT
+if [ ! -f "${MDBX_DENYLIST:-$HOME/.config/mdbx/denylist.txt}" ]; then
+  echo "corpus privacy denylist is missing; nothing synced" >&2
+  exit 1
+fi
 python3 scripts/sync_corpus_sources.py --check-destination "$PWD/corpus"
 mkdir -p corpus/skills corpus/llms
-sync_tree() { python3 scripts/sync_corpus_sources.py -- "$1" "$2"; }
+sync_tree() {
+  if ! python3 scripts/sync_corpus_sources.py -- "$1" "$2" >"$gate_log" 2>&1; then
+    echo "corpus source copy failed; private diagnostics withheld" >&2
+    return 1
+  fi
+}
 for d in "$SKILLS"/mongodb-* "$SKILLS"/atlas-diagnostics-expert "$SKILLS"/atlas-vector-search-pii-isolation; do
   [ -d "$d" ] || continue
   sync_tree "$d" "corpus/skills/$(basename "$d")"
@@ -30,13 +41,14 @@ for d in "$CONCEPTS_SRC"/mongodb-*.llms; do
   [ -d "$d" ] || continue
   b="$(basename "$d")"
   case "$b" in mongodb-atlas-data-federation.llms|mongodb-drivers.llms) continue ;; esac
-  python3 scripts/sync_corpus_sources.py --facts-only -- "$d" "corpus/llms/$b"
+  if ! python3 scripts/sync_corpus_sources.py --facts-only -- "$d" "corpus/llms/$b" >"$gate_log" 2>&1; then
+    echo "corpus source copy failed; private diagnostics withheld" >&2
+    exit 1
+  fi
 done
 # NOTE: the deep MQL optimizer skill ships only as the redacted mongodb-expert reference
 # (corpus/skills/mongodb-expert/references/deep-mongodb-mql-query-optimizer.md); re-redact it by hand
 # after a re-sync — its live SKILL.md cites workload analyses that must not be committed.
-gate_log="$(mktemp)"
-trap 'rm -f "$gate_log"' EXIT
 if ! python3 scripts/redact_corpus.py >"$gate_log" 2>&1; then
   echo "corpus redaction failed; private diagnostics withheld" >&2
   exit 1
@@ -45,7 +57,13 @@ if ! python3 scripts/sync_corpus_sources.py --check-publication "$PWD/corpus" >"
   echo "corpus has publication candidates outside the privacy gate types" >&2
   exit 1
 fi
-if ! python3 scripts/sweep_customers.py >"$gate_log" 2>&1; then
+if python3 scripts/sweep_customers.py >"$gate_log" 2>&1; then
+  :
+else
+  sweep_status=$?
+  if [ "${MDBX_UPDATER_HOLDBACK:-0}" = 1 ] && [ "$sweep_status" = 1 ]; then
+    exit 3 # The updater restores flagged files, then repeats the mandatory sweep.
+  fi
   echo "corpus privacy sweep failed; private diagnostics withheld" >&2
   exit 1
 fi

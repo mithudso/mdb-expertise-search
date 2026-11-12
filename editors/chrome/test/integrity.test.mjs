@@ -8,7 +8,9 @@ import { loadIndex } from "../lib/store.js";
 
 test("selection cutoffs preserve Unicode and reject future handoffs", () => {
   const result = clamp("a".repeat(MAX_INPUT - 1) + "😀");
-  assert.ok(result.text.length <= MAX_INPUT);
+  assert.deepEqual(result, { text: "a".repeat(MAX_INPUT - 1), truncated: true });
+  const exact = "a".repeat(MAX_INPUT - 2) + "😀";
+  assert.deepEqual(clamp(exact), { text: exact, truncated: false });
   assert.doesNotThrow(() => encodeURIComponent(result.text));
   assert.equal(freshPending({ text: "synthetic", ts: 1001 }, 1000), false);
   assert.equal(freshPending({ text: "synthetic", ts: Infinity }, 1000), false);
@@ -82,6 +84,8 @@ test("embedding rejects malformed and zero responses and safely normalizes large
   const response = v => ({ fetchImpl: async () => ({ ok: true, status: 200, json: async () => ({ embeddings: [v] }) }) });
   for (const v of [["bad", 1], [null, 1], [0, 0], [Infinity, 0]]) await assert.rejects(embedQuery("synthetic", response(v)), EmbedError);
   const v = await embedQuery("synthetic", response([1e308, 1e308]));
+  assert.equal(v.length, 2);
+  for (const component of v) assert.ok(Math.abs(component - Math.SQRT1_2) < 1e-12);
   assert.ok(v.every(Number.isFinite));
   assert.ok(Math.abs(Math.hypot(...v) - 1) < 1e-12);
 });

@@ -177,6 +177,8 @@ def test_build_explicitly_confines_destinations_and_skips_semantic(tmp_path, mon
         assert kwargs["env"]["MDBX_DB"] == str(clone / "data/mdbx.sqlite")
         assert kwargs["env"]["MDBX_CORPUS"] == str(clone / "corpus")
         if "index" in argv: assert "--skip-semantic" in argv
+        if any(str(arg).endswith("package_chrome_extension.py") for arg in argv):
+            assert "--no-vectors" in argv
         return SimpleNamespace(returncode=0, stdout="", stderr="")
     monkeypatch.setattr(au.subprocess, "run", run); monkeypatch.setattr(au, "LOG_PATH", tmp_path / "log")
     cfg = {"clone_dir": str(clone), "python": sys.executable, "no_vectors": True}
@@ -192,7 +194,7 @@ def test_existing_unowned_clone_and_bad_revision_are_refused(tmp_path, monkeypat
     cfg = {"clone_dir": str(clone), "repo": "synthetic-repo", "branch": "main"}
     with pytest.raises(RuntimeError): au.ensure_clone(cfg)
     monkeypatch.setattr(au, "ensure_clone", lambda cfg: clone)
-    monkeypatch.setattr(au, "git", lambda args, cwd: SimpleNamespace(returncode=1 if args[0] == "rev-parse" else 0, stdout="origin/missing", stderr="synthetic secret"))
+    monkeypatch.setattr(au, "git", lambda args, cwd: SimpleNamespace(returncode=0, stdout="origin/missing", stderr="synthetic secret"))
     with pytest.raises(RuntimeError): au.upstream_commit(cfg)
 
 

@@ -5,18 +5,18 @@ import { join, parse } from "node:path";
 
 export async function withBrowserContext(chromium, prefix, launchOptions, work) {
   const profile = mkdtempSync(join(tmpdir(), prefix));
-  let context, primary;
+  let context, primaryFailed = false;
   try {
     context = await chromium.launchPersistentContext(profile, launchOptions);
     return await work(context);
   } catch (error) {
-    primary = error;
+    primaryFailed = true;
     throw error;
   } finally {
-    let cleanup;
-    try { await context?.close(); } catch (error) { cleanup = error; }
-    try { rmSync(profile, { recursive: true, force: true }); } catch (error) { cleanup ??= error; }
-    if (!primary && cleanup) throw cleanup;
+    let cleanup, cleanupFailed = false;
+    try { await context?.close(); } catch (error) { cleanup = error; cleanupFailed = true; }
+    try { rmSync(profile, { recursive: true, force: true }); } catch (error) { if (!cleanupFailed) cleanup = error; cleanupFailed = true; }
+    if (!primaryFailed && cleanupFailed) throw cleanup;
   }
 }
 

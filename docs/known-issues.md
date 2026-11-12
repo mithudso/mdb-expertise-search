@@ -59,3 +59,26 @@
 - Hub registry registration for this maintenance is delegated to the batch supervisor.
 
 - Secure corpus reads currently require POSIX no-follow directory descriptors and fail closed on unsupported platforms. Windows launcher resolution tests do not establish Windows corpus-read support.
+
+## Preserved serialization boundary (2026-11-12)
+
+Short parent-heading sections can report an approximate starting line, and tiny
+sibling sections can retain the previous breadcrumb. These two corroborated
+metadata defects are **BLOCKED: scope requires a separately authorized serialization
+migration**. Historical chunk_text and _merge_tiny remain exact; frozen search
+fixtures continue to verify production behavior. No copied legacy codec or fixture
+monkeypatch is used. The same scope also retains the current treatment of inline
+backtick fence openers and unbounded oversized breadcrumbs. Changing those chunk
+representations requires the same migration decision.
+
+Secure publication retains `.mdbx-recovery-*` displaced versions when an explicit
+expected-content update runs, including writes made later through an editor-held
+old inode. Stable `.mdbx-lock-*` files coordinate publishers. These ignored local
+artifacts preserve recovery evidence; users may inspect them before manual removal.
+
+The static optimizer also retains its existing strong warning for dotted key/value
+predicates without `$elemMatch` and numeric-looking string comparisons. Such input
+can be intentional for embedded objects or string schemas. The corroborated message/
+severity correction changes two ordinary optimizer expectation files outside the
+four-file authorization, so it is **BLOCKED by the current fixture scope**. Treat
+that advice as a prompt to inspect schema, rather than proof that a query is wrong.

@@ -31,10 +31,10 @@
       "patterns": [
         {
           "name": "keyword.control.mql",
-          "match": "\\b(const|let|var|use|new)\\b"
+          "match": "(?<![\\w$])(const|let|var|use|new)(?![\\w$])"
         },
         {
-          "match": "\\b(db)\\b(?:\\.([A-Za-z_][\\w-]*))?(?:\\.(find|findOne|aggregate|countDocuments|distinct|insertOne|insertMany|updateOne|updateMany|replaceOne|deleteOne|deleteMany|findOneAndUpdate|findOneAndDelete|findOneAndReplace|createIndex|watch|bulkWrite|sort|limit|skip|project|projection|hint|count|remove|update)(?=\\s*\\())?",
+          "match": "(?<![\\w$])(db)(?![\\w$])(?:\\.(?!getCollection\\s*\\()([A-Za-z_][\\w-]*))?(?:\\.(find|findOne|aggregate|countDocuments|distinct|insertOne|insertMany|updateOne|updateMany|replaceOne|deleteOne|deleteMany|findOneAndUpdate|findOneAndDelete|findOneAndReplace|createIndex|watch|bulkWrite|sort|limit|skip|project|projection|hint|count|remove|update)(?=\\s*\\())?",
           "captures": {
             "1": {
               "name": "support.variable.mql"
@@ -49,7 +49,7 @@
         },
         {
           "name": "support.function.method.mql",
-          "match": "(?<=\\.)(find|findOne|aggregate|sort|limit|skip|project|projection|hint|toArray|forEach|explain|countDocuments|distinct|updateOne|updateMany|deleteOne|deleteMany|insertOne|insertMany)(?=\\s*\\()"
+          "match": "(?<=\\.)(find|findOne|aggregate|countDocuments|distinct|insertOne|insertMany|updateOne|updateMany|replaceOne|deleteOne|deleteMany|findOneAndUpdate|findOneAndDelete|findOneAndReplace|createIndex|watch|bulkWrite|sort|limit|skip|project|projection|hint|count|remove|update|toArray|forEach|explain|getCollection)(?=\\s*\\()"
         }
       ]
     },
@@ -92,11 +92,11 @@
         },
         {
           "name": "support.class.constructor.mql",
-          "match": "\\b(ObjectId|ISODate|Date|NumberLong|NumberInt|NumberDecimal|Decimal128|UUID|Timestamp|BinData|MinKey|MaxKey|RegExp|DBRef)\\b(?=\\s*\\()"
+          "match": "(?<![\\w$])(ObjectId|ISODate|Date|NumberLong|NumberInt|NumberDecimal|Decimal128|UUID|Timestamp|BinData|MinKey|MaxKey|RegExp|DBRef)(?<![\\w$])(?=\\s*\\()"
         },
         {
           "name": "constant.language.mql",
-          "match": "\\b(true|false|null|undefined|Infinity|NaN)\\b"
+          "match": "(?<![\\w$])(true|false|null|undefined|Infinity|NaN)(?![\\w$])"
         },
         {
           "name": "constant.numeric.mql",
@@ -104,27 +104,35 @@
         },
         {
           "name": "string.regexp.mql",
-          "match": "(?<![\\w)\\]])/(?![/*])(?:\\\\.|\\[(?:\\\\.|[^\\]\\\\])*\\]|[^/\\\\\\n])+/[a-z]*"
+          "match": "(?<![\\w)\\]])/(?![/*])(?:\\\\.|\\[(?:\\\\.|[^\\]\\\\])*\\]|[^/[\\\\\\n\\r\\u2028\\u2029])+/[a-z]*"
         },
         {
           "name": "string.quoted.double.mql",
           "begin": "\"",
-          "end": "\"",
+          "end": "\"|(?=[\\r\\n\\u2028\\u2029])",
           "patterns": [
             {
               "name": "constant.character.escape.mql",
-              "match": "\\\\."
+              "match": "\\\\(?:\\r\\n|[\\s\\S])"
+            },
+            {
+              "name": "invalid.illegal.unterminated-string.mql",
+              "match": "[^\"\\\\\\r\\n\\u2028\\u2029]+$"
             }
           ]
         },
         {
           "name": "string.quoted.single.mql",
           "begin": "'",
-          "end": "'",
+          "end": "'|(?=[\\r\\n\\u2028\\u2029])",
           "patterns": [
             {
               "name": "constant.character.escape.mql",
-              "match": "\\\\."
+              "match": "\\\\(?:\\r\\n|[\\s\\S])"
+            },
+            {
+              "name": "invalid.illegal.unterminated-string.mql",
+              "match": "[^'\\\\\\r\\n\\u2028\\u2029]+$"
             }
           ]
         },

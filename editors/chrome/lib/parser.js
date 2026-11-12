@@ -144,6 +144,7 @@ class Parser {
 
   statement() {
     const start = this.i;
+    const initialErrors = this.errors.length;
     const m = matchAt(IDENT, this.s, this.i);
     let decl = null;
     if (m && DECL.has(m[0])) {
@@ -166,6 +167,11 @@ class Parser {
       return null;
     }
     this.ws();
+    if (["object", "array"].includes(node.kind) && this.errors.length === initialErrors &&
+        this.i < this.n && this.s[this.i] !== ";" &&
+        !/[\n\r\u2028\u2029]/.test(this.s.slice(node.end, this.i))) {
+      this.err(this.i, this.i + 1, "expected a statement separator");
+    }
     return new Statement(node, start, node.end, decl);
   }
 
@@ -277,6 +283,7 @@ class Parser {
       const c = this.s[this.i];
       if ('"\'\x60'.includes(c)) { this.string(); continue; }
       if (this.s.startsWith("//", this.i) || this.s.startsWith("/*", this.i)) { this.ws(); continue; }
+      if (c === "/") { this.regex(); continue; }
       if ("{[(".includes(c)) stack.push({"{": "}", "[": "]", "(": ")"}[c]);
       else if ("}])".includes(c)) {
         if (!stack.length || c !== stack[stack.length - 1]) break;
@@ -300,7 +307,13 @@ class Parser {
       const text = m[0];
       this.i = m.index + text.length;
       const val = Number(/^[-+]?0[xX]/.test(text) ? (text[0] === "-" ? -Number(text.slice(1)) : Number(text.replace(/^\+/, ""))) : text);
-      return new Node("number", m.index, this.i, Number.isNaN(val) && text !== "NaN" ? text : val);
+      const node = new Node("number", m.index, this.i, Number.isNaN(val) && text !== "NaN" ? text : val);
+      if (/^[-+]?(?:0[xX][0-9a-fA-F]+|\d+)$/.test(text)) {
+        const negative = text.startsWith("-");
+        const exact = BigInt(text.replace(/^[-+]/, ""));
+        node.exactInteger = (negative ? -exact : exact).toString();
+      }
+      return node;
     }
     m = matchAt(IDENT, this.s, this.i);
     if (m) {
@@ -325,6 +338,7 @@ class Parser {
     const start = this.i;
     this.i += 1;
     let buf = "";
+    let dynamic = false;
     while (this.i < this.n) {
       const c = this.s[this.i];
       if (c === "\\" && this.i + 1 < this.n) {
@@ -338,8 +352,9 @@ class Parser {
           let digits, valid;
           const width = nxt === "u" ? 4 : 2;
           if (nxt === "u" && this.s[this.i] === "{") {
-            const close = this.s.indexOf("}", this.i + 1);
-            digits = close < 0 ? "" : this.s.slice(this.i + 1, close);
+            let close = this.i + 1;
+            while (close < this.n && close <= this.i + 6 && /[0-9a-fA-F]/.test(this.s[close])) close++;
+            digits = this.s[close] === "}" ? this.s.slice(this.i + 1, close) : "";
             valid = /^[0-9a-fA-F]{1,6}$/.test(digits) && parseInt(digits, 16) <= 0x10ffff;
             if (valid) this.i = close + 1;
           } else {
@@ -358,9 +373,11 @@ class Parser {
       }
       if (c === q) {
         this.i += 1;
-        return new Node("string", start, this.i, buf);
+        if (dynamic) this.err(start, this.i, "unsupported template interpolation");
+        return new Node(dynamic ? "error" : "string", start, this.i, dynamic ? null : buf);
       }
-      if ("\n\r\u2028\u2029".includes(c) && q !== "`") break;
+      if (q === "`" && c === "$" && this.s[this.i + 1] === "{") dynamic = true;
+      if ("\n\r".includes(c) && q !== "`") break;
       buf += c;
       this.i += 1;
     }
@@ -376,6 +393,10 @@ class Parser {
     let inClass = false;
     while (j < this.n) {
       const c = this.s[j];
+      if ("\n\r\u2028\u2029".includes(c) || (c === "\\" && "\n\r\u2028\u2029".includes(this.s[j + 1] || "!"))) {
+        j = this.n;
+        break;
+      }
       if (c === "\\") {
         j += 2;
         continue;

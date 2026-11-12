@@ -45,7 +45,7 @@ const IDENT_FULL = /^[A-Za-z_$][\w$]*$/;
 const has = Object.prototype.hasOwnProperty;
 
 function keyText(k) {
-  return IDENT_FULL.test(k) ? k : pyJsonStr(k);
+  return k === "__proto__" ? `[${pyJsonStr(k)}]` : IDENT_FULL.test(k) ? k : pyJsonStr(k);
 }
 
 /** Python-compatible number formatting: integers without a decimal point. */
@@ -109,16 +109,18 @@ function splitRegex(value) {
   return [s.slice(0, i), s.slice(i + 1)];
 }
 
+const BSON_VALUES = new Set(["ObjectId", "ISODate", "Date", "NumberLong", "NumberInt", "NumberDecimal", "Decimal128", "UUID", "Timestamp", "BinData", "MinKey", "MaxKey", "DBRef"]);
+function pureValue(v) {
+  if (["string", "number", "bool", "null", "undefined", "regex"].includes(v.kind)) return true;
+  if (v.kind === "array") return v.items.every(pureValue);
+  if (v.kind === "object") return v.props.every(p => p.value !== null && pureValue(p.value));
+  return v.kind === "call" && v.target?.kind === "ident" && BSON_VALUES.has(v.target.value) && v.items.every(pureValue);
+}
 function isEqValue(v) {
-  if (EQ_KINDS.has(v.kind)) return true;
-  return v.kind === "object" && !v.props.some((p) => p.key.startsWith("$"));
+  if (!pureValue(v) || v.kind === "regex") return false;
+  return v.kind !== "object" || !v.props.some(p => p.key.startsWith("$"));
 }
-
-function uniq(items) {
-  const out = [];
-  for (const i of items) if (!out.includes(i)) out.push(i);
-  return out;
-}
+function uniq(items) { return [...new Set(items)]; }
 
 function projectionFields(proj) {
   if (!proj || proj.kind !== "object") return [];
@@ -129,6 +131,26 @@ function projectionFields(proj) {
     else return [];
   }
   return out;
+}
+
+
+function coverageBlocked(filter) {
+  if (!filter || filter.kind !== "object") return false;
+  const operatorBlocked = (node) => node.props.some((p) =>
+    p.key === "$elemMatch" ||
+    (p.key === "$eq" && p.value !== null && ["null", "array"].includes(p.value.kind)) ||
+    (p.key === "$not" && p.value !== null && p.value.kind === "object" && operatorBlocked(p.value)));
+  for (const p of filter.props) {
+    const value = p.value;
+    if (value === null) continue;
+    if (["$and", "$or", "$nor"].includes(p.key) && value.kind === "array") {
+      if (value.items.some(coverageBlocked)) return true;
+    } else if (!p.key.startsWith("$")) {
+      if (["null", "array"].includes(value.kind)) return true;
+      if (value.kind === "object" && operatorBlocked(value)) return true;
+    }
+  }
+  return false;
 }
 
 function matchFields(v) {
@@ -166,10 +188,11 @@ function produced([name, v]) {
     if (v.kind === "string") path = v.value;
     else {
       const pp = v.props.find((p) => p.key === "path" && p.value !== null);
-      path = pp ? pp.value.value : null;
+      path = pp?.value.kind === "string" ? pp.value.value : null;
     }
-    const extra = (v.kind === "object" ? v.props : []).filter((p) => p.key === "includeArrayIndex" && p.value !== null)
-      .map((p) => String(p.value.value).split(".")[0]);
+    const options = (v.kind === "object" ? v.props : []).filter(p => p.key === "includeArrayIndex");
+    if (options.some(p => p.value?.kind !== "string")) return new Set(["*"]);
+    const extra = options.map(p => String(p.value.value).split(".")[0]);
     const out = new Set(path ? [String(path).replace(/^\$+/, "").split(".")[0]] : ["*"]);
     for (const e of extra) out.add(e);
     return out;
@@ -202,8 +225,9 @@ function intersects(a, b) {
 }
 
 class Audit {
-  constructor(text) {
+  constructor(text, collections = new Map()) {
     this.text = text;
+    this.collections = collections;
     [this.statements, this.errors] = parse(text);
     this.vars = new Map();
     this.findings = [];
@@ -233,7 +257,15 @@ class Audit {
 
   run() {
     for (const st of this.statements) {
-      if (st.decl && !this.errors.length) this.vars.set(st.decl, st.node);
+      if (st.decl && !this.errors.length) {
+        const uses = this.statements.flatMap(other => other.node.walk()).filter(n => n.kind === "ident" && n.value === st.decl);
+        const safeUses = new Set();
+        for (const other of this.statements) for (const call of other.node.walk()) {
+          if (call.kind !== "call" || call.target?.kind !== "member" || !(call.target.value in TARGET_METHODS)) continue;
+          for (const argument of call.items) if (argument.kind === "ident") safeUses.add(argument);
+        }
+        if (uses.every(n => safeUses.has(n))) this.vars.set(st.decl, st.node);
+      }
       this.statement(st);
     }
   }
@@ -294,6 +326,7 @@ class Audit {
     }
     if (chain.has("sort") && chain.get("sort").items.length) t.sort = this.resolve(chain.get("sort").items[0]);
     if (chain.has("projection") && chain.get("projection").items.length) t.projection = this.resolve(chain.get("projection").items[0]);
+    if (this.collections.has(t.start)) t.collection = this.collections.get(t.start);
     this.targets.push(t);
     this.auditTarget(t, base);
   }
@@ -375,7 +408,7 @@ class Audit {
       const v = p.value;
       if (v === null) continue;
       if (p.key === "$and" && v.kind === "array") {
-        for (const it of v.items) if (it.kind === "object") preds = preds.concat(this.filter(it, { hasSort, prefix, rooted }));
+        for (const it of v.items) if (it.kind === "object") for (const pred of this.filter(it, { hasSort, prefix, rooted })) preds.push(pred);
       } else if ((p.key === "$or" || p.key === "$nor") && v.kind === "array") {
         for (const it of v.items) if (it.kind === "object") this.filter(it, { hasSort, prefix, rooted: false });
         if (p.key === "$or") this.orRules(obj, p, { hasSort, rooted });
@@ -395,7 +428,7 @@ class Audit {
           if (!dotted.has(head)) dotted.set(head, new Set());
           dotted.get(head).add(tail);
         }
-        preds = preds.concat(this.field(p, name, { hasSort }));
+        for (const pred of this.field(p, name, { hasSort })) preds.push(pred);
       }
     }
     for (const [head, subs] of dotted) {
@@ -510,10 +543,10 @@ class Audit {
     if (branches.length >= 2 && simple && fields.size === 1) {
       const f = [...fields][0];
       const vals = branches.map((b) => this.src(b.props[0].value)).join(", ");
-      const clash = parent.props.some((q) => q.key === f);
+      const clash = parent.props.some((q) => q.key === f) || new Set(parent.props.map(q => q.key)).size !== parent.props.length;
       this.add([p.start, p.end], MEDIUM, "or-to-in", "P4",
         `$or of equalities on one field (${f}) is an $in: one index scan with point bounds instead ` +
-        "of a subplan per branch, and sort-compatible.",
+        "of a subplan per branch. Sort support depends on the operand count and index.",
         { fix: clash ? null : `${keyText(f)}: { $in: [${vals}] }` });
       return;
     }
@@ -606,9 +639,9 @@ class Audit {
       const [name, v, item] = stages[i];
       if (name !== "$match" || i === 0 || v === null || v.kind !== "object") continue;
       const used = matchFields(v);
-      if (used === null) continue;
+      if (used === null || !pureValue(item)) continue;
       let j = i;
-      while (j > 0 && TRANSPARENT.has(stages[j - 1][0]) && !produced(stages[j - 1]).has("*") &&
+      while (j > 0 && pureValue(stages[j - 1][2]) && TRANSPARENT.has(stages[j - 1][0]) && !produced(stages[j - 1]).has("*") &&
         !intersects(produced(stages[j - 1]), used)) j -= 1;
       if (j === i) continue;
       const order = stages.map((s) => s[2]);
@@ -673,7 +706,7 @@ class Audit {
     const frm = opts.get("from"), ff = opts.get("foreignField");
     if (frm && frm.kind === "string" && ff && ff.kind === "string" && ff.value !== "_id") {
       this.indexes.push(new IndexRec(String(frm.value), [[String(ff.value), 1]],
-        `$lookup from ${t.collection} probes ${frm.value}.${ff.value} once per ` +
+        `$lookup from ${t.collection ?? "an unspecified collection"} probes ${frm.value}.${ff.value} once per ` +
         "input document; without this index each probe is a collection scan."));
     } else if (opts.has("pipeline") && !opts.has("localField")) {
       this.add(item, LOW, "lookup-pipeline", "P5",
@@ -708,19 +741,22 @@ class Audit {
   emit(t, preds, sort, proj, why) {
     if (t.collection === null) return;
     const eq = uniq(preds.filter((p) => p.kind === "eq" || p.kind === "in").map((p) => p.field));
-    let rng = uniq(preds.filter((p) => (p.kind === "range" || p.kind === "regex") && !eq.includes(p.field)).map((p) => p.field));
+    const eqSet = new Set(eq);
+    let rng = uniq(preds.filter((p) => (p.kind === "range" || p.kind === "regex") && !eqSet.has(p.field)).map((p) => p.field));
     const srt = [];
     if (sort && sort.kind === "object") {
       for (const p of sort.props) {
         const d = num(p.value);
-        if ((d === 1 || d === -1) && !eq.includes(p.key)) srt.push([p.key, Math.trunc(d)]);
+        if ((d === 1 || d === -1) && !eqSet.has(p.key)) srt.push([p.key, Math.trunc(d)]);
       }
     }
     const sortKeys = srt.map(([f]) => f);
-    const bounded = rng.filter((f) => sortKeys.includes(f));
-    rng = rng.filter((f) => !sortKeys.includes(f));
-    const keys = eq.map((f) => [f, 1]).concat(srt.filter(([f]) => !eq.includes(f)));
-    for (const f of rng) if (!keys.some(([k]) => k === f)) keys.push([f, 1]);
+    const sortSet = new Set(sortKeys);
+    const bounded = rng.filter((f) => sortSet.has(f));
+    rng = rng.filter((f) => !sortSet.has(f));
+    const keys = eq.map((f) => [f, 1]).concat(srt.filter(([f]) => !eqSet.has(f)));
+    const emittedFields = new Set(keys.map(([k]) => k));
+    for (const f of rng) if (!emittedFields.has(f)) { keys.push([f, 1]); emittedFields.add(f); }
     if (!keys.length) return;
     if (keys.length > 32) {
       this.add([t.start, t.end], MEDIUM, "index-too-wide", "P2",
@@ -741,9 +777,10 @@ class Audit {
     if (preds.some((p) => p.kind === "in") && srt.length) rationale += " $in under 201 values keeps the sort index-backed via SORT_MERGE.";
     const cover = projectionFields(proj);
     const keySet = new Set(keys.map(([k]) => k));
-    if (cover.length && cover.every((c) => keySet.has(c)) && proj) {
+    if (cover.length && cover.every((c) => keySet.has(c)) && proj && !coverageBlocked(t.filter)) {
       const excl = proj.props.some((p) => p.key === "_id" && num(p.value) === 0);
-      rationale += " Covers the projection" + (excl ? "" : " if you add _id: 0") + " (PROJECTION_COVERED, 0 documents examined).";
+      rationale += " May cover the projection" + (excl ? "" : " if you add _id: 0") +
+        "; null equality, multikey values and schema details can require document reads. Confirm coverage with explain().";
     }
     if (why) rationale = `[${why}] ` + rationale;
     const rec = new IndexRec(t.collection, keys, rationale);
@@ -756,7 +793,7 @@ class Audit {
   }
 
   recommendPipeline(t, stages) {
-    if (!stages.length || !(stages[0][0] === "$match" || stages[0][0] === "$sort")) return;
+    if (t.kind === "watch" || !stages.length || !(stages[0][0] === "$match" || stages[0][0] === "$sort")) return;
     let preds = [];
     let sort = null;
     if (stages[0][0] === "$match" && stages[0][1] !== null && stages[0][1].kind === "object") {
@@ -766,8 +803,8 @@ class Audit {
       sort = stages[0][1];
     }
     const fake = { kind: "find", collection: t.collection, method: "aggregate", start: t.start, end: t.end,
-      filter: null, projection: null, sort: null, pipeline: null, chain: new Map() };
-    this.emit(fake, preds, sort, null, "leading $match/$sort");
+      filter: stages[0][0] === "$match" ? stages[0][1] : null, projection: null, sort: null, pipeline: null, chain: new Map() };
+    this.recommend(fake, preds, sort, null, "leading $match/$sort");
   }
 }
 
@@ -833,7 +870,7 @@ export function optimize(text, { apply = true, maxIters = 3 } = {}) {
   let evidenceByStart = new Map();
   let offset = 0;
   for (const query of norm.queries) {
-    evidenceByStart.set(offset, query.evidence);
+    evidenceByStart.set(offset, query);
     offset += query.text.length + 1;
   }
   let iters = 0;
@@ -841,7 +878,7 @@ export function optimize(text, { apply = true, maxIters = 3 } = {}) {
   let nInput = 0;
   for (;;) {
     iters += 1;
-    audit = new Audit(current);
+    audit = new Audit(current, new Map([...evidenceByStart].map(([start, query]) => [start, query.collection])));
     audit.run();
     if (iters === 1) nInput = audit.targets.length;
     if (!apply || iters > maxIters || audit.errors.length) break;
@@ -860,8 +897,9 @@ export function optimize(text, { apply = true, maxIters = 3 } = {}) {
     applied = applied.concat(chosen);
     current = next;
   }
+  for (const error of audit.errors) audit.findings.push({ start: error.start, end: error.end, severity: HIGH, code: "syntax", pass: "P0", message: `Incomplete analysis: ${error.message}`, fix: null, ref: null });
   for (const target of audit.targets) {
-    target.evidence = evidenceByStart.get(target.start) ?? {};
+    target.evidence = evidenceByStart.get(target.start)?.evidence ?? {};
     if (Object.keys(target.evidence).length) audit.findings.push(...evidenceFindings(target.evidence, target.start, target.end));
   }
   audit.findings.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] || a.start - b.start);
@@ -913,7 +951,7 @@ export function formatReport(rep, name = "<input>") {
   const out = [];
   const t = rep.text;
   const pos = positions(t);
-  const counts = Object.keys(SEVERITY_ORDER).map((s) => [s, rep.findings.filter((f) => f.severity === s).length]);
+  const counts = Object.keys(SEVERITY_ORDER).map((s) => [s, rep.findings.filter((f) => !f.code.endsWith("-rewrite") && f.severity === s).length]);
   const countText = counts.filter(([, n]) => n).map(([s, n]) => `${n} ${s}`).join(", ") || "no open findings";
   out.push(`MQL optimizer (static audit) — ${name}: ${rep.inputQueries} quer${rep.inputQueries === 1 ? "y" : "ies"}, ` +
     countText + (rep.applied.length ? `; ${rep.applied.length} rewrite(s) applied in ${rep.iterations - 1} iteration(s)` : ""));

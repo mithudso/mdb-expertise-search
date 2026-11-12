@@ -187,7 +187,13 @@ function select(i) {
   $("results").children[i]?.scrollIntoView({ block: "nearest" });
   const cite = `${hit.path}:${hit.line} — ${hit.heading}`;
   const body = h("div", { class: "md" });
-  body.append(renderMarkdown(hit.text, { mark: markFor(state.q) }));
+  const context = { fence: null };
+  const chunks = index?.document(hit.path)?.chunks || [];
+  for (const chunk of chunks) {
+    if (chunk.id === hit.id || chunk.line >= hit.line) break;
+    renderMarkdown(chunk.text, { context });
+  }
+  body.append(renderMarkdown(hit.text, { mark: markFor(state.q), context }));
   $("detail").replaceChildren(
     h("div", { class: "crumb" }, hit.heading),
     h("div", { class: "loc" }, `${hit.path}:${hit.line}`),
@@ -221,10 +227,11 @@ async function showDocument(path, line, q) {
   $("doc-actions").replaceChildren(copyButton(() => d.chunks.map((c) => c.text).join("\n\n"), "Copy document"));
   const mark = markFor(q);
   let target = null;
+  const context = { fence: null };
   docEl.replaceChildren(...d.chunks.map((c, i) => {
     const isTarget = line && (c.line === line || (c.line <= line && (d.chunks[i + 1]?.line ?? Infinity) > line));
     const el = h("section", { class: `chunk md${isTarget ? " target" : ""}`, id: `L${c.line}` });
-    el.append(renderMarkdown(c.text, { mark: isTarget ? mark : null }));
+    el.append(renderMarkdown(c.text, { mark: isTarget ? mark : null, context }));
     if (isTarget && !target) target = el;
     return el;
   }));
@@ -256,6 +263,7 @@ function refLink(ref) {
 
 function runOptimize() {
   const text = $("opt-input").value;
+  $("opt-out").replaceChildren();
   if (!text.trim()) return;
   let rep;
   try {
@@ -281,15 +289,16 @@ function runLint() {
   const diags = diagnosticsToDicts(text, res.diagnostics);
   const symbols = symbolsToDicts(res.symbols);
   const outline = (syms) => h("ul", {}, syms.map((s) => h("li", {}, h("code", {}, s.name), ` ${s.kind}`, s.children?.length ? outline(s.children) : null)));
-  out.replaceChildren(
-    h("div", { class: "summary" }, diags.length ? ["error", "warning", "info", "hint"].map((sev) => {
+  const fragment = document.createDocumentFragment();
+  fragment.append(h("div", { class: "summary" }, diags.length ? ["error", "warning", "info", "hint"].map((sev) => {
       const n = diags.filter((d) => d.severity === sev).length;
       return n ? h("span", { class: `chip sev-${sev}` }, `${n} ${sev}`) : null;
-    }) : h("span", { class: "chip ok" }, "no problems found")),
-    ...diags.map((d) => h("div", { class: `diag sev-${d.severity}` },
+    }) : h("span", { class: "chip ok" }, "no problems found")));
+  for (const d of diags) fragment.append(h("div", { class: `diag sev-${d.severity}` },
       h("div", { class: "head" }, `${d.line + 1}:${d.column + 1} ${d.severity.toUpperCase()} · ${d.code}`),
-      h("p", {}, d.message, d.fix ? [" ", h("code", {}, d.fix)] : null))),
-    symbols.length ? [h("h2", {}, "Outline"), outline(symbols)] : null);
+      h("p", {}, d.message, d.fix ? [" ", h("code", {}, d.fix)] : null)));
+  if (symbols.length) fragment.append(h("h2", {}, "Outline"), outline(symbols));
+  out.replaceChildren(fragment);
 }
 
 // ---------------------------------------------------------------- operators
@@ -330,6 +339,8 @@ function originPattern(host) {
 }
 
 async function renderAbout() {
+  $("ollama-host").value = state.settings.host;
+  $("ollama-status").textContent = state.settings.semantic ? `On — using ${state.settings.host}` : "Off — keyword search only.";
   const idx = await ensureIndex();
   const m = idx ? idx.meta : null;
   const row = (k, v) => [h("dt", {}, k), h("dd", {}, v)];
@@ -341,8 +352,6 @@ async function renderAbout() {
     row("Recipes", String(m.recipes.length)), row("Built", `${m.built_at} by mdbx ${m.mdbx_version}`),
     row("Extension", chrome.runtime.getManifest().version),
   ].flat() : row("Index", "not packaged")));
-  $("ollama-host").value = state.settings.host;
-  $("ollama-status").textContent = state.settings.semantic ? `On — using ${state.settings.host}` : "Off — keyword search only.";
 }
 
 function showOllamaHelp(show) {
@@ -351,7 +360,7 @@ function showOllamaHelp(show) {
   if (!show) return;
   const id = chrome.runtime.id;
   const mac = `launchctl setenv OLLAMA_ORIGINS "chrome-extension://${id}"`;
-  const linux = `sudo systemctl edit ollama   # add: Environment="OLLAMA_ORIGINS=chrome-extension://${id}"`;
+  const linux = `sudo systemctl edit ollama\n# Add this override, save, then restart Ollama:\n[Service]\nEnvironment="OLLAMA_ORIGINS=chrome-extension://${id}"\nsudo systemctl restart ollama`;
   box.replaceChildren(
     h("p", {}, "Ollama only accepts requests from origins it trusts. Allow this extension, then restart Ollama:"),
     h("div", { class: "row" }, h("code", {}, mac), copyButton(() => mac)),
@@ -430,10 +439,12 @@ async function consumePending() {
       $("lint-input").value = appPending.text;
       go("lint");
       runLint();
+      if (appPending.truncated) $("lint-out").prepend(h("p", { class: "status error" }, "Only the first 200,000 characters of the selection were checked."));
     } else if (appPending.tab === "optimize") {
       $("opt-input").value = appPending.text;
       go("optimize");
       runOptimize();
+      if (appPending.truncated) $("opt-out").prepend(h("p", { class: "status error" }, "Only the first 200,000 characters of the selection were checked."));
     } else {
       go("search", { q: truncateText(appPending.text, 500) });
     }
@@ -460,7 +471,7 @@ function wire() {
     e.preventDefault();
     go("search", { q: $("q").value, kind: state.kind, source: state.source, mode: $("mode").value });
   });
-  $("mode").addEventListener("change", () => { state.mode = $("mode").value; if ($("q").value.trim()) runSearch($("q").value); });
+  $("mode").addEventListener("change", () => { state.mode = $("mode").value; go("search", { q: $("q").value, kind: state.kind, source: state.source, mode: state.mode }); });
   $("facet-filter").addEventListener("input", () => renderFacets());
   $("clear-scope").addEventListener("click", () => go("search", { q: $("q").value, kind: state.kind, mode: state.mode }));
   $("doc-back").addEventListener("click", () => { if (history.length > 1) history.back(); else location.hash = state.lastSearchHash; });
@@ -476,13 +487,13 @@ function wire() {
     $(id).addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) fn(); });
   }
   document.addEventListener("keydown", (e) => {
-    if ($("tab-search").hidden) return;
+    if ($("tab-search").hidden || e.defaultPrevented) return;
     const typing = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName);
     if (e.key === "/" && !typing) { e.preventDefault(); $("q").focus(); $("q").select(); }
     else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && state.hits.length && document.activeElement !== $("facet-filter") && (!typing || document.activeElement === $("q"))) {
       e.preventDefault();
       select(Math.max(0, Math.min(state.hits.length - 1, state.selected + (e.key === "ArrowDown" ? 1 : -1))));
-    } else if (e.key === "Enter" && !typing && state.hits[state.selected]) {
+    } else if (e.key === "Enter" && !typing && !["BUTTON", "A", "SUMMARY"].includes(document.activeElement?.tagName) && !document.activeElement?.isContentEditable && state.hits[state.selected]) {
       const hit = state.hits[state.selected];
       go("doc", { path: hit.path, line: hit.line, q: state.q });
     } else if (e.key === "Escape" && state.source) {

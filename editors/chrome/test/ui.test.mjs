@@ -125,11 +125,12 @@ test("popup code never assigns HTML from page text", () => {
 // Limited syntactic tripwire: direct sinks plus constant bracket names and split string constants.
 // This does not claim to resolve arbitrary aliases or runtime expressions.
 function hasUnsafeSink(source) {
-  const normalized = source.replace(/(["'])([^"']*)\1\s*\+\s*(["'])([^"']*)\3/g, (_m, _q, a, _r, b) => JSON.stringify(a + b));
+  let normalized = source, previous;
+  do { previous = normalized; normalized = normalized.replace(/(["'])([^"']*)\1\s*\+\s*(["'])([^"']*)\3/g, (_m, _q, a, _r, b) => JSON.stringify(a + b)); } while (normalized !== previous);
   return /innerHTML|outerHTML|insertAdjacentHTML|document\s*(?:\.\s*write|\[\s*["']write["']\s*\])|\beval\s*\(|new\s+Function\s*\(/.test(normalized);
 }
 
 test("HTML-sink guard recognizes constant computed access and spaced calls", () => {
-  for (const sample of ['element["inner" + "HTML"] = value', "element['outerHTML'] = value", 'element["insertAdjacentHTML"] ("beforeend", value)', "document . write (value)", "eval (value)", "new Function ('x')"]) assert.ok(hasUnsafeSink(sample), sample);
+  for (const sample of ['element["in" + "ner" + "HTML"] = value', 'element["in" + "ner" + "HT" + "ML"] = value', 'element["inner" + "HTML"] = value', "element['outerHTML'] = value", 'element["insertAdjacentHTML"] ("beforeend", value)', "document . write (value)", "eval (value)", "new Function ('x')"]) assert.ok(hasUnsafeSink(sample), sample);
   assert.equal(hasUnsafeSink("element.textContent = value"), false);
 });
