@@ -23,7 +23,7 @@ export async function loadIndex(read) {
   const whole = n => Number.isSafeInteger(n) && n >= 0;
   if (!meta || typeof meta !== "object" || !Number.isFinite(meta.total_tokens) || meta.total_tokens < 0) invalid("meta.json");
   if (meta.sources !== undefined && (!Array.isArray(meta.sources) || !meta.sources.every(s => s && typeof s === "object" && typeof s.source === "string" && typeof s.kind === "string" && whole(s.chunks)))) invalid("meta.json");
-  if (meta.recipes !== undefined && (!Array.isArray(meta.recipes) || !meta.recipes.every(r => r && typeof r === "object" && ["name", "title", "summary", "path"].every(k => typeof r[k] === "string") && (r.applies_to === undefined || (Array.isArray(r.applies_to) && r.applies_to.every(v => typeof v === "string")))))) invalid("meta.json");
+  if (meta.recipes !== undefined && (!Array.isArray(meta.recipes) || !meta.recipes.every(r => r && typeof r === "object" && ["name", "title", "summary"].every(k => typeof r[k] === "string") && (r.path === null || typeof r.path === "string") && (r.applies_to === undefined || (Array.isArray(r.applies_to) && r.applies_to.every(v => typeof v === "string")))))) invalid("meta.json");
   if (meta.by_kind !== undefined && (!meta.by_kind || typeof meta.by_kind !== "object" || Array.isArray(meta.by_kind) || !Object.values(meta.by_kind).every(whole))) invalid("meta.json");
   for (const k of ["chunks", "files", "terms", "postings"]) if (meta[k] !== undefined && !whole(meta[k])) invalid("meta.json");
   if (!chunks || !["paths", "sources", "kinds", "rows"].every(k => Array.isArray(chunks[k]))) invalid("chunks.json");
@@ -68,6 +68,7 @@ export async function loadIndex(read) {
       !Number.isSafeInteger(r[6]) || r[6] < -1 || (r[6] !== -1 && r[6] >= vectorCount)) invalid("chunks.json");
   }
   const completeMeta = { sources: [], recipes: [], by_kind: {}, files: chunks.paths.length, chunks: chunks.rows.length, terms: Object.keys(vocab).length, postings: postings.length, ...meta };
+  completeMeta.recipes = completeMeta.recipes.filter(r => r.path !== null);
   return new SearchIndex({ meta: completeMeta, chunks, vocab, ids: postings, wts: weights, doclen: lengths, vectors: vectorData });
 }
 
@@ -92,6 +93,7 @@ let cached = null;
 
 /** The extension's index, loaded once per page. */
 export function getIndex() {
+  if (globalThis.chrome?.runtime?.getManifest?.().mdbx_data === false) return Promise.resolve(null);
   if (!cached) {
     cached = loadIndex(extensionReader()).catch(error => { cached = null; throw error; });
   }

@@ -59,10 +59,14 @@ test('regression O7: wide-filter accumulation and identity membership have linea
   const source='db.c.find({'+keys.map(k=>k+':0').join(',')+',tail:{$ne:1}})';
   const full='db.c.find({'+Array.from({length:16384},(_,i)=>'k'+String(i).padStart(5,'0')+':0').join(',')+'})';
   assert.ok(full.length<200000);
+  const wide=optimize(full,{apply:false});
+  assert.equal(wide.targets.length,1);
+  assert.ok(wide.findings.some(f=>f.code==='index-too-wide'));
+  assert.deepEqual(wide.indexes,[]);
   const concat=Array.prototype.concat,includes=Array.prototype.includes;
   let copied=0,visited=0;
   Array.prototype.concat=function(...args){
-    if(this.length && this[0] && typeof this[0]==='object' && Object.hasOwn(this[0],'field') && Object.hasOwn(this[0],'kind')) copied+=this.length;
+    for(const values of [this,...args]) if(Array.isArray(values) && values.length && values[0] && typeof values[0]==='object' && Object.hasOwn(values[0],'field') && Object.hasOwn(values[0],'kind')) copied+=values.length;
     return Reflect.apply(concat,this,args);
   };
   Array.prototype.includes=function(value,...args){

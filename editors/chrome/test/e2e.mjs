@@ -13,10 +13,11 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { withBrowserContext, screenshotPaths } from "./browser-context.mjs";
-import { grabSelection } from "../lib/capture.js";
+import { loadCapture, hasPackagedData } from "./extension-under-test.mjs";
 
 const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright");
 const extDir = resolve(process.env.MDBX_EXTENSION_DIR || resolve(dirname(fileURLToPath(import.meta.url)), ".."));
+const { grabSelection } = await loadCapture(extDir);
 const shot = process.argv[2];
 
 const LOG = '{"t":{"$date":"2026-10-14T09:12:44Z"},"msg":"Slow query","attr":{"ns":"shop.orders","command":' +
@@ -46,13 +47,13 @@ await withBrowserContext(chromium, "mql-ext-", {
     r.selectNodeContents(document.getElementById("log"));
     const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
   });
-  assert.equal(await page.evaluate(fn), LOG, "highlighted <pre> text");
+  assert.equal((await page.evaluate(fn)).text, LOG, "highlighted <pre> text");
   await page.evaluate(() => {
     const ta = document.getElementById("ta");
     ta.focus();
     ta.setSelectionRange(13, 34);
   });
-  assert.equal(await page.evaluate(fn), "db.c.find({ a: /x/ })", "textarea selection");
+  assert.equal((await page.evaluate(fn)).text, "db.c.find({ a: /x/ })", "textarea selection");
   console.log("ok  grabSelection: <pre> highlight and textarea selection");
 
   // 2. right-click handoff -> popup
@@ -100,10 +101,11 @@ await withBrowserContext(chromium, "mql-ext-", {
 
   // 5. popup: a selection that is not a query searches the corpus instead (needs packaged data/)
   // An unavailable optional file is a skip; evaluation failures propagate and fail the script.
-  const hasData = await sw.evaluate(async () => {
-    try { return (await fetch(chrome.runtime.getURL("data/meta.json"))).ok; }
-    catch { return false; }
-  });
+  const hasData = await hasPackagedData(extDir, () => sw.evaluate(async () => {
+    const response = await fetch(chrome.runtime.getURL("data/meta.json"));
+    if (!response.ok) throw new Error(`Packaged metadata HTTP ${response.status}`);
+    return true;
+  }));
   if (!hasData) {
     appSkipped = true;
     console.log("skip app checks: no data/ packaged (set MDBX_EXTENSION_DIR to an unpacked extension with data/)");
@@ -158,9 +160,14 @@ await withBrowserContext(chromium, "mql-ext-", {
     // 8. optimizer "read more" opens the corpus page; right-click lint handoff
     await app.goto(`chrome-extension://${extId}/app.html#optimize`);
     await app.click("#opt-example");
-    await app.click("text=Read more in the corpus >> nth=0");
+    const expectedReference = "skills/mongodb-expert/references/mongodb-explain-plans-and-query-planner.md";
+    const reference = app.locator('.finding .links a').filter({ hasText: "Read more in the corpus" }).first();
+    assert.equal(await reference.getAttribute("href"), `#doc?path=${encodeURIComponent(expectedReference)}`);
+    await reference.click();
     await app.waitForSelector("#tab-doc:not([hidden]) .chunk", { timeout: 10000 });
-    console.log("ok  optimizer 'Read more in the corpus' opens the reference in the app");
+    assert.equal(new URLSearchParams(new URL(app.url()).hash.split("?")[1]).get("path"), expectedReference);
+    assert.ok((await app.textContent("#doc-title")).startsWith(expectedReference + " · "));
+    console.log("ok  optimizer 'Read more in the corpus' opens the expected reference in the app");
     const lintText = "db.c.find({ synthetic: { $gtt: 1 } })";
     await sw.evaluate(async text => chrome.storage.session.set({ "selectionHandoff:lint-test": { tab: "lint", text, ts: Date.now() } }), lintText);
     const app2 = await ctx.newPage();

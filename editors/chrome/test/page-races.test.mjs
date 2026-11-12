@@ -84,8 +84,10 @@ test("popup stale corpus completion cannot replace a report or empty and failed 
     return text.startsWith("db.") ? { inputQueries: 1, inputKind: "mongosh", findings: [], applied: [], indexes: [], evidence: [], interpreted: null } : { inputQueries: 0 };
   } } });
   p.run("old selection"); await flush();
-  p.run("db.c.find({})"); const report = p.$("result").textContent;
-  d.resolve(index()); await flush(); assert.equal(p.$("result").textContent, report);
+  p.run("db.c.find({})");
+  assert.equal(p.$("result").hidden, false); assert.ok(p.$("result").querySelector(".report"));
+  assert.match(p.$("result").textContent, /1 query/); const report = p.$("result").textContent;
+  d.resolve(index()); await flush(); assert.equal(p.$("result").hidden, false); assert.ok(p.$("result").querySelector(".report")); assert.equal(p.$("result").textContent, report);
   for (const replacement of ["", "bad query"]) {
     const pending = deferred(); p.deps.getIndex = () => pending.promise;
     fail = false; p.run("old corpus selection"); await flush();

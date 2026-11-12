@@ -4,12 +4,12 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import shutil
+import stat
 import subprocess
-import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
-from maintenance_safety import atomic_write, lock
+from maintenance_safety import atomic_write, git_environment, lock, safe_bytes
 
 ROOT = Path(__file__).resolve().parent.parent
 TEXT_SUFFIXES = {".md", ".txt", ".json", ".jsonl"}  # inspected by both privacy gates
@@ -23,79 +23,130 @@ def reject_destination_symlinks(destination: Path) -> None:
         raise ValueError("destination symlink is not allowed")
 
 
-def sync_tree(source: Path, destination: Path, state_path: Path, *, facts_only: bool = False) -> None:
+def _directory(path: Path, *, create=False):
+    path = Path(path).absolute()
+    current = os.open(path.anchor, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        for part in path.parts[1:]:
+            if create:
+                try:
+                    os.mkdir(part, dir_fd=current)
+                except FileExistsError:
+                    pass
+            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=current)
+            os.close(current)
+            current = child
+        return current
+    except BaseException:
+        os.close(current)
+        raise
+
+
+@contextmanager
+def _parent(root, relative):
+    parts = Path(relative).parts
+    if not parts or Path(relative).is_absolute() or any(part in {".", ".."} for part in parts):
+        raise ValueError("invalid owned path")
+    current = _directory(root)
+    try:
+        for part in parts[:-1]:
+            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=current)
+            os.close(current)
+            current = child
+        yield current, parts[-1]
+    finally:
+        os.close(current)
+
+
+def sync_tree(source: Path, destination: Path, state_path: Path, *, facts_only: bool = False, identity_destination: Path | None = None) -> None:
     with lock(Path(state_path).with_suffix(".lock")):
-        _sync_tree(source, destination, state_path, facts_only=facts_only)
+        _sync_tree(source, destination, state_path, facts_only=facts_only, identity_destination=identity_destination)
 
 
-def _sync_tree(source: Path, destination: Path, state_path: Path, *, facts_only: bool = False) -> None:
+def _sync_tree(source: Path, destination: Path, state_path: Path, *, facts_only: bool = False, identity_destination: Path | None = None) -> None:
     source, destination, state_path = Path(source), Path(destination), Path(state_path)
+    if source.is_symlink():
+        raise ValueError("source symlink is not allowed")
     if not source.is_dir():
         return  # an unavailable source does not authorize deletion
     reject_destination_symlinks(destination)
-    resolved_source = source.resolve()
     files = []
-    for path in sorted(source.rglob("*")):
-        if path.is_symlink() and (path.is_dir() or not path.resolve().is_relative_to(resolved_source)):
-            raise ValueError("source symlink escapes the selected source family")
-        permitted_name = not facts_only or path.relative_to(source).as_posix() in {"llms.txt", "llms-facts.txt", "llms-vocabulary.txt", "manifest.json"}
-        if path.is_file() and path.suffix in TEXT_SUFFIXES and path.name != ".skillfish.json" and permitted_name:
-            files.append(path)
+    def traversal_error(error):
+        raise error
+    for directory, folders, names in os.walk(source, onerror=traversal_error, followlinks=False):
+        if any((Path(directory) / name).is_symlink() for name in folders):
+            raise ValueError("source symlink is not allowed")
+        for name in sorted(names):
+            path = Path(directory) / name
+            permitted = not facts_only or path.relative_to(source).as_posix() in {"llms.txt", "llms-facts.txt", "llms-vocabulary.txt", "manifest.json"}
+            if path.suffix in TEXT_SUFFIXES and path.name != ".skillfish.json" and permitted:
+                if path.is_symlink():
+                    raise ValueError("source symlink is not allowed")
+                content = safe_bytes(path, source, max_bytes=16 * 1024 * 1024)
+                mode = (path.stat(follow_symlinks=False).st_mode & 0o666) | 0o200
+                files.append((path, content, mode))
     if any(parent.is_symlink() for parent in (state_path, *state_path.parents)):
         raise ValueError("ownership state symlink is not allowed")
     manifest = json.loads(state_path.read_text(encoding="utf-8")) if state_path.exists() else {}
     if not isinstance(manifest, dict) or any(not isinstance(names, list) or any(not isinstance(name, str) for name in names) for names in manifest.values()):
         raise ValueError("invalid source ownership state")
-    key = str(destination.absolute())
+    key = str((identity_destination or destination).absolute())
     previous = manifest.get(key, [])
-    current = {path.relative_to(source).as_posix() for path in files}
+    current = {path.relative_to(source).as_posix() for path, _, _ in files}
     for name in previous:
         relative = Path(name)
         if relative.is_absolute() or ".." in relative.parts:
             raise ValueError("invalid source ownership state")
     # Reserve every path before copying. A failed copy remains owned and recoverable next time.
     manifest[key] = sorted(set(previous) | current)
-    atomic_write(state_path, (json.dumps(manifest, sort_keys=True) + "\n").encode(), 0o600)
+    state_directory = _directory(state_path.parent, create=True)
+    os.close(state_directory)
+    atomic_write(state_path, (json.dumps(manifest, sort_keys=True) + "\n").encode(), 0o600, root=state_path.parent)
+    descriptor = _directory(destination, create=True)
+    os.close(descriptor)
     for name in sorted(set(previous) - current, key=lambda value: (-len(Path(value).parts), value)):
-        obsolete = destination / name
-        if obsolete.is_file():
-            obsolete.unlink()
-        parent = obsolete.parent
-        while parent != destination and parent.is_relative_to(destination):
+        with _parent(destination, name) as (parent, leaf):
             try:
-                parent.rmdir()
+                info = os.stat(leaf, dir_fd=parent, follow_symlinks=False)
+            except FileNotFoundError:
+                continue
+            if not stat.S_ISREG(info.st_mode):
+                raise ValueError("owned obsolete path is not regular")
+            os.unlink(leaf, dir_fd=parent)
+        parent = Path(name).parent
+        while str(parent) != ".":
+            try:
+                with _parent(destination, parent) as (parent_fd, leaf):
+                    os.rmdir(leaf, dir_fd=parent_fd)
             except OSError:
                 break
             parent = parent.parent
-    destination.mkdir(parents=True, exist_ok=True)
-    for path in files:
-        target = destination / path.relative_to(source)
-        if target.is_dir():
-            target.rmdir()  # Never delete unowned contents during a directory-to-file transition.
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(path, target, follow_symlinks=True)
-    manifest[key] = sorted(current)
-    state_path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=state_path.parent, delete=False) as stream:
-        temporary = Path(stream.name)
+    for path, content, mode in files:
+        relative = path.relative_to(source)
+        # Only an empty old owned directory may be removed during a type transition.
         try:
-            json.dump(manifest, stream, sort_keys=True)
-            stream.write("\n")
-        except BaseException:
-            temporary.unlink(missing_ok=True)
-            raise
-    try:
-        os.replace(temporary, state_path)
-    finally:
-        temporary.unlink(missing_ok=True)
+            with _parent(destination, relative) as (parent, leaf):
+                info = os.stat(leaf, dir_fd=parent, follow_symlinks=False)
+                if stat.S_ISDIR(info.st_mode):
+                    os.rmdir(leaf, dir_fd=parent)
+                elif not stat.S_ISREG(info.st_mode):
+                    raise ValueError("destination path is not regular")
+                else:
+                    mode &= stat.S_IMODE(info.st_mode) | 0o200
+        except FileNotFoundError:
+            pass
+        atomic_write(destination / relative, content, mode, root=destination)
+    manifest[key] = sorted(current)
+    atomic_write(state_path, (json.dumps(manifest, sort_keys=True) + "\n").encode(), 0o600,
+                 root=state_path.parent)
 
 
-def check_publication(corpus: Path) -> None:
+def check_publication(corpus: Path, *, repository: Path | None = None) -> None:
     """Reject publishable files that neither text privacy gate inspects."""
     corpus = corpus.absolute()
     result = subprocess.run(
-        ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", corpus.name],
-        cwd=corpus.parent, capture_output=True, check=True, timeout=30,
+        ["git", "-C", str(repository or corpus.parent), "--work-tree", str(corpus.parent), "ls-files", "--cached", "--others", "--exclude-standard", "-z", "--", corpus.name],
+        cwd=corpus.parent, capture_output=True, check=True, timeout=30, env=git_environment(),
     )
     for relative in os.fsdecode(result.stdout).split("\0"):
         if not relative:

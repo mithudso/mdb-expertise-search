@@ -32,20 +32,18 @@ test('regression N3: valid large batch is not converted into function arguments'
 });
 
 test('regression N4: nonoverlapping header errors are visited linearly',()=>{
-  const n=300;
-  const source='@\n{attr:{command:{find:"c",filter:{}}}}\n'.repeat(n);
-  const originalSome=Array.prototype.some;
-  let visits=0;
-  Array.prototype.some=function(callback,thisArg){
-    return originalSome.call(this,(value,index,array)=>{
-      if(value && typeof value==='object' && Object.hasOwn(value,'message') && Object.hasOwn(value,'start') && Object.hasOwn(value,'end')) visits++;
-      return callback.call(thisArg,value,index,array);
-    });
-  };
-  let result;
-  try { result=normalize(source); } finally {Array.prototype.some=originalSome;}
-  assert.equal(result.queries.length,n);
-  assert.ok(visits<=8*n,`error-overlap visits ${visits}, linear budget ${8*n}`);
+  const counts=[];
+  for(const n of [150,300]) {
+    const source='@\n{attr:{command:{find:"c",filter:{}}}}\n'.repeat(n);
+    const push=Array.prototype.push;let visits=0;
+    Array.prototype.push=function(...values){
+      values=values.map(value=>value && typeof value==='object' && Object.hasOwn(value,'message') && Object.hasOwn(value,'start') && Object.hasOwn(value,'end') ? new Proxy(value,{get(target,key,receiver){if(key==='start'||key==='end')visits++;return Reflect.get(target,key,receiver);}}):value);
+      return Reflect.apply(push,this,values);
+    };
+    let result;try{result=normalize(source);}finally{Array.prototype.push=push;}
+    assert.equal(result.queries.length,n);counts.push(visits);
+  }
+  assert.ok(counts[0]>0 && counts[1]<=3*counts[0]+100,JSON.stringify(counts));
 });
 
 test('regression N2a: unsafe raw integer measurements do not enter P9 arithmetic',()=>{

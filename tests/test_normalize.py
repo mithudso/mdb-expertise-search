@@ -158,7 +158,11 @@ def test_wrapper_ranges_and_unsupported_commands_preserve_source():
                         ('$numberDouble', ['Infinity', 'NaN', '1e309', '0, injected:1'])]:
         for value in values:
             source = json.dumps({'find':'c','filter':{'n':{key:value}}})
-            assert json.dumps(value) in normalize(source).text
+            from mdbx.mql.parser import parse
+            filter_node = parse(normalize(source).text)[0][0].node.items[0]
+            node = next(prop.value for prop in filter_node.props if prop.key == "n")
+            assert node.kind == "object" and len(node.props) == 1
+            assert node.props[0].key == key and node.props[0].value.value == value
     for source in ['{find:"c",filter:{},tailable:true}',
                    '{update:"c",updates:[{q:{a:1},u:{b:2},multi:true}]}',
                    '{delete:"c",deletes:[{q:{a:1},limit:1},{q:{a:2},limit:2}]}',

@@ -97,8 +97,8 @@ function constantExpr(node) {
   if (node.kind === "string") return !String(node.value).startsWith("$");
   if (node.kind === "array") return node.items.every(constantExpr);
   if (node.kind === "object") {
-    if (node.props.length === 1 && node.props[0].key === "$literal") return true;
-    return node.props.every((p) => p.value !== null && constantExpr(p.value));
+    if (node.props.length === 1 && ["$literal", "$const"].includes(node.props[0].key)) return true;
+    return node.props.every((p) => !p.key.startsWith("$") && p.value !== null && constantExpr(p.value));
   }
   return false;
 }
@@ -256,17 +256,36 @@ class Audit {
   }
 
   run() {
-    for (const st of this.statements) {
-      if (st.decl && !this.errors.length) {
-        const uses = this.statements.flatMap(other => other.node.walk()).filter(n => n.kind === "ident" && n.value === st.decl);
-        const safeUses = new Set();
-        for (const other of this.statements) for (const call of other.node.walk()) {
-          if (call.kind !== "call" || call.target?.kind !== "member" || !(call.target.value in TARGET_METHODS)) continue;
-          for (const argument of call.items) if (argument.kind === "ident") safeUses.add(argument);
+    const bindings = new Map(), uses = new Map(), safeRefs = new Set();
+    const nodesByStatement = this.statements.map(st => st.node.walk());
+    this.statements.forEach((st, i) => {
+      if (st.decl) { bindings.set(st.decl, st.node); uses.set(st.node, []); }
+      for (const node of nodesByStatement[i]) {
+        if (node.kind === "call" && node.target?.kind === "member") {
+          const method = String(node.target.value), receiver = node.target.target;
+          let dbReceiver = receiver?.kind === "member" && receiver.target?.kind === "ident" && receiver.target.value === "db";
+          if (receiver?.kind === "call") {
+            const member = receiver.target;
+            dbReceiver = member?.kind === "member" && member.value === "getCollection" && member.target?.kind === "ident" && member.target.value === "db";
+          }
+          if (dbReceiver && Object.hasOwn(TARGET_METHODS, method)) {
+            const argi = TARGET_METHODS[method] ?? 0;
+            if (node.items[argi]?.kind === "ident") safeRefs.add(node.items[argi]);
+          }
         }
-        if (uses.every(n => safeUses.has(n))) this.vars.set(st.decl, st.node);
+        if (node.kind === "ident" && bindings.has(String(node.value))) uses.get(bindings.get(String(node.value))).push(node);
       }
+    });
+    const unsafe = [...uses].filter(([, refs]) => refs.length !== 1 || refs.some(ref => !safeRefs.has(ref))).map(([node]) => node);
+    for (const st of this.statements) {
+      if (st.decl && !this.errors.length) this.vars.set(st.decl, st.node);
       this.statement(st);
+    }
+    unsafe.sort((a,b)=>a.start-b.start);
+    for (const finding of this.findings) {
+      let lo=0,hi=unsafe.length;
+      while(lo<hi){const mid=(lo+hi)>>>1;if(unsafe[mid].start<=finding.start)lo=mid+1;else hi=mid;}
+      if(lo>0 && finding.end<=unsafe[lo-1].end) finding.fix=null;
     }
   }
 
@@ -472,7 +491,7 @@ class Audit {
         out.push({ field: name, kind: "eq", nIn: 0 });
       } else if (op === "$in" && qv !== null && qv.kind === "array") {
         const n = qv.items.length;
-        out.push({ field: name, kind: n < IN_SORT_LIMIT ? "in" : "range", nIn: n });
+        out.push({ field: name, kind: n < IN_SORT_LIMIT && qv.items.every(it => isEqValue(it) && it.kind !== "regex") ? "in" : "range", nIn: n });
         if (n >= 10000) {
           this.add(q, HIGH, "huge-in", "P4",
             `$in with ${n} values: parse, plan and bounds cost grow with every value. Load the set ` +
@@ -913,7 +932,13 @@ export function optimize(text, { apply = true, maxIters = 3 } = {}) {
 
 function positions(t) {
   const starts = [0];
-  for (let i = 0; i < t.length; i++) if (t.charCodeAt(i) === 10) starts.push(i + 1);
+  for (let i = 0; i < t.length; i++) {
+    const c = t.charCodeAt(i);
+    if ([10,13,0x2028,0x2029].includes(c)) {
+      if (c === 13 && t.charCodeAt(i + 1) === 10) i++;
+      starts.push(i + 1);
+    }
+  }
   return (off) => {
     let lo = 0, hi = starts.length;
     while (lo + 1 < hi) {
@@ -986,7 +1011,7 @@ export function formatReport(rep, name = "<input>") {
   if (rep.changed) out.push("\nRewritten query:\n" + rep.text.trimEnd());
   out.push("\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, " +
     "totalDocsExamined/nReturned near 1, nReturned unchanged.");
-  return out.join("\n");
+  return [...out.join("\n")].map(c => /[\p{Cc}\p{Cf}\p{Cs}]/u.test(c) && c !== "\n" && c !== "\t" ? "\\x" + c.codePointAt(0).toString(16).padStart(2,"0") : c).join("");
 }
 
 /** Python str() of an evidence value (True/False for booleans). */

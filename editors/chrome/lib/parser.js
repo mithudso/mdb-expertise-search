@@ -32,6 +32,7 @@ export class Node {
     this.props = [];
     this.items = [];
     this.target = null;
+    this.index = null;
     this.nameStart = 0;
     this.closed = true;
   }
@@ -44,6 +45,7 @@ export class Node {
       out.push(node);
       const children = [...node.props.filter(p => p.value !== null).map(p => p.value), ...node.items];
       if (node.target !== null) children.push(node.target);
+      if (node.index !== null) children.push(node.index);
       for (let i = children.length - 1; i >= 0; i--) stack.push(children[i]);
     }
     return out;
@@ -93,6 +95,7 @@ class Parser {
     this.i = 0;
     this.errors = [];
     this.depth = 0;
+    this.regexFailures = new Set();
   }
 
   ws() {
@@ -167,7 +170,7 @@ class Parser {
       return null;
     }
     this.ws();
-    if (["object", "array"].includes(node.kind) && this.errors.length === initialErrors &&
+    if (["object", "array", "call"].includes(node.kind) && this.errors.length === initialErrors &&
         this.i < this.n && this.s[this.i] !== ";" &&
         !/[\n\r\u2028\u2029]/.test(this.s.slice(node.end, this.i))) {
       this.err(this.i, this.i + 1, "expected a statement separator");
@@ -218,6 +221,7 @@ class Parser {
       } else if (c === "[" && (node.kind === "ident" || node.kind === "member")) {
         this.i += 1;
         const inner = this.expression();
+        if (inner === null) this.err(this.i, this.i + 1, "expected a computed property expression");
         this.ws();
         if (this.i < this.n && this.s[this.i] === "]") this.i += 1;
         else this.err(this.i, this.i + 1, "expected ']'");
@@ -225,6 +229,7 @@ class Parser {
         const mem = new Node("member", node.start, this.i, name);
         mem.target = node;
         mem.nameStart = node.end;
+        mem.index = inner;
         node = mem;
       } else {
         break;
@@ -306,6 +311,7 @@ class Parser {
     if (m && ("+-.0123456789".includes(m[0][0]) || m[0] === "Infinity" || m[0] === "NaN")) {
       const text = m[0];
       this.i = m.index + text.length;
+      if (this.i < this.n && /[\p{L}\p{N}_$]/u.test(this.s[this.i])) this.err(this.i, this.i + 1, "invalid numeric literal");
       const val = Number(/^[-+]?0[xX]/.test(text) ? (text[0] === "-" ? -Number(text.slice(1)) : Number(text.replace(/^\+/, ""))) : text);
       const node = new Node("number", m.index, this.i, Number.isNaN(val) && text !== "NaN" ? text : val);
       if (/^[-+]?(?:0[xX][0-9a-fA-F]+|\d+)$/.test(text)) {
@@ -378,6 +384,11 @@ class Parser {
       }
       if (q === "`" && c === "$" && this.s[this.i + 1] === "{") dynamic = true;
       if ("\n\r".includes(c) && q !== "`") break;
+      if (q === "`" && c === "\r") {
+        buf += "\n";
+        this.i += this.s.slice(this.i, this.i + 2) === "\r\n" ? 2 : 1;
+        continue;
+      }
       buf += c;
       this.i += 1;
     }
@@ -391,7 +402,11 @@ class Parser {
     const start = this.i;
     let j = this.i + 1;
     let inClass = false;
+    const traversed = [];
     while (j < this.n) {
+      const state = 2 * j + Number(inClass);
+      if (this.regexFailures.has(state)) { j = this.n; break; }
+      traversed.push(state);
       const c = this.s[j];
       if ("\n\r\u2028\u2029".includes(c) || (c === "\\" && "\n\r\u2028\u2029".includes(this.s[j + 1] || "!"))) {
         j = this.n;
@@ -411,6 +426,7 @@ class Parser {
       j += 1;
     }
     if (j >= this.n) {
+      for (const state of traversed) this.regexFailures.add(state);
       this.err(start, Math.min(this.n, start + 1), "unterminated regular expression");
       this.i = Math.min(this.n, start + 1);
       return new Node("error", start, this.i);
@@ -420,6 +436,7 @@ class Parser {
     const m = matchAt(FLAGS, this.s, j);
     const flags = m ? m[0] : "";
     this.i = j + flags.length;
+    if ([...flags].some(f => !"dgimsuvy".includes(f)) || new Set(flags).size !== flags.length || (flags.includes("u") && flags.includes("v"))) this.err(j, this.i, "invalid regular expression flags");
     return new Node("regex", start, this.i, src + "/" + flags);
   }
 
@@ -521,7 +538,7 @@ class Parser {
         this.skipBadValue(new Set(["}"]));
         return null;
       }
-      key = m[0];
+      key = /^-?[0-9]/.test(m[0]) ? String(Number(m[0])) : m[0];
       this.i = m.index + m[0].length;
     }
     const k1 = this.i;

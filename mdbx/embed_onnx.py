@@ -73,7 +73,7 @@ def available() -> bool:
         import tokenizers  # noqa: F401
 
         _resolve(download=False)
-    except (ImportError, OnnxUnavailable):
+    except Exception:  # noqa: BLE001 - optional imports may fail during native initialization
         return False
     return True
 

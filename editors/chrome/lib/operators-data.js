@@ -51,6 +51,9 @@ export default {
   },
   {
    "arg": "string",
+   "arguments": {
+    "accexpr": "object"
+   },
    "cats": [
     "acc",
     "stage"
@@ -284,6 +287,9 @@ export default {
   },
   {
    "arg": "object",
+   "arguments": {
+    "text": "string"
+   },
    "cats": [
     "stage",
     "sub"
@@ -367,6 +373,9 @@ export default {
   },
   {
    "arg": "string|array",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "stage",
     "update"
@@ -392,6 +401,9 @@ export default {
   },
   {
    "arg": "array+",
+   "arguments": {
+    "expr": "array"
+   },
    "cats": [
     "expr",
     "qtop"
@@ -401,6 +413,9 @@ export default {
   },
   {
    "arg": "array+",
+   "arguments": {
+    "expr": "array"
+   },
    "cats": [
     "expr",
     "qtop"
@@ -466,6 +481,9 @@ export default {
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -475,6 +493,9 @@ export default {
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -484,6 +505,9 @@ export default {
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -493,6 +517,9 @@ export default {
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -502,6 +529,9 @@ export default {
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -511,6 +541,9 @@ export default {
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -520,6 +553,9 @@ export default {
   },
   {
    "arg": "array",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -598,6 +634,9 @@ export default {
   },
   {
    "arg": "nonneg",
+   "arguments": {
+    "expr": "any"
+   },
    "cats": [
     "expr",
     "query"
@@ -1827,6 +1866,9 @@ export default {
   },
   {
    "arg": "any",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "acc",
     "update"
@@ -1933,6 +1975,9 @@ export default {
   },
   {
    "arg": "any",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "acc",
     "expr",
@@ -1952,6 +1997,9 @@ export default {
   },
   {
    "arg": "any",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "acc",
     "expr",
@@ -1971,6 +2019,9 @@ export default {
   },
   {
    "arg": "any",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "acc",
     "update"

@@ -44,7 +44,8 @@
   spread, or loops).
 - MCP uses the v2 SDK (`mcp.server.mcpserver.MCPServer`); v1 `FastMCP` code does not run on it.
 - Natural-language queries fall back from AND to OR keyword matching; very long queries can be noisy.
-- The TUI test covers keyword mode only (no Ollama in CI).
+- TUI tests use synthetic keyword/hybrid paths and stubbed embeddings; real Ollama and
+  interactive model performance remain outside this maintenance.
 
 - Short-section chunk metadata retains the historical format used by the frozen
   search fixtures. A section can share a chunk with an adjacent section, so the
@@ -53,10 +54,9 @@
 - Existing unlabelled semantic vectors require an explicit provenance migration;
   the builder refuses to assign them an inferred model identity. No live migration
   or embedding generation was performed.
-- macOS offline checks use sandbox-exec to deny process-tree outbound traffic.
-  Other platforms need equivalent isolation; the Python socket fixture alone does
-  not isolate child processes or prevent in-process inference.
-- Hub registry registration for this maintenance is delegated to the batch supervisor.
+- macOS offline checks use sandbox-exec; Ubuntu CI uses a temporary network namespace
+  with a non-root uid/gid. Other platforms fail closed. Network denial is paired with
+  synthetic preimport factories to prevent local model inference.
 
 - Secure corpus reads currently require POSIX no-follow directory descriptors and fail closed on unsupported platforms. Windows launcher resolution tests do not establish Windows corpus-read support.
 
@@ -82,3 +82,21 @@ can be intentional for embedded objects or string schemas. The corroborated mess
 severity correction changes two ordinary optimizer expectation files outside the
 four-file authorization, so it is **BLOCKED by the current fixture scope**. Treat
 that advice as a prompt to inspect schema, rather than proof that a query is wrong.
+
+## Scoped operational limits after the post-gate repairs
+
+- Corpus synchronization validates a complete private staged generation before its
+  atomic publication. A flagged candidate withholds the whole generation, including
+  otherwise clean changes. This conservative failure behavior preserves the live
+  corpus; retry after the privacy configuration or input is corrected.
+- Redaction and transactional sync require a verified private metadata directory.
+  A linked-worktree `.git` file is unsupported by these maintenance paths and fails
+  before publication. Do not replace that check with an untrusted gitdir path.
+- Selection capture follows same-origin focused-frame ancestry. Cross-origin frame
+  ancestry cannot be inspected by that bounded probe; it retains the existing
+  selection fallback. Virtualized page editors can expose only their visible text.
+- Multi-file generated publications and expected-content updates retain ignored
+  recovery versions to preserve concurrent editor writes. Inspect these local
+  artifacts before a deliberate cleanup; this maintenance did not clean live data.
+- The maintained VSCode client remains on vscode-languageclient9.0.1. Its major11
+  migration is deferred; the cancellation repair follows the installed v9 contract.

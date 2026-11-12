@@ -63,7 +63,9 @@ def test_sync_runtime_copies_only_runtime_and_swaps_atomically(tmp_path):
     assert not (install / "lib" / "notes.md").exists()
     assert (install / "lib" / "a.js").read_text() == "x"
     assert au.read_stamp(install)["commit"] == "c2"
-    assert not install.with_name("ext.new").exists() and not install.with_name("ext.old").exists()
+    assert not list(tmp_path.glob(".ext.stage-*"))
+    assert not list(tmp_path.glob(".ext.backup-*"))
+    assert not (tmp_path / ".ext.swap.json").exists()
 
 
 def test_sync_runtime_refuses_without_manifest(tmp_path):
@@ -132,12 +134,9 @@ def test_sync_runtime_preserves_install_on_promotion_failure(tmp_path, monkeypat
     install = tmp_path / "ext"
     (install / "data").mkdir(parents=True)
     (install / "data/build.json").write_text(json.dumps({"commit": "c1"}))
-    real_rename = au.os.rename
-    def fail_promotion(src, dst):
-        if Path(src).name.startswith(".ext.stage-") and Path(dst) == install:
-            raise OSError("synthetic promotion failure")
-        return real_rename(src, dst)
-    monkeypatch.setattr(au.os, "rename", fail_promotion)
+    def fail_promotion(*args):
+        raise OSError("synthetic promotion failure")
+    monkeypatch.setattr(au, "exchange_entries", fail_promotion)
     with pytest.raises(OSError, match="synthetic promotion failure"):
         au.sync_runtime(source, install)
     assert au.read_stamp(install)["commit"] == "c1"
@@ -147,11 +146,9 @@ def test_install_preserves_unowned_siblings_and_rolls_back_failure(tmp_path, mon
     import pytest
     src = tmp_path / "src"; _fake_ext(src); install = tmp_path / "ext"; install.mkdir(); (install / "previous").write_text("keep")
     sibling = tmp_path / "ext.old"; sibling.mkdir(); (sibling / "private").write_text("preserve")
-    real = au.os.rename
-    def fail_stage(source, destination):
-        if str(source).find(".stage-") >= 0: raise OSError("synthetic rename failure")
-        return real(source, destination)
-    monkeypatch.setattr(au.os, "rename", fail_stage)
+    def fail_stage(*args):
+        raise OSError("synthetic exchange failure")
+    monkeypatch.setattr(au, "exchange_entries", fail_stage)
     with pytest.raises((OSError, RuntimeError)): au.sync_runtime(src, install)
     assert (install / "previous").read_text() == "keep"
     assert (sibling / "private").read_text() == "preserve"
@@ -168,7 +165,6 @@ def test_install_rejects_incomplete_manifest_runtime(tmp_path):
 def test_build_explicitly_confines_destinations_and_skips_semantic(tmp_path, monkeypatch):
     from types import SimpleNamespace
 
-    import pytest
     clone = tmp_path / "clone"; clone.mkdir()
     monkeypatch.setenv("MDBX_DB", str(tmp_path / "unrelated.sqlite")); monkeypatch.setenv("MDBX_CORPUS", str(tmp_path / "private"))
     seen = []
@@ -182,8 +178,15 @@ def test_build_explicitly_confines_destinations_and_skips_semantic(tmp_path, mon
         return SimpleNamespace(returncode=0, stdout="", stderr="")
     monkeypatch.setattr(au.subprocess, "run", run); monkeypatch.setattr(au, "LOG_PATH", tmp_path / "log")
     cfg = {"clone_dir": str(clone), "python": sys.executable, "no_vectors": True}
-    with pytest.raises((OSError, RuntimeError, ValueError)): au.build_from_clone(cfg)
-    assert seen
+    runtime = tmp_path / "built"
+    _fake_ext(runtime)
+    (clone / "editors/chrome").mkdir(parents=True)
+    (clone / "editors/chrome/manifest.json").write_text('{"version":"0.3.0"}')
+    monkeypatch.setattr(au, "unpack_archive", lambda path, destination: None)
+    assert au.build_from_clone(cfg, destination=runtime) == runtime
+    assert len(seen) == 2
+    assert "index" in seen[0][0]
+    assert any(str(arg).endswith("package_chrome_extension.py") for arg in seen[1][0])
 
 
 def test_existing_unowned_clone_and_bad_revision_are_refused(tmp_path, monkeypatch):
@@ -229,4 +232,7 @@ def test_expected_operational_errors_use_the_command_boundary(tmp_path, monkeypa
     monkeypatch.setattr(au, "CONFIG_PATH", tmp_path / "cfg"); monkeypatch.setattr(au, "LOG_PATH", tmp_path / "log")
     monkeypatch.setattr(au, "origin_url", lambda: "synthetic")
     monkeypatch.setattr(au, "run_update", lambda *a, **k: (_ for _ in ()).throw(FileNotFoundError("SYNTH_SECRET")))
-    assert au.main(["run"]) == 1; assert "SYNTH_SECRET" not in capsys.readouterr().out
+    assert au.main(["run"]) == 1
+    captured = capsys.readouterr()
+    assert "SYNTH_SECRET" not in captured.out + captured.err
+    assert "SYNTH_SECRET" not in (tmp_path / "log").read_text()

@@ -64,7 +64,7 @@ def test_semantic_ranking_with_fake_embeddings(tmp_path, monkeypatch):
     con = index.connect(tmp_path / "t.sqlite")
     index.build_keyword(con, make_corpus(tmp_path))
 
-    def fake(texts, prefix="search_document: ", timeout=0):
+    def fake(texts, prefix="search_document: ", timeout=0, **kwargs):
         v = np.zeros((len(texts), 2), dtype=np.float32)
         for i, t in enumerate(texts):
             v[i] = (1, 0) if "shard" in t.lower() else (0, 1)
@@ -193,6 +193,10 @@ class PositionMeter(str):
         if isinstance(key, slice):
             self.work += len(result)
         return result
+    def __iter__(self):
+        for char in super().__iter__():
+            self.work += 1
+            yield char
     def count(self, sub, start=0, end=None):
         end=len(self) if end is None else end
         self.work += end-start
@@ -211,6 +215,13 @@ def test_position_meter_detects_quadratic_prefix_copies():
     for diagnostic in report.diagnostics:
         text[:diagnostic.start].count('\n')
     assert text.work > 100*len(text)
+
+
+def test_position_meter_detects_repeated_full_iteration():
+    text, report = _position_case()
+    for _ in report.diagnostics:
+        list(text)
+    assert text.work > 100 * len(text)
 
 
 def test_review_lint_positions_are_linear(monkeypatch, capsys):
@@ -234,7 +245,9 @@ def test_review_mcp_positions_are_linear(monkeypatch):
     from mdbx import mcp_server as module
     text, report = _position_case()
     monkeypatch.setattr(module,'analyze',lambda _:report)
-    assert module.mql_lint(text)[-1]['line'] == 1000
+    diagnostics = module.mql_lint(text)
+    assert len(diagnostics) == 1000
+    assert [(d['line'], d['column']) for d in diagnostics] == [(i+1, 1) for i in range(1000)]
     assert text.work <= 4*len(text)
 
 

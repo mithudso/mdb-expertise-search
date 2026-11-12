@@ -105,6 +105,7 @@ def _diagnostic_key(d):
 
 
 def _plain_snippet(text: str) -> str:
+    text = re.sub(r"(?<!\\)\$\{[0-9]+\|((?:\\.|[^|])*)\|\}", lambda m: re.split(r"(?<!\\),", m.group(1))[0].replace(r"\,", ",").replace(r"\|", "|"), text)
     text = re.sub(r"(?<!\\)\$\{[0-9]+:([^{}]*)\}", lambda m: m.group(1), text)
     text = re.sub(r"(?<!\\)\$(?:[0-9]+|\{[0-9]+\})", "", text)
     return re.sub(r"\\([\\$}])", r"\1", text)
@@ -143,6 +144,8 @@ def optimizer_diagnostics(text: str) -> list[Diag]:
 def make_expertise_lookup():
     """Return a callable ``term -> ["path:line — heading", ...]`` backed by the mdbx index, or None."""
     try:
+        import sqlite3
+
         from .. import index as idx
         from .. import search as srch
 
@@ -153,7 +156,9 @@ def make_expertise_lookup():
         def lookup(term: str) -> list[str]:
             con = None
             try:
-                con = idx.connect(db)
+                con = sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True, timeout=0.05)
+                con.row_factory = sqlite3.Row
+                con.execute("PRAGMA query_only=ON")
                 hits = srch.keyword(con, term.lstrip("$") + " mongodb", 2, kind="skill")
                 return [f"`{h.location}` — {h.heading.split(' > ')[-1]}" for h in hits]
             except Exception:  # noqa: BLE001 - optional index failures must preserve built-in docs
@@ -264,6 +269,9 @@ def build_server() -> LanguageServer:
         types.CodeActionOptions(code_action_kinds=[types.CodeActionKind.QuickFix]),
     )
     def code_action(params: types.CodeActionParams) -> list[types.CodeAction]:
+        eligible = [d for d in params.context.diagnostics if isinstance(d.data, dict) and isinstance(d.data.get("fix"), str) and d.data.get("fix") and d.source in {"mql", "mql-optimizer"}]
+        if not eligible:
+            return []
         uri = params.text_document.uri
         doc = server.workspace.get_text_document(uri)
         res = analyze(doc.source)
@@ -271,7 +279,7 @@ def build_server() -> LanguageServer:
         valid_keys = {_diagnostic_key(d) for d in valid}
         valid_keys.discard(None)
         actions = []
-        for d in params.context.diagnostics:
+        for d in eligible:
             fix = (d.data or {}).get("fix") if isinstance(d.data, dict) else None
             if not isinstance(fix, str) or not fix or d.source not in {"mql", "mql-optimizer"}:
                 continue

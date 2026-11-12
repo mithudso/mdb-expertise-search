@@ -30,16 +30,19 @@ import json
 import os
 import plistlib
 import re
+import signal
 import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from maintenance_safety import (
+    atomic_write,
     confined_corpus_path,
     git_environment,
     lock,
     mark_clone,
+    safe_bytes,
     scrub,
     verify_clone,
 )
@@ -148,16 +151,21 @@ def reset_to_origin(clone: Path, branch: str) -> None:
 
 
 def sweep(clone: Path, python: str, environment: dict | None = None) -> tuple[int, list[str]]:
-    res = subprocess.run([python, str(clone / "scripts" / "sweep_customers.py"), "--json"], cwd=str(clone),
-                         capture_output=True, text=True, timeout=600, check=False, env=git_environment(dict(os.environ, **(environment or {}), PYTHONDONTWRITEBYTECODE="1")))
+    res = None
     try:
+        res = subprocess.run([python, str(clone / "scripts" / "sweep_customers.py"), "--json"], cwd=str(clone),
+                             capture_output=True, text=True, timeout=600, check=False,
+                             env=git_environment(dict(os.environ, **(environment or {}), PYTHONDONTWRITEBYTECODE="1")))
         result = json.loads(res.stdout)
-        if result.get("status") not in {"clean", "markers"} or res.returncode not in (0, 1): raise ValueError()
+        if not isinstance(result, dict) or result.get("status") not in {"clean", "markers"} or res.returncode not in (0, 1):
+            raise ValueError()
         files = result["files"]
-        if not isinstance(files, list) or not all(isinstance(p, str) for p in files): raise ValueError()
-        for rel in files: confined_corpus_path(clone, rel)
-    except (ValueError, KeyError, TypeError, RuntimeError):
-        log(f"sweep execution failed (exit {res.returncode})")
+        if not isinstance(files, list) or not all(isinstance(path, str) for path in files):
+            raise ValueError()
+        for rel in files:
+            confined_corpus_path(clone, rel)
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError, subprocess.SubprocessError):
+        log(f"sweep execution failed (exit {getattr(res, 'returncode', 'unavailable')})")
         return 2, []
     return res.returncode, files
 
@@ -171,7 +179,7 @@ def restore_committed(clone: Path, files: list[str]) -> None:
             must_git(["--literal-pathspecs", "checkout", "HEAD", "--", rel], clone, f"git checkout {rel}")
         else:
             candidate.unlink(missing_ok=True)
-        log(f"  held back {rel} ({'kept committed text' if tracked else 'new file dropped'})")
+        log("  held back one flagged corpus file (" + ("kept committed text" if tracked else "new file dropped") + ")")
 
 
 def run_update(cfg: dict, *, dry_run: bool = False) -> int:
@@ -184,8 +192,65 @@ def run_update(cfg: dict, *, dry_run: bool = False) -> int:
         log("busy: another corpus update is active"); return 0
 
 
+def run_sync(argv, *, cwd, env, timeout):
+    """Reap the complete owned process group before any reset or lock release."""
+    process = subprocess.Popen(argv, cwd=cwd, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               text=True, start_new_session=True)
+    try:
+        out, err = process.communicate(timeout=timeout)
+    except BaseException:
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        process.communicate()
+        raise
+    return subprocess.CompletedProcess(argv, process.returncode, out, err)
+
+
+def pending_path(clone):
+    return clone / ".git/mdbx-corpus-pending.json"
+
+
+def record_pending(clone):
+    head = must_git(["rev-parse", "HEAD"], clone, "pending revision lookup").strip()
+    atomic_write(pending_path(clone), json.dumps({"head": head}).encode(), 0o600, root=clone)
+
+
+def publish_pending(cfg, clone):
+    path = pending_path(clone)
+    expected = json.loads(safe_bytes(path, clone))["head"]
+    head = must_git(["rev-parse", "HEAD"], clone, "pending revision lookup").strip()
+    if head != expected:
+        raise RuntimeError("pending maintenance revision changed; preserve it for review")
+    changed = must_git(["diff-tree", "--no-commit-id", "--name-only", "-r", head], clone, "pending scope lookup")
+    if not changed.strip() or any(not value.startswith("corpus/") for value in changed.splitlines()):
+        raise RuntimeError("pending maintenance revision has unexpected scope")
+    rc, _hits = sweep(clone, cfg["python"], cfg.get("environment", {}))
+    if rc:
+        return 1
+    pull = git(["pull", "--rebase", "--quiet", "origin", cfg["branch"]], clone)
+    if pull.returncode:
+        git(["rebase", "--abort"], clone)
+        raise RuntimeError("git pull --rebase failed")
+    record_pending(clone)
+    rc, _hits = sweep(clone, cfg["python"], cfg.get("environment", {}))
+    if rc:
+        log("abort: outgoing rebased tree failed sweep; nothing pushed")
+        return 1
+    must_git(["push", "origin", f"HEAD:{cfg['branch']}"], clone, "git push")
+    path.unlink()
+    log("pushed corpus refresh to origin/" + cfg["branch"])
+    return 0
+
+
 def _run_update(cfg: dict, *, dry_run: bool = False) -> int:
     clone = ensure_clone(cfg)
+    if pending_path(clone).exists():
+        if dry_run:
+            log("dry run: pending maintenance revision preserved; nothing published")
+            return 0
+        return publish_pending(cfg, clone)
     reset_to_origin(clone, cfg["branch"])
     py = cfg["python"]
     denylist = Path(cfg.get("environment", {}).get("MDBX_DENYLIST", os.environ.get("MDBX_DENYLIST", HOME / ".config" / "mdbx" / "denylist.txt")))
@@ -197,8 +262,8 @@ def _run_update(cfg: dict, *, dry_run: bool = False) -> int:
         log("warning: selected private redaction rules are missing; only generic rules apply")
     env = dict(os.environ, **cfg.get("environment", {}), MDBX_SKIP_INDEX="1", MDBX_UPDATER_HOLDBACK="1", PYTHONDONTWRITEBYTECODE="1")
     try:
-        sync = subprocess.run(["bash", str(clone / "scripts" / "sync_corpus.sh")], cwd=str(clone), env=git_environment(env),
-                              capture_output=True, text=True, timeout=1800, check=False)
+        sync = run_sync(["bash", str(clone / "scripts" / "sync_corpus.sh")], cwd=str(clone),
+                        env=git_environment(env), timeout=1800)
     except (OSError, subprocess.SubprocessError):
         log("abort: source sync could not finish; generated changes discarded")
         reset_to_origin(clone, cfg["branch"])
@@ -227,23 +292,16 @@ def _run_update(cfg: dict, *, dry_run: bool = False) -> int:
     new = sum(1 for ln in changed if ln.startswith("??"))
     log(f"{len(changed)} corpus path(s) changed ({new} new)")
     if dry_run:
-        log("dry run: leaving the clone's changes uncommitted")
+        reset_to_origin(clone, cfg["branch"])
+        log("dry run: checked changes were not published; maintenance clone restored")
         return 0
     must_git(["add", "--", "corpus"], clone, "git add")
     msg = (f"corpus: refresh from local skills and llms sources ({dt.date.today().isoformat()})\n\n"
            f"{len(changed)} path(s) changed, {new} new. Automated by scripts/corpus_autoupdate.py; "
            "redacted and swept before commit.\n")
     must_git(["commit", "-q", "-m", msg], clone, "git commit")
-    pull = git(["pull", "--rebase", "--quiet", "origin", cfg["branch"]], clone)
-    if pull.returncode != 0:
-        git(["rebase", "--abort"], clone)
-        raise RuntimeError("git pull --rebase failed")
-    rc, _hits = sweep(clone, py, cfg.get("environment", {}))
-    if rc:
-        log(f"abort: outgoing rebased tree failed sweep (exit {rc}); nothing pushed"); return 1
-    must_git(["push", "origin", f"HEAD:{cfg['branch']}"], clone, "git push")
-    log("pushed corpus refresh to origin/" + cfg["branch"])
-    return 0
+    record_pending(clone)
+    return publish_pending(cfg, clone)
 
 
 def agent_plist(cfg: dict) -> dict:
@@ -260,6 +318,12 @@ def agent_plist(cfg: dict) -> dict:
 
 
 def install_agent(cfg: dict) -> int:
+    clone = Path(cfg.get("clone_dir", DEFAULT_CLONE_DIR))
+    with lock(clone.with_name("." + clone.name + ".corpus-update.lock")):
+        return _install_agent(cfg)
+
+
+def _install_agent(cfg: dict) -> int:
     if sys.platform != "darwin":
         print("install-agent needs macOS launchd; on other systems run `run` from cron", file=sys.stderr)
         return 2

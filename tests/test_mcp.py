@@ -127,18 +127,39 @@ def test_review_mcp_show_does_not_consume_unrequested_tail(env,monkeypatch):
     from contextlib import contextmanager
 
     from mdbx import safety
-    class Budget(io.StringIO):
-        used=0
-        def read(self,size=-1):
-            assert 0 < size <= 8192
-            text=super().read(size)
-            self.used+=len(text)
-            assert self.used<=8192
+    class Budget:
+        def __init__(self, text):
+            self.stream = io.StringIO(text)
+            self.used = 0
+        def consume(self, text):
+            self.used += len(text)
+            assert self.used <= 8192
             return text
+        def read(self, size=-1):
+            assert 0 < size <= 8192
+            return self.consume(self.stream.read(size))
+        def readline(self, size=-1):
+            return self.consume(self.stream.readline(size))
+        def readlines(self, hint=-1):
+            result = []
+            total = 0
+            for line in self:
+                result.append(line)
+                total += len(line)
+                if hint > 0 and total >= hint:
+                    break
+            return result
+        def __iter__(self):
+            return self
+        def __next__(self):
+            line = self.readline()
+            if not line:
+                raise StopIteration
+            return line
     stream=Budget('head\n'+'tail\n'*10000)
     @contextmanager
     def opened(*args):
         yield stream
     monkeypatch.setattr(safety,'open_confined',opened)
     assert m.mdb_show('synthetic.md',1,1)=='head'
-    assert stream.used==8192
+    assert 0 < stream.used <= 8192

@@ -50,6 +50,9 @@
   },
   {
    "arg": "string",
+   "arguments": {
+    "accexpr": "object"
+   },
    "cats": [
     "acc",
     "stage"
@@ -283,6 +286,9 @@
   },
   {
    "arg": "object",
+   "arguments": {
+    "text": "string"
+   },
    "cats": [
     "stage",
     "sub"
@@ -366,6 +372,9 @@
   },
   {
    "arg": "string|array",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "stage",
     "update"
@@ -391,6 +400,9 @@
   },
   {
    "arg": "array+",
+   "arguments": {
+    "expr": "array"
+   },
    "cats": [
     "expr",
     "qtop"
@@ -400,6 +412,9 @@
   },
   {
    "arg": "array+",
+   "arguments": {
+    "expr": "array"
+   },
    "cats": [
     "expr",
     "qtop"
@@ -465,6 +480,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -474,6 +492,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -483,6 +504,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -492,6 +516,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -501,6 +528,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -510,6 +540,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -519,6 +552,9 @@
   },
   {
    "arg": "array",
+   "arguments": {
+    "expr": "array2"
+   },
    "cats": [
     "expr",
     "query"
@@ -597,6 +633,9 @@
   },
   {
    "arg": "nonneg",
+   "arguments": {
+    "expr": "any"
+   },
    "cats": [
     "expr",
     "query"
@@ -1826,6 +1865,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "acc",
     "update"
@@ -1932,6 +1974,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "acc",
     "expr",
@@ -1951,6 +1996,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "acc",
     "expr",
@@ -1970,6 +2018,9 @@
   },
   {
    "arg": "any",
+   "arguments": {
+    "update": "object"
+   },
    "cats": [
     "acc",
     "update"

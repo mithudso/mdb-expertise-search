@@ -45,13 +45,23 @@ def _read_frame(stream) -> dict:
 
 def read_msg(proc, deadline=None, phase="read"):
     if not hasattr(proc, "_mql_messages"):
-        proc._mql_messages = queue.Queue()
+        proc._mql_messages = queue.Queue(maxsize=128)
+        proc._mql_stop = threading.Event()
+        def put(message):
+            while not proc._mql_stop.is_set():
+                try:
+                    proc._mql_messages.put(message, timeout=0.05)
+                    return True
+                except queue.Full:
+                    continue
+            return False
         def reader():
             try:
-                while True:
-                    proc._mql_messages.put(_read_frame(proc.stdout))
+                while not proc._mql_stop.is_set():
+                    if not put(_read_frame(proc.stdout)):
+                        break
             except Exception as error:  # noqa: BLE001 - transfer reader failures to the test thread
-                proc._mql_messages.put(error)
+                put(error)
         proc._mql_reader = threading.Thread(target=reader, daemon=True)
         proc._mql_reader.start()
     remaining = (deadline if deadline is not None else time.monotonic() + 10) - time.monotonic()
@@ -94,6 +104,9 @@ def close_process(proc):
             proc.kill()
         proc.wait(timeout=5)
     finally:
+        stop = getattr(proc, "_mql_stop", None)
+        if stop is not None:
+            stop.set()
         for stream in (proc.stdin, proc.stdout):
             if stream is not None:
                 try:
@@ -229,3 +242,15 @@ def test_protocol_cleanup_closes_remaining_stream_and_joins_after_broken_pipe():
     )
     close_process(process)
     assert calls == ["wait", "stdin", "stdout", "join"]
+
+
+def test_notification_flood_uses_bounded_backpressure():
+    import io
+    from types import SimpleNamespace
+    proc = SimpleNamespace(stdout=io.BytesIO(frame({"method":"synthetic"}) * 10000), poll=lambda: None)
+    assert read_msg(proc)["method"] == "synthetic"
+    assert proc._mql_messages.maxsize == 128
+    assert proc._mql_messages.qsize() <= 128
+    proc._mql_stop.set()
+    proc._mql_reader.join(timeout=1)
+    assert not proc._mql_reader.is_alive()

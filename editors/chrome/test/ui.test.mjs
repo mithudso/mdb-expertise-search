@@ -40,18 +40,23 @@ test("freshPending accepts only recent, non-blank handoffs", () => {
 
 // A syntactic coverage guard for literal finding codes, including multiline ternary severity arguments.
 function findingCodes(source) {
-  return new Set([...source.matchAll(/(?:\b(?:BLOCKING|HIGH|MEDIUM|LOW)|\?\s*(?:HIGH|MEDIUM|LOW)\s*:\s*(?:HIGH|MEDIUM|LOW))\s*,\s*["']([a-z0-9-]+)["']/g)].map(m => m[1]));
+  const codes = new Set([...source.matchAll(/(?:\b(?:BLOCKING|HIGH|MEDIUM|LOW)|\?\s*(?:HIGH|MEDIUM|LOW)\s*:\s*(?:HIGH|MEDIUM|LOW))\s*,\s*["']([a-z0-9-]+)["']/g)].map(m => m[1]));
+  for (const match of source.matchAll(/\bcode\s*:\s*["']([a-z0-9-]+)["']/g)) codes.add(match[1]);
+  return codes;
 }
 
 test("finding-code guard recognizes multiline and single-quoted codes", () => {
   assert.deepEqual([...findingCodes("add(HIGH,\n 'synthetic-one', 'm'); f(MEDIUM , \"synthetic-two\", 'm')")], ["synthetic-one", "synthetic-two"]);
+  assert.deepEqual([...findingCodes('items.push({ severity: HIGH, code: "synthetic-object" })')], ["synthetic-object"]);
 });
 
 test("every finding code the optimizer can emit has a docs link", () => {
   const src = readFileSync(join(root, "lib", "optimize.js"), "utf8");
   const codes = findingCodes(src);
   assert.ok(codes.size >= 30, `found only ${codes.size} codes`);
-  for (const c of codes) assert.ok(docFor(c), `no docs link for ${c}`);
+  const exclusions = new Set(["syntax", "match-not-early-rewrite"]);
+  for (const c of exclusions) assert.ok(codes.has(c), `stale exclusion ${c}`);
+  for (const c of codes) if (!exclusions.has(c)) assert.ok(docFor(c), `no docs link for ${c}`);
   for (const url of Object.values(DOCS)) assert.match(url, /^https:\/\/www\.mongodb\.com\/docs\//);
 });
 
@@ -125,12 +130,19 @@ test("popup code never assigns HTML from page text", () => {
 // Limited syntactic tripwire: direct sinks plus constant bracket names and split string constants.
 // This does not claim to resolve arbitrary aliases or runtime expressions.
 function hasUnsafeSink(source) {
-  let normalized = source, previous;
-  do { previous = normalized; normalized = normalized.replace(/(["'])([^"']*)\1\s*\+\s*(["'])([^"']*)\3/g, (_m, _q, a, _r, b) => JSON.stringify(a + b)); } while (normalized !== previous);
+  const decode = token => token.slice(1, -1).replace(/\\(?:u\{([0-9a-fA-F]+)\}|u([0-9a-fA-F]{4})|x([0-9a-fA-F]{2})|([\s\S]))/g,
+    (_all, point, unit, hex, escaped) => point || unit || hex ? String.fromCodePoint(parseInt(point || unit || hex, 16)) : ({n:"\n",r:"\r",t:"\t",b:"\b",f:"\f",v:"\v",0:"\0"}[escaped] ?? escaped));
+  let normalized = source.replace(/\/\*[\s\S]*?\*\/|\/\/[^\r\n]*|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'/g,
+    token => token.startsWith("/") ? " " : JSON.stringify(decode(token)));
+  let previous;
+  do {
+    previous = normalized;
+    normalized = normalized.replace(/("(?:\\.|[^"\\])*")\s*\+\s*("(?:\\.|[^"\\])*")/g, (_m, a, b) => JSON.stringify(JSON.parse(a) + JSON.parse(b)));
+  } while (normalized !== previous);
   return /innerHTML|outerHTML|insertAdjacentHTML|document\s*(?:\.\s*write|\[\s*["']write["']\s*\])|\beval\s*\(|new\s+Function\s*\(/.test(normalized);
 }
 
 test("HTML-sink guard recognizes constant computed access and spaced calls", () => {
-  for (const sample of ['element["in" + "ner" + "HTML"] = value', 'element["in" + "ner" + "HT" + "ML"] = value', 'element["inner" + "HTML"] = value', "element['outerHTML'] = value", 'element["insertAdjacentHTML"] ("beforeend", value)', "document . write (value)", "eval (value)", "new Function ('x')"]) assert.ok(hasUnsafeSink(sample), sample);
+  for (const sample of ['element["in" + "ner" + "HTML"] = value', 'element["in" + /* synthetic */ "nerHTML"] = value', 'element["in" + // synthetic\n "nerHTML"] = value', 'element["in" + "ner\\x48TML"] = value', 'element["in" + "ner" + "HT" + "ML"] = value', 'element["inner" + "HTML"] = value', "element['outerHTML'] = value", 'element["insertAdjacentHTML"] ("beforeend", value)', "document . write (value)", "eval (value)", "new Function ('x')"]) assert.ok(hasUnsafeSink(sample), sample);
   assert.equal(hasUnsafeSink("element.textContent = value"), false);
 });

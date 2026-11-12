@@ -23,6 +23,8 @@ def test_optimizer_does_not_apply_unproven_rewrites(source):
 
 def test_optimizer_literal_rewrites_and_rendering_stay_usable():
     report = optimize('db.c.find({$or:[{"a²":1},{"a²":2}]})')
+    assert [f.code for f in report.applied] == ["or-to-in"]
+    assert report.changed and "$in: [1, 2]" in report.text
     assert '"a²"' in report.text or '"a\\u00b2"' in report.text
     assert '["__proto__"]' in IndexRec('c', [('__proto__', 1)], '').shell()
     assert any(f.code == 'syntax' for f in optimize('db.c.find({a:1').findings)
@@ -91,6 +93,12 @@ def test_completion_edits_remain_structural(source,label,offset):
     item=next(item for item in items if item.label==label)
     if label=='$limit':
         assert source[item.start:item.end]=='"$li"'
+    elif label == "sort":
+        assert (item.start,item.end,item.insert) == (source.rfind("so"),len(source),"sort($0)")
+    elif source.startswith('db["c"]'):
+        assert (item.start,item.end,item.insert) == (source.index("fi"),len(source),"find($0)")
+    elif label == "$meta":
+        assert (item.start,item.end,item.insert) == (source.index("$m"),source.index("$m")+2,r'\$meta: "$0"')
     if '/*c*/' in source:
         assert ': $0' not in item.insert and '($0)' not in item.insert
 
@@ -104,13 +112,16 @@ def test_completion_literal_and_sort_fields_guards():
 
 
 def test_lsp_plain_snippets_and_compact_positions():
+    pytest.importorskip("pygls")
+    pytest.importorskip("lsprotocol")
     from mdbx.mql import server
     assert server._plain_snippet(r'\$limit: ${1:10}')=='$limit: 10'
     text='a\r\n😀x\ry\nz'
-    for offset in [0,1,3,4,5,6,7,8,9]:
+    for offset in [0,1,2,3,4,5,6,7,8,9]:
         pos=server.offset_to_position(text,offset)
         expected=offset if text[offset-1:offset+1]!='\r\n' else offset-1
         assert server.position_to_offset(text,pos)==expected
+    assert [(server.offset_to_position(text, i).line, server.offset_to_position(text, i).character) for i in (1,2,3,4,5,6,7,8,9)] == [(0,1),(0,1),(1,0),(1,2),(1,3),(2,0),(2,1),(3,0),(3,1)]
     starts,ends,astral=server._positions('x'*100000)
     assert len(starts)==1 and len(ends)==1 and not astral
     assert server._positions.cache_info().maxsize==1
@@ -134,6 +145,7 @@ def test_pipeline_or_indexes_keep_common_predicates_and_sort(apply):
 
 
 def test_mcp_operator_context_contracts_and_recipe_description():
+    pytest.importorskip("mcp")
     from mdbx import mcp_server
     assert mcp_server.mql_operator("$size")["arguments"] == {"query": "nonneg", "expr": "any"}
     assert mcp_server.mql_operator("$count")["arguments"] == {"stage": "string", "acc": "object"}

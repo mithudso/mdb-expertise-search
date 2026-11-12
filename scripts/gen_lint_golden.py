@@ -19,7 +19,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+import tempfile
 from array import array
 from bisect import bisect_left, bisect_right
 from functools import lru_cache
@@ -85,7 +87,22 @@ def inputs() -> list[tuple[Path, Path]]:
 
 def golden(src: Path) -> str:
     data = {"source": src.relative_to(ROOT).as_posix(), **lint_dict(src.read_bytes().decode("utf-8"))}
-    return json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+    return (json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8", "backslashreplace").decode("utf-8")
+
+
+def _atomic_write(path: Path, data: bytes) -> None:
+    name = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, prefix="." + path.name + ".", delete=False) as stream:
+            name = stream.name
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(name, path)
+        name = None
+    finally:
+        if name is not None:
+            Path(name).unlink(missing_ok=True)
 
 
 def main() -> int:
@@ -108,7 +125,7 @@ def main() -> int:
             if not out.is_file() or out.read_text(encoding="utf-8") != want:
                 stale.append(out.name)
         else:
-            out.write_text(want, encoding="utf-8")
+            _atomic_write(out, want.encode("utf-8"))
     if a.check and (stale or orphans):
         if stale:
             print("stale goldens (run scripts/gen_lint_golden.py):", ", ".join(stale))

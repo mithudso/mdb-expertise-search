@@ -60,7 +60,7 @@ def _print_hit(i: int, h: srch.Hit, full: bool) -> None:
 
 def cmd_search(args) -> int:
     with closing(idx.connect(args.db)) as con:
-        if not idx.stats(con)["chunks"]:
+        if not con.execute("SELECT EXISTS(SELECT 1 FROM chunks)").fetchone()[0]:
             _say("index is empty — run `mdbx index` first")
             return 2
         notes: list[str] = []
@@ -186,7 +186,11 @@ def cmd_mcp(args) -> int:
 def cmd_lint(args) -> int:
     from .mql.analyze import analyze
 
-    text = sys.stdin.read() if args.file == "-" else Path(args.file).read_text(encoding="utf-8")
+    try:
+        text = sys.stdin.read() if args.file == "-" else Path(args.file).read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        _say("cannot read query input; provide a readable UTF-8 file")
+        return 2
     res = analyze(text)
     starts = [0] + [i + 1 for i, char in enumerate(text) if char == "\n"]
     for d in res.diagnostics:
@@ -214,8 +218,12 @@ def cmd_export_web(args) -> int:
 def cmd_optimize(args) -> int:
     from .mql.optimize import format_report, optimize, to_dict
 
-    before = None if args.file == "-" else Path(args.file).read_bytes()
-    text = sys.stdin.read() if before is None else before.decode("utf-8")
+    try:
+        before = None if args.file == "-" else Path(args.file).read_bytes()
+        text = sys.stdin.read() if before is None else before.decode("utf-8")
+    except (OSError, UnicodeError):
+        _say("cannot read query input; provide a readable UTF-8 file")
+        return 2
     rep = optimize(text, apply=not args.read_only)
     if args.json:
         print(json.dumps(to_dict(rep), indent=2))
@@ -253,7 +261,7 @@ def cmd_ask(args) -> int:
     question = " ".join(args.question)
     with closing(idx.connect(args.db)) as con:
         hits = []
-        if idx.stats(con)["chunks"]:
+        if con.execute("SELECT EXISTS(SELECT 1 FROM chunks)").fetchone()[0]:
             notes: list[str] = []
             try:
                 hits = srch.search(con, question, args.mode, args.limit, kind=args.kind, source=args.source,
@@ -279,11 +287,11 @@ def cmd_ask(args) -> int:
             print(json.dumps({"question": question, "answer": result.text, "provider": result.provider,
                               "kind": result.kind, "model": result.model, "sources": sources}, indent=2))
             return 0
-        print(result.text.rstrip())
+        print(_terminal(result.text.rstrip()))
         if sources:
             print("\nSources:")
             for s in sources:
-                print(f"  [{s['n']}] {s['source']} · {s['heading']}  ({s['location']})")
+                print(_terminal(f"  [{s['n']}] {s['source']} · {s['heading']}  ({s['location']})"))
         _say(f"[{result.provider} · {result.kind} · {result.model}]")
         return 0
 
@@ -312,10 +320,10 @@ def cmd_glean(args) -> int:
         _say("no results")
         return 1
     for i, r in enumerate(out["results"], 1):
-        print(f"{i:>2}. {r['title']}  [{r['datasource']}]")
-        print(f"    {r['url']}")
+        print(_terminal(f"{i:>2}. {r['title']}  [{r['datasource']}]"))
+        print(_terminal(f"    {r['url']}"))
         if r["snippet"]:
-            print(f"    {r['snippet'][:240]}")
+            print(_terminal(f"    {r['snippet'][:240]}"))
         print()
     return 0
 

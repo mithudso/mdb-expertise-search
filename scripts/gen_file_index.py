@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from mdbx.safety import atomic_write
+from mdbx.safety import publish_files
 
 PURPOSE = {
     "mdbx/corpus.py": "Corpus discovery, classification, chunking",
@@ -58,7 +58,6 @@ def tracked() -> list[str]:
 def literal(value: str) -> str:
     # Entities remain literal in headings; control characters never become markup.
     value = ''.join(c if c.isprintable() else f'\\u{ord(c):04x}' for c in value)
-    value = value.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
     width = max((len(run) for run in re.findall(r'`+', value)), default=0) + 1
     delimiter = '`' * width
     return delimiter + ' ' + value + ' ' + delimiter
@@ -75,7 +74,7 @@ def main() -> None:
         if stat.S_ISREG(info.st_mode):
             entries.append({"path": p, "purpose": PURPOSE.get(p, "docs/config"),
                             "bytes": None if p in ("docs/high_signal_file_index.json", "docs/codebase-overview.md") else info.st_size})
-    atomic_write(ROOT / "docs" / "high_signal_file_index.json", (json.dumps(entries, indent=2) + "\n").encode("utf-8"))
+    json_bytes = (json.dumps(entries, indent=2) + "\n").encode("utf-8")
     by_dir: dict[str, list[str]] = {}
     for e in entries:
         by_dir.setdefault(str(Path(e["path"]).parent), []).append(e["path"])
@@ -85,7 +84,9 @@ def main() -> None:
         for p in sorted(by_dir[d]):
             lines.append(f"- {literal(p)} — {PURPOSE.get(p, 'docs/config')}")
         lines.append("")
-    atomic_write(ROOT / "docs" / "codebase-overview.md", "\n".join(lines).encode("utf-8"))
+    publish_files(ROOT / 'docs', {'high_signal_file_index.json': json_bytes,
+                                'codebase-overview.md': '\n'.join(lines).encode('utf-8')},
+                  lock_name='static-documentation-indexes')
 
 
 if __name__ == "__main__":

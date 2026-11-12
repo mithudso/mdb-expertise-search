@@ -15,7 +15,7 @@ def seed(tmp_path, monkeypatch):
     (root / 'a.md').write_text('alpha', encoding='utf-8')
     con = index.connect(tmp_path / 'fixture.sqlite')
     monkeypatch.setattr(embed, 'model', lambda: 'synthetic')
-    monkeypatch.setattr(embed, 'embed', lambda texts: np.tile([1., 0.], (len(texts), 1)))
+    monkeypatch.setattr(embed, 'embed', lambda texts, **kwargs: np.tile([1., 0.], (len(texts), 1)))
     index.build_keyword(con, root)
     return con, root
 
@@ -26,19 +26,21 @@ def seed(tmp_path, monkeypatch):
 
 
 
-def test_unreadable_subtree_is_not_authoritative_empty(tmp_path):
+def test_unreadable_subtree_is_not_authoritative_empty(tmp_path, monkeypatch):
     root = tmp_path / 'corpus'
     child = root / 'skills' / 'demo'
     child.mkdir(parents=True)
     (child / 'safe.md').write_text('alpha', encoding='utf-8')
-    child.chmod(0)
-    try:
-        with pytest.raises((OSError, ValueError)):
-            list(corpus.iter_chunks(root))
-    finally:
-        child.chmod(0o700)
-
-
+    original = os.scandir
+    def denied(path):
+        info = os.fstat(path) if isinstance(path, int) else Path(path).stat()
+        denied_info = child.stat()
+        if (info.st_dev, info.st_ino) == (denied_info.st_dev, denied_info.st_ino):
+            raise PermissionError('synthetic denied traversal')
+        return original(path)
+    monkeypatch.setattr(os, 'scandir', denied)
+    with pytest.raises((OSError, ValueError), match='synthetic denied'):
+        list(corpus.iter_chunks(root))
 
 
 def test_onnx_path_resolution_is_typed(monkeypatch):
@@ -55,7 +57,9 @@ def test_missing_model_diagnostic_does_not_echo_path(tmp_path, monkeypatch):
     monkeypatch.setenv('MDBX_ONNX_MODEL', str(tmp_path / marker))
     with pytest.raises(embed_onnx.OnnxUnavailable) as error:
         embed_onnx._resolve(download=False)
-    assert marker not in str(error.value)
+    message = str(error.value)
+    assert all(part not in message for part in marker.splitlines())
+    assert not any(ord(char) < 32 for char in message)
 
 
 def test_keyword_cache_snapshot_after_write_lock(tmp_path, monkeypatch):
@@ -103,31 +107,35 @@ def test_empty_warning_has_no_raw_controls(tmp_path, caplog):
     assert '\x1b' not in caplog.text
 
 
-def test_semantic_batches_bound_python_vector_payload(tmp_path, monkeypatch):
-    import tracemalloc
-    module=index
-    monkeypatch.setattr(embed,'model',lambda:'synthetic-memory-fixture')
-    def fake(texts):
-        matrix=np.zeros((len(texts),768),dtype=np.float32)
-        matrix[:,0]=1.
-        return matrix
-    monkeypatch.setattr(embed,'embed',fake)
-    with closing(module.connect(tmp_path/'synthetic.sqlite')) as con:
-        for number in range(4096):
-            text=f'synthetic text {number}'
-            digest=hashlib.sha1(text.encode()).hexdigest()
-            con.execute('INSERT INTO chunks VALUES(?,?,?,?,?,?,?,?)',(number+1,f'{number}.md','s','skill','H',1,text,digest))
-        con.commit()
-        tracemalloc.start()
-        try:
-            assert module.build_semantic(con,batch=24)==4096
-            _,peak=tracemalloc.get_traced_memory()
-        finally:
-            tracemalloc.stop()
-        # The fixture generates12MiB of payload; batching must not retain it all
-        # as Python bytes until publication. SQLite's bounded native page cache
-        # is separate from this Python-allocation regression contract.
-        assert peak < 6*1024*1024, f'Python candidate payload peak={peak}'
+def test_semantic_batches_bound_python_vector_payload(tmp_path):
+    code = r"""
+import hashlib, tracemalloc, sys
+from contextlib import closing
+from pathlib import Path
+import numpy as np
+from mdbx import embed, index
+embed.model = lambda: 'synthetic-memory-fixture'
+def fake(texts, **kwargs):
+    matrix = np.zeros((len(texts), 768), dtype=np.float32)
+    matrix[:, 0] = 1.
+    return matrix
+embed.embed = fake
+with closing(index.connect(Path(sys.argv[1])/'synthetic.sqlite')) as con:
+    for number in range(4096):
+        text = f'synthetic text {number}'
+        digest = hashlib.sha1(text.encode()).hexdigest()
+        con.execute('INSERT INTO chunks VALUES(?,?,?,?,?,?,?,?)', (number+1, f'{number}.md', 's', 'skill', 'H', 1, text, digest))
+    con.commit()
+    tracemalloc.start()
+    try:
+        assert index.build_semantic(con, batch=24) == 4096
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert peak < 6*1024*1024, f'Python candidate payload peak={peak}'
+"""
+    subprocess.run([sys.executable, '-c', code, str(tmp_path)], check=True,
+                   capture_output=True, text=True, timeout=30)
 
 
 def test_stats_uses_single_snapshot(tmp_path, monkeypatch):
@@ -294,7 +302,7 @@ def test_export_checks_current_embedding_input(tmp_path, monkeypatch):
     source = root / 'safe.md'
     source.write_text('# Alpha\n' + 'synthetic alpha text ' * 200)
     monkeypatch.setattr(embed, 'model', lambda: 'synthetic')
-    monkeypatch.setattr(embed, 'embed', lambda texts: np.tile([1., 0.], (len(texts), 1)))
+    monkeypatch.setattr(embed, 'embed', lambda texts, **kwargs: np.tile([1., 0.], (len(texts), 1)))
     db = tmp_path / 'fixture.sqlite'
     with closing(index.connect(db)) as con:
         index.build_keyword(con, root)
@@ -307,6 +315,7 @@ def test_export_checks_current_embedding_input(tmp_path, monkeypatch):
     webexport.export(root, out, db=db, allow_untracked=True)
     import json
     rows = json.loads((out / 'chunks.json').read_text())['rows']
+    assert stale <= {r[5] for r in rows}
     assert all(r[6] == -1 for r in rows if r[5] in stale)
 
 
@@ -345,16 +354,13 @@ def test_atomic_expected_retains_intervening_editor_bytes(tmp_path, monkeypatch)
     target = tmp_path / 'query.mql'
     target.write_bytes(b'original')
     changed = []
-    replace, link = os.replace, os.link
-    def intercept(fn):
-        def publish(src, dst, *args, **kwargs):
-            if Path(dst).name == target.name and Path(src).name.startswith('.mdbx-') and not changed:
-                target.write_bytes(b'editor change')
-                changed.append(True)
-            return fn(src, dst, *args, **kwargs)
-        return publish
-    monkeypatch.setattr(os, 'replace', intercept(replace))
-    monkeypatch.setattr(os, 'link', intercept(link))
+    exchange = safety._exchange
+    def intercept(parent, left, right):
+        if right == target.name and not changed:
+            target.write_bytes(b'editor change')
+            changed.append(True)
+        return exchange(parent, left, right)
+    monkeypatch.setattr(safety, '_exchange', intercept)
     try:
         safety.atomic_write(target, b'rewritten', expected=b'original')
     except (ValueError, OSError):
@@ -389,7 +395,7 @@ def test_export_reads_only_relevant_vector_payload(tmp_path, monkeypatch):
     root.mkdir()
     (root / 'safe.md').write_text('synthetic alpha')
     monkeypatch.setattr(embed, 'model', lambda: 'synthetic')
-    monkeypatch.setattr(embed, 'embed', lambda texts: np.tile([1., 0.], (len(texts), 1)))
+    monkeypatch.setattr(embed, 'embed', lambda texts, **kwargs: np.tile([1., 0.], (len(texts), 1)))
     db = tmp_path / 'fixture.sqlite'
     with closing(index.connect(db)) as con:
         index.build_keyword(con, root)
@@ -427,7 +433,7 @@ def test_semantic_cache_still_obeys_cosine_contract(tmp_path, monkeypatch):
         con.execute('UPDATE vectors SET vec=?', (np.array([1e38, 1e38], dtype=np.float32).tobytes(),))
         con.commit()
         hit = search.semantic(con, 'alpha')[0]
-        assert 0. <= hit.score <= 1.
+        assert hit.score == pytest.approx(1 / np.sqrt(2), abs=1e-6)
 
 
 def test_semantic_text_blob_is_rejected_as_corrupt(tmp_path, monkeypatch):

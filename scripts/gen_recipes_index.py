@@ -2,6 +2,8 @@
 """Regenerate docs/RECIPES.md from the frontmatter of corpus/recipes/*.md."""
 from __future__ import annotations
 
+import html
+import json
 import sys
 from pathlib import Path, PurePosixPath
 from urllib.parse import quote
@@ -39,7 +41,10 @@ def row(recipe) -> str:
     path = PurePosixPath(str(recipe.path))
     if path.is_absolute() or ".." in path.parts:
         raise ValueError("recipe path must be corpus-relative")
-    label = cell(recipe.name).replace("[", "\\[").replace("]", "\\]").replace("\x60", "&#96;")
+    label = html.escape(cell(recipe.name), quote=False)
+    for marker in "*_[]":
+        label = label.replace(marker, "\\" + marker)
+    label = label.replace("\x60", "&#96;")
     destination = quote(path.as_posix(), safe="/")
     return f"| [{label}](../corpus/{destination}) | {cell(', '.join(recipe.applies_to)) or '-'} | {cell(recipe.summary)} |"
 
@@ -49,9 +54,9 @@ def main() -> None:
         raise ValueError("recipe source directory is missing")
     items = {}
     names = {}
-    for recipe in recipes.load(ROOT / "corpus"):
+    for recipe in recipes.load(ROOT / "corpus", strict=True):
         if recipe.name.lower() in names:
-            raise ValueError(f"duplicate recipe name {recipe.name!r}: {names[recipe.name.lower()].path}, {recipe.path}")
+            raise ValueError("duplicate recipe name or path: " + json.dumps([recipe.name, names[recipe.name.lower()].path, recipe.path], ensure_ascii=True))
         names[recipe.name.lower()] = recipe
         items[recipe.name] = recipe
     placed: set[str] = set()

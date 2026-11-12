@@ -40,13 +40,15 @@ def derive():
                         ignorable.append(code)
                         is_token = False
                     else:
-                        assert len(middle) == 1, (code, terms)
+                        if len(middle) != 1:
+                            raise ValueError("Unicode61 scalar fold consistency failed")
                         is_token = True
                         if middle != chr(code):
                             folds[code] = ord(middle)
                 else:
                     raise AssertionError((code, terms))
-                assert standalone == ([middle] if is_token else []), (code, terms, standalone)
+                if standalone != ([middle] if is_token else []):
+                    raise ValueError("Unicode61 standalone verification failed")
                 if is_token:
                     if active_end is not None and code == active_end+1:
                         active_end = code

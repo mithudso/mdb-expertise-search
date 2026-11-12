@@ -122,12 +122,14 @@ function run(text, from, priorTruncated = false) {
   $("input-label").textContent = "Edit the input or paste another query";
   $("input-section").hidden = false;
   $("input-section").open = false;
-  if (!rep.inputQueries) {
+  const malformedQuery = /^\s*(?:[\[{]|db\s*(?:\.|\[))/.test(input) && rep.findings?.some(f => f.code === "syntax");
+  if (!rep.inputQueries && !malformedQuery) {
     renderCorpusHits(input, generation);
   } else {
     const root = $("result");
     root.replaceChildren(renderReport(rep, { refLink }));
     root.hidden = false;
+    if (!rep.inputQueries) $("input-section").open = true;
   }
   chrome.storage?.session?.set({ last: { text: input, truncated } }).catch(() => {});
 }

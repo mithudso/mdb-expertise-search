@@ -11,14 +11,15 @@ export const ALARM = "mdbx-autoupdate";
 export const INTERVAL_MINUTES = 5;
 export const SESSION_KEY = "autoupdateBuild";
 
-/** Stable identity of a build: the commit when known, else version + build time. */
+/** Package identity includes rebuild time and payload mode as well as the source revision. */
 export function buildId(info) {
   if (!info || typeof info !== "object") return "";
   const commit = String(info.commit || "").trim();
-  if (commit && commit !== "unknown") return commit;
+
   const version = String(info.version || "").trim();
   const built = String(info.built_at || "").trim();
-  return version || built ? `${version}@${built}` : "";
+  if (!version && !built) return commit && commit !== "unknown" ? commit : "";
+  return JSON.stringify([commit, version, built, info.vectors ?? null]);
 }
 
 /** True when a newer build id is present and differs from the one this worker started with. */
@@ -47,7 +48,7 @@ export function startAutoUpdate(api = globalThis.chrome, fetchImpl = globalThis.
   // Serialize initialization and alarm checks so neither can replace an outstanding baseline.
   let queue = Promise.resolve();
   let reloading = false;
-  let knownBaseline = "", baselinePersisted = false;
+  let knownBaseline = "", baselinePersisted = false, identityReadFailed = false;
   const serial = fn => {
     const next = queue.then(fn);
     queue = next.catch(() => {});
@@ -60,7 +61,9 @@ export function startAutoUpdate(api = globalThis.chrome, fetchImpl = globalThis.
     }
     const stored = (await storage.session.get(SESSION_KEY))?.[SESSION_KEY];
     if (stored) { baselinePersisted = true; return (knownBaseline = stored); }
+    if (identityReadFailed) return "";
     knownBaseline = buildId(await readBuild(fetchImpl, runtime));
+    if (!knownBaseline) identityReadFailed = true;
     if (knownBaseline) { await storage.session.set({ [SESSION_KEY]: knownBaseline }); baselinePersisted = true; }
     return knownBaseline;
   }
@@ -69,7 +72,7 @@ export function startAutoUpdate(api = globalThis.chrome, fetchImpl = globalThis.
     if (reloading) return false;
     const started = await baseline();
     const current = buildId(await readBuild(fetchImpl, runtime));
-    if (shouldReload(started, current)) {
+    if ((identityReadFailed && current) || shouldReload(started, current)) {
       await storage.session.remove(SESSION_KEY);
       runtime.reload();
       reloading = true;

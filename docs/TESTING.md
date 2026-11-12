@@ -8,7 +8,7 @@ python3 -m venv .venv
 npm ci --ignore-scripts --prefix editors/vscode
 ```
 
-On macOS run every test/check through the process-tree egress wrapper:
+On macOS and supported Linux CI runners, run every test/check through the process-tree egress wrapper:
 
 ```sh
 python3 scripts/offline_test.py -- .venv/bin/python -m pytest -q
@@ -24,11 +24,14 @@ python3 scripts/offline_test.py -- .venv/bin/python scripts/rotate_workflow_logs
 The wrapper denies outbound traffic for descendants, including loopback. An exact
 owned synthetic listener port may be allowed explicitly; never allow a real model,
 service or index endpoint. Python socket patches alone do not cover descendants.
-Other platforms require an equivalent network sandbox; the wrapper fails closed
-when macOS sandbox-exec is unavailable.
+macOS uses sandbox-exec. Linux requires a non-root runner with passwordless sudo
+and unshare; the child gets an isolated network namespace with no configured
+interfaces and drops back to the runner uid/gid. Linux does not accept host fixture-
+port exceptions. Unsupported platforms fail closed. CI covers macOS and Ubuntu
+on Python 3.11, 3.12 and 3.13; dependency downloads precede isolated checks.
 
 Before product imports, scripts/test_isolation.py assigns a fresh process-only HOME,
-XDG/config/data/auth/model locations, forces cached synthetic ONNX/client factories,
+XDG/config/data/auth/model and temporary locations, forces cached synthetic ONNX/client factories,
 and installs the same protection for Python descendants. Artifact-validation tests
 explicitly restore the real loader with synthetic dependency factories and empty
 model directories; no real inference runs. No shared configuration is changed.
@@ -58,4 +61,7 @@ checks and were not performed in this maintenance.
 Only static catalogs and relevant synthetic MQL goldens are refreshed. Frozen
 search fixtures and vectors remain byte-identical. Full pre-existing suites are
 must-pass gates; passing paired implementations alone does not establish query
-semantics or measured performance gains.
+semantics or measured performance gains. The search fixture generator always uses
+the actual production chunker; frozen expectations have no compatibility codec.
+The four ordinary optimizer expectations changed under the narrow maintenance
+authorization; subsequent post-gate repairs preserve all expectation bytes.

@@ -7,12 +7,21 @@ import os
 import runpy
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+@pytest.fixture(autouse=True)
+def isolated_script_imports(monkeypatch):
+    previous = list(sys.path)
+    monkeypatch.syspath_prepend(str(ROOT / "scripts"))
+    yield
+    sys.path[:] = previous
 
 
 def load(name):
@@ -92,7 +101,7 @@ def test_recipe_index_preserves_names_paths_and_table_cells(tmp_path, monkeypatc
     main, recipes, output = recipe_generator(tmp_path, monkeypatch)
     items = [SimpleNamespace(name=name, path="recipes/physical file.md", summary="left | right", applies_to=["atlas|managed"])
              for name in ("shard-a-collection", "extra")]
-    monkeypatch.setattr(recipes, "load", lambda root: items)
+    monkeypatch.setattr(recipes, "load", lambda root, **kw: items)
     main()
     text = output.read_text(encoding="utf-8")
     for item in items:
@@ -102,7 +111,7 @@ def test_recipe_index_preserves_names_paths_and_table_cells(tmp_path, monkeypatc
 
 def test_recipe_index_rejects_duplicate_names_before_write(tmp_path, monkeypatch):
     main, recipes, output = recipe_generator(tmp_path, monkeypatch)
-    monkeypatch.setattr(recipes, "load", lambda root: [
+    monkeypatch.setattr(recipes, "load", lambda root, **kw: [
         SimpleNamespace(name="same", path=f"recipes/{name}.md", summary="", applies_to=[]) for name in ("a", "b")])
     output.write_text("previous index", encoding="utf-8")
     with pytest.raises(ValueError, match="duplicate"):
@@ -112,7 +121,7 @@ def test_recipe_index_rejects_duplicate_names_before_write(tmp_path, monkeypatch
 
 def test_recipe_index_writes_utf8_explicitly(tmp_path, monkeypatch):
     main, recipes, output = recipe_generator(tmp_path, monkeypatch)
-    monkeypatch.setattr(recipes, "load", lambda root: [])
+    monkeypatch.setattr(recipes, "load", lambda root, **kw: [])
     original = Path.open
     def locale_open(self, mode="r", buffering=-1, encoding=None, errors=None, newline=None):
         return original(self, mode, buffering, "ascii" if encoding in (None, "locale") else encoding, errors, newline)
@@ -173,11 +182,11 @@ def test_sync_shell_gates_hide_payload_and_pin_index_root(tmp_path):
     subprocess.run(["git", "-c", "init.templateDir=", "init", "-q", str(tmp_path)], check=True, capture_output=True)
     scripts = tmp_path / "scripts"
     scripts.mkdir()
-    for name in ("sync_corpus.sh", "sync_corpus_sources.py", "maintenance_safety.py"):
+    for name in ("sync_corpus.sh", "sync_corpus_transaction.py", "sync_corpus_sources.py", "maintenance_safety.py"):
         if (ROOT / "scripts" / name).exists():
             shutil.copyfile(ROOT / "scripts" / name, scripts / name)
-    (scripts / "redact_corpus.py").write_text("print('redaction ok')\n")
-    (scripts / "sweep_customers.py").write_text("import os,sys; print('fixture_customer_93815');sys.exit(int(os.environ.get('FAIL_GATE','0')))\n")
+    (scripts / "redact_corpus.py").write_text("def main(argv=None):\n    print('fixture_customer_93815')\n    return 0\n")
+    (scripts / "sweep_customers.py").write_text("import os\ndef main(argv=None):\n    print('fixture_customer_93815')\n    return int(os.environ.get('FAIL_GATE','0'))\n")
     skills = tmp_path / "source/mongodb-synthetic"
     skills.mkdir(parents=True)
     (skills / "note.md").write_text("synthetic documentation")
@@ -189,10 +198,13 @@ def test_sync_shell_gates_hide_payload_and_pin_index_root(tmp_path):
     result = subprocess.run(["/bin/bash", str(scripts / "sync_corpus.sh")], env=env,
                             capture_output=True, check=False, encoding="utf-8", timeout=10)
     assert result.returncode == 0, result.stderr
+    assert "fixture_customer_93815" not in result.stdout + result.stderr
     assert (tmp_path / "index-args").read_text().splitlines() == ["index", "--corpus", str(tmp_path / "corpus")]
+    (tmp_path / "index-args").unlink()
     result = subprocess.run(["/bin/bash", str(scripts / "sync_corpus.sh")], env={**env, "FAIL_GATE": "1"},
                             capture_output=True, check=False, encoding="utf-8", timeout=10)
     assert result.returncode != 0 and "fixture_customer_93815" not in result.stdout + result.stderr
+    assert not (tmp_path / "index-args").exists()
 
 
 def test_sync_publication_rejects_unscanned_candidates(tmp_path, monkeypatch):

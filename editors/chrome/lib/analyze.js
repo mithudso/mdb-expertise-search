@@ -134,7 +134,7 @@ class Analyzer {
 
   // ---- reporting
   add(start, end, sev, code, msg, fix = null) {
-    this.diags.push({ start, end: Math.max(end, start + 1), severity: sev, code, message: msg, fix });
+    this.diags.push({ start, end: Math.max(end, start + 1), severity: sev, code, message: [...msg].map(c => /[\p{Cc}\p{Cf}\p{Cs}]/u.test(c) ? "\\x" + c.codePointAt(0).toString(16).padStart(2, "0") : c).join(""), fix });
   }
 
   onProp(p, sev, code, msg, fix = null) {
@@ -178,7 +178,7 @@ class Analyzer {
     for (const st of this.statements) {
       const node = st.node;
       if (st.decl) this.vars.set(st.decl, node);
-      const ctx = this.varCtx.get(st.decl || "");
+      const ctx = this.varCtx.get(node);
       if (ctx) { for (const useCtx of ctx) this.value(node, useCtx); }
       else if (!this.done.has(node)) this.statementNode(node);
       for (const c of node.walk()) {
@@ -194,16 +194,20 @@ class Analyzer {
   }
 
   collectVars() {
+    const bindings = new Map();
     for (const st of this.statements) {
+      if (st.decl) bindings.set(st.decl, st.node);
       for (const c of st.node.walk()) {
         if (c.kind !== "call" || c.target === null || c.target.kind !== "member") continue;
         const spec = METHODS.get(String(c.target.value));
         if (!spec) continue;
         c.items.forEach((a, i) => {
           if (a.kind === "ident" && i < spec.length && spec[i] !== "-") {
-            const contexts = this.varCtx.get(String(a.value)) || [];
+            const binding = bindings.get(String(a.value));
+            if (!binding) return;
+            const contexts = this.varCtx.get(binding) || [];
             if (!contexts.includes(spec[i])) contexts.push(spec[i]);
-            this.varCtx.set(String(a.value), contexts);
+            this.varCtx.set(binding, contexts);
           }
         });
       }
@@ -234,7 +238,7 @@ class Analyzer {
     if (contexts.has(ctx)) return;
     contexts.add(ctx);
     this.contexts.set(node, contexts);
-    this.done.add(node);
+    if (node.kind !== "call") this.done.add(node);
     if (ctx === "pipeline") {
       this.pipeline(node);
     } else if (ctx === "query") {
@@ -329,6 +333,10 @@ class Analyzer {
         if (!keys.has("$search")) this.add(v.start, v.end, ERROR, "missing-field", "$text requires a $search string.");
         for (const q of v.props) {
           if (!TEXT_KEYS.has(q.key)) this.onProp(q, WARNING, "unknown-operator", `${q.key} is not a $text option.`);
+          else if (q.value !== null) {
+            if (["$search", "$language"].includes(q.key)) this.arg(q, new ops.Operator(q.key, [], "string", ""));
+            else if (!dyn(q.value.kind) && q.value.kind !== "bool") this.add(q.value.start, q.value.end, ERROR, "bad-argument", `${q.key} expects a boolean, got ${q.value.kind}.`);
+          }
         }
       } else if (v !== null && !dyn(v.kind)) {
         this.add(v.start, v.end, ERROR, "bad-argument", "$text expects an object with $search.");
@@ -452,12 +460,11 @@ class Analyzer {
         continue;
       }
       const v = p.value;
+      if (v !== null && obj.props.length === 1 && op.argFor("expr") !== "array2") this.arg(p, new ops.Operator(op.name, op.cats, op.argFor("expr"), op.doc));
       if (p.key === "$literal" || p.key === "$function" || p.key === "$accumulator" || v === null) continue;
       if (p.key === "$cond" && v.kind === "array" && v.items.length !== 3) {
         this.add(v.start, v.end, ERROR, "bad-argument", "$cond array form needs exactly 3 elements [if, then, else].");
-      } else if (op.arg === "object" && !kindOk(v, "object")) {
-        this.add(v.start, v.end, ERROR, "bad-argument", `${p.key} expects an object, got ${v.kind}.`);
-      } else if (op.arg === "array2" && !kindOk(v, "array2")) {
+      } else if (obj.props.length === 1 && op.argFor("expr") === "array2" && !kindOk(v, "array2")) {
         this.add(v.start, v.end, ERROR, "bad-argument", `${p.key} expects exactly 2 arguments.`);
       }
       this.expr(v);
@@ -471,8 +478,8 @@ class Analyzer {
     const flags = [];
     this.collectProj(obj, flags, true, label === "proj");
     if (project) {
-      const inc = flags.filter(([p, f, top]) => f && !(top && p.key === "_id"));
-      const exc = flags.filter(([p, f, top]) => !f && !(top && p.key === "_id"));
+      const inc = flags.filter(([p, f, top]) => f && !(top && p.key === "_id" && ["number", "bool"].includes(p.value?.kind)));
+      const exc = flags.filter(([p, f, top]) => !f && !(top && p.key === "_id" && ["number", "bool"].includes(p.value?.kind)));
       if (inc.length && exc.length) {
         for (const [p] of exc) {
           this.onProp(p, ERROR, "projection-mix",
@@ -499,7 +506,7 @@ class Analyzer {
         this.collectProj(v, flags, false, findProjection);
       } else {
         flags.push([p, true, top]);
-        if (findProjection && v.kind === "object" && v.props.length === 1 && v.props[0].key === "$elemMatch" && v.props[0].value?.kind === "object") this.query(v.props[0].value);
+        if (findProjection && v.kind === "object" && v.props.length === 1 && v.props[0].key === "$elemMatch" && v.props[0].value?.kind === "object") this.qops(v);
         else this.expr(v);
       }
     }
@@ -536,7 +543,10 @@ class Analyzer {
     const op = ops.get(a.key);
     if (op === null) this.unknown(a, "accumulator");
     else if (!op.isA("acc")) this.onProp(a, ERROR, "misplaced-operator", `${a.key} is not an accumulator.`);
-    else if (a.value !== null && a.key !== "$accumulator") this.expr(a.value);
+    else if (a.value !== null) {
+      this.arg(a, new ops.Operator(op.name, op.cats, op.argFor("accexpr"), op.doc));
+      if (a.key !== "$accumulator") this.expr(a.value);
+    }
   }
 
   windowOutput(p) {
@@ -552,7 +562,10 @@ class Analyzer {
     const a = operators[0], op = ops.get(a.key);
     if (op === null) this.unknown(a, "window operator");
     else if (!op.isA("acc")) this.onProp(a, ERROR, "misplaced-operator", a.key + " is not an accumulator.");
-    else if (a.value !== null) this.expr(a.value);
+    else if (a.value !== null) {
+      this.arg(a, new ops.Operator(op.name, op.cats, op.argFor("accexpr"), op.doc));
+      this.expr(a.value);
+    }
     for (const q of v.props) {
       if (q.key !== "window" || q.value === null) continue;
       const w = q.value;
@@ -639,13 +652,19 @@ class Analyzer {
           this.onProp(q, ERROR, "misplaced-operator", `${q.key} is not a valid modifier for ${opname}.`);
         } else if (q.key === "$each" && q.value !== null && !dynOr("array").has(q.value.kind)) {
           this.add(q.value.start, q.value.end, ERROR, "bad-argument", "$each expects an array.");
+        } else if (["$position", "$slice"].includes(q.key)) {
+          this.arg(q, new ops.Operator(q.key, [], "int", ""));
+        } else if (q.key === "$sort" && q.value !== null) {
+          if (q.value.kind === "object") this.sort(q.value, { strictStrings:true });
+          else if (!dyn(q.value.kind) && !(q.value.kind === "number" && [1,-1].includes(q.value.value))) this.add(q.value.start, q.value.end, ERROR, "bad-argument", "$sort expects 1, -1 or an object.");
         }
       }
       if (!v.props.some((q) => q.key === "$each")) {
         this.onProp(v.props[0], ERROR, "missing-field", `Modifiers on ${opname} require $each.`);
       }
-    } else if (opname === "$pull" && v.kind === "object" && v.props.some((q) => q.key.startsWith("$"))) {
-      this.qops(v);
+    } else if (opname === "$pull" && v.kind === "object") {
+      if (v.props.some((q) => q.key.startsWith("$"))) this.qops(v);
+      else this.query(v);
     }
   }
 
@@ -733,8 +752,8 @@ class Analyzer {
     const v = p.value;
     const name = p.key;
     if (v === null) return;
-    if (name === "$documents" && v.kind === "object" &&
-        (v.props.length !== 1 || !v.props[0].key.startsWith("$"))) {
+    if (name === "$documents" && ((!dyn(v.kind) && !["array", "object"].includes(v.kind)) ||
+        (v.kind === "object" && (v.props.length !== 1 || !v.props[0].key.startsWith("$"))))) {
       this.arg(p, new ops.Operator(op.name, op.cats, "array", op.doc));
       return;
     }
@@ -885,6 +904,7 @@ class Analyzer {
         }
         const children = [...n.props.filter(p => p.value !== null).map(p => p.value), ...n.items];
         if (n.target !== null) children.push(n.target);
+        if (n.index !== null) children.push(n.index);
         for (let i = children.length - 1; i >= 0; i--) pending.push(children[i]);
       }
       out.push(new Symbol_(label, kind, st.start, st.end, kids));

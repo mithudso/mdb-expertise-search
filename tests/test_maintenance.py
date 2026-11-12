@@ -40,6 +40,7 @@ def test_keyword_limit_counts_unique_complete_content(tmp_path):
             con.execute('INSERT INTO chunks VALUES(?,?,?,?,?,?,?,?)', (i + 1, f'{i}.md', 's', 'skill', 'H', 1, body, str(i)))
         con.execute('INSERT INTO chunks_fts(rowid,heading,text,source) SELECT id,heading,text,source FROM chunks')
         hits=search.keyword(con, 'alpha', limit=3)
+        assert len(hits) == 3
         assert {h.text for h in hits} == {common+'first', common+'10', common+'11'}
         assert search.keyword(con, 'alpha', limit=0) == []
         with pytest.raises(ValueError, match='limit'):
@@ -95,7 +96,12 @@ def test_heading_change_preserves_bytes_but_invalidates_cached_use(tmp_path, mon
         # Synthetic digest identity lets this test exercise the historical cache key.
         con.execute('UPDATE chunks SET digest=?', (item.digest,))
         con.execute('UPDATE vectors SET digest=?', (item.digest,))
+        con.execute('INSERT INTO vector_inputs VALUES(?,?)', (item.digest, corpus.embedding_input_hash('Heading', 'alpha')))
         con.commit()
+        unchanged = corpus.Chunk('a.md', 's', 'skill', 'Heading', 1, 'alpha')
+        monkeypatch.setattr(corpus, 'iter_chunks', lambda _: iter([unchanged]))
+        index.build_keyword(con, tmp_path)
+        assert len(search.VectorStore(con)) == 1
         monkeypatch.setattr(corpus, 'iter_chunks', lambda _: iter([item]))
         index.build_keyword(con, tmp_path)
         assert con.execute('SELECT vec FROM vectors').fetchone()[0] == before

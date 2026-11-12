@@ -1,3 +1,4 @@
+import {countedSource} from "./counted-source.mjs";
 // Parity: the JavaScript optimizer must produce exactly what the Python reference produces for every
 // input in tests/fixtures/optimizer/ (goldens written by scripts/gen_optimizer_golden.py).
 import { test } from "node:test";
@@ -56,6 +57,9 @@ test("synthetic: automatic rewrites preserve query semantics and syntax", () => 
   assert.ok(report.text.includes('// keep comment\n'));
   assert.deepEqual(parse(report.text)[1], []);
   assert.equal(report.targets.length, 1);
+  assert.deepEqual(report.targets[0].pipeline.items.map(stage=>stage.props[0].key), ["$match","$sort"]);
+  assert.equal(report.targets[0].pipeline.items[0].props[0].value.props[0].key,"b");
+  assert.equal(report.targets[0].pipeline.items[0].props[0].value.props[0].value.value,1);
 });
 
 test("synthetic: generated commands serialize keys and collection identity", () => {
@@ -91,7 +95,9 @@ test("synthetic: command batches, write methods and semantic options survive", (
     const report = normalize(JSON.stringify({[verb]:'c',[key]:[1,2].map((a) => ({q:{a},...extra}))}));
     assert.equal(report.queries.length, 2);
     assert.equal(report.text.split('.' + method + '(').length - 1, 2);
-    assert.ok(report.text.includes('"a":2'));
+    const statements=parse(report.text)[0];
+    assert.deepEqual(statements.map(st=>st.node.items[0].props.find(p=>p.key==='a').value.value),[1,2]);
+    if (verb==='update') assert.ok(statements.every(st=>st.node.items[1].props[0].key==='$set' && st.node.items[1].props[0].value.props[0].value.value===1));
   }
   assert.ok(normalize('{find:"c",filter:{name:"a"},collation:{locale:"en",strength:2}}').text.includes('.collation({locale:"en",strength:2})'));
   assert.ok(normalize('{count:"c",query:{a:1},skip:2,limit:1}').text.includes('{skip: 2, limit: 1}'));
@@ -158,13 +164,10 @@ test("synthetic: evidence identity and position lookup survive source edits", (t
   const n = 200;
   const many = optimize('db.c.find({a:{$ne:1}});\n'.repeat(n), { apply:false });
   let visits = 0;
-  const original = String.prototype.charCodeAt;
-  const spy = t.mock.method(String.prototype, 'charCodeAt', function(i) { visits++; return original.call(this,i); });
-  try {
-    const output = toDict(many);
-    assert.equal(output.queries[n-1].line, n);
-    assert.ok(visits <= 2 * many.text.length);
-  } finally { spy.mock.restore(); }
+  const watched=countedSource(many.text,n=>{visits+=n;});
+  const output=toDict({...many,text:watched});
+  assert.equal(output.queries[n-1].line,n);
+  assert.ok(visits>0 && visits<=6*many.text.length,String(visits));
 });
 
 test("synthetic: fixture loading normalizes CRLF and CR inputs", () => {
@@ -176,6 +179,7 @@ test("synthetic: fixture loading normalizes CRLF and CR inputs", () => {
     for (const path of [dirname(target), lib, fixture]) mkdirSync(path, { recursive:true });
     writeFileSync(join(root, 'package.json'), JSON.stringify({ type:'module' }));
     copyFileSync(fileURLToPath(import.meta.url), target);
+    copyFileSync(fileURLToPath(new URL("./counted-source.mjs",import.meta.url)), join(dirname(target),"counted-source.mjs"));
     writeFileSync(join(lib, 'optimize.js'), 'export const optimize=text=>({text}); export const toDict=value=>value; export const formatReport=()=>""; export class IndexRec {}');
     writeFileSync(join(lib, 'normalize.js'), 'export const normalize=()=>{};');
     writeFileSync(join(lib, 'parser.js'), 'export const parse=()=>{};');

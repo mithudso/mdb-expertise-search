@@ -29,6 +29,10 @@ except ImportError as error:
                       "error": "ai-auth library not installed" if absent else "ai-auth helper import failed",
                       "remediation": "Install the ai extra or repair its dependencies."}))
     sys.exit(code)
+except Exception:  # noqa: BLE001 - initialization must preserve the single JSON response boundary
+    print(json.dumps({"ok": False, "code": 1, "error": "ai-auth helper initialization failed",
+                      "remediation": "Repair the ai-auth installation."}))
+    sys.exit(1)
 
 if __name__ == "__main__":
     sys.exit(main())

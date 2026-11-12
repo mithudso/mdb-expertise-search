@@ -57,7 +57,7 @@ def test_recipe_reads_reject_outside_symlinks_and_skip_directories(tmp_path):
 
 
 def redactor(tmp_path, monkeypatch):
-    m = module("redact_corpus"); (tmp_path / "corpus").mkdir(); monkeypatch.setattr(m, "ROOT", tmp_path); monkeypatch.setattr(m, "CORPUS", tmp_path / "corpus"); monkeypatch.setattr(m, "PRIVATE_FILES", []); monkeypatch.setattr(m, "load_private", lambda: ([("SYNTH_PRIVATE", "safe")], None)); return m
+    m = module("redact_corpus"); (tmp_path / "corpus").mkdir(); (tmp_path / ".git").mkdir(mode=0o700); monkeypatch.setattr(m, "ROOT", tmp_path); monkeypatch.setattr(m, "CORPUS", tmp_path / "corpus"); monkeypatch.setattr(m, "PRIVATE_FILES", []); monkeypatch.setattr(m, "load_private", lambda: ([("SYNTH_PRIVATE", "safe")], None)); return m
 
 
 def test_redaction_preserves_outside_files_invalid_utf8_and_yml(tmp_path, monkeypatch):
@@ -81,10 +81,16 @@ def test_redaction_exact_private_file_and_idempotent_rules(tmp_path, monkeypatch
 
 
 def test_redaction_patch_failure_is_private_and_fails(tmp_path, monkeypatch, capsys):
-    m = redactor(tmp_path, monkeypatch); patch = tmp_path / "private.patch"; patch.write_text("synthetic")
+    m = redactor(tmp_path, monkeypatch); patch = tmp_path / 'private.patch'
+    patch.write_text('diff --git a/corpus/x.md b/corpus/x.md\n--- a/corpus/x.md\n+++ b/corpus/x.md\n@@ -1 +1 @@\n-old\n+new\n')
     monkeypatch.setattr(m, "load_private", lambda: ([], str(patch)))
-    monkeypatch.setattr(m.subprocess, "run", lambda *a, **k: SimpleNamespace(returncode=1, stdout="SYNTH_PRIVATE", stderr="SYNTH_PRIVATE"))
+    calls = []
+    def failed(*args, **kwargs):
+        calls.append(args[0])
+        return SimpleNamespace(returncode=1, stdout='SYNTH_PRIVATE', stderr='SYNTH_PRIVATE')
+    monkeypatch.setattr(m.subprocess, 'run', failed)
     assert m.main() != 0
+    assert calls and all('--check' in command for command in calls)
     captured = capsys.readouterr()
     assert "SYNTH_PRIVATE" not in captured.out + captured.err
 
@@ -105,7 +111,7 @@ def test_sweeper_nul_names_csv_symlinks_and_private_diagnostics(tmp_path, monkey
 
 def test_package_no_data_preserves_existing_data_and_artifact_failure(tmp_path, monkeypatch):
     m = module("package_chrome_extension"); ext = tmp_path / "editors/chrome"; ext.mkdir(parents=True)
-    monkeypatch.setattr(m, "ROOT", tmp_path); monkeypatch.setattr(m, "EXT", ext); monkeypatch.setattr(m, "DATA", ext / "data"); monkeypatch.setattr(m, "git_commit", lambda: "synthetic")
+    monkeypatch.setattr(m, "ROOT", tmp_path); monkeypatch.setattr(m, "EXT", ext); monkeypatch.setattr(m, "DATA", ext / "data"); monkeypatch.setattr(m, "git_commit", lambda **kwargs: "synthetic")
     for name in m.RUNTIME: (ext / name).write_text("synthetic")
     (ext / "manifest.json").write_text(json.dumps({"version": "0.3.0"})); (ext / "package.json").write_text(json.dumps({"version": "0.3.0"}))
     (ext / "lib").mkdir(); (ext / "icons").mkdir()
@@ -161,7 +167,9 @@ def test_redaction_preserves_lines_and_processes_yaml(tmp_path, monkeypatch):
 def test_invalid_private_pattern_diagnostic_is_opaque(tmp_path, monkeypatch, capsys):
     m = module("sweep_customers"); deny = tmp_path / "deny"; deny.write_text("SYNTH_SECRET[\n")
     monkeypatch.setenv("MDBX_DENYLIST", str(deny))
-    with pytest.raises(SystemExit) as error: m.load_patterns()
+    with pytest.raises(ValueError, match="invalid denylist rule") as error: m.load_patterns()
+    monkeypatch.setattr(m, "ROOT", tmp_path)
+    assert m.main([]) == 2
     captured = capsys.readouterr()
     assert "SYNTH_SECRET" not in str(error.value) + captured.out + captured.err
 
@@ -181,3 +189,11 @@ def test_rotation_preserves_delayed_writer_on_the_original_inode(tmp_path, monke
     retained = [path.read_bytes() for path in tmp_path.rglob("*") if path.is_file() and path != source]
     assert any(b"late uncooperative append\n" in body for body in retained)
     assert source.read_text() == "## v2\nkeep\n"
+
+
+def test_redaction_invalid_utf8_is_independent_of_symlink_failure(tmp_path, monkeypatch):
+    module = redactor(tmp_path, monkeypatch)
+    invalid = module.CORPUS / 'bad.md'
+    invalid.write_bytes(b'SYNTH_PRIVATE\xff')
+    assert module.main() != 0
+    assert invalid.read_bytes() == b'SYNTH_PRIVATE\xff'

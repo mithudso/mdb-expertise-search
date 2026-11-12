@@ -1,6 +1,6 @@
 """Fixture-only scratch state and synthetic factories for offline test processes.
 
-This helper is for test fixtures. Repository delivery must keep its validation hooks.
+The empty Git configuration and hooks belong only to synthetic test fixtures.
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ def prepare_environment(root: Path) -> None:
     root = root.resolve(strict=True)
     home, gitroot = root / 'home', root / 'fixture-git'
     for path in (home, gitroot / 'hooks', gitroot / 'template', root / 'empty-model',
-                 root / 'corpus', root / 'bin', root / 'bootstrap'):
+                 root / 'corpus', root / 'bin', root / 'bootstrap', root / 'tmp'):
         path.mkdir(parents=True, exist_ok=True)
     config = gitroot / 'empty-config'
     if config.exists() and config.read_bytes():
@@ -39,7 +39,7 @@ def prepare_environment(root: Path) -> None:
     os.environ.clear()
     os.environ.update(previous)
     os.environ.update({
-        'HOME': str(home), 'XDG_CONFIG_HOME': str(home / 'config'),
+        'TMPDIR': str(root / 'tmp'), 'HOME': str(home), 'XDG_CONFIG_HOME': str(home / 'config'),
         'XDG_CACHE_HOME': str(home / 'cache'), 'XDG_DATA_HOME': str(home / 'data'),
         'XDG_STATE_HOME': str(home / 'state'), 'PYTHONNOUSERSITE': '1',
         'PYTHONDONTWRITEBYTECODE': '1', 'MDBX_TEST_ISOLATION': '1',
@@ -181,6 +181,9 @@ def fixture_git(args: list[str]) -> int:
     if command in ('init', 'clone'):
         filtered, at = [], 0
         while at < len(tail):
+            if tail[at] == '--':
+                filtered.extend(tail[at:])
+                break
             if tail[at] == '--template':
                 at += 2
             elif tail[at].startswith('--template='):

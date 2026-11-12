@@ -32,11 +32,12 @@ def _bootstrap(scratch):
 
 
 def test_hostile_git_environment_templates_and_hooks_never_reach_fixture_commits(tmp_path):
-    hostile = tmp_path / 'hostile'
+    hostile = tmp_path / "reviewer's-work" / 'hostile'
     (hostile / 'template' / 'hooks').mkdir(parents=True)
     (hostile / 'global-hooks').mkdir()
     marker = tmp_path / 'unexpected-hook-execution'
-    script = '#!/bin/sh\nprintf unsafe >> ' + str(marker) + '\nexit 99\n'
+    import shlex
+    script = '#!/bin/sh\nprintf unsafe >> ' + shlex.quote(str(marker)) + '\nexit 99\n'
     for hook in (hostile / 'template/hooks/post-commit', hostile / 'global-hooks/pre-commit'):
         hook.write_text(script)
         hook.chmod(0o700)
@@ -67,12 +68,13 @@ git('-C',str(repo),'config','core.hooksPath',{str(hostile / 'global-hooks')!r})
 git('-C',str(repo),'commit','-q','--allow-empty','-m','root')
 (repo/'sub').mkdir(); (repo/'sub/later').write_text('synthetic')
 git('-C',str(repo/'sub'),'add','later')
-git('-C',str(repo/'sub'),'-c','core.hooksPath={hostile / 'global-hooks'}','commit','-q','-m','later')
+git('-C',str(repo/'sub'),'-c',{('core.hooksPath=' + str(hostile / 'global-hooks'))!r},'commit','-q','-m','later')
 assert git('-C',str(repo),'rev-list','--count','HEAD').strip()=='2'
 assert not any((repo/'.git/hooks').iterdir()) if (repo/'.git/hooks').exists() else True
 state=pathlib.Path(os.environ['MDBX_FIXTURE_GIT_ROOT'])
 rows=[json.loads(line) for line in (state/'commit-preflight.jsonl').read_text().splitlines()]
-assert len(rows)==2 and all(all(row.values()) for row in rows)
+assert len(rows)==2
+assert all(set(row)=={{'effective_hooks_empty','template_empty','inherited_git_config_removed'}} and all(value is True for value in row.values()) for row in rows)
 assert (state/'empty-config').read_bytes()==b''
 assert not any((state/'template').iterdir()) and not any((state/'hooks').iterdir())
 """
@@ -181,7 +183,8 @@ def _valid_report():
 @pytest.mark.parametrize('payload,code', [({}, 0), ({'error':'synthetic failure'}, 1),
     ({**_valid_report(), 'queries': []}, 0), ({**_valid_report(), 'applied': [{}]}, 0),
     ({**_valid_report(), 'rewritten': 'changed'}, 0), (_valid_report(), 1),
-    ({**_valid_report(), 'iterations': True}, 0)])
+    ({**_valid_report(), 'iterations': True}, 0),
+    ({**_valid_report(), 'findings': [{'severity':'high','code':'fixture','pass':'fixture','message':'synthetic','ref':None,'line':1,'column':1}]}, 0)])
 def test_ci_optimizer_smoke_rejects_invalid_reports(payload, code):
     result = subprocess.CompletedProcess([], code, json.dumps(payload), '')
     with pytest.raises(AssertionError):

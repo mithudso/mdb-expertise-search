@@ -124,7 +124,7 @@ class Analyzer:
 
     def add(self, start: int, end: int, sev: str, code: str, msg: str, fix: str | None = None) -> None:
         self.diags.append(Diag(start, max(end, start + 1), sev, code,
-                               "".join(f"\\x{ord(c):02x}" if unicodedata.category(c) in {"Cc", "Cf"} else c for c in msg), fix))
+                               "".join(f"\\x{ord(c):02x}" if unicodedata.category(c) in {"Cc", "Cf", "Cs"} else c for c in msg), fix))
 
     def on_prop(self, p: Prop, sev: str, code: str, msg: str, fix: str | None = None) -> None:
         self.add(p.key_start, p.key_end, sev, code, msg, fix)
@@ -325,6 +325,11 @@ class Analyzer:
                 for q in v.props:
                     if q.key not in {"$search", "$language", "$caseSensitive", "$diacriticSensitive"}:
                         self.on_prop(q, WARNING, "unknown-operator", f"{q.key} is not a $text option.")
+                    elif q.value is not None:
+                        if q.key in {"$search", "$language"}:
+                            self.arg(q, ops.Operator(q.key, frozenset(), "string", ""))
+                        elif q.value.kind not in {"bool", *_DYNAMIC}:
+                            self.add(q.value.start, q.value.end, ERROR, "bad-argument", f"{q.key} expects a boolean, got {q.value.kind}.")
             elif v is not None and v.kind not in _DYNAMIC:
                 self.add(v.start, v.end, ERROR, "bad-argument", "$text expects an object with $search.")
         elif name == "$where":
@@ -449,13 +454,13 @@ class Analyzer:
                 self.on_prop(p, WARNING, "misplaced-operator", f"{p.key} is not an aggregation expression operator.")
                 continue
             v = p.value
-            if v is not None and op.arg_for("expr") != "array2":
+            if v is not None and len(obj.props) == 1 and op.arg_for("expr") != "array2":
                 self.arg(p, ops.Operator(op.name, op.cats, op.arg_for("expr"), op.doc))
             if p.key in {"$literal", "$function", "$accumulator"} or v is None:
                 continue
             if p.key == "$cond" and v.kind == "array" and len(v.items) != 3:
                 self.add(v.start, v.end, ERROR, "bad-argument", "$cond array form needs exactly 3 elements [if, then, else].")
-            elif op.arg == "array2" and not _kind_ok(v, "array2"):
+            elif len(obj.props) == 1 and op.arg_for("expr") == "array2" and not _kind_ok(v, "array2"):
                 self.add(v.start, v.end, ERROR, "bad-argument", f"{p.key} expects exactly 2 arguments.")
             self.expr(v)
 
@@ -466,8 +471,8 @@ class Analyzer:
         flags: list[tuple[Prop, bool, bool]] = []
         self.collect_proj(obj, flags, top=True, find_projection=label == "proj")
         if project:
-            inc = [(p, f) for p, f, top in flags if f and not (top and p.key == "_id")]
-            exc = [(p, f) for p, f, top in flags if not f and not (top and p.key == "_id")]
+            inc = [(p, f) for p, f, top in flags if f and not (top and p.key == "_id" and p.value is not None and p.value.kind in {"number", "bool"})]
+            exc = [(p, f) for p, f, top in flags if not f and not (top and p.key == "_id" and p.value is not None and p.value.kind in {"number", "bool"})]
             if inc and exc:
                 for p, _ in exc:
                     self.on_prop(p, ERROR, "projection-mix",
@@ -551,6 +556,7 @@ class Analyzer:
         elif not op.is_a("acc"):
             self.on_prop(a, ERROR, "misplaced-operator", f"{a.key} is not an accumulator.")
         elif a.value is not None:
+            self.arg(a, ops.Operator(op.name, op.cats, op.arg_for("accexpr"), op.doc))
             self.expr(a.value)
         for q in v.props:
             if q.key != "window" or q.value is None:
@@ -642,10 +648,20 @@ class Analyzer:
                     self.on_prop(q, ERROR, "misplaced-operator", f"{q.key} is not a valid modifier for {opname}.")
                 elif q.key == "$each" and q.value is not None and q.value.kind not in {"array", *_DYNAMIC}:
                     self.add(q.value.start, q.value.end, ERROR, "bad-argument", "$each expects an array.")
+                elif q.key in {"$position", "$slice"}:
+                    self.arg(q, ops.Operator(q.key, frozenset(), "int", ""))
+                elif q.key == "$sort" and q.value is not None:
+                    if q.value.kind == "object":
+                        self.sort(q.value, strict_strings=True)
+                    elif q.value.kind not in _DYNAMIC and not (q.value.kind == "number" and q.value.value in (1, -1)):
+                        self.add(q.value.start, q.value.end, ERROR, "bad-argument", "$sort expects 1, -1 or an object.")
             if not any(q.key == "$each" for q in v.props):
                 self.on_prop(v.props[0], ERROR, "missing-field", f"Modifiers on {opname} require $each.")
-        elif opname == "$pull" and v.kind == "object" and any(q.key.startswith("$") for q in v.props):
-            self.qops(v)
+        elif opname == "$pull" and v.kind == "object":
+            if any(q.key.startswith("$") for q in v.props):
+                self.qops(v)
+            else:
+                self.query(v)
 
     # ---- pipelines
     def pipeline(self, node: Node, *, update: bool = False, facet: bool = False) -> None:
@@ -715,8 +731,8 @@ class Analyzer:
         if v is None:
             return
         # A plain object is a known non-array value. Operator objects may resolve to arrays.
-        if name == "$documents" and v.kind == "object" and (
-                len(v.props) != 1 or not v.props[0].key.startswith("$")):
+        if name == "$documents" and (v.kind not in {"array", "object", *_DYNAMIC} or (v.kind == "object" and (
+                len(v.props) != 1 or not v.props[0].key.startswith("$")))):
             self.arg(p, ops.Operator(op.name, op.cats, "array", op.doc))
             return
         free_form = {"$sortByCount", "$redact", "$replaceWith", "$unionWith", "$out", "$merge", "$unwind", "$unset"}

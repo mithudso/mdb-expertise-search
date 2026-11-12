@@ -20,6 +20,7 @@ Only files tracked by git are exported, so private, git-ignored corpus files nev
 """
 from __future__ import annotations
 
+import io
 import json
 import math
 import os
@@ -36,7 +37,7 @@ from pathlib import Path
 from . import __version__
 from . import corpus as corpusmod
 from . import recipes as recipemod
-from .safety import _directory, _same_directory, directory_lock, open_confined
+from .safety import _directory, _same_directory, directory_lock
 from .unicode61 import raw_tokens
 
 #: column weights of bm25(chunks_fts, 4.0, 1.0, 2.0) in search.py (heading, text, source)
@@ -277,26 +278,60 @@ def export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: boo
             os.close(parent)
 
 
+def _recipe_metadata(relative: str, text: str):
+    """Parse the loader's bounded header from the same bytes used for chunks."""
+    path = Path(relative)
+    if path.parent != Path('recipes') or path.suffix != '.md' or path.name.lower() == 'readme.md':
+        return None
+    with io.StringIO(text) as stream:
+        header = []
+        first = stream.readline(65537)
+        if first == "---\n":
+            header.append(first)
+            for _ in range(1024):
+                line = stream.readline(65537)
+                if len(line) > 65536:
+                    return None
+                header.append(line)
+                if line in {"---\n", "---"}:
+                    break
+                if not line:
+                    return None
+            else:
+                return None
+        fm = recipemod.parse_frontmatter("".join(header))
+    return {"name": fm.get("name") or path.stem,
+            "title": fm.get("title") or path.stem.replace("-", " ").title(),
+            "summary": fm.get("summary", ""),
+            "applies_to": recipemod._list_value(fm.get("applies_to", "")), "path": relative}
+
+
 def _export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bool = True,
            allow_untracked: bool = False, directory_fd: int) -> ExportResult:
     """Write the web index for ``corpus_root`` into ``out``. Vectors come from ``db`` (by text digest)."""
     corpus_root = corpus_root.resolve()
-    tracked = None if allow_untracked else tracked_files(corpus_root)
-    if tracked is None and not allow_untracked:
-        raise RuntimeError(f"{corpus_root} is not in a git checkout; refusing to export (private files could "
-                           "leak). Pass allow_untracked=True / --allow-untracked for a corpus that is all public.")
-    rows, skipped, files = [], 0, set()
-    for path in corpusmod.iter_files(corpus_root):
-        rel = path.relative_to(corpus_root).as_posix()
-        if tracked is not None and rel not in tracked:
-            skipped += 1
-            continue
-        files.add(rel)
-        kind, source = corpusmod.classify(Path(rel))
-        with open_confined(corpus_root, rel) as stream:
-            text = stream.read()
-        for head, line, body in corpusmod.chunk_text(text):
-            rows.append((rel, source, kind, head or path.stem, line, body))
+    rows, skipped, files, recipe_metadata = [], 0, set(), []
+    with corpusmod.read_generation(corpus_root) as generation:
+        tracked = None if allow_untracked else tracked_files(corpus_root)
+        if tracked is None and not allow_untracked:
+            raise RuntimeError(f"{corpus_root} is not in a git checkout; refusing to export (private files could "
+                               "leak). Pass allow_untracked=True / --allow-untracked for a corpus that is all public.")
+        if not allow_untracked and not _same_directory(generation.descriptor, corpus_root):
+            raise RuntimeError('corpus changed while checking tracked files; retry the export')
+        for path in generation.files():
+            rel = path.relative_to(corpus_root).as_posix()
+            if tracked is not None and rel not in tracked:
+                skipped += 1
+                continue
+            files.add(rel)
+            kind, source = corpusmod.classify(Path(rel))
+            with generation.open(rel) as stream:
+                text = stream.read()
+            recipe = _recipe_metadata(rel, text)
+            if recipe is not None:
+                recipe_metadata.append(recipe)
+            for head, line, body in corpusmod.chunk_text(text):
+                rows.append((rel, source, kind, head or path.stem, line, body))
     if not files and skipped:
         raise RuntimeError(f"all {skipped} corpus files under {corpus_root} are untracked by git; commit them first "
                            "(or pass allow_untracked=True / --allow-untracked if every file may be shared)")
@@ -314,7 +349,9 @@ def _export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bo
                 counts[t] = counts.get(t, 0) + weight
         doclen.append(n)
         for t, w in counts.items():
-            postings.setdefault(t, []).append((i, min(w, 65535)))
+            if w > 65535:
+                raise ValueError('weighted term frequency exceeds export format; generation preserved')
+            postings.setdefault(t, []).append((i, w))
     terms = sorted(postings)
     ids, wts = array("I"), array("H")
     vocab = {}
@@ -383,12 +420,8 @@ def _export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bo
     by_source: dict[tuple[str, str], int] = {}
     for r in rows:
         by_source[(r[2], r[1])] = by_source.get((r[2], r[1]), 0) + 1
-    recipes = [
-        {"name": rc.name, "title": rc.title, "summary": rc.summary, "applies_to": rc.applies_to,
-         "path": rc.path if rc.path in pi else None}
-        for rc in recipemod.load(corpus_root)
-        if (rc.path in files)
-    ]
+    recipes = [{**recipe, "path": recipe["path"] if recipe["path"] in pi else None}
+               for recipe in recipe_metadata]
     meta_doc = {
         "format": FORMAT,
         "mdbx_version": __version__,
@@ -475,21 +508,38 @@ class WebHit:
 
 class WebIndex:
     def __init__(self, out: Path):
-        self.meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
-        c = json.loads((out / "chunks.json").read_text(encoding="utf-8"))
-        self.paths, self.sources, self.kinds, self.rows = c["paths"], c["sources"], c["kinds"], c["rows"]
-        self.vocab = json.loads((out / "terms.json").read_text(encoding="utf-8"))
-        self.ids = array("I", (out / "postings.bin").read_bytes())
-        self.wts = array("H", (out / "weights.bin").read_bytes())
-        self.doclen = array("I", (out / "doclen.bin").read_bytes())
+        from .safety import _read_bytes
+        out = Path(out)
+        parent = _directory(out.parent)
+        directory = None
+        try:
+            with directory_lock(parent, out.name):
+                directory = _directory(out)
+                def data(name):
+                    return _read_bytes(directory, name)
+                self.meta = json.loads(data('meta.json'))
+                c = json.loads(data('chunks.json'))
+                self.paths, self.sources, self.kinds, self.rows = c['paths'], c['sources'], c['kinds'], c['rows']
+                self.vocab = json.loads(data('terms.json'))
+                self.ids = array('I', data('postings.bin'))
+                self.wts = array('H', data('weights.bin'))
+                self.doclen = array('I', data('doclen.bin'))
+                try:
+                    self.vectors = data('vectors.bin')
+                except FileNotFoundError:
+                    self.vectors = b''
+        finally:
+            try:
+                if directory is not None:
+                    os.close(directory)
+            finally:
+                os.close(parent)
         if _big_endian():
             for a in (self.ids, self.wts, self.doclen):
                 a.byteswap()
         self.n = len(self.rows)
-        self.avgdl = (self.meta["total_tokens"] / self.n) if self.n else 0.0
-        vf = out / "vectors.bin"
-        self.vectors = vf.read_bytes() if vf.is_file() else b""
-        self.dim = (self.meta.get("vectors") or {}).get("dim", 0)
+        self.avgdl = self.meta['total_tokens'] / self.n if self.n else 0.0
+        self.dim = (self.meta.get('vectors') or {}).get('dim', 0)
 
     def hit(self, i: int, score: float, via: str) -> WebHit:
         r = self.rows[i]
@@ -499,13 +549,14 @@ class WebIndex:
         r = self.rows[i]
         if kind and self.kinds[r[2]] != kind:
             return False
-        return not (source and source.lower() not in self.sources[r[1]].lower())
+        return not (source and _ascii_lower(source) not in _ascii_lower(self.sources[r[1]]))
 
     def keyword_ranked(self, query: str, kind: str | None = None, source: str | None = None) -> list[tuple[int, float]]:
         terms = query_terms(query)
         if not terms:
             return []
-        uniq = list(dict.fromkeys(terms))
+        frequencies = Counter(terms)
+        uniq = list(frequencies)
         lists = []
         for t in uniq:
             v = self.vocab.get(t)
@@ -520,7 +571,7 @@ class WebIndex:
                 idf = math.log((self.n - df + 0.5) / (df + 0.5))
                 if idf <= 0:
                     idf = 1e-6
-                qtf = terms.count(t)  # a repeated query term counts once per occurrence, like repeated phrases
+                qtf = frequencies[t]  # a repeated query term counts once per occurrence, like repeated phrases
                 for j in range(off, off + df):
                     i = self.ids[j]
                     w = self.wts[j]
@@ -535,13 +586,15 @@ class WebIndex:
         return []
 
     def keyword(self, query: str, limit: int = 10, *, kind: str | None = None, source: str | None = None) -> list[WebHit]:
+        _validate_limit(limit)
         ranked = self.keyword_ranked(query, kind, source)
-        return dedupe([self.hit(i, s, "keyword") for i, s in ranked], limit)
+        return dedupe((self.hit(i, s, "keyword") for i, s in ranked), limit)
 
     def semantic_vec(self, qv: list[float], limit: int = 10, *, kind: str | None = None,
                      source: str | None = None) -> list[WebHit]:
         """Rank by dot product of the int8 vectors with an L2-normalised query vector."""
-        if not self.vectors:
+        _validate_limit(limit)
+        if not limit or not self.vectors:
             return []
         if len(qv) != self.dim or not all(math.isfinite(x) for x in qv):
             raise ValueError("query vector dimension or values invalid")
@@ -555,10 +608,11 @@ class WebIndex:
             base = vi * dim
             best[i] = sum(mv[base + k] * qv[k] for k in range(dim)) / 127.0
         ranked = sorted(best.items(), key=lambda x: (-x[1], x[0]))
-        return dedupe([self.hit(i, s, "semantic") for i, s in ranked], limit)
+        return dedupe((self.hit(i, s, "semantic") for i, s in ranked), limit)
 
     def hybrid_vec(self, query: str, qv: list[float] | None, limit: int = 10, *, kind: str | None = None,
                    source: str | None = None) -> list[WebHit]:
+        _validate_limit(limit)
         kw = self.keyword(query, limit * 3, kind=kind, source=source)
         if qv is None:
             return kw[:limit]
@@ -579,9 +633,17 @@ class WebIndex:
         return dedupe(out, limit)
 
 
-def dedupe(hits: list[WebHit], limit: int) -> list[WebHit]:
+def _ascii_lower(text):
+    return text.translate(str.maketrans('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'))
+
+
+def _validate_limit(limit):
     if not isinstance(limit, int) or isinstance(limit, bool) or limit < 0:
         raise ValueError("limit must be nonnegative")
+
+
+def dedupe(hits, limit: int) -> list[WebHit]:
+    _validate_limit(limit)
     if not limit:
         return []
     seen: set[str] = set()

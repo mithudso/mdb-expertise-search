@@ -5,7 +5,7 @@ import { OPERATORS } from "./lib/operators.js";
 import { optimize } from "./lib/optimize.js";
 import { getIndex } from "./lib/store.js";
 import { embedQuery, EmbedError, snippet } from "./lib/textsearch.js";
-import { copyButton, h, markFor, renderMarkdown, renderReport } from "./lib/ui.js";
+import { copyButton, h, markFor, advanceMarkdownContext, renderMarkdown, renderReport } from "./lib/ui.js";
 
 const $ = (id) => document.getElementById(id);
 const TABS = ["search", "doc", "recipes", "optimize", "lint", "operators", "about"];
@@ -31,6 +31,20 @@ let routeGeneration = 0;
 let documentGeneration = 0;
 let settingsGeneration = 0;
 let settingsWrites = Promise.resolve();
+const truncatedInputs = new Map();
+function setToolInput(id, text, truncated = false) {
+  $(id).value = text;
+  if (truncated) truncatedInputs.set(id, text);
+  else truncatedInputs.delete(id);
+}
+function isTruncatedInput(id) {
+  const yes = truncatedInputs.has(id) && truncatedInputs.get(id) === $(id).value;
+  if (!yes) truncatedInputs.delete(id);
+  return yes;
+}
+function inputWarning(id) {
+  return isTruncatedInput(id) ? h("p", { class: "status error" }, "Only the first 200,000 characters of the selection were checked.") : document.createDocumentFragment();
+}
 
 // ---------------------------------------------------------------- routing
 
@@ -191,9 +205,9 @@ function select(i) {
   const chunks = index?.document(hit.path)?.chunks || [];
   for (const chunk of chunks) {
     if (chunk.id === hit.id || chunk.line >= hit.line) break;
-    renderMarkdown(chunk.text, { context });
+    advanceMarkdownContext(chunk.text, { context, line: chunk.line });
   }
-  body.append(renderMarkdown(hit.text, { mark: markFor(state.q), context }));
+  body.append(renderMarkdown(hit.text, { mark: markFor(state.q), context, line: hit.line }));
   $("detail").replaceChildren(
     h("div", { class: "crumb" }, hit.heading),
     h("div", { class: "loc" }, `${hit.path}:${hit.line}`),
@@ -231,7 +245,7 @@ async function showDocument(path, line, q) {
   docEl.replaceChildren(...d.chunks.map((c, i) => {
     const isTarget = line && (c.line === line || (c.line <= line && (d.chunks[i + 1]?.line ?? Infinity) > line));
     const el = h("section", { class: `chunk md${isTarget ? " target" : ""}`, id: `L${c.line}` });
-    el.append(renderMarkdown(c.text, { mark: isTarget ? mark : null, context }));
+    el.append(renderMarkdown(c.text, { mark: isTarget ? mark : null, context, line: c.line }));
     if (isTarget && !target) target = el;
     return el;
   }));
@@ -244,8 +258,10 @@ async function showDocument(path, line, q) {
 async function renderRecipes() {
   const idx = await ensureIndex();
   const list = $("recipes");
+  list.dataset.ready = "false";
   if (!idx) {
     list.replaceChildren(h("li", {}, "No index packaged."));
+    list.dataset.ready = "true";
     return;
   }
   const f = $("recipe-filter").value.trim().toLowerCase();
@@ -253,6 +269,7 @@ async function renderRecipes() {
   list.replaceChildren(...items.map((r) => h("li", { tabindex: "0", onclick: () => go("doc", { path: r.path }),
     onkeydown: (e) => { if (e.key === "Enter") go("doc", { path: r.path }); } },
   h("h3", {}, r.title), h("p", {}, r.summary), h("span", { class: "kind" }, (r.applies_to || []).join(" · ")))));
+  list.dataset.ready = "true";
 }
 
 // ---------------------------------------------------------------- optimizer
@@ -272,8 +289,8 @@ function runOptimize() {
     $("opt-out").replaceChildren(h("p", { class: "status error" }, `The optimizer could not read this input: ${err.message}`));
     return;
   }
-  $("opt-out").replaceChildren(renderReport(rep, { refLink,
-    extra: h("button", { type: "button", class: "small", onclick: () => { $("lint-input").value = text; go("lint"); runLint(); } }, "Lint this") }));
+  $("opt-out").replaceChildren(inputWarning("opt-input"), renderReport(rep, { refLink,
+    extra: h("button", { type: "button", class: "small", onclick: () => { setToolInput("lint-input", text, isTruncatedInput("opt-input")); go("lint"); runLint(); } }, "Lint this") }));
 }
 
 // ---------------------------------------------------------------- lint
@@ -298,7 +315,7 @@ function runLint() {
       h("div", { class: "head" }, `${d.line + 1}:${d.column + 1} ${d.severity.toUpperCase()} · ${d.code}`),
       h("p", {}, d.message, d.fix ? [" ", h("code", {}, d.fix)] : null)));
   if (symbols.length) fragment.append(h("h2", {}, "Outline"), outline(symbols));
-  out.replaceChildren(fragment);
+  out.replaceChildren(inputWarning("lint-input"), fragment);
 }
 
 // ---------------------------------------------------------------- operators
@@ -326,8 +343,8 @@ async function loadSettings() {
   if (state.settings.semantic) state.mode = "hybrid";
 }
 
-function saveSettings() {
-  const settings = { ...state.settings };
+function saveSettings(next = state.settings) {
+  const settings = { ...next };
   const write = settingsWrites.then(() => chrome.storage.local.set({ settings }));
   settingsWrites = write.catch(() => {});
   return write;
@@ -360,11 +377,18 @@ function showOllamaHelp(show) {
   if (!show) return;
   const id = chrome.runtime.id;
   const mac = `launchctl setenv OLLAMA_ORIGINS "chrome-extension://${id}"`;
-  const linux = `sudo systemctl edit ollama\n# Add this override, save, then restart Ollama:\n[Service]\nEnvironment="OLLAMA_ORIGINS=chrome-extension://${id}"\nsudo systemctl restart ollama`;
+  const linuxEdit = "sudo systemctl edit ollama";
+  const linuxOverride = `[Service]\nEnvironment="OLLAMA_ORIGINS=chrome-extension://${id}"`;
+  const linuxRestart = "sudo systemctl restart ollama";
   box.replaceChildren(
     h("p", {}, "Ollama only accepts requests from origins it trusts. Allow this extension, then restart Ollama:"),
     h("div", { class: "row" }, h("code", {}, mac), copyButton(() => mac)),
-    h("div", { class: "row" }, h("code", {}, linux), copyButton(() => linux)),
+    h("p", {}, "Linux: open the service override editor:"),
+    h("div", { class: "row" }, h("code", {}, linuxEdit), copyButton(() => linuxEdit)),
+    h("p", {}, "Paste only these override contents into the editor, then save:"),
+    h("div", { class: "row" }, h("code", {}, linuxOverride), copyButton(() => linuxOverride)),
+    h("p", {}, "After saving, restart the service:"),
+    h("div", { class: "row" }, h("code", {}, linuxRestart), copyButton(() => linuxRestart)),
     h("p", { class: "kind" }, "On Windows set the OLLAMA_ORIGINS user environment variable to the same value. Then click Enable and test again."));
 }
 
@@ -397,9 +421,10 @@ async function enableOllama() {
     if (generation !== settingsGeneration) return;
     if (!Array.isArray(v) || !v.every(Number.isFinite)) throw new EmbedError("the model returned an invalid embedding");
     if (idx && idx.dim && v.length !== idx.dim) throw new EmbedError(`the model returned ${v.length} dimensions but the index has ${idx.dim}; pull ${model}`);
-    state.settings = { semantic: true, host };
-    await saveSettings();
+    const settings = { semantic: true, host };
+    await saveSettings(settings);
     if (generation !== settingsGeneration) return;
+    state.settings = settings;
     state.mode = "hybrid";
     showOllamaHelp(false);
     status.textContent = `On — ${host} answered with ${v.length}-dimension ${model} embeddings. Hybrid is now the default search mode.`;
@@ -436,15 +461,13 @@ async function consumePending() {
     const appPending = await consumeHandoff(chrome.storage.session, params.get("handoff"));
     if (!appPending) return false;
     if (appPending.tab === "lint") {
-      $("lint-input").value = appPending.text;
+      setToolInput("lint-input", appPending.text, appPending.truncated);
       go("lint");
       runLint();
-      if (appPending.truncated) $("lint-out").prepend(h("p", { class: "status error" }, "Only the first 200,000 characters of the selection were checked."));
     } else if (appPending.tab === "optimize") {
-      $("opt-input").value = appPending.text;
+      setToolInput("opt-input", appPending.text, appPending.truncated);
       go("optimize");
       runOptimize();
-      if (appPending.truncated) $("opt-out").prepend(h("p", { class: "status error" }, "Only the first 200,000 characters of the selection were checked."));
     } else {
       go("search", { q: truncateText(appPending.text, 500) });
     }
@@ -478,12 +501,13 @@ function wire() {
   $("recipe-filter").addEventListener("input", () => renderRecipes());
   $("op-filter").addEventListener("input", () => renderOperators());
   $("opt-run").addEventListener("click", runOptimize);
-  $("opt-example").addEventListener("click", () => { $("opt-input").value = EXAMPLE_LOG; runOptimize(); });
+  $("opt-example").addEventListener("click", () => { setToolInput("opt-input", EXAMPLE_LOG); runOptimize(); });
   $("lint-run").addEventListener("click", runLint);
-  $("lint-to-opt").addEventListener("click", () => { $("opt-input").value = $("lint-input").value; go("optimize"); runOptimize(); });
+  $("lint-to-opt").addEventListener("click", () => { setToolInput("opt-input", $("lint-input").value, isTruncatedInput("lint-input")); go("optimize"); runOptimize(); });
   $("ollama-enable").addEventListener("click", enableOllama);
   $("ollama-disable").addEventListener("click", disableOllama);
   for (const [id, fn] of [["opt-input", runOptimize], ["lint-input", runLint]]) {
+    $(id).addEventListener("input", () => truncatedInputs.delete(id));
     $(id).addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) fn(); });
   }
   document.addEventListener("keydown", (e) => {
@@ -508,6 +532,7 @@ async function main() {
   $("lint-input").value = EXAMPLE_LINT;
   await loadSettings();
   if (!(await consumePending())) await route();
+  document.body.dataset.ready = "true";
 }
 
 main();

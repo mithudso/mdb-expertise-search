@@ -12,6 +12,7 @@ Files that cannot be redacted are listed in PRIVATE_FILES and in .gitignore; the
 """
 from __future__ import annotations
 
+import argparse
 import contextlib
 import importlib.util
 import io
@@ -42,11 +43,11 @@ PRIVATE_FILES = [
 #: (pattern, replacement) applied with re.sub to every text file.
 GENERIC_REGEX: list[tuple[re.Pattern, str]] = [
     # stop at quotes/brackets so a path inside JSON or a markdown link keeps its closing delimiter
-    (re.compile(r"/Users/[A-Za-z0-9._-]+/[^\s\\\"'`)\]>,]*"), "<local-path>"),
-    (re.compile(r"~/\.(?:claude|global-ai-hub)/[^\s\\\"'`)\]>,]*"), "<local-path>"),
+    (re.compile(r"/Users/[A-Za-z0-9._-]+/[^\s\\\"'`)\]>},]*"), "<local-path>"),
+    (re.compile(r"~/\.(?:claude|global-ai-hub)/[^\s\\\"'`)\]>},]*"), "<local-path>"),
     (re.compile(r"[ \t]*\(HELP-\d+\)"), ""),
     (re.compile(r"\bHELP-\d+\b"), "<ticket>"),
-    (re.compile(r"(?<![\w.-])[\w.-]*\.corp\.mongodb\.com\b"), "internal.example.com"),
+    (re.compile(r"(?<![\w.-])[\w.-]*\.corp\.mongodb\.com\b", re.IGNORECASE), "internal.example.com"),
     (re.compile(r"^<!--[^\n]*skill-to-llms-txt[^\n]*-->\n", re.MULTILINE), ""),
 ]
 
@@ -54,7 +55,7 @@ GENERIC_REGEX: list[tuple[re.Pattern, str]] = [
 def load_private() -> tuple[list[tuple[str, str]], str | None]:
     path = Path(os.environ.get("MDBX_REDACTIONS", Path.home() / ".config/mdbx/redactions.py"))
     if not path.is_file():
-        print(f"note: no private redaction rules at {path}; generic rules only", file=sys.stderr)
+        print("note: selected private redaction rules are unavailable; generic rules only", file=sys.stderr)
         return [], None
     try:
         with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
@@ -84,8 +85,34 @@ def is_private(rel: str) -> bool:
     return any(rel == f.rstrip("/") or (f.endswith("/") and rel.startswith(f)) for f in PRIVATE_FILES)
 
 
-def main() -> int:
-    if CORPUS.is_symlink() or not CORPUS.resolve().is_relative_to(ROOT.resolve()):
+def recovery_directory() -> Path:
+    # Linked-worktree .git files are deliberately unsupported; do not trust their external path.
+    root_fd = os.open(ROOT, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        git_fd = os.open(".git", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
+        try:
+            try:
+                os.mkdir("mdbx-redaction-recovery", 0o700, dir_fd=git_fd)
+            except FileExistsError:
+                pass
+            recovery_fd = os.open("mdbx-redaction-recovery", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=git_fd)
+            try:
+                os.fchmod(recovery_fd, 0o700)
+            finally:
+                os.close(recovery_fd)
+        finally:
+            os.close(git_fd)
+    finally:
+        os.close(root_fd)
+    return ROOT / ".git/mdbx-redaction-recovery"
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--corpus", type=Path)
+    args = parser.parse_args([] if argv is None else argv)
+    corpus = args.corpus or CORPUS
+    if corpus.is_symlink() or not corpus.is_dir():
         print("error: corpus copy is outside the repository", file=sys.stderr); return 1
     try:
         rules, patch = load_private()
@@ -98,14 +125,14 @@ def main() -> int:
         print("error: private redaction rules can reintroduce matches", file=sys.stderr); return 1
     plan = []
     errors = 0
-    for p in sorted(CORPUS.rglob("*")):
-        rel = p.relative_to(ROOT).as_posix()
+    for p in sorted(corpus.rglob("*")):
+        rel = "corpus/" + p.relative_to(corpus).as_posix()
         if p.is_symlink():
             print("error: symlink in redaction input", file=sys.stderr); errors += 1; continue
         if not p.is_file() or p.suffix.lower() not in {".md", ".txt", ".json", ".jsonl", ".yaml", ".yml", ".csv"}: continue
         if is_private(rel) or rel.startswith(("corpus/recipes/", "corpus/llms/mongodb.com.llms/")): continue
         try:
-            original = safe_bytes(p, CORPUS); old = original.decode("utf-8"); new = redact_text(old, rules)
+            original = safe_bytes(p, corpus); old = original.decode("utf-8"); new = redact_text(old, rules)
             if redact_text(new, rules) != new: raise ValueError("non-idempotent redaction")
         except (OSError, UnicodeError, ValueError):
             print("error: unreadable or non-idempotent redaction input", file=sys.stderr); errors += 1; continue
@@ -113,38 +140,54 @@ def main() -> int:
     if errors: return 1
     if patch and not Path(patch).is_file():
         print("error: configured private patch is missing", file=sys.stderr); return 1
+    try:
+        recovery_root = recovery_directory() if plan else None
+    except (OSError, ValueError):
+        print("error: private recovery storage is unavailable; source preserved", file=sys.stderr); return 1
     for p, original, new in plan:
-        if safe_bytes(p, CORPUS) != original:
-            print("error: redaction input changed; retry", file=sys.stderr); return 1
         try:
-            recovery = replace_preserving(p, new, CORPUS, original, p.stat().st_mode & 0o777)
-            recovery.unlink()
+            if safe_bytes(p, corpus) != original:
+                print("error: redaction input changed; retry", file=sys.stderr); return 1
+            recovery = replace_preserving(p, new, corpus, original, p.stat().st_mode & 0o777)
+            try:
+                recovery.move_to(recovery_root)
+            finally:
+                recovery.close()
         except (OSError, ValueError, RuntimeError):
             print("error: redaction publication failed; source or recovery data preserved", file=sys.stderr); return 1
     # Check each file patch independently so refreshed and already-patched families can coexist.
     if patch:
         try:
             payload = Path(patch).read_bytes()
-            pieces = re.split(rb"(?m)(?=^diff --git )", payload)
+            pieces = re.split(rb"(?m)(?=^diff --git )" if re.search(rb"(?m)^diff --git ", payload) else rb"(?m)(?=^--- [^\n]+\n\+\+\+ )", payload)
             pieces = [piece for piece in pieces if piece.strip() and (piece.startswith(b"diff --git ") or b"--- " in piece)]
             if not pieces:
                 raise ValueError()
             pending = []
             for piece in pieces:
-                options = {"cwd": ROOT, "input": piece, "capture_output": True, "timeout": 30}
+                options = {"cwd": corpus.parent, "input": piece, "capture_output": True, "timeout": 30}
                 forward = subprocess.run(["git", "apply", "--check", "-"], check=False, **options)
                 if forward.returncode == 0:
                     pending.append(piece)
                 elif subprocess.run(["git", "apply", "--reverse", "--check", "-"], check=False, **options).returncode:
                     raise ValueError()
+            applied = []
             for piece in pending:
-                if subprocess.run(["git", "apply", "-"], cwd=ROOT, input=piece, capture_output=True, timeout=30, check=False).returncode:
+                if subprocess.run(["git", "apply", "-"], cwd=corpus.parent, input=piece, capture_output=True, timeout=30, check=False).returncode:
                     raise ValueError()
-        except (OSError, ValueError, subprocess.SubprocessError):
+                applied.append(piece)
+            for path in sorted(corpus.rglob("*")):
+                if path.is_file() and not path.is_symlink() and path.suffix.lower() in {".md", ".txt", ".json", ".jsonl", ".yaml", ".yml", ".csv"}:
+                    content = safe_bytes(path, corpus).decode("utf-8")
+                    if redact_text(content, rules) != content:
+                        raise ValueError()
+        except (OSError, UnicodeError, ValueError, subprocess.SubprocessError):
+            for piece in reversed(locals().get("applied", [])):
+                subprocess.run(["git", "apply", "--reverse", "-"], cwd=corpus.parent, input=piece, capture_output=True, timeout=30, check=False)
             print("error: configured private patch rejected", file=sys.stderr); return 1
     print(f"{len(plan)} file(s) changed", file=sys.stderr)
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))

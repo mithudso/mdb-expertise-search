@@ -7,11 +7,16 @@
 import DATA from "./operators-data.js";
 
 export class Operator {
-  constructor(name, cats, arg, doc) {
+  constructor(name, cats, arg, doc, argumentsByContext = {}) {
     this.name = name;
     this.cats = new Set(cats);
     this.arg = arg;
     this.doc = doc;
+    this.argumentsByContext = argumentsByContext;
+  }
+
+  argFor(context) {
+    return this.argumentsByContext[context] ?? this.arg;
   }
 
   /** True when the operator belongs to at least one of the given categories. */
@@ -21,7 +26,7 @@ export class Operator {
 }
 
 /** name -> Operator, in table order; suggest() breaks ties by descending Unicode code-point order. */
-export const OPERATORS = new Map(DATA.operators.map((o) => [o.name, new Operator(o.name, o.cats, o.arg, o.doc)]));
+export const OPERATORS = new Map(DATA.operators.map((o) => [o.name, new Operator(o.name, o.cats, o.arg, o.doc, o.arguments)]));
 export const VARIABLES = DATA.variables;
 export const FIRST_STAGE_ONLY = new Set(DATA.sets.FIRST_STAGE_ONLY);
 export const LAST_STAGE_ONLY = new Set(DATA.sets.LAST_STAGE_ONLY);

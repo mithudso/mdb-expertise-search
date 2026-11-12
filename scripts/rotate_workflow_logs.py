@@ -23,7 +23,7 @@ from maintenance_safety import atomic_write, lock, replace_preserving, safe_byte
 
 ROOT = Path(__file__).resolve().parent.parent
 LOGS = ["memory.md", "prompts.md"]
-SECTION = re.compile(r"^## v", re.MULTILINE)
+SECTION = re.compile(r"^## v[0-9]+(?:[.][0-9A-Za-z_-]+)*(?:[ \t].*)?$")
 
 
 def swap_files(p: Path) -> list[Path]:
@@ -36,7 +36,21 @@ def rotate(p: Path, max_bytes: int, keep: int, check: bool) -> bool:
     if not p.is_file() or p.stat().st_size <= max_bytes: return False
     if p.is_symlink(): raise ValueError("refusing symlinked workflow log")
     original = safe_bytes(p, ROOT); text = original.decode("utf-8")
-    starts = [m.start() for m in SECTION.finditer(text)]
+    starts = []
+    offset = 0
+    fence = None
+    fence_pattern = r"^ {0,3}(" + chr(96) + r"{3,}|~{3,})"
+    for line in text.splitlines(keepends=True):
+        marker = re.match(fence_pattern, line)
+        if marker:
+            token = marker.group(1)
+            if fence is None:
+                fence = token
+            elif token[0] == fence[0] and len(token) >= len(fence):
+                fence = None
+        elif fence is None and SECTION.fullmatch(line.rstrip("\r\n")):
+            starts.append(offset)
+        offset += len(line)
     if len(starts) <= keep: return False
     if check:
         print(f"{p.name}: rotation due"); return True
@@ -56,7 +70,7 @@ def rotate(p: Path, max_bytes: int, keep: int, check: bool) -> bool:
         snapshot = archive.with_name(archive.name + ".source-" + identity[:16])
         if not snapshot.exists():
             atomic_write(snapshot, original, stat.S_IMODE(before.st_mode), root=ROOT)
-        marker = ("<!-- mdbx-rotation:" + identity + " -->\n").encode()
+        marker = ("<!-- mdbx-rotation:" + identity + ":" + str(kept_until) + " -->\n").encode()
         separator = b"\n" if previous and not previous.endswith(b"\n") else b""
         archive_mode = stat.S_IMODE(before.st_mode)
         if archive.exists():

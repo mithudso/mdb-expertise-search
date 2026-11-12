@@ -57,3 +57,8 @@ Apply full repo-bootstrapper and repository-scope code-deep-optimizer to MDBx,
 preserve protected data and existing serialization, and deliver through verified
 remote-default contents. Correct only the four explicitly authorized synthetic
 optimizer expectations using independent semantics and separate behavior tests.
+
+
+## 2026-11-12 — selected maintenance scope
+
+Resume only mdb-expertise-search through verified PR delivery. Preserve the original five-iteration/two-gate caps, completed evidence and serialization freeze. Apply focused corroborated repairs with synthetic factories, scratch state, process-tree egress denial and isolated fixture Git hooks. Preserve unrelated work and live services/models/indexes.

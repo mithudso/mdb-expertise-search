@@ -36,7 +36,7 @@ def test_filename_markdown_is_literal():
     module = load('gen_file_index')
     result = module.literal('docs/a`b\r\n## <forged>.md')
     assert '\n' not in result and '\r' not in result
-    assert '<forged>' not in result
+    assert '<forged>' in result and '&amp;' not in module.literal('a&b')
     assert result.startswith('`` ') and result.endswith(' ``')
 
 def test_golden_generation_failure_preserves_pair(tmp_path, monkeypatch):
@@ -66,23 +66,25 @@ def test_second_publication_failure_restores_pair(tmp_path, monkeypatch):
     (staged/'index').mkdir(parents=True)
     (staged/'index/chunks.json').write_bytes(b'new index')
     (staged/'golden.json').write_bytes(b'new golden')
-    real = module.os.replace
+    from mdbx import safety
+    real = safety._rename_exclusive
+    reached = []
     def fail(source, target, *args, **kwargs):
-        if Path(source) == staged/'golden.json':
+        if Path(source).name == 'golden.json' and Path(target).name == 'golden.json' and kwargs.get('src_dir_fd') != kwargs.get('dst_dir_fd'):
+            reached.append(True)
+            assert (tmp_path/'index/chunks.json').read_bytes() == b'new index'
             raise OSError('synthetic second publication failure')
         return real(source, target, *args, **kwargs)
-    monkeypatch.setattr(module.os, 'replace', fail)
-    with pytest.raises(OSError):
+    monkeypatch.setattr(safety, '_rename_exclusive', fail)
+    with pytest.raises(OSError, match='synthetic second publication failure'):
         module.publish_pair(staged)
+    assert reached == [True]
     assert (tmp_path/'index/chunks.json').read_bytes() == b'previous index'
     assert (tmp_path/'golden.json').read_bytes() == b'previous golden'
 
 
 def test_reference_search_failure_preserves_previous_pair(tmp_path, monkeypatch):
-    script=SOURCE/'scripts/gen_search_golden.py'
-    spec=importlib.util.spec_from_file_location('generator_counterexample',script)
-    module=importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    module=load('gen_search_golden')
     monkeypatch.setattr(module,'FIX',tmp_path)
     monkeypatch.setattr(module,'QUERIES',[{'q':'synthetic'}])
     (tmp_path/'corpus').mkdir()

@@ -25,7 +25,10 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from maintenance_safety import atomic_write, lock, safe_bytes
+from maintenance_safety import git_environment, lock, safe_bytes
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from mdbx.safety import publish_files
 
 ROOT = Path(__file__).resolve().parent.parent
 EXT = ROOT / "editors" / "chrome"
@@ -34,20 +37,27 @@ RUNTIME = ["manifest.json", "background.js", "popup.html", "popup.css", "popup.j
 RUNTIME_DIRS = {"lib": {".js"}, "icons": {".png"}, "data": {".json", ".bin"}}
 
 
-def build_data(vectors: bool, out: Path | None = None):
+def build_data(vectors: bool, out: Path | None = None, *, commit: str | None = None):
     sys.path.insert(0, str(ROOT))
     from mdbx import index as idx
     from mdbx.webexport import export
 
     with tempfile.TemporaryDirectory(prefix="mdbx-committed-corpus-") as temporary:
         corpus = Path(temporary) / "corpus"
-        payload = subprocess.run(["git", "archive", "HEAD", "corpus"], cwd=ROOT, capture_output=True, timeout=120, check=True).stdout
+        payload = subprocess.run(["git", "archive", commit or git_commit(full=True), "corpus"], cwd=ROOT, env=git_environment(), capture_output=True, timeout=120, check=True).stdout
         with tarfile.open(fileobj=io.BytesIO(payload)) as archive:
             for member in archive.getmembers():
                 relative = Path(member.name)
                 if relative.is_absolute() or ".." in relative.parts or not relative.parts or relative.parts[0] != "corpus" or not (member.isfile() or member.isdir()):
                     raise ValueError("committed corpus contains an unsupported path")
-            archive.extractall(temporary, filter="data")
+            for member in archive.getmembers():
+                target = Path(temporary) / member.name
+                if member.isdir():
+                    target.mkdir(parents=True, exist_ok=True)
+                else:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    with archive.extractfile(member) as source:
+                        target.write_bytes(source.read())
         r = export(corpus, out or DATA, db=idx.default_db(), vectors=vectors, allow_untracked=True)
     note = f"; skipped {r.skipped_untracked} untracked (private) files" if r.skipped_untracked else ""
     print(f"search data: {r.chunks} chunks from {r.files} files, {r.terms} terms, {r.vectors} vectors{note}")
@@ -56,21 +66,21 @@ def build_data(vectors: bool, out: Path | None = None):
     return r
 
 
-def git_commit() -> str:
+def git_commit(*, full=False) -> str:
     """Short SHA of HEAD, or "unknown" outside a git checkout."""
     try:
-        out = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short=12", "HEAD"], capture_output=True,
+        out = subprocess.run(["git", "-C", str(ROOT), "rev-parse", *( [] if full else ["--short=12"] ), "HEAD"], env=git_environment(), capture_output=True,
                              text=True, timeout=10, check=False)
     except (OSError, subprocess.SubprocessError):
         return "unknown"
     return out.stdout.strip() or "unknown"
 
 
-def write_build_stamp(version: str, *, data: bool, vectors: bool, out: Path | None = None) -> dict:
+def write_build_stamp(version: str, *, data: bool, vectors: bool, out: Path | None = None, commit: str | None = None) -> dict:
     """data/build.json: what the extension's self-reload check compares (see lib/autoupdate.js)."""
     directory = out or DATA
     directory.mkdir(parents=True, exist_ok=True)
-    stamp = {"version": version, "commit": git_commit(),
+    stamp = {"version": version, "commit": commit if commit is not None else git_commit(),
              "built_at": dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
              "search_data": data, "vectors": vectors}
     (directory / "build.json").write_text(json.dumps(stamp, indent=2) + "\n", encoding="utf-8")
@@ -98,10 +108,12 @@ def main() -> int:
         if out.parent.is_symlink(): raise ValueError("dist directory is a symlink")
         with lock(out.parent / ".chrome-package.lock"), tempfile.TemporaryDirectory(prefix="mdbx-package-") as scratch:
             scratch = Path(scratch); exported = scratch / "data"; exported.mkdir()
-            result = None if a.no_data else build_data(vectors=not a.no_vectors, out=exported)
-            stamp = write_build_stamp(version, data=not a.no_data, vectors=bool(result and result.vectors), out=exported)
+            commit = git_commit(full=True)
+            result = None if a.no_data else build_data(vectors=not a.no_vectors, out=exported, commit=commit)
+            stamp = write_build_stamp(version, data=not a.no_data, vectors=bool(result and result.vectors), out=exported, commit=commit[:12])
             files = {name: safe_bytes(EXT / name, EXT) for name in RUNTIME if name != "manifest.json"}
-            files["manifest.json"] = manifest_bytes
+            manifest['mdbx_data'] = not a.no_data
+            files['manifest.json'] = (json.dumps(manifest, indent=2) + '\n').encode('utf-8')
             for name, suffixes in RUNTIME_DIRS.items():
                 directory = exported if name == "data" else EXT / name
                 if directory.is_symlink(): raise ValueError("runtime input directory is a symlink")
@@ -110,25 +122,20 @@ def main() -> int:
                 for entry in sorted(directory.iterdir()):
                     if entry.suffix not in suffixes: continue
                     files[name + "/" + entry.name] = safe_bytes(entry, exported if name == "data" else EXT)
+            required_icons = set((manifest.get('icons') or {}).values())
+            action_icon = (manifest.get('action') or {}).get('default_icon', {})
+            required_icons.update(action_icon.values() if isinstance(action_icon, dict) else [action_icon])
+            if any(not isinstance(name, str) or name not in files for name in required_icons):
+                raise ValueError('manifest-required icon is missing')
             temporary = scratch / "extension.zip"
             with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED) as archive:
                 for name, content in files.items():
                     info = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
                     info.compress_type = zipfile.ZIP_DEFLATED; info.external_attr = 0o644 << 16
                     archive.writestr(info, content)
-            metadata = out.parent / "build.json"
-            old_zip = safe_bytes(out, ROOT) if out.exists() else None
-            old_metadata = safe_bytes(metadata, ROOT) if metadata.exists() else None
-            try:
-                atomic_write(out, temporary.read_bytes(), root=ROOT)
-                atomic_write(metadata, json.dumps(stamp, indent=2).encode() + b"\n", root=ROOT)
-            except BaseException:
-                for target, previous in [(out, old_zip), (metadata, old_metadata)]:
-                    if previous is None:
-                        target.unlink(missing_ok=True)
-                    else:
-                        atomic_write(target, previous, root=ROOT)
-                raise
+            publish_files(out.parent, {out.name: temporary.read_bytes(),
+                                       'build.json': json.dumps(stamp, indent=2).encode() + b"\n"},
+                          lock_name='chrome-package-outputs')
         print(f"wrote {out.relative_to(ROOT)} ({len(files)} files)")
         return 0
     except (OSError, ValueError, TypeError, RuntimeError, KeyError, subprocess.SubprocessError):

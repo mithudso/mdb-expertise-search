@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+import threading
 from pathlib import Path
 from typing import ClassVar
 
@@ -102,7 +103,8 @@ class MdbxApp(App):
         self.kind = 0
         self.source: str | None = None
         self.hits: list[srch.Hit] = []
-        self._store: srch.VectorStore | None = None
+        self._search_local = threading.local()
+        self._search_gate = threading.Lock()
         self._longest_facet = 0
         self._facet_rows: list[tuple[str, int, str]] = []  # (source, count, option id)
         self._facet_width: int | None = None
@@ -194,15 +196,34 @@ class MdbxApp(App):
             return
         row = self.con.execute("SELECT value FROM meta WHERE key='corpus'").fetchone()
         root = Path(row[0]) if row else idx.default_corpus()
+        return self._recipe_worker(root, self._generation)
+
+    @work(thread=True, exclusive=True, group="recipes")
+    def _recipe_worker(self, root: Path, generation: int) -> None:
         hits = []
+        unavailable = False
         try:
-            for recipe in recipemod.load(root):
-                hits.append(srch.Hit(-1, recipe.path, recipe.name, "recipe", recipe.title, 1,
-                                     recipe.text, 0.0, "recipe", recipe.summary))
+            items = recipemod.load(root)
         except (OSError, ValueError, UnicodeError):
-            self._render_hits([], " · recipe files are unavailable; retry")
-            return
-        self._render_hits(hits, " · recipes (type to search within them)")
+            items = []
+            unavailable = True
+        for recipe in items:
+            if generation != self._generation:
+                return
+            try:
+                # Recipe browsing uses a bounded preview; mdbx recipe exposes the full runbook.
+                with recipemod.open_confined(root, recipe.path) as stream:
+                    preview = stream.read(20_001)
+                if len(preview) > 20_000:
+                    preview = preview[:20_000] + "\n[Preview truncated; use mdbx recipe for the complete runbook.]"
+                hits.append(srch.Hit(-1, recipe.path, recipe.name, "recipe", recipe.title, 1,
+                                     preview, 0.0, "recipe", recipe.summary))
+            except (OSError, ValueError, UnicodeError):
+                unavailable = True
+        note = " · recipes (type to search within them)"
+        if unavailable:
+            note += " · some recipe files are unavailable; partial results"
+        self.call_from_thread(self._publish_hits, generation, hits, note)
 
     def action_focus_query(self) -> None:
         self.query_one("#q", Input).focus()
@@ -249,33 +270,58 @@ class MdbxApp(App):
             return None
         return self._search_worker(query, self._generation, MODES[self.mode], KINDS[self.kind], self.source)
 
+    def _thread_search_state(self):
+        path = Path(self.db or idx.default_db()).absolute()
+        def identity():
+            try:
+                info = path.stat()
+                return str(path), info.st_dev, info.st_ino
+            except FileNotFoundError:
+                return str(path), None, None
+        state = getattr(self._search_local, "value", None)
+        if state is None or state["identity"] != identity():
+            if state is not None:
+                state["con"].close()
+            con = idx.connect(self.db)
+            state = {"identity": identity(), "con": con, "store": None}
+            self._search_local.value = state
+        return state
+
     @work(thread=True, exclusive=True)
     def _search_worker(self, query: str, generation: int, mode: str, kind: str | None, source: str | None) -> None:
-        if not query.strip():
+        if not query.strip() or generation != self._generation:
             return
         self.call_from_thread(self._search_status, generation)
         note = ""
         hits: list[srch.Hit] = []
-        try:
-            con = idx.connect(self.db)  # sqlite connections are thread-bound
+        # Only one embedding request runs. Waiting superseded workers exit before loading/querying.
+        with self._search_gate:
+            if generation != self._generation:
+                return
             try:
-                store = srch.VectorStore(con) if mode != "keyword" else None
-                notes: list[str] = []
-                hits = srch.search(
-                    con, query, mode, 40, kind=kind, source=source, source_exact=source is not None, notes=notes,
-                    **({"store": store} if mode != "keyword" else {}),
-                )
-                if notes:  # hybrid ran keyword-only because the embedder is down: say so in the status bar
-                    note = f" ⚠ {srch.fallback_note(embedmod.EmbedError('semantic backend unavailable'))}"
-            except embedmod.EmbedError:
-                log.warning("semantic search unavailable, using keyword")
-                hits = srch.keyword(con, query, 40, kind=kind, source=source, source_exact=source is not None)
-                note = " (semantic search unavailable; showing keyword results only)"
-            finally:
-                con.close()
-        except sqlite3.Error:  # an unhandled worker error would tear down the whole TUI
-            log.error("search failed")
-            note = " (search failed; retry)"
+                state = self._thread_search_state()
+                con = state["con"]
+                try:
+                    if mode != "keyword" and state["store"] is None:
+                        state["store"] = srch.VectorStore(con)
+                    if generation != self._generation:
+                        return
+                    notes: list[str] = []
+                    hits = srch.search(
+                        con, query, mode, 40, kind=kind, source=source, source_exact=source is not None, notes=notes,
+                        **({"store": state["store"]} if mode != "keyword" else {}),
+                    )
+                    if notes:
+                        note = f" ⚠ {srch.fallback_note(embedmod.EmbedError('semantic backend unavailable'))}"
+                except embedmod.EmbedError:
+                    if generation != self._generation:
+                        return
+                    log.warning("semantic search unavailable, using keyword")
+                    hits = srch.keyword(con, query, 40, kind=kind, source=source, source_exact=source is not None)
+                    note = " (semantic search unavailable; showing keyword results only)"
+            except sqlite3.Error:
+                log.error("search failed")
+                note = " (search failed; retry)"
         self.call_from_thread(self._publish_hits, generation, hits, note)
 
     def _publish_hits(self, generation: int, hits: list[srch.Hit], note: str) -> None:
@@ -291,7 +337,7 @@ class MdbxApp(App):
         table = self.query_one("#results", DataTable)
         table.clear()
         for h in hits:
-            table.add_row(f"{h.score:.3f}", h.kind, h.source, Text(h.heading.split(" > ")[-1][:60]))
+            table.add_row(f"{h.score:.3f}", Text(h.kind), Text(h.source), Text(h.heading.split(" > ")[-1][:60]))
         self._status(f"{len(hits)} results{note}")
         if hits:
             table.move_cursor(row=0)

@@ -7,7 +7,7 @@ const path = require('path');
  * Order: explicit setting, then <workspace>/.venv/bin/mql-lsp (Scripts\mql-lsp.exe on Windows), then PATH.
  */
 function resolveServerCommand(configured, workspaceFolders, platform = process.platform, exists = candidate => { try { if (!fs.statSync(candidate).isFile()) return false; if (platform !== "win32") fs.accessSync(candidate, fs.constants.X_OK); return true; } catch { return false; } }) {
-  if (configured && configured.trim()) return configured.trim();
+  if (typeof configured === "string" && configured.trim()) return configured.trim();
   const rel = platform === 'win32' ? path.join('.venv', 'Scripts', 'mql-lsp.exe') : path.join('.venv', 'bin', 'mql-lsp');
   for (const folder of workspaceFolders || []) {
     const candidate = path.join(folder, rel);

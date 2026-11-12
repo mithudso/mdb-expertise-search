@@ -65,6 +65,7 @@ test('overlapping restarts and deactivation serialize client ownership', async (
   const tick = () => new Promise(resolve => setImmediate(resolve));
   class Client {
     constructor() { clients.push(this); }
+    isRunning() { return live.has(this); }
     async start() { assert.ok(!live.has(this)); live.add(this); maxAlive = Math.max(maxAlive, live.size); await tick(); }
     async dispose() { await tick(); assert.ok(live.delete(this), "dispose owns a live client"); assert.ok(!disposed.has(this)); disposed.add(this); }
   }
@@ -97,7 +98,7 @@ test('overlapping restarts and deactivation serialize client ownership', async (
   }
 });
 
-test("automatic discovery skips directories and non-executable POSIX files", () => {
+test("automatic discovery skips directories and non-executable POSIX files", { skip: process.platform === "win32" }, () => {
   const fs = require("node:fs"), os = require("node:os");
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "mql-path-"));
   try {
@@ -120,6 +121,7 @@ test("grammar uses identifier boundaries, complete method inventory and bounded 
   assert.strictEqual(keyword.test("$use"), false);
   const constructor = new RegExp(values.find(r => r.name === "support.class.constructor.mql").match);
   assert.strictEqual(constructor.test("my$Date()"), false);
+  for (const name of ["Date", "ObjectId", "ISODate", "NumberLong"]) assert.strictEqual(constructor.test(name + "()"), true);
   for (const name of ["double", "single"]) {
     const rule = values.find(r => r.name === `string.quoted.${name}.mql`);
     assert.ok(new RegExp(rule.end).test("\n"));
@@ -155,4 +157,23 @@ test("a failed disposal retains ownership until a later restart retries it", asy
     await restart(); assert.strictEqual(starts, 2); assert.strictEqual(live.size, 1);
     await extension.deactivate(); assert.strictEqual(live.size, 0);
   } finally { Module._load = originalLoad; delete require.cache[filename]; }
+});
+
+
+test('non-string settings continue normal discovery', () => {
+  for (const value of [true, 1, {}, []]) assert.strictEqual(resolveServerCommand(value, [], 'linux', () => false), 'mql-lsp');
+});
+test('direct database methods and system variable identifiers have exact scopes', () => {
+  const grammar = require('../syntaxes/mql.tmLanguage.json');
+  const db = new RegExp(grammar.repository['statement-words'].patterns[1].match);
+  for (const name of ['watch', 'aggregate', 'getCollection']) assert.strictEqual(db.exec(`db.${name}()`)[2], undefined);
+  assert.strictEqual(db.exec('db.orders.find({})')[2], 'orders');
+  const system = new RegExp(grammar.repository.value.patterns.find(r => r.name === 'variable.language.system.mql').match);
+  assert.strictEqual(system.test('$$ROOT'), true);
+  for (const text of ['prefix$$ROOT', '$$ROOT$suffix', '$$$ROOT']) assert.strictEqual(system.test(text), false);
+});
+test('native directory rejection does not depend on POSIX executable bits', () => {
+  const fs=require('node:fs'),os=require('node:os');const root=fs.mkdtempSync(path.join(os.tmpdir(),'synthetic-mql-native-'));
+  try{const rel=process.platform==='win32'?['.venv','Scripts','mql-lsp.exe']:['.venv','bin','mql-lsp'];const candidate=path.join(root,...rel);fs.mkdirSync(candidate,{recursive:true});assert.strictEqual(resolveServerCommand('',[root]),'mql-lsp');}
+  finally{fs.rmSync(root,{recursive:true,force:true});}
 });

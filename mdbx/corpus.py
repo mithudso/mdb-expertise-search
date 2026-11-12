@@ -6,10 +6,11 @@ import logging
 import os
 import re
 from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from .safety import open_confined
+from .safety import _directory, _directory_at, open_confined_at
 
 log = logging.getLogger("mdbx.corpus")
 
@@ -63,17 +64,48 @@ def classify(rel: Path) -> tuple[str, str]:
     return "llms", rel.stem
 
 
+class _ReadGeneration:
+    def __init__(self, root: Path, descriptor: int):
+        self.root = root
+        self.descriptor = descriptor
+
+    def files(self) -> Iterator[Path]:
+        pending = [()]
+        paths = []
+        while pending:
+            parts = pending.pop()
+            directory = _directory_at(self.descriptor, parts)
+            try:
+                with os.scandir(directory) as entries:
+                    for entry in entries:
+                        relative = (*parts, entry.name)
+                        if entry.is_dir(follow_symlinks=False):
+                            pending.append(relative)
+                        elif (entry.is_file(follow_symlinks=False)
+                              and Path(entry.name).suffix in TEXT_SUFFIXES
+                              and not entry.name.startswith('.')):
+                            paths.append(self.root.joinpath(*relative))
+            finally:
+                os.close(directory)
+        yield from sorted(paths)
+
+    def open(self, relative: str):
+        return open_confined_at(self.descriptor, relative)
+
+
+@contextmanager
+def read_generation(root: Path):
+    """Hold the corpus directory across traversal and all descriptor-relative reads."""
+    descriptor = _directory(root)
+    try:
+        yield _ReadGeneration(root, descriptor)
+    finally:
+        os.close(descriptor)
+
+
 def iter_files(root: Path) -> Iterator[Path]:
-    def failed(error):
-        raise error
-    paths = []
-    for directory, children, filenames in os.walk(root, onerror=failed, followlinks=False):
-        children[:] = sorted(name for name in children if not (Path(directory) / name).is_symlink())
-        for name in filenames:
-            p = Path(directory) / name
-            if not p.is_symlink() and p.is_file() and p.suffix in TEXT_SUFFIXES and not p.name.startswith('.'):
-                paths.append(p)
-    yield from sorted(paths)
+    with read_generation(root) as generation:
+        yield from generation.files()
 
 
 def chunk_text(text: str, *, max_chars: int = MAX_CHUNK_CHARS) -> list[tuple[str, int, str]]:
@@ -144,13 +176,14 @@ def _merge_tiny(pieces: list[tuple[str, int, str]], max_chars: int = MAX_CHUNK_C
 
 
 def iter_chunks(root: Path) -> Iterator[Chunk]:
-    for path in iter_files(root):
-        rel = path.relative_to(root)
-        try:
-            with open_confined(root, rel.as_posix()) as stream:
-                text = stream.read()
-        except (OSError, ValueError, UnicodeError) as exc:
-            raise ValueError("corpus contains an unreadable or unsafe text file") from exc
-        kind, source = classify(rel)
-        for head, line, body in chunk_text(text):
-            yield Chunk(str(rel), source, kind, head or path.stem, line, body)
+    with read_generation(root) as generation:
+        for path in generation.files():
+            rel = path.relative_to(root)
+            try:
+                with generation.open(rel.as_posix()) as stream:
+                    text = stream.read()
+            except (OSError, ValueError, UnicodeError) as exc:
+                raise ValueError("corpus contains an unreadable or unsafe text file") from exc
+            kind, source = classify(rel)
+            for head, line, body in chunk_text(text):
+                yield Chunk(str(rel), source, kind, head or path.stem, line, body)

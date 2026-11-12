@@ -4,10 +4,10 @@ import assert from "node:assert/strict";
 
 import { ALARM, buildId, readBuild, shouldReload, startAutoUpdate, SESSION_KEY } from "../lib/autoupdate.js";
 
-test("buildId prefers the commit, falls back to version@built_at, empty when nothing is known", () => {
-  assert.equal(buildId({ commit: "abc123", version: "0.3.0" }), "abc123");
-  assert.equal(buildId({ commit: "unknown", version: "0.3.0", built_at: "2026-10-20T00:00:00Z" }), "0.3.0@2026-10-20T00:00:00Z");
-  assert.equal(buildId({ version: "0.3.0" }), "0.3.0@");
+test("buildId identifies each package including rebuild time and payload mode", () => {
+  assert.equal(buildId({ commit: "abc123", version: "0.3.0" }), JSON.stringify(["abc123", "0.3.0", "", null]));
+  assert.equal(buildId({ commit: "unknown", version: "0.3.0", built_at: "2026-10-20T00:00:00Z" }), JSON.stringify(["unknown", "0.3.0", "2026-10-20T00:00:00Z", null]));
+  assert.equal(buildId({ version: "0.3.0" }), JSON.stringify(["", "0.3.0", "", null]));
   assert.equal(buildId(null), "");
   assert.equal(buildId({}), "");
 });

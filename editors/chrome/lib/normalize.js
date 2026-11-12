@@ -38,14 +38,17 @@ function isIntegral(v) {
 export function scalar(n) {
   if (n.kind === "number") {
     if (n.exactInteger !== undefined && !Number.isSafeInteger(n.value)) return n.exactInteger;
-    return Number.isFinite(n.value) ? n.value : null;
+    return Number.isFinite(n.value) ? (Number.isInteger(n.value) && !Number.isSafeInteger(n.value) ? BigInt(n.value).toString() : n.value) : null;
   }
   if (n.kind === "string" || n.kind === "bool") return n.value;
   if (n.kind === "object") {
     const p = props(n);
     if (p.size === 1) {
       const [k, value] = [...p][0];
-      if (value.kind === "string") return numericWrapper(k, String(value.value));
+      if (value.kind === "string") {
+        const decoded = numericWrapper(k, String(value.value));
+        return typeof decoded === "number" && Number.isInteger(decoded) && !Number.isSafeInteger(decoded) ? BigInt(decoded).toString() : decoded;
+      }
     }
   }
   return null;
@@ -323,6 +326,7 @@ export function normalize(text) {
   let errorIndex = 0;
   for (const st of statements) {
     const node = st.node;
+    if (st.decl) return { text, kind: "mongosh", queries: [], changed: false };
     if (node.kind !== "object" && node.kind !== "array") { unknown = true; continue; }
     while (errorIndex < intervals.length && intervals[errorIndex].end <= node.start) errorIndex++;
     if (errorIndex < intervals.length && intervals[errorIndex].start < node.end) return { text, kind: "mongosh", queries: [], changed: false };

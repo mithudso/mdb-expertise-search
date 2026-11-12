@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from bisect import bisect_right
+from pathlib import Path
+from threading import local
 
 from mcp.server.mcpserver import MCPServer
 
@@ -31,6 +33,29 @@ server = MCPServer(
 def _db():
     return idx.connect(None)
 
+_request_state = local()
+
+
+def _semantic_state():
+    path = Path(idx.default_db()).absolute()
+    def identity():
+        try:
+            info = path.stat()
+            return str(path), info.st_dev, info.st_ino
+        except FileNotFoundError:
+            return str(path), None, None
+    state = getattr(_request_state, "value", None)
+    if state is None or state["identity"] != identity():
+        if state is not None:
+            state["con"].close()
+        con = _db()
+        state = {"identity": identity(), "con": con, "store": None}
+        _request_state.value = state
+    if state["store"] is None:
+        state["store"] = srch.VectorStore(state["con"])
+    return state
+
+
 
 @server.tool()
 def mdb_search(
@@ -48,11 +73,13 @@ def mdb_search(
     """
     if mode not in {"hybrid", "keyword", "semantic"}:
         raise ValueError("mode must be hybrid, keyword or semantic")
-    con = _db()
+    state = _semantic_state() if mode != "keyword" else None
+    con = state["con"] if state is not None else _db()
     notes: list[str] = []
     try:
         try:
-            hits = srch.search(con, query, mode, max(1, min(limit, 25)), kind=kind, source=source, notes=notes)
+            hits = srch.search(con, query, mode, max(1, min(limit, 25)), kind=kind, source=source, notes=notes,
+                               **({"store": state["store"]} if state is not None else {}))
         except embedmod.EmbedError as exc:
             if mode == "semantic":
                 raise ValueError(f"{srch.fallback_note(exc)}; start Ollama or use mode=keyword") from None
@@ -70,7 +97,8 @@ def mdb_search(
             for h in hits
         ]
     finally:
-        con.close()
+        if state is None:
+            con.close()
 
 
 @server.tool()
@@ -153,6 +181,8 @@ def mql_operator(name: str) -> dict:
     if op is None:
         return {"found": False, "suggestions": ops.suggest(key)}
     contracts = {context: op.arg_for(label) for context, label in [("query", "query"), ("proj", "projection"), ("stage", "pipeline-item"), ("expr", "expr"), ("acc", "accexpr"), ("update", "update")] if context in op.cats}
+    if op.name == "$search":
+        contracts["text"] = op.arg_for("text")
     return {"found": True, "name": op.name, "categories": sorted(op.cats),
             "argument": op.arg if len(set(contracts.values())) <= 1 else None,
             "arguments": contracts, "doc": op.doc}

@@ -32,6 +32,13 @@ pick_python() {
 }
 
 
+install_lock="$PWD/.mdbx-install.lock"
+if ! mkdir "$install_lock" 2>/dev/null; then
+  echo "another installer owns this checkout; retry after it exits" >&2
+  exit 1
+fi
+trap 'rmdir "$install_lock" 2>/dev/null || true' EXIT
+
 say "Updating code"
 git pull --ff-only || echo "note: not fast-forwarding (local changes or no upstream); continuing with the current checkout"
 

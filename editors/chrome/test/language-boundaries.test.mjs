@@ -1,3 +1,4 @@
+import {countedSource} from "./counted-source.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {parse} from "../lib/parser.js";
@@ -12,7 +13,7 @@ observe("parser-template", () => {
   const result=optimize("db.getCollection("+quote+"c"+dynamic+quote+").find({a:1})",{apply:false});
   const observed={kind:parse(quote+"c"+dynamic+quote)[0][0].node.kind, normalized:normalized.text,
                   collection:normalized.queries[0]?.collection, indexes:result.indexes.map(index=>index.collection)};
-  return {observed, satisfied:observed.kind!=="string" && observed.indexes.every(index=>index===null)};
+  return {observed, satisfied:observed.kind!=="string" && normalized.text===source && normalized.changed===false && normalized.queries.length===0 && result.targets.length===1 && result.targets[0].collection===null && result.indexes.length===0};
 });
 observe("parser-unsafe-integer", () => {
   const result=normalize('{attr:{command:{find:"c",filter:{}},docsExamined:9007199254740993,nreturned:1}}');
@@ -34,18 +35,13 @@ observe("parser-regex-newlines", () => {
 });
 function unicodeWork(count) {
   const source='"'+"\\u{".repeat(count)+'"';
-  const original=String.prototype.indexOf;
-  let scans=0,calls=0;
-  String.prototype.indexOf=function(needle,start=0){
-    if (needle==="}" && String(this)===source) {scans+=source.length-start;calls++;}
-    return original.call(this,needle,start);
-  };
-  try {parse(source);} finally {String.prototype.indexOf=original;}
-  return {count,scans,calls};
+  let scans=0;
+  parse(countedSource(source,n=>{scans+=n;}));
+  return {count,scans};
 }
 observe("parser-braced-unicode-complexity", () => {
   const small=unicodeWork(500),large=unicodeWork(1000);
-  return {observed:{small,large,ratio:large.scans/small.scans},satisfied:large.scans<=3*small.scans+100};
+  return {observed:{small,large,ratio:large.scans/small.scans},satisfied:small.scans>0 && large.scans<=3*small.scans+100};
 });
 observe("analyze-find-projection", () => {
   const source="db.c.find({}, "+JSON.stringify({items:{$elemMatch:{score:{$exists:true}}}})+")";
@@ -61,26 +57,29 @@ observe("analyze-map-contract", () => {
   return {observed:diagnostics,satisfied:diagnostics.some(diag=>diag.code==="bad-argument")};
 });
 function symbolWork(count) {
-  const original=Array.prototype.some;
+  const original=Map.prototype.set,has=Set.prototype.has;
   let comparisons=0;
-  Array.prototype.some=function(predicate,...rest){
-    if(this.length && this[0]?.kind==="stage")
-      return original.call(this,function(...args){comparisons++;return predicate(...args);},...rest);
-    return original.call(this,predicate,...rest);
+  Map.prototype.set=function(key,value){
+    if(key?.kind==='array' && Array.isArray(value) && value[0]?.kind==='stage') value=new Proxy(value.map(symbol=>new Proxy(symbol,{get(target,property,receiver){
+      if(['start','end','kind'].includes(property)) comparisons++;
+      return Reflect.get(target,property,receiver);
+    }})),{get(target,property,receiver){if(typeof property==='string' && /^[0-9]+$/.test(property)) comparisons++;return Reflect.get(target,property,receiver);}});
+    return Reflect.apply(original,this,[key,value]);
   };
+  Set.prototype.has=function(value){if(value?.kind==='stage')comparisons++;return Reflect.apply(has,this,[value]);};
   try {analyze("db.c.aggregate(["+Array(count).fill('{$lookup:{from:"other",as:"joined",pipeline:[]}}').join(",")+"])");}
-  finally {Array.prototype.some=original;}
+  finally {Map.prototype.set=original;Set.prototype.has=has;}
   return {count,comparisons};
 }
 observe("analyze-symbol-complexity", () => {
   const small=symbolWork(200),large=symbolWork(400);
-  return {observed:{small,large,ratio:large.comparisons/small.comparisons},satisfied:large.comparisons<=3*small.comparisons+100};
+  return {observed:{small,large,ratio:large.comparisons/small.comparisons},satisfied:small.comparisons>0 && large.comparisons<=3*small.comparisons+100};
 });
 observe("analyze-wide-symbols", () => {
   const count=200000;
   try {
     const result=analyze("db.c.aggregate(["+Array(count).fill("{$limit:1}").join(",")+"])");
-    return {observed:{count,symbols:result.symbols[0].children.length},satisfied:true};
+    return {observed:{count,symbols:result.symbols[0].children.length},satisfied:result.symbols.length===1 && result.symbols[0].children.length===count};
   } catch(error) {
     return {observed:{count,error:error.name,message:error.message},satisfied:false};
   }

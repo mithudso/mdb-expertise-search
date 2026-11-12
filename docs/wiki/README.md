@@ -14,7 +14,7 @@ semantic stores are outside this documentation-maintenance surface.
 | Editor and agent tools | [LSP](../LSP.md), [MCP](../MCP.md), [Chrome](../../editors/chrome/README.md), [VS Code](../../editors/vscode/README.md) |
 | Runbooks and recipes | [Recipe index](../RECIPES.md), [Rebuild index](../runbooks/rebuild-index.md) |
 | Retrieval navigation | [Codebase overview](../codebase-overview.md), [Static file index](../high_signal_file_index.json) |
-| Limits and maintenance evidence | [Known issues](../known-issues.md), [2026-11-12 audit](../repo-bootstrap-audit-2026-11-12.md) |
+| Limits and maintenance evidence | [Known issues](../known-issues.md), [Bootstrap audit](../repo-bootstrap-audit-2026-11-12.md), [Optimizer report](../code-deep-optimizer-2026-11-12.md), [Source coverage](../source-coverage-2026-11-12.md) |
 
 Regenerate code navigation with `python scripts/gen_file_index.py`; validate with
 `python scripts/check_doc_indexes.py`. These operations do not create embeddings.

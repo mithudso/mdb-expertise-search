@@ -66,11 +66,14 @@ export function pageFixture(name = "app.js", options = {}) {
   const elements = new Map();
   const html = readFileSync(new URL(name === "popup.js" ? "../popup.html" : "../app.html", import.meta.url), "utf8");
   for (const match of html.matchAll(/<([\w-]+)\b[^>]*\bid="([^"]+)"[^>]*>/g)) {
-    const node = document.createElement(match[1]); node.setAttribute("id", match[2]); elements.set(match[2], node);
+    const node = document.createElement(match[1]);
+    for (const attr of match[0].matchAll(/([\w-]+)(?:="([^"]*)")?/g)) { if (attr[1] !== match[1]) node.setAttribute(attr[1], attr[2] ?? ""); }
+    node.hidden = /\bhidden(?:\s|>)/.test(match[0]); elements.set(match[2], node);
   }
   const tabs = [];
   for (const match of html.matchAll(/<a\b([^>]*)data-tab="([^"]+)"([^>]*)>/g)) {
-    const node = document.createElement("a"); node.dataset.tab = match[2]; tabs.push(node);
+    const id = /\bid="([^"]+)"/.exec(match[1] + match[3])?.[1];
+    const node = id ? elements.get(id) : document.createElement("a"); node.dataset.tab = match[2]; tabs.push(node);
   }
   document.getElementById = id => { if (!elements.has(id)) throw Error(`missing fixture id ${id}`); return elements.get(id); };
   document.querySelectorAll = selector => selector === ".tabs a" ? tabs : [];
@@ -79,9 +82,15 @@ export function pageFixture(name = "app.js", options = {}) {
     storage: { session: sessionStore(), local: sessionStore() }, permissions: { request: async () => true },
     tabs: { query: async () => [], create: async value => { opened.push(value); return {}; } },
   };
-  const deps = { getIndex: async () => null, embedQuery: async () => [1, 0], optimize: () => ({ inputQueries: 0 }),
+  const deps = { getIndex: async () => null, embedQuery: async () => [1, 0], optimize: () => ({ inputQueries: 0, inputKind: "mongosh", findings: [], applied: [], indexes: [], evidence: [], interpreted: null, text: "" }),
     analyze: () => ({ diagnostics: [], symbols: [] }), diagnosticsToDicts: () => [], symbolsToDicts: () => [], ...options.deps };
-  const location = { hash: options.hash ?? "#search" };
+  let hash = options.hash ?? "#search";
+  const navigation = [];
+  const location = { get hash() { return hash; }, set hash(value) {
+    const next = String(value); if (next === hash) return;
+    hash = next; navigation.push(() => windowListeners.hashchange?.());
+  } };
+  const drainNavigation = async () => { while (navigation.length) { await navigation.shift()(); await flush(); } };
   const context = vm.createContext({ document, Node: SyntheticNode, chrome, location, history: { length: 1 },
     window: { addEventListener: (type, fn) => { windowListeners[type] = fn; }, close() {} },
     navigator: { clipboard: { writeText: async () => {} } }, performance, URLSearchParams, URL, console,
@@ -94,10 +103,10 @@ export function pageFixture(name = "app.js", options = {}) {
   const strip = source => source.replace(/^import .*;\r?\n/gm, "").replace(/^export /gm, "").replace(/^main\(\);\s*$/m, "");
   vm.runInContext(strip(options.uiSource ?? readSource("lib/ui.js")), context, { filename: "lib/ui.js" });
   if (name !== "lib/ui.js") vm.runInContext(strip(options.source ?? readSource(name)), context, { filename: name });
-  const names = name === "app.js" ? ["state", "route", "go", "wire", "runSearch", "showDocument", "enableOllama", "disableOllama", "consumePending", "loadSettings"]
+  const names = name === "app.js" ? ["main", "state", "route", "go", "wire", "runSearch", "showDocument", "enableOllama", "disableOllama", "consumePending", "loadSettings"]
     : name === "popup.js" ? ["run", "renderCorpusHits", "readSelection"] : ["copyText", "markFor", "renderMarkdown"];
   const api = vm.runInContext(`({${names.join(",")}})`, context);
-  return { ...api, context, deps, chrome, document, location, opened, tabs, $: id => document.getElementById(id) };
+  return { ...api, context, deps, chrome, document, location, opened, tabs, drainNavigation, $: id => document.getElementById(id) };
 }
 
 export function backgroundFixture() {

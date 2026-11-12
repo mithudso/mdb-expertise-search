@@ -30,7 +30,7 @@ test("goldens exist for every code", () => {
 
 for (const name of goldens) {
   const golden = JSON.parse(readFileSync(join(LINT, name), "utf8"));
-  const text = readFileSync(join(ROOT, golden.source), "utf8").replace(/\r\n?/g, "\n");
+  const text = readFileSync(join(ROOT, golden.source), "utf8");
 
   test(`${name}: diagnostics match Python`, () => {
     assert.deepStrictEqual(toDict(text).diagnostics, golden.diagnostics);

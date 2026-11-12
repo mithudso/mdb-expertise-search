@@ -1,7 +1,7 @@
 """Generated Unicode61 classification and simple folds. Regenerate with scripts/gen_unicode61.py."""
 from bisect import bisect_right
 
-UNICODE61_PROVENANCE = {'generator_sha256': '914af4276d8fe871b14d85e459b5903429f6037fb3a9b42ccbf3ea1f34baaf0c',
+UNICODE61_PROVENANCE = {'generator_sha256': 'f95160348db2e588486994e445a5a0210d674d7e4acaf3555140a8336bdc3a26',
  'scanned_scalars': 1112064,
  'sqlite_version': '3.54.1',
  'standalone_verified': True,

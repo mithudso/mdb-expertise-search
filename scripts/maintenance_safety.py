@@ -10,10 +10,16 @@ from pathlib import Path
 
 
 def scrub(value):
-    text = str(value)
-    text = re.sub(r"(https?://)[^/@\s]+@", r"\1<credentials>@", text)
-    text = re.sub(r"(https?://[^\s?#]+)[?#][^\s]*", r"\1<query omitted>", text)
-    return text
+    def clean(match):
+        url = match.group(0)
+        head, separator, authority = url.partition('://')
+        authority, slash, tail = authority.partition('/')
+        if '@' in authority:
+            authority = '<credentials>@' + authority.rsplit('@', 1)[1]
+        url = head + separator + authority + slash + tail
+        cut = min((url.find(mark) for mark in ('?', '#') if mark in url), default=-1)
+        return url[:cut] + '<query omitted>' if cut >= 0 else url
+    return re.sub(r'https?://(?:(?!https?://)[^\s])*', clean, str(value), flags=re.IGNORECASE)
 
 
 @contextmanager
@@ -27,8 +33,10 @@ def lock(path):
     finally: os.close(fd)
 
 
-def safe_bytes(path, root):
+def safe_bytes(path, root, *, max_bytes=None):
     """Pin the lexical root and walk without symlinks. The caller trusts its root ancestors."""
+    if max_bytes is not None and (type(max_bytes) is not int or max_bytes < 0):
+        raise ValueError('invalid input byte limit')
     lexical_root = Path(root).absolute(); root = lexical_root; path = Path(path).absolute()
     try: parts = path.relative_to(lexical_root).parts
     except ValueError: raise ValueError("input is outside the allowed directory") from None
@@ -40,7 +48,10 @@ def safe_bytes(path, root):
         data_fd = os.open(parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
         with os.fdopen(data_fd, "rb") as stream:
             if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode): raise ValueError("input is not a regular file")
-            return stream.read()
+            data = stream.read() if max_bytes is None else stream.read(max_bytes + 1)
+            if max_bytes is not None and len(data) > max_bytes:
+                raise ValueError('input exceeds the byte limit')
+            return data
     finally: os.close(fd)
 
 
@@ -76,8 +87,10 @@ def atomic_write(path, data, mode=0o644, *, root=None):
         os.replace(temporary, relative.name, src_dir_fd=directory, dst_dir_fd=directory)
         created = False
     finally:
-        if created: os.unlink(temporary, dir_fd=directory)
-        os.close(directory)
+        try:
+            if created: os.unlink(temporary, dir_fd=directory)
+        finally:
+            os.close(directory)
 
 
 def confined_corpus_path(root, value):
@@ -102,7 +115,7 @@ def verify_clone(clone, repo, working_root, git):
     if info != {"path": str(clone), "repo": repo}: raise RuntimeError("maintenance clone ownership or repository mismatch")
     origin = git(["remote", "get-url", "origin"], clone)
     if origin.returncode or origin.stdout.strip() != repo: raise RuntimeError("maintenance clone origin does not match configuration")
-    status = git(["status", "--porcelain"], clone)
+    status = git(["status", "--porcelain", "--untracked-files=all"], clone)
     if status.returncode or status.stdout.strip(): raise RuntimeError("maintenance clone contains changes; preserve them before updating")
     return clone
 
@@ -119,60 +132,116 @@ def git_environment(environment=None):
             if key not in _GIT_SELECTORS}
 
 
-def replace_preserving(path, data, root, expected, mode=0o600):
-    """Exchange a staged file with the pinned destination, retaining the displaced inode.
+def _primitives():
+    # These primitives import no providers or model runtimes.
+    import sys
+    source = str(Path(__file__).resolve().parent.parent)
+    if source not in sys.path:
+        sys.path.insert(0, source)
+    from mdbx.safety import _directory, _exchange, _read_bytes, _same_directory
+    return _directory, _exchange, _read_bytes, _same_directory
 
-    A concurrent editor save remains in the returned recovery file, including writes through an
-    already-open descriptor. If its content differs from expected, restore it when possible and
-    report a conflict. Platforms without an atomic exchange fail before changing the destination.
-    """
-    import ctypes
-    import errno
+
+def exchange_entries(left, right, root):
+    """Exchange two existing no-follow sibling files/directories under root."""
+    directory, exchange, _, same = _primitives()
+    root = Path(root).absolute()
+    left, right = Path(left).absolute(), Path(right).absolute()
+    for path in (left, right):
+        rel = path.relative_to(root)
+        if not rel.parts or any(part in {'.', '..'} for part in rel.parts):
+            raise ValueError('invalid exchange path')
+    if left.parent != right.parent:
+        raise ValueError('exchange entries must share a parent')
+    parent = directory(left.parent)
+    try:
+        if not same(parent, left.parent):
+            raise RuntimeError('exchange parent changed')
+        for name in (left.name, right.name):
+            info = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            if not (stat.S_ISREG(info.st_mode) or stat.S_ISDIR(info.st_mode)):
+                raise ValueError('exchange input must be a regular file or directory')
+        exchange(parent, left.name, right.name)
+        os.fsync(parent)
+    finally:
+        os.close(parent)
+
+
+class Recovery:
+    """Own a retained entry by directory descriptor, independently of its path."""
+    def __init__(self, parent, name):
+        self.parent = os.dup(parent)
+        self.name = name
+
+    def unlink(self):
+        os.unlink(self.name, dir_fd=self.parent)
+
+    def move_to(self, directory):
+        import ctypes
+        import errno
+        open_directory, _, _, same = _primitives()
+        target = open_directory(directory)
+        try:
+            if not same(target, directory) or stat.S_IMODE(os.fstat(target).st_mode) & 0o077:
+                raise ValueError('recovery destination must be a private pinned directory')
+            libc = ctypes.CDLL(None, use_errno=True)
+            function = getattr(libc, 'renameatx_np', None)
+            flags = 4
+            if function is None:
+                function = getattr(libc, 'renameat2', None)
+                flags = 1
+            if function is None:
+                raise RuntimeError('exclusive recovery move unavailable; recovery retained')
+            function.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+            function.restype = ctypes.c_int
+            if function(self.parent, os.fsencode(self.name), target, os.fsencode(self.name), flags):
+                number = ctypes.get_errno()
+                if number in (errno.ENOSYS, errno.ENOTSUP, errno.EINVAL):
+                    raise RuntimeError('exclusive recovery move unavailable; recovery retained')
+                raise OSError(number, 'recovery move failed; recovery retained')
+            os.fsync(target)
+        finally:
+            os.close(target)
+
+    def close(self):
+        if self.parent is not None:
+            os.close(self.parent)
+            self.parent = None
+
+    def __del__(self):
+        self.close()
+
+
+def replace_preserving(path, data, root, expected, mode=0o600):
+    """Exchange a staged file and retain the displaced inode in a pinned Recovery."""
     import uuid
+    directory, exchange, read, same = _primitives()
     path, root = Path(path).absolute(), Path(root).absolute()
     relative = path.relative_to(root)
-    if not relative.parts or any(part in {".", ".."} for part in relative.parts):
-        raise ValueError("invalid replacement path")
-    parent_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-    temporary = "." + path.name + ".recovery-" + uuid.uuid4().hex
-    staged = False
-    exchanged = False
+    if not relative.parts or any(part in {'.', '..'} for part in relative.parts):
+        raise ValueError('invalid replacement path')
+    parent = directory(path.parent)
+    temporary = '.' + path.name + '.recovery-' + uuid.uuid4().hex
+    staged = exchanged = False
     try:
-        for part in relative.parts[:-1]:
-            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent_fd)
-            os.close(parent_fd); parent_fd = child
-        fd = os.open(temporary, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, mode, dir_fd=parent_fd)
+        fd = os.open(temporary, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, mode, dir_fd=parent)
         staged = True
-        with os.fdopen(fd, "wb") as stream:
+        with os.fdopen(fd, 'wb') as stream:
             stream.write(data); stream.flush(); os.fsync(stream.fileno()); os.fchmod(stream.fileno(), mode)
-        libc = ctypes.CDLL(None, use_errno=True)
-        exchange = getattr(libc, "renameatx_np", None) or getattr(libc, "renameat2", None)
-        if exchange is None:
-            raise RuntimeError("atomic exchange is unavailable; source preserved")
-        exchange.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
-        exchange.restype = ctypes.c_int
-        def swap():
-            if exchange(parent_fd, os.fsencode(temporary), parent_fd, os.fsencode(relative.name), 2):
-                number = ctypes.get_errno()
-                if number in {errno.ENOSYS, errno.ENOTSUP, errno.EINVAL}:
-                    raise RuntimeError("atomic exchange is unavailable; source preserved")
-                raise OSError(number, "atomic publication failed")
-        # Validate through the pinned parent before changing either entry.
-        def current(name):
-            handle = os.open(name, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW, dir_fd=parent_fd)
-            with os.fdopen(handle, "rb") as stream:
-                if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
-                    raise ValueError("replacement input is not regular")
-                return stream.read()
-        if current(relative.name) != expected:
-            raise RuntimeError("replacement input changed; source preserved")
-        swap(); exchanged = True
-        if current(temporary) != expected:
-            if current(relative.name) == data:
-                swap()
-            raise RuntimeError("concurrent save detected; displaced data preserved in recovery file")
-        return path.parent / temporary
+        if not same(parent, path.parent) or read(parent, path.name, len(expected) + 1) != expected:
+            raise RuntimeError('replacement input changed; source preserved')
+        exchange(parent, temporary, path.name)
+        exchanged = True
+        try:
+            if read(parent, temporary, len(expected) + 1) != expected:
+                raise RuntimeError('concurrent save detected; displaced data preserved')
+        except BaseException:
+            exchange(parent, temporary, path.name)
+            raise
+        return Recovery(parent, temporary)
     finally:
-        if staged and not exchanged:
-            os.unlink(temporary, dir_fd=parent_fd)
-        os.close(parent_fd)
+        try:
+            if staged and not exchanged:
+                os.unlink(temporary, dir_fd=parent)
+        finally:
+            os.close(parent)

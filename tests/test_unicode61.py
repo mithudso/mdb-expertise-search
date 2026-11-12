@@ -70,7 +70,7 @@ def test_query_lexemes_match_sqlite_and_export(query):
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
 def test_js_unicode61_tokens_queries_and_utf16_spans():
-    queries = [*CASES, "why is cafe\u0301ine slow", "ΟΣ and ガ", "the and of"]
+    queries = [*CASES, "why is cafe\u0301ine slow", "ΟΣ and ガ", "the and of", '\U00010400a', 'x \U00010400a z', 'a,b', 'a\u0301 b']
     script = """
 import {readFileSync} from 'node:fs';
 import {tokens,queryTerms,rawTokenSpans} from './editors/chrome/lib/textsearch.js';
@@ -82,7 +82,14 @@ process.stdout.write(JSON.stringify(texts.map(text => ({tokens:tokens(text),quer
     for text, item in zip(queries, json.loads(result.stdout), strict=True):
         assert item["tokens"] == webexport.tokens(text) == oracle(text, porter=True)
         assert item["query"] == webexport.query_terms(text)
+        previous = 0
+        expected = {'\U00010400a': [['\U00010428a', 0, 3]], 'x \U00010400a z': [['x',0,1],['\U00010428a',2,5],['z',6,7]], 'a,b': [['a',0,1],['b',2,3]], 'a\u0301 b': [['a',0,2],['b',3,4]]}
+        if text in expected:
+            assert item['spans'] == expected[text]
         for word, start, end in item["spans"]:
+            assert type(start) is int and type(end) is int
+            assert previous <= start < end <= len(text.encode('utf-16-le', 'surrogatepass')) // 2
+            previous = end
             original = text.encode("utf-16-le", "surrogatepass")[2*start:2*end].decode("utf-16-le", "surrogatepass")
             assert unicode61.raw_tokens(original) == [word]
 

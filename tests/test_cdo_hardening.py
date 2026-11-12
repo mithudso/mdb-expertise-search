@@ -68,7 +68,7 @@ def test_build_keyword_missing_root_keeps_index(tmp_path, monkeypatch):
 
 
 def _fake_embed(dim):
-    def fake(texts, prefix="search_document: ", timeout=0):
+    def fake(texts, prefix="search_document: ", timeout=0, **kwargs):
         v = np.zeros((len(texts), dim), dtype=np.float32)
         v[:, 0] = 1
         return v
@@ -95,9 +95,12 @@ def test_semantic_query_dim_mismatch_falls_back(tmp_path, monkeypatch):
     monkeypatch.setattr("mdbx.embed.embed", _fake_embed(2))
     index.build_semantic(con)
     monkeypatch.setattr("mdbx.embed.embed_query", lambda q: np.ones(5, dtype=np.float32))
-    with pytest.raises(embed.EmbedError):
+    with pytest.raises(embed.EmbedError, match="query embedding has 5 dims but the index has 2"):
         search.semantic(con, "shard key")
-    assert search.hybrid(con, "shard key cardinality")  # keyword fallback
+    notes = []
+    hits = search.hybrid(con, 'shard key cardinality', notes=notes)
+    assert hits and all(hit.via == 'keyword (semantic unavailable)' for hit in hits)
+    assert len(notes) == 1
 
 
 def test_vector_store_ignores_mixed_dims(tmp_path, monkeypatch):

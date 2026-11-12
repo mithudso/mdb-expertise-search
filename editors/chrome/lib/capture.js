@@ -5,24 +5,36 @@ export const PENDING_TTL_MS = 60_000; // a context-menu handoff older than this 
 
 /**
  * Runs INSIDE the page (chrome.scripting.executeScript). Must be self-contained: no imports, no closure.
- * Returns the selected text of the focused textarea / text input, else the document selection.
+ * Returns { text, focused } for the textarea / text input or document selection.
  */
 export function grabSelection() {
   const el = document.activeElement;
+  const leaf = !/^(IFRAME|FRAME)$/.test(el?.tagName || "");
+  let focused = document.hasFocus() && leaf;
+  try {
+    // The popup may own browser focus. Same-origin activeElement ancestry still identifies the leaf.
+    let frame = window, active = true;
+    while (frame !== frame.top) {
+      if (frame.parent.document.activeElement !== frame.frameElement) { active = false; break; }
+      frame = frame.parent;
+    }
+    focused = active && leaf;
+  } catch { /* Cross-origin ancestry keeps the document.hasFocus fallback. */ }
   if (el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && /^(text|search|url|)$/i.test(el.type || "")))) {
     const s = String(el.value || "").slice(el.selectionStart ?? 0, el.selectionEnd ?? 0);
-    if (s.trim()) return s;
+    if (s.trim()) return { text: s, focused };
   }
   const sel = typeof window.getSelection === "function" ? window.getSelection() : null;
-  return sel ? String(sel) : "";
+  return { text: sel ? String(sel) : "", focused };
 }
 
-/** Pick the selection to analyse from per-frame results: the longest non-blank one. */
+/** Prefer the focused frame; strings remain accepted for older captured results. */
 export function pickSelection(frameResults) {
-  const texts = (frameResults || []).map((r) => (r && typeof r.result === "string" ? r.result : ""))
-    .filter((t) => t.trim());
-  if (!texts.length) return "";
-  return texts.reduce((a, b) => (b.length > a.length ? b : a));
+  const choices = (frameResults || []).map(r => typeof r?.result === "string" ? { text: r.result, focused: false } : r?.result)
+    .filter(r => r && typeof r.text === "string");
+  const focused = choices.filter(r => r.focused);
+  const pool = focused.length ? focused : choices.filter(r => r.text.trim());
+  return pool.reduce((best, r) => r.text.length > best.length ? r.text : best, "");
 }
 
 /** Clamp to MAX_INPUT. Returns { text, truncated }. */
@@ -59,10 +71,13 @@ export async function saveHandoff(session, payload, now = Date.now(), id = crypt
   return id;
 }
 
-export async function consumeHandoff(session, id, now = Date.now()) {
+export async function consumeHandoff(session, id, now = Date.now(), locks = globalThis.navigator?.locks) {
   if (!id || !/^[a-zA-Z0-9-]{1,100}$/.test(id)) return null;
   const key = HANDOFF_PREFIX + id;
-  const pending = (await session.get(key))[key];
-  if (pending) await session.remove(key);
-  return freshPending(pending, now) ? pending : null;
+  if (!locks?.request) throw new Error("Handoff consumption requires an origin lock");
+  return locks.request(key, async () => {
+    const pending = (await session.get(key))[key];
+    if (pending) await session.remove(key);
+    return freshPending(pending, now) ? pending : null;
+  });
 }

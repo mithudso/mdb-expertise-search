@@ -249,10 +249,18 @@ def hybrid(
     if limit == 0:
         return []
     candidates = min(10000, limit * 3)
-    kw = keyword(con, query, candidates, kind=kind, source=source, source_exact=source_exact)
     try:
-        sm = semantic(con, query, candidates, kind=kind, source=source, source_exact=source_exact, store=store)
+        model = embedmod.model()
+        with read_snapshot(con):
+            store, _ = _ready_store(con, store)
+        qv = embedmod.embed_query(query)
+        if embedmod.model() != model:
+            raise embedmod.EmbedError('query model changed during embedding; retry')
+        with read_snapshot(con):
+            kw = keyword(con, query, candidates, kind=kind, source=source, source_exact=source_exact)
+            sm = _semantic_snapshot(con, qv, candidates, kind=kind, source=source, source_exact=source_exact, store=store)
     except embedmod.EmbedError as exc:
+        kw = keyword(con, query, candidates, kind=kind, source=source, source_exact=source_exact)
         msg = fallback_note(exc)
         # a caller that passed `notes` will show the message itself; only silent callers get the WARNING
         log.log(logging.INFO if notes is not None else logging.WARNING, "%s", msg)
@@ -333,6 +341,6 @@ def _revision(con):
         filename = con.execute('PRAGMA database_list').fetchone()[2]
         if filename:
             info = os.stat(filename)
-            return (info.st_dev, info.st_ino, value)
-        return (id(con), value)
+            return (info.st_dev, info.st_ino, id(con), value, con.total_changes, con.execute('PRAGMA data_version').fetchone()[0])
+        return (id(con), value, con.total_changes, con.execute('PRAGMA data_version').fetchone()[0])
     return (id(con), con.total_changes, con.execute('PRAGMA data_version').fetchone()[0])

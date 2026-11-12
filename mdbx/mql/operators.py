@@ -334,6 +334,12 @@ class Operator:
 
     def arg_for(self, context: str) -> str:
         """Argument contracts for operators whose syntax depends on their context."""
+        if context == "expr" and self.name in {"$eq", "$gt", "$gte", "$lt", "$lte", "$ne", "$in"}:
+            return "array2"
+        if context == "expr" and self.name in {"$and", "$or"}:
+            return "array"
+        if context == "update" and self.name in {"$push", "$addToSet", "$min", "$max"}:
+            return "object"
         return {("$search", "text"): "string", ("$size", "expr"): "any",
                 ("$count", "accexpr"): "object", ("$unset", "update"): "object"}.get((self.name, context), self.arg)
 

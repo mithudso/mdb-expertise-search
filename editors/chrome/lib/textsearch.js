@@ -144,6 +144,13 @@ export function queryTerms(query) {
 }
 
 
+// Count through one traversal; the iterable boundary also permits deterministic work assertions.
+export function termFrequencies(terms) {
+  const frequencies = new Map();
+  for (const term of terms) frequencies.set(term, (frequencies.get(term) || 0) + 1);
+  return frequencies;
+}
+
 // ---- index
 
 /**
@@ -176,14 +183,13 @@ export class SearchIndex {
   allowed(i, kind, source) {
     const r = this.rows[i];
     if (kind && this.kinds[r[2]] !== kind) return false;
-    return !(source && !this.sources[r[1]].toLowerCase().includes(String(source).toLowerCase()));
+    return !(source && !this.sources[r[1]].replace(/[A-Z]/g, c => c.toLowerCase()).includes(String(source).replace(/[A-Z]/g, c => c.toLowerCase())));
   }
 
   keywordRanked(query, kind = null, source = null) {
     const terms = queryTerms(query);
     if (!terms.length) return [];
-    const frequencies = new Map();
-    for (const term of terms) frequencies.set(term, (frequencies.get(term) || 0) + 1);
+    const frequencies = termFrequencies(terms);
     const uniq = [...frequencies.keys()];
     for (const mode of ["AND", "OR"]) {
       const scores = new Map();
@@ -281,7 +287,7 @@ export function dedupe(hits, limit) {
   const seen = new Set();
   const out = [];
   for (const h of hits) {
-    const key = h.text.split(/\s+/).filter(Boolean).join(" ");
+    const key = h.text.split(/[\u0009-\u000D\u001C-\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]+/u).filter(Boolean).join(" ");
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(h);
@@ -307,8 +313,8 @@ export function snippet(text, query, width = 24) {
     if (count > bestCount) { bestCount = count; best = start; }
   }
   const end = Math.min(spans.length, best + width);
-  const from = spans[best][1];
-  const to = spans[end - 1][2];
+  const from = best === 0 ? 0 : spans[best - 1][2];
+  const to = end === spans.length ? text.length : spans[end][1];
   const segs = [];
   if (best > 0) segs.push({ text: "… ", hit: false });
   let pos = from;
@@ -318,7 +324,8 @@ export function snippet(text, query, width = 24) {
     segs.push({ text: text.slice(s, e), hit: isHit[i] });
     pos = e;
   }
-  if (to < text.length) segs.push({ text: " …", hit: false });
+  if (pos < to) segs.push({ text: text.slice(pos, to), hit: false });
+  if (end < spans.length) segs.push({ text: " …", hit: false });
   return segs.map((g) => ({ ...g, text: g.text.replace(/\s+/g, " ") }));
 }
 

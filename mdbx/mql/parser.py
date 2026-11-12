@@ -11,9 +11,10 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from decimal import Decimal
 
 _IDENT = re.compile(r"[A-Za-z_$][\w$]*")
-_NUMBER = re.compile(r"[-+]?(?:0[xX][0-9a-fA-F]+|(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?|(?:Infinity|NaN)(?![\w$]))")
+_NUMBER = re.compile(r"[-+]?(?:0[xX][0-9a-fA-F]+|(?:[0-9]+\.?[0-9]*|\.[0-9]+)(?:[eE][-+]?[0-9]+)?|(?:Infinity|NaN)(?![\w$]))")
 _KEYWORDS = {"true": "bool", "false": "bool", "null": "null", "undefined": "undefined"}
 _DECL = {"const", "let", "var"}
 _LINE_END = re.compile(r"[\n\r\u2028\u2029]")
@@ -46,6 +47,7 @@ class Node:
     props: list[Prop] = field(default_factory=list)  # object
     items: list[Node] = field(default_factory=list)  # array / call args
     target: Node | None = None  # call callee / member object
+    index: Node | None = None  # computed member expression
     name_start: int = 0  # member name offset
     closed: bool = True  # object/array/call had its closing token
 
@@ -57,6 +59,8 @@ class Node:
             children = [p.value for p in node.props if p.value is not None] + node.items
             if node.target is not None:
                 children.append(node.target)
+            if node.index is not None:
+                children.append(node.index)
             stack.extend(reversed(children))
 
 
@@ -75,6 +79,7 @@ class Parser:
         self.i = 0
         self.errors: list[ParseError] = []
         self.depth = 0
+        self.regex_failures: set[tuple[int, bool]] = set()
 
     # ---- low level
     def ws(self) -> None:
@@ -145,7 +150,7 @@ class Parser:
             return None
         # a trailing token that is not ; or newline-separated start of a new statement
         self.ws()
-        if node.kind in {"object", "array"} and len(self.errors) == initial_errors and self.i < self.n and self.s[self.i] != ";" and not _LINE_END.search(self.s, node.end, self.i):
+        if node.kind in {"object", "array", "call"} and len(self.errors) == initial_errors and self.i < self.n and self.s[self.i] != ";" and not _LINE_END.search(self.s, node.end, self.i):
             self.err(self.i, self.i + 1, "expected a statement separator")
         return Statement(node, start, node.end, decl)
 
@@ -191,13 +196,15 @@ class Parser:
                 # computed member access (e.g. db["my-coll"]) — treat as member of unknown name
                 self.i += 1
                 inner = self.expression()
+                if inner is None:
+                    self.err(self.i, self.i + 1, "expected a computed property expression")
                 self.ws()
                 if self.i < self.n and self.s[self.i] == "]":
                     self.i += 1
                 else:
                     self.err(self.i, self.i + 1, "expected ']'")
                 name = inner.value if inner is not None and inner.kind == "string" else "?"
-                node = Node("member", node.start, self.i, name, target=node, name_start=node.end)
+                node = Node("member", node.start, self.i, name, target=node, index=inner, name_start=node.end)
             else:
                 break
         return node
@@ -284,9 +291,11 @@ class Parser:
         if m and (m.group()[0] in "+-.0123456789" or m.group() in {"Infinity", "NaN"}):
             text = m.group()
             self.i = m.end()
+            if self.i < self.n and (self.s[self.i].isalnum() or self.s[self.i] in "_$"):
+                self.err(self.i, self.i + 1, "invalid numeric literal")
             try:
                 val: object = int(text, 0) if text.lower().startswith(("0x", "-0x", "+0x")) else (
-                    int(text) if re.fullmatch(r"[-+]?\d+", text) else float(text)
+                    int(text) if re.fullmatch(r"[-+]?[0-9]+", text) else float(text)
                 )
             except (ValueError, OverflowError):
                 self.err(m.start(), m.end(), "numeric literal is not representable")
@@ -355,6 +364,10 @@ class Parser:
                 return Node("string", start, self.i, "".join(buf).encode("utf-16-le", "surrogatepass").decode("utf-16-le", "surrogatepass"))
             if c in "\n\r" and q != "`":
                 break
+            if q == "`" and c == "\r":
+                buf.append("\n")
+                self.i += 2 if self.s[self.i:self.i + 2] == "\r\n" else 1
+                continue
             buf.append(c)
             self.i += 1
         self.err(start, self.i, "unterminated string")
@@ -364,7 +377,14 @@ class Parser:
         start = self.i
         j = self.i + 1
         in_class = False
+        traversed = []
+        failed = False
         while j < self.n:
+            state = (j, in_class)
+            if state in self.regex_failures:
+                failed = True
+                break
+            traversed.append(state)
             c = self.s[j]
             if c in "\n\r\u2028\u2029" or (c == "\\" and j + 1 < self.n and self.s[j + 1] in "\n\r\u2028\u2029"):
                 break
@@ -381,7 +401,8 @@ class Parser:
                 j = self.n
                 break
             j += 1
-        if j >= self.n or self.s[j] != "/":
+        if failed or j >= self.n or self.s[j] != "/":
+            self.regex_failures.update(traversed)
             self.err(start, min(self.n, start + 1), "unterminated regular expression")
             self.i = min(self.n, start + 1)
             return Node("error", start, self.i)
@@ -390,6 +411,8 @@ class Parser:
         m = re.compile(r"[a-z]*").match(self.s, j)
         flags = m.group() if m else ""
         self.i = j + len(flags)
+        if set(flags) - set("dgimsuvy") or len(set(flags)) != len(flags) or {"u", "v"} <= set(flags):
+            self.err(j, self.i, "invalid regular expression flags")
         return Node("regex", start, self.i, src + "/" + flags)
 
     def array(self) -> Node:
@@ -475,12 +498,24 @@ class Parser:
             node = self.string()
             key = str(node.value)
         else:
-            m = _IDENT.match(self.s, self.i) or re.compile(r"-?\d+(?:\.\d+)?").match(self.s, self.i)
+            m = _IDENT.match(self.s, self.i) or re.compile(r"-?[0-9]+(?:\.[0-9]+)?").match(self.s, self.i)
             if not m:
                 self.err(self.i, self.i + 1, "expected a property name")
                 self.skip_bad_value({"}"})
                 return None
             key = m.group()
+            if key[:1] in "-0123456789":
+                number = float(key)
+                if number == 0:
+                    key = "0"
+                elif number in (float("inf"), -float("inf")):
+                    key = "Infinity" if number > 0 else "-Infinity"
+                elif 1e-6 <= abs(number) < 1e21:
+                    key = format(Decimal(repr(number)), "f")
+                    if "." in key:
+                        key = key.rstrip("0").rstrip(".")
+                else:
+                    key = repr(number).replace("e-0", "e-").replace("e+0", "e+")
             self.i = m.end()
         k1 = self.i
         self.ws()

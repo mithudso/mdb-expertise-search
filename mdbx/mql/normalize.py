@@ -151,6 +151,8 @@ def _evidence(src: dict[str, Node], cmd: dict[str, Node]) -> dict:
 
 def _evidence_scalar(node: Node):
     value = _scalar(node)
+    if isinstance(value, float) and value.is_integer():
+        value = int(value)
     # JSON numbers have only JavaScript's safe integer range in the browser port. Preserve larger
     # exact integers as decimal strings in both APIs; they are not used for ratio arithmetic.
     return str(value) if isinstance(value, int) and not isinstance(value, bool) and abs(value) > 2**53 - 1 else value
@@ -159,6 +161,8 @@ def _evidence_scalar(node: Node):
 def _scalar(n: Node):
     if n.kind == "number":
         v = n.value
+        if isinstance(v, int) and not isinstance(v, bool):
+            return v
         try:
             if isinstance(v, bool) or not math.isfinite(v):
                 return None

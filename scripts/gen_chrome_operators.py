@@ -14,7 +14,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -27,13 +29,20 @@ JSON_OUT = LIB / "operators.json"
 JS_OUT = LIB / "operators-data.js"
 
 
+def _operator_entry(operator: ops.Operator) -> dict:
+    entry = {"name": operator.name, "cats": sorted(operator.cats), "arg": operator.arg, "doc": operator.doc}
+    contexts = ("pipeline-item", "query", "qtop", "expr", "accexpr", "update", "text", "mod")
+    overrides = {context: operator.arg_for(context) for context in contexts
+                 if operator.arg_for(context) != operator.arg}
+    if overrides:
+        entry["arguments"] = overrides
+    return entry
+
+
 def table() -> dict:
     """The operator table as plain data; operator order is the table order (it drives suggest())."""
     return {
-        "operators": [
-            {"name": o.name, "cats": sorted(o.cats), "arg": o.arg, "doc": o.doc}
-            for o in ops.OPERATORS.values()
-        ],
+        "operators": [_operator_entry(operator) for operator in ops.OPERATORS.values()],
         "variables": dict(ops.VARIABLES),
         "sets": {
             "FIRST_STAGE_ONLY": sorted(ops.FIRST_STAGE_ONLY),
@@ -53,6 +62,21 @@ def render() -> tuple[str, str]:
     return body + "\n", js
 
 
+def _atomic_write(path: Path, data: bytes) -> None:
+    name = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, prefix="." + path.name + ".", delete=False) as stream:
+            name = stream.name
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(name, path)
+        name = None
+    finally:
+        if name is not None:
+            Path(name).unlink(missing_ok=True)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true")
@@ -66,7 +90,7 @@ def main() -> int:
             return 1
         return 0
     for p, text in want.items():
-        p.write_bytes(text.encode("utf-8"))
+        _atomic_write(p, text.encode("utf-8"))
     return 0
 
 

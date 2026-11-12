@@ -11,13 +11,15 @@ reindex() { echo "[watch] change detected; reindexing"; "$MDBX" index || echo "[
 consume() {
   while read -r _; do
     # Collapse events already queued before the next serial rebuild.
-    while read -r -t 1 _; do :; done
+    for _batch in {1..64}; do
+      read -r -t 1 _ || break
+    done
     reindex
   done
 }
 watch_changes() {
   if command -v fswatch >/dev/null; then
-    fswatch -o -l 2 --exclude '/\.' -- "$CORPUS" | consume
+    fswatch -r -o -l 2 -- "$CORPUS" | consume
   elif command -v inotifywait >/dev/null; then
     inotifywait --monitor --quiet --format '%e' -r -e close_write,create,delete,move -- "$CORPUS" | consume
   else

@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 
 pytest.importorskip("textual")
@@ -117,6 +119,7 @@ async def test_review_tui_selected_recipes_shutdown_and_old_search(tmp_path,monk
     from threading import Event
 
     from mdbx import tui as t
+    caplog.set_level(logging.DEBUG, logger="mdbx.tui")
     root=make_corpus(tmp_path)
     (root/'recipes').mkdir()
     (root/'recipes'/'selected.md').write_text('# Selected\n')
@@ -142,7 +145,8 @@ async def test_review_tui_selected_recipes_shutdown_and_old_search(tmp_path,monk
             assert app.query_one('#side').size.width<=18
             worker=app._search('old')
             assert await asyncio.to_thread(started.wait,5)
-            app.action_recipes()
+            recipes_worker = app.action_recipes()
+            await recipes_worker.wait()
             assert [h.source for h in app.hits]==['selected']
             release.set()
             await worker.wait()
@@ -161,6 +165,7 @@ async def test_empty_query_clears_active_state_and_private_failure_is_opaque(tmp
 
     from mdbx import index
     from mdbx import tui as t
+    caplog.set_level(logging.DEBUG, logger="mdbx.tui")
     db = tmp_path / "synthetic.sqlite"
     con = index.connect(db); con.close()
     def unavailable(*args, **kwargs):
@@ -176,10 +181,31 @@ async def test_empty_query_clears_active_state_and_private_failure_is_opaque(tmp
         await worker.wait()
         assert "SYNTHETIC_SECRET" not in caplog.text
         assert "SYNTHETIC_SECRET" not in str(app.query_one("#status").render())
-        app._status("searching…")
-        app._search("")
-        assert app.hits == []
-        assert "searching" not in str(app.query_one("#status").render())
+        assert "search failed" in caplog.text
+        import asyncio
+        from threading import Event
+
+        from mdbx.search import Hit
+        hit = Hit(1, "synthetic.md", "populated", "skill", "Heading", 1, "body", 1.0)
+        app._render_hits([hit], "")
+        assert app.hits and app.query_one("#results").row_count == 1
+        started, release = Event(), Event()
+        def pending(*args, **kwargs):
+            started.set()
+            assert release.wait(5)
+            return [hit]
+        monkeypatch.setattr(t.srch, "search", pending)
+        worker = app._search("pending")
+        assert await asyncio.to_thread(started.wait, 5)
+        try:
+            app._search("")
+            assert app.hits == [] and app.query_one("#results").row_count == 0
+            assert app.query_one("#detail").lines == []
+            assert "searching" not in str(app.query_one("#status").render())
+        finally:
+            release.set()
+        await worker.wait()
+        assert app.hits == [] and app.query_one("#results").row_count == 0
 
 
 @pytest.mark.asyncio
@@ -200,3 +226,55 @@ async def test_facet_selection_passes_exact_kind_and_source(tmp_path, monkeypatc
         await app.workers.wait_for_complete()
         assert seen and seen[-1]["kind"] == "recipe"
         assert seen[-1]["source"] == "selected" and seen[-1]["source_exact"] is True
+
+
+@pytest.mark.asyncio
+async def test_recipe_browser_keeps_valid_bounded_literal_entries(tmp_path, monkeypatch):
+    from mdbx import tui as t
+    root = tmp_path/"corpus"
+    (root/"recipes").mkdir(parents=True)
+    (root/"recipes/good.md").write_text("---\nname: [/bold]\n---\n" + "good body\n" * 5000)
+    (root/"recipes/bad.md").write_bytes(b"---\nname: bad\n---\n" + b"valid prefix\n" * 1000 + b"\xff")
+    monkeypatch.setenv("MDBX_CORPUS", str(root))
+    db = tmp_path/"synthetic.sqlite"
+    con = index.connect(db)
+    index.build_keyword(con, root/"missing") if False else None
+    con.execute("INSERT OR REPLACE INTO meta VALUES('corpus',?)", (str(root),))
+    con.commit(); con.close()
+    app = t.MdbxApp(db)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        worker = app.action_recipes()
+        await worker.wait()
+        assert [hit.source for hit in app.hits] == ["[/bold]"]
+        assert len(app.hits[0].text) < 20_200 and "Preview truncated" in app.hits[0].text
+        assert "partial results" in str(app.query_one("#status").render())
+
+
+@pytest.mark.asyncio
+async def test_superseded_worker_exits_before_embedding_search(tmp_path, monkeypatch):
+    import asyncio
+    from threading import Event
+
+    from mdbx import tui as t
+    db = tmp_path/"synthetic.sqlite"
+    con = index.connect(db); con.close()
+    entered, release = Event(), Event()
+    constructed, searched = [], []
+    def store(con):
+        constructed.append(True)
+        if len(constructed) == 1:
+            entered.set()
+            assert release.wait(5)
+        return object()
+    monkeypatch.setattr(t.srch, "VectorStore", store)
+    monkeypatch.setattr(t.srch, "search", lambda con, query, *a, **kw: (searched.append(query), [])[1])
+    app = t.MdbxApp(db)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        app._search("superseded")
+        assert await asyncio.to_thread(entered.wait, 5)
+        newest = app._search("newest")
+        release.set()
+        await newest.wait()
+        assert searched == ["newest"]

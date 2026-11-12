@@ -34,7 +34,7 @@
           "match": "(?<![\\w$])(const|let|var|use|new)(?![\\w$])"
         },
         {
-          "match": "(?<![\\w$])(db)(?![\\w$])(?:\\.(?!getCollection\\s*\\()([A-Za-z_][\\w-]*))?(?:\\.(find|findOne|aggregate|countDocuments|distinct|insertOne|insertMany|updateOne|updateMany|replaceOne|deleteOne|deleteMany|findOneAndUpdate|findOneAndDelete|findOneAndReplace|createIndex|watch|bulkWrite|sort|limit|skip|project|projection|hint|count|remove|update)(?=\\s*\\())?",
+          "match": "(?<![\\w$])(db)(?![\\w$])(?:\\.(?!(?:getCollection|watch|aggregate)\\s*\\()([A-Za-z_][\\w-]*))?(?:\\.(find|findOne|aggregate|countDocuments|distinct|insertOne|insertMany|updateOne|updateMany|replaceOne|deleteOne|deleteMany|findOneAndUpdate|findOneAndDelete|findOneAndReplace|createIndex|watch|bulkWrite|sort|limit|skip|project|projection|hint|count|remove|update)(?=\\s*\\())?",
           "captures": {
             "1": {
               "name": "support.variable.mql"
@@ -84,7 +84,7 @@
         },
         {
           "name": "variable.language.system.mql",
-          "match": "\\$\\$[A-Za-z_]\\w*"
+          "match": "(?<![\\w$])\\$\\$[A-Za-z_]\\w*(?![\\w$])"
         },
         {
           "name": "keyword.operator.mql",
@@ -92,7 +92,7 @@
         },
         {
           "name": "support.class.constructor.mql",
-          "match": "(?<![\\w$])(ObjectId|ISODate|Date|NumberLong|NumberInt|NumberDecimal|Decimal128|UUID|Timestamp|BinData|MinKey|MaxKey|RegExp|DBRef)(?<![\\w$])(?=\\s*\\()"
+          "match": "(?<![\\w$])(ObjectId|ISODate|Date|NumberLong|NumberInt|NumberDecimal|Decimal128|UUID|Timestamp|BinData|MinKey|MaxKey|RegExp|DBRef)(?![\\w$])(?=\\s*\\()"
         },
         {
           "name": "constant.language.mql",

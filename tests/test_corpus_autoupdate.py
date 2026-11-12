@@ -98,9 +98,15 @@ def test_run_update_refuses_without_denylist(tmp_path, monkeypatch):
 
 def test_unowned_checkout_and_traversal_paths_are_preserved(tmp_path):
     import pytest
-    clone = tmp_path / "clone"; (clone / ".git").mkdir(parents=True); victim = tmp_path / "victim"; victim.write_text("keep")
-    cfg = {"clone_dir": str(clone), "repo": "synthetic", "branch": "main"}
-    with pytest.raises(RuntimeError): cu.ensure_clone(cfg)
+    origin = make_origin(tmp_path)
+    clone = tmp_path / "clone"
+    run(tmp_path, "git", "clone", "-q", str(origin), str(clone))
+    victim = tmp_path / "victim"; victim.write_text("keep")
+    before = run(clone, "git", "rev-parse", "HEAD")
+    cfg = {"clone_dir": str(clone), "repo": str(origin), "branch": "main"}
+    with pytest.raises(RuntimeError, match="not owned"): cu.ensure_clone(cfg)
+    assert run(clone, "git", "rev-parse", "HEAD") == before
+    assert (clone / "corpus/kept.md").read_text() == "clean committed text\n"
     with pytest.raises(RuntimeError): cu.restore_committed(clone, ["corpus/../../victim"])
     assert victim.read_text() == "keep"
 
@@ -110,7 +116,7 @@ def test_sync_failure_aborts_before_gate_and_protected_missing_paths_restore(tmp
     clone = tmp_path / "clone"; clone.mkdir(); deny = tmp_path / "deny"; deny.write_text("synthetic")
     monkeypatch.setenv("MDBX_DENYLIST", str(deny)); monkeypatch.setattr(cu, "LOG_PATH", tmp_path / "log")
     monkeypatch.setattr(cu, "ensure_clone", lambda cfg: clone); monkeypatch.setattr(cu, "reset_to_origin", lambda *a: None)
-    monkeypatch.setattr(cu.subprocess, "run", lambda *a, **k: SimpleNamespace(returncode=4, stdout="SYNTH_SECRET", stderr="SYNTH_SECRET"))
+    monkeypatch.setattr(cu, "run_sync", lambda *a, **k: SimpleNamespace(returncode=4, stdout="SYNTH_SECRET", stderr="SYNTH_SECRET"))
     monkeypatch.setattr(cu, "sweep", lambda *a: (_ for _ in ()).throw(AssertionError("must abort before sweep")))
     cfg = {"clone_dir": str(clone), "repo": "synthetic", "branch": "main", "python": sys.executable}
     assert cu.run_update(cfg) == 1; assert "SYNTH_SECRET" not in (tmp_path / "log").read_text()
@@ -135,10 +141,10 @@ def test_rebased_outgoing_tree_is_swept_and_missing_protected_paths_restore(tmp_
     clone = tmp_path / "clone"; clone.mkdir(); deny = tmp_path / "deny"; deny.write_text("synthetic")
     monkeypatch.setenv("MDBX_DENYLIST", str(deny)); monkeypatch.setattr(cu, "LOG_PATH", tmp_path / "log")
     monkeypatch.setattr(cu, "ensure_clone", lambda cfg: clone); monkeypatch.setattr(cu, "reset_to_origin", lambda *a: None)
-    monkeypatch.setattr(cu.subprocess, "run", lambda *a, **k: SimpleNamespace(returncode=0, stdout="", stderr=""))
+    monkeypatch.setattr(cu, "run_sync", lambda *a, **k: SimpleNamespace(returncode=0, stdout="", stderr=""))
     restored = []; monkeypatch.setattr(cu, "PROTECTED", ["corpus/missing.md"]); monkeypatch.setattr(cu, "restore_committed", lambda clone, files: restored.extend(files))
     trace = []
-    sweeps = iter([(0, []), (2, [])])
+    sweeps = iter([(0, []), (0, []), (2, [])])
     def sweep(*args):
         trace.append("sweep")
         return next(sweeps)
@@ -147,7 +153,13 @@ def test_rebased_outgoing_tree_is_swept_and_missing_protected_paths_restore(tmp_
     def must(args, *other):
         commands.append(args)
         trace.append(args[0])
-        return " M corpus/good.md\n" if args[0] == "status" else ""
+        if args[0] == "status":
+            return " M corpus/good.md\n"
+        if args[0] == "rev-parse":
+            return "a" * 40
+        if args[0] == "diff-tree":
+            return "corpus/good.md\n"
+        return ""
     def git(args, *other):
         trace.append("pull-rebase" if args[:2] == ["pull", "--rebase"] else args[0])
         return SimpleNamespace(returncode=0, stdout="", stderr="")

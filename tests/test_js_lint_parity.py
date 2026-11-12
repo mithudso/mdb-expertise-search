@@ -43,7 +43,7 @@ def _inputs() -> list[str]:
         sources = sorted(fixtures.glob("*.txt"))
         assert sources, f"missing or empty fixture directory: {fixtures}"
         for src in sources:
-            text = src.read_text(encoding="utf-8")
+            text = src.read_bytes().decode("utf-8")
             step = max(1, len(text) // 40)
             out += [text[:i] for i in range(0, len(text) + 1, step)]
             out.append(text)
@@ -164,11 +164,8 @@ for(const c of [-0.01,1.01,NaN]) assert.throws(()=>getCloseMatches('x',['x'],1,c
 const count=128, text='x\n'.repeat(count);
 const ds=Array.from({length:count},(_,i)=>({start:2*i,end:2*i+1,severity:'error',code:'synthetic',message:'synthetic',fix:null}));
 let reads=0;
-const watched=new Proxy(new String(text), {get(target,key) {
- if(typeof key==='string' && /^[0-9]+$/.test(key)) reads++;
- const value=Reflect.get(target,key,target);
- return typeof value==='function' ? value.bind(target) : value;
-}});
+const {countedSource}=await import('./editors/chrome/test/counted-source.mjs');
+const watched=countedSource(text,n=>{reads+=n;});
 assert.deepEqual(diagnosticsToDicts(watched,ds).map(d=>[d.line,d.column]),ds.map((_,i)=>[i,0]));
 assert.ok(reads>0 && reads<=6*text.length, String(reads));
 """

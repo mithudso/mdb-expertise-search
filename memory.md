@@ -155,3 +155,8 @@ Supported maintenance repairs preserve chunk serialization and approved search
 fixtures. Offline checks isolate descendants, scratch homes, synthetic providers
 and Git fixture templates/hooks. See the dated bootstrap and optimizer reports
 for scope, final verification and retained migration-dependent defects.
+
+
+## 2026-11-12 — selected maintenance repair continuation
+
+Applied corroborated preservation, index identity, parser/editor, updater and offline-test isolation repairs. Both blind gates remain spent; optimizer status is BLIND-AUDIT-DISSENT. Frozen chunk/search serialization and protected data remain unchanged. Integrated Python:666 passed,2 platform/model skips; Chrome280 and VSCode20 passed. Final upstream integration, CI and remote delivery evidence are tracked in PR7 and the external maintenance receipt.

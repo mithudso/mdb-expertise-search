@@ -161,25 +161,40 @@ class _Audit:
 
     # ---- target discovery
     def run(self) -> None:
-        bindings = {st.decl: st.node for st in self.statements if st.decl}
-        uses = {name: [] for name in bindings}
+        bindings = {}
+        uses = {}
         safe_refs = set()
-        for st in self.statements:
-            for node in st.node.walk():
-                if node.kind == "ident" and str(node.value) in uses:
-                    uses[str(node.value)].append(node)
+        nodes_by_statement = [list(st.node.walk()) for st in self.statements]
+        for st, nodes in zip(self.statements, nodes_by_statement, strict=True):
+            if st.decl:
+                bindings[st.decl] = st.node
+                uses[id(st.node)] = (st.node, [])
+            for node in nodes:
                 if node.kind == "call" and node.target is not None and node.target.kind == "member":
                     method = str(node.target.value)
-                    if method in TARGET_METHODS or method in {"sort", "projection"}:
-                        safe_refs.update(id(arg) for arg in node.items if arg.kind == "ident")
-        unsafe = [node for name, node in bindings.items()
-                  if len(uses[name]) != 1 or any(id(use) not in safe_refs for use in uses[name])]
+                    receiver = node.target.target
+                    db_receiver = receiver is not None and receiver.kind == "member" and receiver.target is not None and receiver.target.kind == "ident" and receiver.target.value == "db"
+                    if receiver is not None and receiver.kind == "call" and receiver.target is not None:
+                        member = receiver.target
+                        db_receiver = member.kind == "member" and member.value == "getCollection" and member.target is not None and member.target.kind == "ident" and member.target.value == "db"
+                    if db_receiver and method in TARGET_METHODS:
+                        argi = TARGET_METHODS[method]
+                        argi = 0 if argi is None else argi
+                        if len(node.items) > argi and node.items[argi].kind == "ident":
+                            safe_refs.add(id(node.items[argi]))
+                if node.kind == "ident" and str(node.value) in bindings:
+                    uses[id(bindings[str(node.value)])][1].append(node)
+        unsafe = [node for node, refs in uses.values()
+                  if len(refs) != 1 or any(id(ref) not in safe_refs for ref in refs)]
         for st in self.statements:
             if st.decl and not self.errors:
                 self.vars[st.decl] = st.node
             self.statement(st)
+        unsafe.sort(key=lambda node: node.start)
+        unsafe_starts = [node.start for node in unsafe]
         for finding in self.findings:
-            if any(node.start <= finding.start and finding.end <= node.end for node in unsafe):
+            index = bisect_right(unsafe_starts, finding.start) - 1
+            if index >= 0 and finding.end <= unsafe[index].end:
                 finding.fix = None
         for error in self.errors:
             self.findings.append(Finding(error.start, max(error.end, error.start + 1), HIGH,
@@ -381,7 +396,7 @@ class _Audit:
                 out.append(_Pred(name, "eq"))
             elif op == "$in" and qv is not None and qv.kind == "array":
                 n = len(qv.items)
-                out.append(_Pred(name, "in" if n < IN_SORT_LIMIT else "range", n))
+                out.append(_Pred(name, "in" if n < IN_SORT_LIMIT and all(_is_eq_value(it) for it in qv.items) and not any(it.kind == "regex" for it in qv.items) else "range", n))
                 if n >= 10_000:
                     self.add(q, HIGH, "huge-in", "P4",
                              f"$in with {n} values: parse, plan and bounds cost grow with every value. Load the set "
@@ -446,7 +461,7 @@ class _Audit:
         if len(branches) >= 2 and simple and len(fields) == 1:
             f = fields.pop()
             vals = ", ".join(self.src(b.props[0].value) for b in branches)  # type: ignore[arg-type]
-            clash = any(q.key == f for q in parent.props)
+            clash = any(q.key == f for q in parent.props) or len({q.key for q in parent.props}) != len(parent.props)
             self.add((p.start, p.end), MEDIUM, "or-to-in", "P4",
                      f"$or of equalities on one field ({f}) is an $in: one index scan with point bounds instead "
                      "of a subplan per branch. Sort support depends on the operand count and index.",
@@ -730,9 +745,9 @@ def _constant_expr(node: Node) -> bool:
     if node.kind == "array":
         return all(_constant_expr(it) for it in node.items)
     if node.kind == "object":
-        if len(node.props) == 1 and node.props[0].key == "$literal":
+        if len(node.props) == 1 and node.props[0].key in {"$literal", "$const"}:
             return True
-        return all(p.value is not None and _constant_expr(p.value) for p in node.props)
+        return all(not p.key.startswith("$") and p.value is not None and _constant_expr(p.value) for p in node.props)
     return False
 
 
@@ -778,11 +793,7 @@ def _is_eq_value(v: Node) -> bool:
 
 
 def _uniq(items) -> list[str]:
-    out: list[str] = []
-    for i in items:
-        if i not in out:
-            out.append(i)
-    return out
+    return list(dict.fromkeys(items))
 
 
 def _projection_fields(proj: Node | None) -> list[str]:
@@ -982,7 +993,7 @@ def format_report(rep: Report, name: str = "<input>") -> str:
     out: list[str] = []
     t = rep.text
     position = _positioner(t)
-    counts = {s: sum(1 for f in rep.findings if f.severity == s) for s in SEVERITY_ORDER}
+    counts = {s: sum(1 for f in rep.findings if f.severity == s and not f.code.endswith("-rewrite")) for s in SEVERITY_ORDER}
     out.append(f"MQL optimizer (static audit) — {name}: {rep.input_queries} quer{'y' if rep.input_queries == 1 else 'ies'}, "
                + (", ".join(f"{n} {s}" for s, n in counts.items() if n) or "no open findings")
                + (f"; {len(rep.applied)} rewrite(s) applied in {rep.iterations - 1} iteration(s)" if rep.applied else ""))
@@ -1018,12 +1029,19 @@ def format_report(rep: Report, name: str = "<input>") -> str:
         out.append("\nRewritten query:\n" + rep.text.rstrip())
     out.append("\nStatic analysis only: confirm with explain('executionStats') — COLLSCAN -> IXSCAN, "
                "totalDocsExamined/nReturned near 1, nReturned unchanged.")
-    return "".join(f"\\x{ord(ch):02x}" if unicodedata.category(ch) in {"Cc", "Cf"} and ch not in "\n\t" else ch
+    return "".join(f"\\x{ord(ch):02x}" if unicodedata.category(ch) in {"Cc", "Cf", "Cs"} and ch not in "\n\t" else ch
                    for ch in "\n".join(out))
 
 
 def _positioner(text: str):
-    starts = [0] + [i + 1 for i, ch in enumerate(text) if ch == "\n"]
+    starts = [0]
+    i = 0
+    while i < len(text):
+        if text[i] in "\r\n\u2028\u2029":
+            if text[i:i + 2] == "\r\n":
+                i += 1
+            starts.append(i + 1)
+        i += 1
 
     def position(offset: int) -> dict:
         offset = max(0, min(offset, len(text)))

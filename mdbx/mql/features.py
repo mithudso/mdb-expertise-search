@@ -75,8 +75,8 @@ def hover_markdown(word: str, expertise: Callable[[str], list[str]] | None = Non
     op = ops.get(word)
     if op is None:
         return None
-    contracts = {label: op.arg_for(ctx) for label, ctx in [("stage", "pipeline-item"), ("expression", "expr"), ("accumulator", "accexpr"), ("update", "update")]
-                 if {"stage": "stage", "expression": "expr", "accumulator": "acc", "update": "update"}[label] in op.cats}
+    contracts = {label: op.arg_for(ctx) for label, ctx in [("stage", "pipeline-item"), ("expression", "expr"), ("accumulator", "accexpr"), ("update", "update"), ("text", "text")]
+                 if {"stage": "stage", "expression": "expr", "accumulator": "acc", "update": "update", "text": "sub"}[label] in op.cats and (label != "text" or op.name == "$search")}
     argument = f"`{op.arg}`" if len(set(contracts.values())) <= 1 else "; ".join(f"{label}: `{arg}`" for label, arg in contracts.items())
     md = f"**{op.name}** · {categories(op)}\n\n{op.doc}\n\n_Argument:_ {argument}"
     if expertise:
@@ -152,6 +152,10 @@ def completions(result: Result, offset: int) -> list[Completion]:
     while end < len(text) and (text[end].isalnum() or text[end] in "_$"):
         end += 1
     prefix = text[start:offset]
+    in_regex = any(value.kind == "regex" and value.start < offset < value.end
+                   for st in result.statements for value in st.node.walk())
+    if in_regex:
+        return []
     if prefix.startswith("$$"):
         return [Completion("$$" + n, "variable", "system variable", d, n, start + 2, end)
                 for n, d in ops.VARIABLES.items()]
@@ -191,14 +195,16 @@ def completions(result: Result, offset: int) -> list[Completion]:
         return []
     node, label = hit
     key_prop = None
-    for prop in node.props:
+    for index, prop in enumerate(node.props):
+        if prop.key_start > offset:
+            break
         if prop.key_start <= offset <= prop.key_end:
             key_prop = prop
             break
         value = prop.value
         if value is not None and value.start <= offset <= value.end:
             return []
-        if value is None and ":" in text[prop.key_end:offset] and offset > prop.key_end:
+        if value is None and offset > prop.key_end and (index + 1 == len(node.props) or offset < node.props[index + 1].key_start) and text.find(":", prop.key_end, min(offset, prop.end + 1)) >= 0:
             return []
     if label == "pipeline-item" and any(a.start < node.start < a.end and c == "update-pipeline" for a, c in result.arrays):
         label = "update-pipeline"

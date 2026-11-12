@@ -62,9 +62,9 @@ def backend() -> str:
     return b if b in BACKENDS else "auto"
 
 
-def _embed_onnx(texts: list[str], prefix: str) -> np.ndarray:
-    if model() != DEFAULT_MODEL:
-        raise EmbedError(f"the onnx backend only serves {DEFAULT_MODEL}, not {model()}")
+def _embed_onnx(texts: list[str], prefix: str, selected: str) -> np.ndarray:
+    if selected != DEFAULT_MODEL:
+        raise EmbedError(f"the onnx backend only serves {DEFAULT_MODEL}, not {selected}")
     try:
         return validate_vectors(embed_onnx.embed(texts, prefix=prefix), len(texts))
     except Exception as exc:
@@ -77,26 +77,28 @@ def embed(
     prefix: str = "search_document: ",
     timeout: float = 120.0,
     retries: int = 2,
+    model_name: str | None = None,
 ) -> np.ndarray:
     """Embed ``texts`` and return an L2-normalised float32 matrix."""
     if not texts:
         return np.zeros((0, 0), dtype=np.float32)
+    selected = model() if model_name is None else model_name
     mode = backend()
     if mode == "onnx":
-        return _embed_onnx(texts, prefix)
+        return _embed_onnx(texts, prefix, selected)
     try:
-        return _embed_ollama(texts, prefix, timeout, retries)
+        return _embed_ollama(texts, prefix, timeout, retries, selected)
     except EmbedError:
-        if mode == "auto" and model() == DEFAULT_MODEL and embed_onnx.available():
+        if mode == "auto" and selected == DEFAULT_MODEL and embed_onnx.available():
             log.info("Ollama unreachable; embedding in-process with ONNX")
-            return _embed_onnx(texts, prefix)
+            return _embed_onnx(texts, prefix, selected)
         raise
 
 
-def _embed_ollama(texts: list[str], prefix: str, timeout: float, retries: int) -> np.ndarray:
-    log.debug("embed model=%s inputs=%d", model(), len(texts))
+def _embed_ollama(texts: list[str], prefix: str, timeout: float, retries: int, selected: str) -> np.ndarray:
+    log.debug("embed model=%s inputs=%d", selected, len(texts))
     try:
-        vecs = _client(timeout, retries).embed([prefix + t for t in texts], model=model())
+        vecs = _client(timeout, retries).embed([prefix + t for t in texts], model=selected)
     except OllamaUnavailable as exc:
         log.warning("Ollama embed request failed (%s)", type(exc).__name__)
         raise EmbedError("cannot reach Ollama; verify the local service and optional ollama extra") from exc

@@ -153,19 +153,32 @@ def build_semantic(
             if vectors and not previous:
                 raise embedmod.EmbedError('indexed vectors have no model identity; explicit migration is required')
             changing = previous is not None and previous[0] != model
-            stage.executemany('INSERT INTO pending(digest,h,t) VALUES(?,?,?)', _pending(con, changing))
-            dimensions = set()
-            if not changing:
-                for dim, vec in con.execute('SELECT dim,vec FROM vectors WHERE digest NOT IN (SELECT digest FROM invalid_vectors)'):
-                    if _valid_cached(dim, vec):
-                        dimensions.add(dim)
+            dimension_row = con.execute("SELECT value FROM meta WHERE key='embed_dim'").fetchone()
+            try:
+                expected_dimension = int(dimension_row[0]) if dimension_row else None
+            except (TypeError, ValueError):
+                expected_dimension = None
+            if expected_dimension is not None and expected_dimension < 1:
+                expected_dimension = None
+            dimensions = {dim for digest, heading, text, dim, vec, invalid, known in _cache_rows(con)
+                          if invalid is None and known == _input_hash(heading, text) and _valid_cached(dim, vec)}
+            if changing:
+                expected_dimension = None
+            repair_all = changing or (expected_dimension is None and len(dimensions) > 1)
+            stage.executemany('INSERT INTO pending(digest,h,t) VALUES(?,?,?)', _pending(con, repair_all, expected_dimension))
+            # Only current, proven, unreplaced vectors constrain a partial generation.
+            dimensions = set() if repair_all else ({expected_dimension} if expected_dimension else dimensions)
         stage.commit()
         total = stage.execute('SELECT COUNT(*) FROM pending').fetchone()[0]
         say(f'semantic index: {total} chunks to embed')
         cursor = stage.execute('SELECT digest,h,t FROM pending ORDER BY digest')
         done = 0
         while part := cursor.fetchmany(batch):
-            matrix = embedmod.validate_vectors(embedmod.embed([corpusmod.embedding_input(h, t) for _, h, t in part]), len(part))
+            if embedmod.model() != model:
+                raise embedmod.EmbedError('active model changed during embedding; retry')
+            matrix = embedmod.validate_vectors(embedmod.embed([corpusmod.embedding_input(h, t) for _, h, t in part], model_name=model), len(part))
+            if embedmod.model() != model:
+                raise embedmod.EmbedError('active model changed during embedding; retry')
             dimensions.add(matrix.shape[1])
             if len(dimensions) > 1:
                 raise embedmod.EmbedError('inconsistent embedding dimensions for the active model')
@@ -177,12 +190,14 @@ def build_semantic(
         try:
             # Obtain the writer lock before rechecking the candidate's generation.
             con.execute('UPDATE store_revision SET value=value WHERE id=1')
+            if embedmod.model() != model:
+                raise embedmod.EmbedError('active model changed during embedding; retry')
             current = con.execute("SELECT value FROM meta WHERE key='embed_model'").fetchone()
             if (current[0] if current else None) != (previous[0] if previous else None):
                 raise embedmod.EmbedError('index model changed during embedding; retry')
             expected = stage.execute('SELECT digest,h,t FROM pending ORDER BY digest')
             sentinel = object()
-            if any(a != b for a, b in itertools.zip_longest(_pending(con, changing), expected, fillvalue=sentinel)):
+            if any(a != b for a, b in itertools.zip_longest(_pending(con, repair_all, expected_dimension), expected, fillvalue=sentinel)):
                 raise embedmod.EmbedError('index contents changed during embedding; retry')
             if changing:
                 con.execute('DELETE FROM vectors')
@@ -190,6 +205,8 @@ def build_semantic(
             con.executemany('DELETE FROM invalid_vectors WHERE digest=?', stage.execute('SELECT digest FROM pending'))
             con.executemany('INSERT OR REPLACE INTO vector_inputs VALUES(?,?)', ((d, _input_hash(h, t)) for d, h, t in stage.execute('SELECT digest,h,t FROM pending')))
             con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model',?)", (model,))
+            if dimensions:
+                con.execute("INSERT OR REPLACE INTO meta VALUES('embed_dim',?)", (str(next(iter(dimensions))),))
             con.execute('RELEASE semantic_publish')
         except BaseException:
             con.execute('ROLLBACK TO semantic_publish')
@@ -206,13 +223,17 @@ def _valid_cached(dim, blob):
     return bool(np.isfinite(vector).all() and np.any(vector))
 
 
-def _pending(con, changing):
+def _cache_rows(con):
     sql = ('SELECT c.digest,MIN(c.heading),MIN(c.text),v.dim,v.vec,i.digest,vi.input_hash '
            'FROM chunks c LEFT JOIN vectors v ON v.digest=c.digest '
            'LEFT JOIN invalid_vectors i ON i.digest=c.digest '
            'LEFT JOIN vector_inputs vi ON vi.digest=c.digest GROUP BY c.digest ORDER BY c.digest')
-    for digest, heading, text, dim, blob, invalid, known in con.execute(sql):
-        if changing or invalid is not None or known != _input_hash(heading, text) or not _valid_cached(dim, blob):
+    return con.execute(sql)
+
+
+def _pending(con, changing, expected_dimension=None):
+    for digest, heading, text, dim, blob, invalid, known in _cache_rows(con):
+        if changing or invalid is not None or known != _input_hash(heading, text) or not _valid_cached(dim, blob) or (expected_dimension is not None and dim != expected_dimension):
             yield digest, heading, text
 
 

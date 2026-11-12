@@ -51,14 +51,16 @@ def parse_frontmatter(text: str) -> dict[str, str]:
     return out
 
 
-def load(root: Path | None = None) -> list[Recipe]:
+def load(root: Path | None = None, *, strict: bool = False) -> list[Recipe]:
     root = (root or idx.default_corpus()).resolve()
     recipes: list[Recipe] = []
     for p in sorted((root / "recipes").glob("*.md")):
-        if not p.is_file() or p.name.lower() == "readme.md":
+        if p.name.lower() == "readme.md":
             continue
         relative = p.relative_to(root).as_posix()
         try:
+            if not p.is_file():
+                continue
             with open_confined(root, relative) as stream:
                 header = []
                 first = stream.readline(65537)
@@ -69,10 +71,16 @@ def load(root: Path | None = None) -> list[Recipe]:
                         if len(line) > 65536:
                             raise ValueError("recipe frontmatter line is too long")
                         header.append(line)
-                        if line in {"---\n", "---"} or not line:
+                        if line in {"---\n", "---"}:
                             break
+                        if not line:
+                            raise ValueError("recipe frontmatter is incomplete")
+                    else:
+                        raise ValueError("recipe frontmatter exceeds the line budget")
                 fm = parse_frontmatter("".join(header))
         except (OSError, UnicodeError, ValueError):
+            if strict:
+                raise ValueError("recipe metadata is unavailable or invalid") from None
             continue  # unsafe entries cannot become recipes or hide valid regular recipes
         recipes.append(
             Recipe(

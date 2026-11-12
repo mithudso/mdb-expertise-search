@@ -40,6 +40,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from maintenance_safety import (
     atomic_write,
+    exchange_entries,
     git_environment,
     lock,
     mark_clone,
@@ -123,6 +124,15 @@ def validate_config(cfg):
     if type(cfg.get("interval_min")) is not int or cfg["interval_min"] < 1: raise ValueError("invalid update interval")
     cfg["clone_dir"] = str(Path(cfg["clone_dir"]).expanduser().resolve())
     cfg["install_dir"] = str(Path(cfg["install_dir"]).expanduser().absolute())
+    check_install_location(Path(cfg["install_dir"]), Path(cfg["clone_dir"]))
+
+
+def check_install_location(install_dir: Path, clone_dir: Path | None = None, source: Path | None = None) -> None:
+    install = Path(install_dir).expanduser().resolve()
+    protected = [ROOT.resolve()]
+    protected.extend(Path(path).resolve() for path in (clone_dir, source) if path is not None)
+    if any(install == path or install.is_relative_to(path) or path.is_relative_to(install) for path in protected):
+        raise RuntimeError("installation overlaps a working or maintenance directory")
 
 
 # ---- build identity ----
@@ -163,9 +173,22 @@ def ensure_clone(cfg: dict) -> Path:
     if clone.exists(): return verify_clone(clone, cfg["repo"], ROOT, git)
     clone.parent.mkdir(parents=True, exist_ok=True)
     log("creating updater-owned clone")
-    res = subprocess.run(["git", "clone", "--branch", cfg["branch"], "--single-branch", "--", cfg["repo"], str(clone)], capture_output=True, text=True, timeout=900, check=False)
-    if res.returncode: raise RuntimeError("git clone failed")
-    mark_clone(clone, cfg["repo"])
+    stage = Path(tempfile.mkdtemp(prefix="." + clone.name + ".clone-", dir=clone.parent))
+    try:
+        res = subprocess.run(["git", "clone", "--branch", cfg["branch"], "--single-branch", "--", cfg["repo"], str(stage)],
+                             capture_output=True, text=True, timeout=900, check=False, env=git_environment())
+        if res.returncode:
+            raise RuntimeError("git clone failed")
+        mark_clone(stage, cfg["repo"])
+        verify_clone(stage, cfg["repo"], ROOT, git)
+        atomic_write(stage / ".git/mdbx-maintenance-owner.json",
+                     json.dumps({"path": str(clone), "repo": cfg["repo"]}).encode(), 0o600)
+        if clone.exists():
+            raise RuntimeError("clone destination appeared during preparation; source preserved")
+        os.rename(stage, clone)
+    finally:
+        if stage.exists():
+            shutil.rmtree(stage)
     return verify_clone(clone, cfg["repo"], ROOT, git)
 
 
@@ -196,21 +219,20 @@ def build_from_clone(cfg: dict, destination: Path | None = None) -> Path:
     argv = [cfg["python"], str(clone / "scripts" / "package_chrome_extension.py")]
     if cfg.get("no_vectors"):
         argv.append("--no-vectors")
-    env = dict(os.environ)
+    env = git_environment()
     env["MDBX_CORPUS"] = str(clone / "corpus")
-    # the clone's own index: built once, then reused (vectors need Ollama; keyword-only otherwise)
+    # Refresh keyword data and retry missing vectors for the current corpus.
     db = clone / "data" / "mdbx.sqlite"
     env["MDBX_DB"] = str(db)
     if any(path.is_symlink() for path in [clone / "corpus", db.parent, db]):
         raise RuntimeError("clone corpus or index destination is a symlink")
-    if not db.exists():
-        log("building the clone's search index (first run)")
-        index_command = [cfg["python"], "-m", "mdbx.cli", "index"]
-        if cfg.get("no_vectors"): index_command.append("--skip-semantic")
-        idx = subprocess.run(index_command, cwd=str(clone), env=env,
-                             capture_output=True, text=True, timeout=3600, check=False)
-        if idx.returncode not in (0, 1):  # 1 = keyword index built, Ollama absent
-            raise RuntimeError("mdbx index failed")
+    log("refreshing the clone's search index")
+    index_command = [cfg["python"], "-m", "mdbx.cli", "index"]
+    if cfg.get("no_vectors"): index_command.append("--skip-semantic")
+    idx = subprocess.run(index_command, cwd=str(clone), env=env,
+                         capture_output=True, text=True, timeout=3600, check=False)
+    if idx.returncode not in (0, 1):  # 1 = keyword index built, Ollama absent
+        raise RuntimeError("mdbx index failed")
     log("packaging the extension from the clone")
     res = subprocess.run(argv, cwd=str(clone), env=env, capture_output=True, text=True, timeout=1800, check=False)
     if res.returncode != 0:
@@ -270,11 +292,18 @@ def runtime_files(src: Path) -> list[Path]:
     return files
 
 
+MAX_ARCHIVE_BYTES = 512 * 1024 * 1024
+MAX_ARCHIVE_FILES = 4096
+
+
 def unpack_archive(path: Path, destination: Path) -> None:
     destination.mkdir(parents=True, exist_ok=True)
     try:
         with zipfile.ZipFile(path) as archive:
-            for info in archive.infolist():
+            entries = archive.infolist()
+            if len(entries) > MAX_ARCHIVE_FILES or sum(info.file_size for info in entries) > MAX_ARCHIVE_BYTES:
+                raise RuntimeError("extension archive exceeds extraction limits")
+            for info in entries:
                 rel = Path(info.filename)
                 if rel.is_absolute() or ".." in rel.parts or (info.external_attr >> 16) & 0o170000 == 0o120000:
                     raise RuntimeError("unsafe extension archive entry")
@@ -300,6 +329,24 @@ def validate_runtime(src: Path) -> list[Path]:
         stamp = json.loads(safe_bytes(src / "data/build.json", src))
         if not isinstance(stamp, dict) or not build_id(stamp) or stamp.get("version") != manifest["version"]: raise ValueError()
         for path in files: safe_bytes(path, src)
+        pending = [path for path in files if path.suffix == ".js"]
+        visited = set()
+        while pending:
+            path = pending.pop()
+            relative = path.relative_to(src).as_posix()
+            if relative in visited:
+                continue
+            visited.add(relative)
+            text = safe_bytes(path, src).decode("utf-8")
+            for match in re.finditer(r"(?:from\s*|import\s*)[\"'](\.[^\"']+)[\"']", text):
+                dependency = path.parent / match.group(1)
+                rel = dependency.relative_to(src)
+                if ".." in rel.parts or dependency.suffix != ".js":
+                    raise ValueError()
+                safe_bytes(dependency, src)
+                if dependency not in files:
+                    raise ValueError()
+                pending.append(dependency)
         return files
     except (OSError, ValueError, TypeError, KeyError):
         raise RuntimeError("extension runtime is incomplete or invalid") from None
@@ -323,6 +370,7 @@ def recover_install(install: Path, journal: Path) -> None:
 
 def sync_runtime(src: Path, install_dir: Path) -> int:
     """Stage and validate an owned replacement; roll back if publishing the staged directory fails."""
+    check_install_location(install_dir, source=src)
     install_dir = Path(install_dir).absolute(); install_dir.parent.mkdir(parents=True, exist_ok=True)
     if install_dir.is_symlink(): raise RuntimeError("installation directory is a symlink")
     files = validate_runtime(src)
@@ -331,28 +379,32 @@ def sync_runtime(src: Path, install_dir: Path) -> int:
     stage = Path(tempfile.mkdtemp(prefix="." + install_dir.name + ".stage-", dir=install_dir.parent))
     backup = Path(tempfile.mkdtemp(prefix="." + install_dir.name + ".backup-", dir=install_dir.parent)); backup.rmdir()
     published = False
+    exchanged = False
     try:
         for path in files:
             target = stage / path.relative_to(src); target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(safe_bytes(path, src))
         validate_runtime(stage)
         atomic_write(journal, json.dumps({"backup": str(backup), "stage": str(stage)}).encode(), 0o600)
-        if install_dir.exists(): os.rename(install_dir, backup)
-        try: os.rename(stage, install_dir)
-        except OSError:
-            if backup.exists() and not install_dir.exists(): os.rename(backup, install_dir)
-            raise
+        if install_dir.exists():
+            exchange_entries(stage, install_dir, install_dir.parent)
+            exchanged = True
+            # The complete old generation stays under stage until the journaled backup rename.
+            os.rename(stage, backup)
+        else:
+            os.rename(stage, install_dir)
         published = True
         if backup.exists(): shutil.rmtree(backup)
         journal.unlink()
     finally:
-        if stage.exists(): shutil.rmtree(stage)
-        if not published and install_dir.exists() and not backup.exists(): journal.unlink(missing_ok=True)
+        if stage.exists() and not exchanged: shutil.rmtree(stage)
+        if not published and not exchanged and install_dir.exists() and not backup.exists(): journal.unlink(missing_ok=True)
     return len(files)
 
 
 def run_update(cfg: dict, *, force: bool = False) -> int:
     clone, install = Path(cfg["clone_dir"]), Path(cfg["install_dir"])
+    check_install_location(install, clone)
     try:
         with lock(clone.with_name("." + clone.name + ".chrome-update.lock")), lock(install.with_name("." + install.name + ".install.lock")):
             if install.is_symlink():
@@ -386,6 +438,8 @@ def _run_update(cfg: dict, *, force: bool = False) -> int:
         checkout_upstream(cfg)
         with tempfile.TemporaryDirectory(prefix="mdbx-local-build-") as output:
             src = build_from_clone(cfg, destination=Path(output))
+            if needs_update(read_stamp(src), target):
+                raise RuntimeError("packaged runtime disagrees about the expected commit")
             n = sync_runtime(src, install_dir)
     log(f"installed {n} files into {install_dir}; build {build_id(read_stamp(install_dir))}")
     return 0

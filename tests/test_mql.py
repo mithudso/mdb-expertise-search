@@ -269,6 +269,14 @@ def test_completion_preserves_existing_source():
         item = next(c for c in features.completions(analyze(text), offset) if c.label == label)
         assert item.insert == expected, marked
         assert item.start == text.rfind('$', 0, offset) if label.startswith('$') else item.start == text.index('fi')
+        token_end = text.index("\"", item.start) if marked.startswith('db.c.aggregate([{ "') else item.start
+        if label.startswith("$"):
+            token_end = item.start
+            while token_end < len(text) and (text[token_end].isalnum() or text[token_end] in "_$"):
+                token_end += 1
+        else:
+            token_end = text.index("(", item.start)
+        assert item.end == token_end, marked
         if marked == 'db.c.find({a:{$g|t:1}})':
             assert text[:item.start] + item.insert.replace(r'\$', '$') + text[item.end:] == 'db.c.find({a:{$gt:1}})'
 
@@ -369,9 +377,12 @@ def test_lsp_optional_lookup_runtime_failure(monkeypatch, tmp_path):
     db.touch()
     monkeypatch.setattr(mdbx, 'index', N(default_db=lambda: db, connect=Mock(side_effect=sqlite3.OperationalError('synthetic'))), raising=False)
     monkeypatch.setattr(mdbx, 'search', N(keyword=Mock(side_effect=AssertionError('unexpected search'))), raising=False)
+    monkeypatch.setattr(sqlite3, "connect", Mock(side_effect=sqlite3.OperationalError("synthetic")))
     lookup = s.make_expertise_lookup()
     assert lookup is not None and lookup('$match') == []
-    mdbx.index.connect.assert_called_once_with(db)
+    mdbx.index.connect.assert_not_called()
+    assert sqlite3.connect.call_args.kwargs["uri"] is True
+    assert "mode=ro" in sqlite3.connect.call_args.args[0]
     mdbx.search.keyword.assert_not_called()
 
 def test_completion_long_suffix_uses_linear_prefix_scan(monkeypatch):
