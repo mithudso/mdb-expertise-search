@@ -57,6 +57,7 @@ def isolated(guard, tmp_path, monkeypatch):
 
 def test_privileged_command_drops_every_privilege_after_namespace(guard, monkeypatch):
     monkeypatch.setattr(guard, 'linux_isolated', lambda: False, raising=False)
+    monkeypatch.setattr(guard, '_no_new_privileges', lambda: False)
     monkeypatch.setattr(guard.os, 'getuid', lambda: 1001)
     monkeypatch.setattr(guard.os, 'geteuid', lambda: 1001)
     monkeypatch.setattr(guard.os, 'getgid', lambda: 1002)
@@ -172,6 +173,7 @@ def test_only_inert_reject_ipv6_rows_on_down_loopback_are_accepted(guard, isolat
 @pytest.mark.parametrize('inherited', [True, False])
 def test_missing_required_system_tool_fails_closed(guard, monkeypatch, inherited):
     monkeypatch.setattr(guard, 'linux_isolated', lambda: inherited)
+    monkeypatch.setattr(guard, '_no_new_privileges', lambda: False)
     monkeypatch.setattr(guard.os, 'access', lambda *a: False)
     with pytest.raises(ValueError, match='require system'):
         guard.linux_command(['synthetic'])
@@ -249,7 +251,7 @@ def test_actual_linux_guard_is_inherited_by_python_and_node(tmp_path):
 
     guard = module()
     # Running this test outside the offline launcher fails before opening sockets.
-    assert guard.linux_isolated(), 'run Linux tests through scripts/offline_test.py'
+    assert guard.linux_isolated(), guard.linux_isolation_diagnostic()
     assert shutil.which('node'), 'the maintained CI setup supplies Node'
     _blocked()
     probe, _node = _egress_probe()
@@ -259,3 +261,50 @@ def test_actual_linux_guard_is_inherited_by_python_and_node(tmp_path):
     row = json.loads(result.stdout)
     assert Path(row['home']) == Path(row['root']) / 'home'
     assert not Path(row['root']).exists()
+
+
+def test_failed_attestation_metadata_is_numeric_and_excludes_private_text(guard, isolated, monkeypatch):
+    proc, _sysfs = isolated
+    monkeypatch.setenv('SYNTHETIC_AUTH_TOKEN', 'SYNTH_SECRET')
+    with (proc / 'self/status').open('a') as stream:
+        stream.write('Name: SYNTH_SECRET\nUnrelatedPath: /private/SYNTH_SECRET\n')
+    row = json.loads(guard.linux_isolation_diagnostic())
+    assert row['failed_predicates'] == [] and all(row['predicates'].values())
+    assert 'SYNTH_SECRET' not in json.dumps(row)
+    assert row['uid'] == row['euid'] == 1001
+    assert row['gid'] == row['egid'] == 1002 and row['groups'] == []
+    assert row['status_uids'] == [1001] * 4 and row['status_gids'] == [1002] * 4
+    assert row['no_new_privs'] == 1 and set(row['caps'].values()) == {0}
+    assert row['interfaces'] == {'count': 1, 'loopback_seen': True, 'other_count': 0,
+                                 'loopback_flags': 8}
+    assert row['ipv4_header_matches'] and row['ipv4']['rows'] == row['ipv6']['rows'] == 0
+    (proc / 'self/status').write_text('Uid: SYNTH_SECRET/private/path')
+    (proc / 'net/dev').write_text('header\nheader\nSYNTH_SECRET: 0\n')
+    (proc / 'net/route').write_text('SYNTH_SECRET header\nSYNTH_SECRET private data invalid\n')
+    diagnostic = guard.linux_isolation_diagnostic()
+    assert 'SYNTH_SECRET' not in diagnostic and '/private/path' not in diagnostic
+    row = json.loads(diagnostic)
+    assert row['status_error'] == {'type': 'ValueError', 'errno': None}
+    assert row['ipv4_error'] == {'type': 'ValueError', 'errno': None}
+    assert row['interfaces']['other_count'] == 1
+
+
+def test_failed_nnp_attestation_cannot_fall_back_to_elevation(guard, isolated, monkeypatch):
+    _proc, sysfs = isolated
+    (sysfs / 'flags').write_text('0x9')
+    def forbidden(*args):
+        raise AssertionError('privileged runner selection reached under NoNewPrivs')
+    monkeypatch.setattr(guard.os, 'access', forbidden)
+    with pytest.raises(ValueError, match='inherited isolation attestation failed') as error:
+        guard.linux_command(['synthetic'])
+    row = json.loads(str(error.value).split(': ', 1)[1])
+    assert row['no_new_privs'] == 1 and row['interfaces']['loopback_flags'] == 9
+    assert row['failed_predicates'] == ['lo_down_loopback']
+
+
+def test_diagnostic_io_errors_have_only_type_and_errno(guard, isolated):
+    proc, _sysfs = isolated
+    (proc / 'net/ipv6_route').unlink()
+    row = json.loads(guard.linux_isolation_diagnostic())
+    assert row['ipv6_error'] == {'type': 'FileNotFoundError', 'errno': 2}
+    assert str(proc) not in json.dumps(row)
