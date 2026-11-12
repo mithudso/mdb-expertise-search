@@ -148,7 +148,7 @@ bytes are unchanged or received another 15-pass review.
 | `mdbx/mql/server.py` | `c629f1b3f93a139cb616e8a1dd25a5a26c57f16e1d2990d3c427ad4e3c9460fe` |
 | `mdbx/providers.py` | `983f6a5f0c84f95f988d90041e30308c8dd62362c507f7e0382ef7d1816fa6dc` |
 | `mdbx/recipes.py` | `40696e553ae5349ad5eb3d60a6e507c319e4bcf579fecb5b8e0d3332ed509d6f` |
-| `mdbx/safety.py` | `85c319f3ebf61e8e40efed52cd6e9ca3e601fccc03c0c6c1812f21bba078bb5d` |
+| `mdbx/safety.py` | `979da24bfab67fb2d1d94fd2a0641e90188ff464dee032665d47adce15d6983c` |
 | `mdbx/search.py` | `c095ba1b7e7f08607edafbb133943c038b951a0f6fe04ee1218fa23fb4ab6450` |
 | `mdbx/tui.py` | `aae16a04218f93fe06d78169ac03e0695a917e761462ef2b4d47fdf6e07ecf9d` |
 | `mdbx/unicode61.py` | `8d60c69daf24ee08c4b07ed977cb8b550655f57453cdb27f996a2924175f1342` |
@@ -188,7 +188,7 @@ bytes are unchanged or received another 15-pass review.
 | `tests/test_embed_backend.py` | `7b07e3aebe19480cdee73241c0b6032523f7b138622f0814100439b8cfca18a1` |
 | `tests/test_generator_preservation.py` | `2cfe76bffaf5d2efaad03d21886986f6536bd429b071975e65cc723a8785cc9e` |
 | `tests/test_iteration2_python.py` | `e608373823883551c62d5a880087a4adf68ff75dd88d3c5a36d136d529cbbbae` |
-| `tests/test_iteration2_scripts.py` | `ca259e2e17209e3ee90645cfa61c2831a815829faa47e3ed7e23d4ef56fc69b3` |
+| `tests/test_iteration2_scripts.py` | `6e8d32d08d70fc043e4716ac92fac83bc4c97c58c627303a92b8b34fdfaf51ea` |
 | `tests/test_js_lint_parity.py` | `4bb05c5816f7c9de719ba919ceda67edfc938eb6dfaddabf41d40d39bd5291f5` |
 | `tests/test_js_parity.py` | `ee125b806663e7b78a8c4af12125e27c5577c0ff61592013eb6af8973188b0cc` |
 | `tests/test_lint_preservation.py` | `9d69d31317560afb7fe45be7c66631ff539285c345b84ca5039656dc36f6aae1` |
