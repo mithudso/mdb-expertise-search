@@ -189,60 +189,135 @@ def test_signal_status_143_is_preserved(guard, monkeypatch, platform):
     assert guard.main() == 143
 
 
-def _blocked():
+def _blocked(phase='python-parent', *, collect=False):
     import errno
+    import json
+    import socket
+    import sys
 
-    for address in [('192.0.2.1', 9), ('127.0.0.1', 9),
-                    ('2001:db8::1', 9), ('::1', 9)]:
-        family = socket.AF_INET6 if ':' in address[0] else socket.AF_INET
+    assert phase in {'python-parent', 'python-child'}
+    labels = {errno.ENETUNREACH: 'ENETUNREACH', errno.EAFNOSUPPORT: 'EAFNOSUPPORT',
+              errno.EADDRNOTAVAIL: 'EADDRNOTAVAIL', errno.ECONNREFUSED: 'ECONNREFUSED',
+              errno.ETIMEDOUT: 'ETIMEDOUT'}
+    observations = []
+    def emit(case, operation, outcome, number=None):
+        row = {'phase': phase, 'case': case, 'operation': operation, 'outcome': outcome,
+               'family': 'ipv4' if case.endswith('v4') else 'ipv6',
+               'errno': number if type(number) is int else None,
+               'code': labels.get(number, 'UNKNOWN') if outcome != 'attempt' else None}
+        print('MDBX_EGRESS ' + json.dumps(row, sort_keys=True), file=sys.stderr, flush=True)
+        return row
+    cases = [('doc-v4', '192.0.2.1', socket.AF_INET),
+             ('loopback-v4', '127.0.0.1', socket.AF_INET),
+             ('doc-v6', '2001:db8::1', socket.AF_INET6),
+             ('loopback-v6', '::1', socket.AF_INET6)]
+    for case, host, family in cases:
+        operation = 'socket'
+        emit(case, operation, 'attempt')
         try:
             with socket.socket(family, socket.SOCK_STREAM) as handle:
                 handle.settimeout(1)
-                handle.connect(address)
+                operation = 'connect'
+                emit(case, operation, 'attempt')
+                handle.connect((host, 9))
         except OSError as error:
-            assert error.errno in {errno.ENETUNREACH, errno.EAFNOSUPPORT}, error
+            outcome = 'timeout' if isinstance(error, TimeoutError) else 'error'
+            row = emit(case, operation, outcome, error.errno)
+            assert outcome == 'error', 'kernel denial not proven'
+            assert collect or error.errno in {
+                errno.ENETUNREACH, errno.EAFNOSUPPORT}, 'kernel denial not proven'
+            observations.append(row)
+        except Exception:  # noqa: BLE001 - diagnostics never include arbitrary error text
+            emit(case, operation, 'error')
+            raise AssertionError('unknown proof failure') from None
         else:
-            raise AssertionError('synthetic documentation-address connection escaped')
+            emit(case, operation, 'connected')
+            raise AssertionError('connection escaped')
+    return observations
 
 
 def _egress_probe():
     import inspect
 
-    probe = ('import errno,json,os,socket,subprocess,sys\n' +
-             inspect.getsource(_blocked) + '\n_blocked()\n')
-    child = 'import socket\n' + inspect.getsource(_blocked) + '\n_blocked()\n'
+    body = inspect.getsource(_blocked)
+    child = body + "\ntry:\n records = _blocked('python-child', collect=True)\n if any(row['code'] not in {'ENETUNREACH','EAFNOSUPPORT'} for row in records): raise SystemExit(1)\nexcept AssertionError:\n raise SystemExit(1)\n"
     node = """
 const net = require('node:net'), cp = require('node:child_process');
-async function blocked(host, family) {
+const phase = 'node-child';
+let rejected = false;
+const codes = new Set(['ENETUNREACH','EAFNOSUPPORT','EADDRNOTAVAIL','ECONNREFUSED','ETIMEDOUT','ENOENT']);
+function emit(id, operation, outcome, error) {
+  const row = {phase, case:id, operation, outcome, family:id === null ? null : id.endsWith('v4') ? 'ipv4' : 'ipv6',
+    errno:Number.isInteger(error?.errno) ? error.errno : null,
+    code:outcome === 'attempt' ? null : codes.has(error?.code) ? error.code : 'UNKNOWN'};
+  console.error('MDBX_EGRESS ' + JSON.stringify(row));
+}
+async function blocked(id, host, family) {
   await new Promise((resolve, reject) => {
-    const socket = net.createConnection({host, port: 9, family});
+    emit(id, 'socket', 'attempt');
+    let socket;
+    try { socket = net.createConnection({host, port:9, family}); }
+    catch (error) { emit(id, 'socket', 'error', error);
+      if (!['ENETUNREACH', 'EAFNOSUPPORT'].includes(error.code)) rejected = true;
+      resolve(); return; }
+    emit(id, 'connect', 'attempt');
     socket.setTimeout(1000);
-    socket.on('connect', () => { socket.destroy(); reject(Error('escaped')); });
-    socket.on('timeout', () => { socket.destroy(); reject(Error('unexpected timeout')); });
+    socket.on('connect', () => { emit(id,'connect','connected'); socket.destroy(); reject(Error('escaped')); });
+    socket.on('timeout', () => { emit(id,'connect','timeout'); socket.destroy(); reject(Error('timeout')); });
     socket.on('error', error => {
-      if (['ENETUNREACH', 'EAFNOSUPPORT'].includes(error.code)) resolve();
-      else reject(error);
+      emit(id, 'connect', 'error', error);
+      if (!['ENETUNREACH', 'EAFNOSUPPORT'].includes(error.code)) rejected = true;
+      resolve(); // Collect all denied cases; the strict verdict follows the complete chain.
     });
   });
 }
 (async () => {
-  await blocked('192.0.2.1', 4);
-  await blocked('127.0.0.1', 4);
-  await blocked('2001:db8::1', 6);
-  await blocked('::1', 6);
-  const child = cp.spawnSync(process.argv[1], ['-c', process.argv[2]], {stdio: 'inherit'});
-  if (child.status !== 0) throw Error('Python descendant failed');
-})().catch(error => { console.error(error.code || error.message); process.exitCode=1; });
+  for (const [id,host,family] of [['doc-v4','192.0.2.1',4],['loopback-v4','127.0.0.1',4],
+    ['doc-v6','2001:db8::1',6],['loopback-v6','::1',6]]) await blocked(id,host,family);
+  emit(null, 'spawn', 'attempt');
+  const child = cp.spawnSync(process.argv[1], ['-c', process.argv[2]], {stdio:'inherit'});
+  if (child.status !== 0) { emit(null,'spawn','error',child.error); rejected = true; }
+  if (rejected) process.exitCode=1;
+})().catch(() => { process.exitCode=1; });
 """
-    probe += ('subprocess.run(["node","-e",' + repr(node) + ',sys.executable,' + repr(child) +
-              '],check=True,timeout=10)\n'
-              'print(json.dumps({"home":os.environ["HOME"],"root":os.environ["MDBX_TEST_ISOLATION_ROOT"]}))\n')
+    probe = ("import json,os,subprocess,sys\n" + body +
+             "\ntry:\n parent_records = _blocked('python-parent', collect=True)\nexcept AssertionError:\n raise SystemExit(1)\n")
+    probe += """def spawn_event(outcome, number=None):
+ print('MDBX_EGRESS '+json.dumps({'phase':'python-parent','case':None,'operation':'spawn','outcome':outcome,'family':None,'errno':number,'code':'UNKNOWN' if outcome!='attempt' else None}),file=sys.stderr,flush=True)
+spawn_event('attempt')
+try:
+ result=subprocess.run(["node","-e",NODE,sys.executable,CHILD],check=False,timeout=10)
+except subprocess.TimeoutExpired:
+ spawn_event('timeout');raise SystemExit(1)
+except OSError as error:
+ spawn_event('error',error.errno);raise SystemExit(1)
+if result.returncode or any(row['code'] not in {'ENETUNREACH','EAFNOSUPPORT'} for row in parent_records):
+ spawn_event('error');raise SystemExit(1)
+print(json.dumps({"home":os.environ["HOME"],"root":os.environ["MDBX_TEST_ISOLATION_ROOT"]}))
+""".replace('NODE', repr(node)).replace('CHILD', repr(child))
     return probe, node
 
 
 def test_egress_probe_compiles_before_linux_execution():
     probe, _node = _egress_probe()
     compile(probe, '<Linux descendant proof>', 'exec')
+    result = subprocess.run(['node', '--check'], input=_node, text=True,
+                            capture_output=True, check=False, timeout=10)
+    assert result.returncode == 0, result.stderr
+
+
+def _kernel_metadata(proc=Path('/proc')):
+    release = os.uname().release
+    safe_release = release if len(release) <= 128 and all(
+        ch.isascii() and (ch.isalnum() or ch in '._+-') for ch in release) else 'unrecognized'
+    row = {'kernel_release': safe_release, 'ipv6_address_read': False}
+    try:
+        entries = (proc / 'net/if_inet6').read_bytes().splitlines()
+        row.update(ipv6_address_read=True,
+                   ipv6_address_entries=sum(bool(entry.strip()) for entry in entries))
+    except OSError as error:
+        row['ipv6_address_error'] = {'type': type(error).__name__, 'errno': error.errno}
+    return row
 
 
 @pytest.mark.skipif(not sys.platform.startswith('linux'), reason='actual Linux namespace proof')
@@ -259,10 +334,18 @@ def test_actual_linux_guard_is_inherited_by_python_and_node(tmp_path):
     result = subprocess.run([sys.executable, str(ROOT / 'scripts/offline_test.py'), '--',
                              sys.executable, '-c', probe],
                             capture_output=True, text=True, check=False, timeout=30)
-    assert result.returncode == 0, result.stderr[-8000:]
+    assert result.returncode == 0, json.dumps(_kernel_metadata(), sort_keys=True) + '\n' + result.stderr[-8000:]
     row = json.loads(result.stdout)
     assert Path(row['home']) == Path(row['root']) / 'home'
     assert not Path(row['root']).exists()
+    observations = [json.loads(line.removeprefix('MDBX_EGRESS '))
+                    for line in result.stderr.splitlines() if line.startswith('MDBX_EGRESS ')]
+    errors = [event for event in observations if event['outcome'] == 'error'
+              and event['case'] is not None]
+    expected = {(phase, case) for phase in ['python-parent', 'node-child', 'python-child']
+                for case in ['doc-v4', 'loopback-v4', 'doc-v6', 'loopback-v6']}
+    assert len(errors) == 12 and {(event['phase'], event['case']) for event in errors} == expected
+    assert all(event['code'] in {'ENETUNREACH', 'EAFNOSUPPORT'} for event in errors)
 
 
 def test_failed_attestation_metadata_is_numeric_and_excludes_private_text(guard, isolated, monkeypatch):
@@ -350,3 +433,71 @@ def test_generic_pytest_socket_mock_is_not_accepted_as_egress_proof(monkeypatch)
     with pytest.raises(AssertionError):
         _blocked()
     assert calls == [('192.0.2.1', 9)]
+
+
+@pytest.mark.parametrize('outcome', ['none', 'refused', 'unavailable', 'timeout', 'connected'])
+def test_case_diagnostics_keep_unproven_denials_rejected(monkeypatch, capsys, outcome):
+    import errno
+
+    class FakeSocket:
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            pass
+        def settimeout(self, value):
+            pass
+        def connect(self, address):
+            if outcome == 'none':
+                raise OSError('SYNTH_SECRET/private/path')
+            if outcome == 'refused':
+                raise OSError(errno.ECONNREFUSED, 'SYNTH_SECRET/private/path')
+            if outcome == 'unavailable':
+                raise OSError(errno.EADDRNOTAVAIL, 'SYNTH_SECRET/private/path')
+            if outcome == 'timeout':
+                raise TimeoutError('SYNTH_SECRET/private/path')
+    monkeypatch.setattr(socket, 'socket', lambda *a, **kw: FakeSocket())
+    with pytest.raises(AssertionError):
+        _blocked('python-child')
+    output = capsys.readouterr().err
+    assert 'SYNTH_SECRET' not in output and '/private/path' not in output
+    events = [json.loads(line.removeprefix('MDBX_EGRESS ')) for line in output.splitlines()]
+    assert all(event['phase'] == 'python-child' and event['case'] == 'doc-v4' for event in events)
+    assert events[-1]['operation'] == 'connect'
+    assert events[-1]['outcome'] == ('timeout' if outcome == 'timeout' else
+                                     'connected' if outcome == 'connected' else 'error')
+
+
+def test_diagnostic_collection_records_all_denials_without_accepting_them(monkeypatch, capsys):
+    import errno
+
+    class FakeSocket:
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            pass
+        def settimeout(self, value):
+            pass
+        def connect(self, address):
+            raise OSError(errno.EADDRNOTAVAIL, 'SYNTH_SECRET/private/path')
+    monkeypatch.setattr(socket, 'socket', lambda *a, **kw: FakeSocket())
+    records = _blocked('python-parent', collect=True)
+    assert [row['case'] for row in records] == ['doc-v4', 'loopback-v4', 'doc-v6', 'loopback-v6']
+    assert len(records) == 4 and all(row['code'] == 'EADDRNOTAVAIL' for row in records)
+    assert not all(row['code'] in {'ENETUNREACH', 'EAFNOSUPPORT'} for row in records)
+    assert 'SYNTH_SECRET' not in capsys.readouterr().err
+
+
+def test_kernel_metadata_counts_only_and_preserves_unreadable_state(tmp_path, monkeypatch):
+    monkeypatch.setattr(os, 'uname', lambda: SimpleNamespace(release='6.12.0-synthetic'))
+    (tmp_path / 'net').mkdir()
+    source = tmp_path / 'net/if_inet6'
+    source.write_text('SYNTHETIC_PRIVATE_ADDRESS\n\nsecond synthetic address\n')
+    row = _kernel_metadata(tmp_path)
+    assert row == {'kernel_release': '6.12.0-synthetic', 'ipv6_address_read': True,
+                   'ipv6_address_entries': 2}
+    assert 'PRIVATE' not in json.dumps(row)
+    source.unlink()
+    row = _kernel_metadata(tmp_path)
+    assert row['ipv6_address_read'] is False and 'ipv6_address_entries' not in row
+    assert row['ipv6_address_error'] == {'type': 'FileNotFoundError', 'errno': 2}
+    assert str(tmp_path) not in json.dumps(row)
