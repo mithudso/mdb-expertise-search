@@ -28,11 +28,40 @@ export function pickSelection(frameResults) {
 /** Clamp to MAX_INPUT. Returns { text, truncated }. */
 export function clamp(text) {
   const t = String(text ?? "");
-  return t.length > MAX_INPUT ? { text: t.slice(0, MAX_INPUT), truncated: true } : { text: t, truncated: false };
+  return { text: truncateText(t, MAX_INPUT), truncated: t.length > MAX_INPUT };
+}
+
+/** Bound UTF-16 length without splitting code points; replace isolated surrogates for URL encoding. */
+export function truncateText(text, limit) {
+  let out = "";
+  for (const c of String(text ?? "")) {
+    if (out.length + c.length > limit) break;
+    out += c.length === 1 && /[\uD800-\uDFFF]/.test(c) ? "\uFFFD" : c;
+  }
+  return out;
 }
 
 /** A context-menu handoff is usable when present, non-blank and recent. */
 export function freshPending(pending, now = Date.now()) {
   return Boolean(pending && typeof pending.text === "string" && pending.text.trim() &&
-    typeof pending.ts === "number" && now - pending.ts < PENDING_TTL_MS);
+    Number.isFinite(pending.ts) && now - pending.ts >= 0 && now - pending.ts < PENDING_TTL_MS);
+}
+
+export const HANDOFF_PREFIX = "selectionHandoff:";
+
+/** Each destination owns one key. Remove only expired abandoned handoffs. */
+export async function saveHandoff(session, payload, now = Date.now(), id = crypto.randomUUID()) {
+  const entries = await session.get(null);
+  const stale = Object.keys(entries).filter(k => k.startsWith(HANDOFF_PREFIX) && !freshPending(entries[k], now));
+  if (stale.length) await session.remove(stale);
+  await session.set({ [HANDOFF_PREFIX + id]: { ...payload, text: clamp(payload.text).text, ts: now } });
+  return id;
+}
+
+export async function consumeHandoff(session, id, now = Date.now()) {
+  if (!id || !/^[a-zA-Z0-9-]{1,100}$/.test(id)) return null;
+  const key = HANDOFF_PREFIX + id;
+  const pending = (await session.get(key))[key];
+  if (pending) await session.remove(key);
+  return freshPending(pending, now) ? pending : null;
 }

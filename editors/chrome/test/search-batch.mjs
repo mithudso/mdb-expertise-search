@@ -17,9 +17,14 @@ let raw = "";
 process.stdin.setEncoding("utf8");
 for await (const c of process.stdin) raw += c;
 const pairs = (hits) => hits.map((h) => [h.id, h.score]);
-const out = JSON.parse(raw).map(({ q, qvec, ...opts }) => ({
-  keyword: pairs(idx.keyword(q, 10, opts)),
-  semantic: qvec ? pairs(idx.semanticVec(qvec, 10, opts)) : [],
-  hybrid: pairs(idx.hybridVec(q, qvec ?? null, 10, opts)),
-}));
+const out = JSON.parse(raw).map(({ q, qvec, ...opts }, position) => {
+  if (qvec !== undefined && (!Array.isArray(qvec) || !qvec.every(Number.isFinite) || (idx.vectors && qvec.length !== idx.dim))) {
+    throw new Error(`batch position ${position}: qvec must contain finite numbers with the index dimension`);
+  }
+  return {
+    keyword: pairs(idx.keyword(q, 10, opts)),
+    semantic: qvec ? pairs(idx.semanticVec(qvec, 10, opts)) : [],
+    hybrid: pairs(idx.hybridVec(q, qvec ?? null, 10, opts)),
+  };
+});
 process.stdout.write(JSON.stringify(out));

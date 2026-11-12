@@ -59,7 +59,7 @@ def main() -> int:
     a = ap.parse_args()
     want = dict(zip((JSON_OUT, JS_OUT), render(), strict=True))
     stale = [p.name for p, text in want.items()
-             if not p.is_file() or p.read_text(encoding="utf-8") != text]
+             if not p.is_file() or p.read_bytes() != text.encode("utf-8")]
     if a.check:
         if stale:
             print("stale (run scripts/gen_chrome_operators.py):", ", ".join(stale))

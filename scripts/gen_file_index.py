@@ -2,9 +2,13 @@
 """Regenerate docs/high_signal_file_index.json and docs/codebase-overview.md (code only, not corpus)."""
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+from mdbx.safety import atomic_write
+
 PURPOSE = {
     "mdbx/corpus.py": "Corpus discovery, classification, chunking",
     "mdbx/embed.py": "Embedding client: Ollama or in-process ONNX",
@@ -44,18 +48,18 @@ PURPOSE = {
 
 def tracked() -> list[str]:
     # tracked plus untracked-but-not-ignored, so new files are indexed before they are committed
-    out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard"], cwd=ROOT, capture_output=True, text=True, check=True).stdout
-    return [p for p in out.splitlines() if not p.startswith("corpus/")]
+    out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=ROOT, capture_output=True, text=True, check=True, timeout=10).stdout
+    return [p for p in sorted(set(out.split("\0"))) if p and not p.startswith("corpus/")]
 
 
 def main() -> None:
     files = tracked()
     entries = [
-        {"path": p, "purpose": PURPOSE.get(p, "docs/config"), "bytes": (ROOT / p).stat().st_size}
+        {"path": p, "purpose": PURPOSE.get(p, "docs/config"), "bytes": None if p in ("docs/high_signal_file_index.json", "docs/codebase-overview.md") else (ROOT / p).stat().st_size}
         for p in files
-        if (ROOT / p).is_file()
+        if (ROOT / p).is_file() and not (ROOT / p).is_symlink()
     ]
-    (ROOT / "docs" / "high_signal_file_index.json").write_text(json.dumps(entries, indent=2) + "\n")
+    atomic_write(ROOT / "docs" / "high_signal_file_index.json", (json.dumps(entries, indent=2) + "\n").encode("utf-8"))
     by_dir: dict[str, list[str]] = {}
     for e in entries:
         by_dir.setdefault(str(Path(e["path"]).parent), []).append(e["path"])
@@ -65,7 +69,7 @@ def main() -> None:
         for p in sorted(by_dir[d]):
             lines.append(f"- `{p}` — {PURPOSE.get(p, 'docs/config')}")
         lines.append("")
-    (ROOT / "docs" / "codebase-overview.md").write_text("\n".join(lines))
+    atomic_write(ROOT / "docs" / "codebase-overview.md", "\n".join(lines).encode("utf-8"))
 
 
 if __name__ == "__main__":

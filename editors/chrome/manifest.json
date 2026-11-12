@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "MongoDB Expertise",
   "short_name": "MongoDB Expertise",
-  "version": "0.3.0",
+  "version": "0.7.1",
   "description": "Search MongoDB expertise, recipes and docs; optimize and lint highlighted queries or slow-query log lines. Runs locally.",
   "minimum_chrome_version": "116",
   "icons": {
@@ -23,12 +23,25 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "permissions": ["activeTab", "scripting", "contextMenus", "storage", "alarms"],
-  "optional_host_permissions": ["http://127.0.0.1/*", "http://localhost/*"],
-  "omnibox": { "keyword": "mdb" },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "contextMenus",
+    "storage",
+    "alarms"
+  ],
+  "optional_host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "omnibox": {
+    "keyword": "mdb"
+  },
   "commands": {
     "_execute_action": {
-      "suggested_key": { "default": "Alt+Shift+O" },
+      "suggested_key": {
+        "default": "Alt+Shift+O"
+      },
       "description": "Optimize the highlighted query"
     }
   },

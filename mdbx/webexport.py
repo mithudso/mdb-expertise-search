@@ -22,9 +22,12 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
+import shutil
 import sqlite3
 import subprocess
+import tempfile
 import time
 import unicodedata
 from array import array
@@ -34,6 +37,7 @@ from pathlib import Path
 from . import __version__
 from . import corpus as corpusmod
 from . import recipes as recipemod
+from .safety import open_confined
 
 #: column weights of bm25(chunks_fts, 4.0, 1.0, 2.0) in search.py (heading, text, source)
 W_HEADING, W_TEXT, W_SOURCE = 4, 1, 2
@@ -64,7 +68,7 @@ def raw_tokens(text: str) -> list[str]:
     """Lower-cased, diacritic-free tokens, split like FTS5 unicode61 with '_' as a token character."""
     out, cur = [], []
     for c in text:
-        if _is_token_char(c):
+        if _is_token_char(c) or (cur and unicodedata.category(c).startswith("M")):
             cur.append(c)
         elif cur:
             out.append(_fold("".join(cur)))
@@ -222,7 +226,7 @@ def tracked_files(corpus_root: Path) -> set[str] | None:
     """Corpus-relative paths tracked by git, or None when the corpus is not inside a git checkout."""
     try:
         r = subprocess.run(["git", "-C", str(corpus_root), "ls-files", "-z", "--", "."],
-                           check=True, capture_output=True, text=True)
+                           check=True, capture_output=True, text=True, timeout=10)
     except (OSError, subprocess.CalledProcessError):
         return None
     return {p for p in r.stdout.split("\0") if p}
@@ -241,6 +245,36 @@ class ExportResult:
 
 def export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bool = True,
            allow_untracked: bool = False) -> ExportResult:
+    """Prepare a complete generation before replacing the previous output."""
+    out = Path(out)
+    if out.is_symlink() or (out.exists() and not out.is_dir()):
+        raise ValueError("export output must be a regular directory")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    candidate = Path(tempfile.mkdtemp(prefix='.mdbx-export-', dir=out.parent))
+    backup = Path(tempfile.mkdtemp(prefix='.mdbx-previous-', dir=out.parent))
+    backup.rmdir()
+    try:
+        result = _export(corpus_root, candidate, db=db, vectors=vectors, allow_untracked=allow_untracked)
+        if out.is_symlink():
+            raise ValueError("export output changed during preparation")
+        had_output = out.exists()
+        if had_output:
+            os.replace(out, backup)
+        try:
+            os.replace(candidate, out)
+        except BaseException:
+            if had_output:
+                os.replace(backup, out)
+            raise
+        result.out = out
+        return result
+    finally:
+        shutil.rmtree(candidate, ignore_errors=True)
+        shutil.rmtree(backup, ignore_errors=True)
+
+
+def _export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: bool = True,
+           allow_untracked: bool = False) -> ExportResult:
     """Write the web index for ``corpus_root`` into ``out``. Vectors come from ``db`` (by text digest)."""
     corpus_root = corpus_root.resolve()
     tracked = None if allow_untracked else tracked_files(corpus_root)
@@ -255,7 +289,8 @@ def export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: boo
             continue
         files.add(rel)
         kind, source = corpusmod.classify(Path(rel))
-        text = path.read_text(encoding="utf-8", errors="replace")
+        with open_confined(corpus_root, rel) as stream:
+            text = stream.read()
         for head, line, body in corpusmod.chunk_text(text):
             rows.append((rel, source, kind, head or path.stem, line, body))
     if not files and skipped:
@@ -295,11 +330,19 @@ def export(corpus_root: Path, out: Path, *, db: Path | None = None, vectors: boo
     if vectors and db is not None and Path(db).is_file():
         con = sqlite3.connect(db)
         try:
+            con.execute("BEGIN")
             meta = dict(con.execute("SELECT key, value FROM meta").fetchall())
             model = meta.get("embed_model")
             stored = {d: (dm, v) for d, dm, v in con.execute("SELECT digest, dim, vec FROM vectors")}
+            if con.execute("SELECT 1 FROM sqlite_master WHERE name='invalid_vectors'").fetchone():
+                invalid = {r[0] for r in con.execute("SELECT digest FROM invalid_vectors")}
+                stored = {d: value for d, value in stored.items() if d not in invalid}
         finally:
             con.close()
+        relevant = {corpusmod.Chunk(*r).digest for r in rows}
+        stored = {d: (dm, v) for d, (dm, v) in stored.items() if d in relevant and dm > 0 and len(v) == dm * 4 and all(math.isfinite(x) for x in array("f", v)) and any(array("f", v))}
+        if not model:
+            stored = {}
         dims = [dm for dm, _v in stored.values()]
         dim = max(set(dims), key=dims.count) if dims else 0
         for r in rows:
@@ -457,7 +500,7 @@ class WebIndex:
         return []
 
     def keyword(self, query: str, limit: int = 10, *, kind: str | None = None, source: str | None = None) -> list[WebHit]:
-        ranked = self.keyword_ranked(query, kind, source)[: limit * 3]
+        ranked = self.keyword_ranked(query, kind, source)
         return dedupe([self.hit(i, s, "keyword") for i, s in ranked], limit)
 
     def semantic_vec(self, qv: list[float], limit: int = 10, *, kind: str | None = None,
@@ -465,6 +508,8 @@ class WebIndex:
         """Rank by dot product of the int8 vectors with an L2-normalised query vector."""
         if not self.vectors:
             return []
+        if len(qv) != self.dim or not all(math.isfinite(x) for x in qv):
+            raise ValueError("query vector dimension or values invalid")
         dim = self.dim
         best: dict[int, float] = {}
         mv = memoryview(self.vectors).cast("b")
@@ -474,7 +519,7 @@ class WebIndex:
                 continue
             base = vi * dim
             best[i] = sum(mv[base + k] * qv[k] for k in range(dim)) / 127.0
-        ranked = sorted(best.items(), key=lambda x: (-x[1], x[0]))[: limit * 3]
+        ranked = sorted(best.items(), key=lambda x: (-x[1], x[0]))
         return dedupe([self.hit(i, s, "semantic") for i, s in ranked], limit)
 
     def hybrid_vec(self, query: str, qv: list[float] | None, limit: int = 10, *, kind: str | None = None,
@@ -500,10 +545,14 @@ class WebIndex:
 
 
 def dedupe(hits: list[WebHit], limit: int) -> list[WebHit]:
+    if not isinstance(limit, int) or isinstance(limit, bool) or limit < 0:
+        raise ValueError("limit must be nonnegative")
+    if not limit:
+        return []
     seen: set[str] = set()
     out = []
     for h in hits:
-        key = " ".join(h.text.split())[:300]
+        key = " ".join(h.text.split())
         if key in seen:
             continue
         seen.add(key)

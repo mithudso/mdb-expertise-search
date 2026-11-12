@@ -26,8 +26,9 @@ FIXTURES = ROOT / "tests" / "fixtures" / "optimizer"
 
 
 def golden(text: str, name: str) -> str:
-    data = {"apply": to_dict(optimize(text)), "read_only": to_dict(optimize(text, apply=False)),
-            "report": format_report(optimize(text), name)}
+    applied = optimize(text)
+    data = {"apply": to_dict(applied), "read_only": to_dict(optimize(text, apply=False)),
+            "report": format_report(applied, name)}
     return json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
 
 
@@ -36,6 +37,9 @@ def main() -> int:
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--print", action="store_true", dest="show")
     a = ap.parse_args()
+    if not FIXTURES.is_dir() or not list(FIXTURES.glob("*.txt")):
+        print("missing or empty optimizer fixtures")
+        return 1
     stale = []
     for src in sorted(FIXTURES.glob("*.txt")):
         text = src.read_text(encoding="utf-8")

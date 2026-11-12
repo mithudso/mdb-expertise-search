@@ -1,6 +1,8 @@
 """mcp_server — `mdbx mcp`: expose the corpus search and MQL lint as MCP tools over stdio."""
 from __future__ import annotations
 
+from bisect import bisect_right
+
 from mcp.server.mcpserver import MCPServer
 
 from . import __version__
@@ -11,6 +13,7 @@ from . import search as srch
 from .mql import operators as ops
 from .mql.analyze import analyze
 from .mql.optimize import optimize, to_dict
+from .safety import read_range
 
 MAX_SHOW_CHARS = 20_000
 
@@ -52,15 +55,18 @@ def mdb_search(
             hits = srch.search(con, query, mode, max(1, min(limit, 25)), kind=kind, source=source, notes=notes)
         except embedmod.EmbedError as exc:
             if mode == "semantic":
-                raise ValueError(f"{srch.fallback_note(exc)}; start Ollama or use mode=keyword") from exc
+                raise ValueError(f"{srch.fallback_note(exc)}; start Ollama or use mode=keyword") from None
             notes.append(srch.fallback_note(exc))
             hits = srch.keyword(con, query, max(1, min(limit, 25)), kind=kind, source=source)
+        warning = srch.fallback_note(embedmod.EmbedError("semantic backend unavailable")) if notes else None
+        if warning and not hits:
+            raise ValueError(warning)
         # The fallback is signalled on every hit so an agent cannot miss it: `via` names the reason and
         # `degraded` is set. (Keyword-only mode is not degraded; it is what was asked for.)
         return [
             {"path": h.path, "line": h.line, "heading": h.heading, "source": h.source, "kind": h.kind,
              "score": round(h.score, 4), "via": h.via, "text": h.text,
-             **({"degraded": True, "warning": notes[0]} if notes else {})}
+             **({"degraded": True, "warning": warning} if warning else {})}
             for h in hits
         ]
     finally:
@@ -71,14 +77,8 @@ def mdb_search(
 def mdb_show(path: str, start_line: int = 1, end_line: int | None = None) -> str:
     """Read lines of a corpus file (path as returned by mdb_search). Output is capped at 20k characters."""
     root = idx.default_corpus().resolve()
-    p = (root / path).resolve()
-    if root not in p.parents or not p.is_file():
-        raise ValueError(f"not a corpus file: {path}")
-    lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
-    start = max(start_line, 1)
-    end = end_line if end_line is not None else min(len(lines), start + 199)
-    body = "\n".join(lines[start - 1 : end])
-    return body[:MAX_SHOW_CHARS]
+    end = end_line if end_line is not None else start_line + 199
+    return read_range(root, path, start_line, end, max_chars=MAX_SHOW_CHARS)
 
 
 @server.tool()
@@ -120,9 +120,10 @@ def mql_lint(text: str) -> list[dict]:
     """Lint MQL (mongosh-style queries, pipelines, updates). Returns diagnostics with 1-based line/column."""
     res = analyze(text)
     out = []
+    starts = [0] + [i + 1 for i, char in enumerate(text) if char == "\n"]
     for d in res.diagnostics:
-        line = text.count("\n", 0, d.start) + 1
-        col = d.start - (text.rfind("\n", 0, d.start) + 1) + 1
+        line = bisect_right(starts, d.start)
+        col = d.start - starts[line - 1] + 1
         out.append({"line": line, "column": col, "severity": d.severity, "code": d.code,
                     "message": d.message, "suggestion": d.fix})
     return out
@@ -137,8 +138,9 @@ def mql_optimize(text: str, apply: bool = True) -> dict:
     and log measurements become P9 evidence findings (COLLSCAN, docsExamined vs nreturned, spills, ...).
     Returns findings (severity blocking/high/medium/low, optimizer pass P2-P9, corpus `ref` to read with
     mdb_show), ESR-ordered index recommendations (recommend-only), and, when apply is true, the text
-    with result-preserving rewrites applied (same-field $or -> $in, degenerate range -> equality,
-    $match hoisting, countDocuments({}) -> estimatedDocumentCount). Confirm with explain() on a cluster.
+    with supported result-preserving rewrites applied (same-field $or -> $in and dependency-safe
+    $match hoisting). Equal-range and approximate-count alternatives remain advisory because their
+    semantics can differ. Confirm with explain() on a cluster.
     """
     return to_dict(optimize(text, apply=apply))
 

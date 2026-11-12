@@ -4,95 +4,113 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import unicodedata
+from bisect import bisect_right
+from contextlib import closing
 from pathlib import Path
 
 from . import __version__
 from . import embed as embedmod
 from . import index as idx
 from . import search as srch
+from .safety import atomic_write, open_confined
+
+
+def _terminal(text: str) -> str:
+    return "".join(f"\\x{ord(ch):02x}" if unicodedata.category(ch) in {"Cc", "Cf"} and ch not in "\n\t" else ch
+                   for ch in text)
+
+
+def _passage_limit(raw: str) -> int:
+    value = int(raw)
+    if not 1 <= value <= 10000:
+        raise argparse.ArgumentTypeError("passage limit must be between 1 and 10000")
+    return value
 
 
 def _say(msg: str) -> None:
-    print(msg, file=sys.stderr, flush=True)
+    print(_terminal(msg), file=sys.stderr, flush=True)
 
 
 def cmd_index(args) -> int:
-    con = idx.connect(args.db)
-    root = Path(args.corpus) if args.corpus else idx.default_corpus()
-    if not root.is_dir():
-        _say(f"corpus not found: {root}")
-        return 2
-    if not args.skip_keyword:
-        idx.build_keyword(con, root, _say)
-    if not args.skip_semantic:
-        try:
-            idx.build_semantic(con, _say)
-        except embedmod.EmbedError as exc:
-            _say(f"semantic index skipped: {exc}")
-            _say("keyword index is ready; start Ollama and re-run `mdbx index` to add vectors")
-            return 1
-    return 0
+    with closing(idx.connect(args.db)) as con:
+        root = Path(args.corpus) if args.corpus else idx.default_corpus()
+        if not root.is_dir():
+            _say(f"corpus not found: {root}")
+            return 2
+        if not args.skip_keyword:
+            idx.build_keyword(con, root, _say)
+        if not args.skip_semantic:
+            try:
+                idx.build_semantic(con, _say)
+            except embedmod.EmbedError as exc:
+                _say(f"semantic index skipped: {srch.fallback_note(exc)}")
+                _say("keyword index is ready; start Ollama and re-run `mdbx index` to add vectors")
+                return 1
+        return 0
 
 
 def _print_hit(i: int, h: srch.Hit, full: bool) -> None:
-    print(f"{i:>2}. [{h.kind}] {h.source}  ·  {h.heading}")
-    print(f"    {h.location}   score={h.score:.4f} via={h.via}")
+    print(_terminal(f"{i:>2}. [{h.kind}] {h.source}  ·  {h.heading}"))
+    print(_terminal(f"    {h.location}   score={h.score:.4f} via={h.via}"))
     body = h.text if full else (h.snippet or " ".join(h.text.split())[:240])
-    print("    " + body.replace("\n", "\n    "))
+    print("    " + _terminal(body).replace("\n", "\n    "))
     print()
 
 
 def cmd_search(args) -> int:
-    con = idx.connect(args.db)
-    if not idx.stats(con)["chunks"]:
-        _say("index is empty — run `mdbx index` first")
-        return 2
-    notes: list[str] = []
-    try:
-        hits = srch.search(con, " ".join(args.query), args.mode, args.limit,
-                           kind=args.kind, source=args.source, notes=notes)
-    except embedmod.EmbedError as exc:
-        _say(f"error: {exc}")
-        _say("semantic search needs the embedder: start Ollama (`ollama serve`, model nomic-embed-text) "
-             "or use `-m keyword`")
-        return 1
-    for n in notes:
-        _say(f"warning: {n}")
-    if args.json:
-        print(json.dumps([{**h.__dict__, "location": h.location} for h in hits], indent=2))
+    with closing(idx.connect(args.db)) as con:
+        if not idx.stats(con)["chunks"]:
+            _say("index is empty — run `mdbx index` first")
+            return 2
+        notes: list[str] = []
+        try:
+            hits = srch.search(con, " ".join(args.query), args.mode, args.limit,
+                               kind=args.kind, source=args.source, notes=notes)
+        except embedmod.EmbedError as exc:
+            _say(f"error: {srch.fallback_note(exc)}")
+            _say("semantic search needs the embedder: start Ollama (`ollama serve`, model nomic-embed-text) "
+                 "or use `-m keyword`")
+            return 1
+        for _ in notes:
+            _say(f"warning: {srch.fallback_note(embedmod.EmbedError('semantic backend unavailable'))}")
+        if args.json:
+            print(json.dumps([{**h.__dict__, "location": h.location} for h in hits], indent=2))
+            return 0
+        if not hits:
+            _say("no results")
+            return 1
+        for i, h in enumerate(hits, 1):
+            _print_hit(i, h, args.full)
         return 0
-    if not hits:
-        _say("no results")
-        return 1
-    for i, h in enumerate(hits, 1):
-        _print_hit(i, h, args.full)
-    return 0
 
 
 def cmd_show(args) -> int:
     root = Path(args.corpus) if args.corpus else idx.default_corpus()
-    p = (root / args.path).resolve()
-    if root.resolve() not in p.parents or not p.is_file():
+    try:
+        with open_confined(root, args.path) as stream:
+            while chunk := stream.read(65536):
+                sys.stdout.write(chunk)
+    except (ValueError, UnicodeError):
         _say(f"not a corpus file: {args.path}")
         return 2
-    sys.stdout.write(p.read_text(encoding="utf-8", errors="replace"))
     return 0
 
 
 def cmd_stats(args) -> int:
-    con = idx.connect(args.db)
-    s = idx.stats(con)
-    if args.json:
-        print(json.dumps(s, indent=2))
+    with closing(idx.connect(args.db)) as con:
+        s = idx.stats(con)
+        if args.json:
+            print(json.dumps(s, indent=2))
+            return 0
+        for k, v in s.items():
+            print(f"{k:>12}: {v}")
+        if args.sources:
+            for r in con.execute(
+                "SELECT source, kind, COUNT(*) n FROM chunks GROUP BY source, kind ORDER BY n DESC"
+            ):
+                print(f"  {r['n']:>6}  {r['kind']:<7} {r['source']}")
         return 0
-    for k, v in s.items():
-        print(f"{k:>12}: {v}")
-    if args.sources:
-        for r in con.execute(
-            "SELECT source, kind, COUNT(*) n FROM chunks GROUP BY source, kind ORDER BY n DESC"
-        ):
-            print(f"  {r['n']:>6}  {r['kind']:<7} {r['source']}")
-    return 0
 
 
 def cmd_tui(args) -> int:
@@ -170,9 +188,10 @@ def cmd_lint(args) -> int:
 
     text = sys.stdin.read() if args.file == "-" else Path(args.file).read_text(encoding="utf-8")
     res = analyze(text)
+    starts = [0] + [i + 1 for i, char in enumerate(text) if char == "\n"]
     for d in res.diagnostics:
-        line = text.count("\n", 0, d.start) + 1
-        col = d.start - (text.rfind("\n", 0, d.start) + 1) + 1
+        line = bisect_right(starts, d.start)
+        col = d.start - starts[line - 1] + 1
         print(f"{args.file}:{line}:{col}: {d.severity}: {d.message} [{d.code}]")
     return 1 if any(d.severity == "error" for d in res.diagnostics) else 0
 
@@ -195,14 +214,19 @@ def cmd_export_web(args) -> int:
 def cmd_optimize(args) -> int:
     from .mql.optimize import format_report, optimize, to_dict
 
-    text = sys.stdin.read() if args.file == "-" else Path(args.file).read_text(encoding="utf-8")
+    before = None if args.file == "-" else Path(args.file).read_bytes()
+    text = sys.stdin.read() if before is None else before.decode("utf-8")
     rep = optimize(text, apply=not args.read_only)
     if args.json:
         print(json.dumps(to_dict(rep), indent=2))
     else:
         print(format_report(rep, args.file))
     if args.write and rep.changed and args.file != "-":
-        Path(args.file).write_text(rep.text, encoding="utf-8")
+        try:
+            atomic_write(Path(args.file), rep.text.encode("utf-8"), expected=before)
+        except (OSError, ValueError) as exc:
+            _say(f"cannot write rewritten queries: {exc}")
+            return 2
         print(f"\nwrote rewritten queries to {args.file}", file=sys.stderr)
     return 1 if any(f.severity in {"blocking", "high"} for f in rep.findings) else 0
 
@@ -227,41 +251,41 @@ def cmd_ask(args) -> int:
     import ai_auth
 
     question = " ".join(args.question)
-    con = idx.connect(args.db)
-    hits = []
-    if idx.stats(con)["chunks"]:
-        notes: list[str] = []
+    with closing(idx.connect(args.db)) as con:
+        hits = []
+        if idx.stats(con)["chunks"]:
+            notes: list[str] = []
+            try:
+                hits = srch.search(con, question, args.mode, args.limit, kind=args.kind, source=args.source,
+                                   notes=notes)
+            except embedmod.EmbedError as exc:
+                notes.append(srch.fallback_note(exc))
+                hits = srch.search(con, question, "keyword", args.limit, kind=args.kind, source=args.source)
+            for n in notes:
+                _say(f"warning: {n}")
+        else:
+            _say("index is empty — answering without corpus passages (run `mdbx index`)")
         try:
-            hits = srch.search(con, question, args.mode, args.limit, kind=args.kind, source=args.source,
-                               notes=notes)
-        except embedmod.EmbedError as exc:
-            notes.append(srch.fallback_note(exc))
-            hits = srch.search(con, question, "keyword", args.limit, kind=args.kind, source=args.source)
-        for n in notes:
-            _say(f"warning: {n}")
-    else:
-        _say("index is empty — answering without corpus passages (run `mdbx index`)")
-    try:
-        result, sources = providers.ask(question, hits, provider=args.provider, model=args.model,
-                                        timeout=args.timeout, allow_apple=not args.no_apple)
-    except ai_auth.NotConfigured as exc:
-        _say(str(exc))
-        _say("configure a provider with `mdbx auth set-key <provider>` or `mdbx auth login <provider>`")
-        return 1
-    except ai_auth.AIAuthError as exc:
-        _say(f"error: {exc}")
-        return 1
-    if args.json:
-        print(json.dumps({"question": question, "answer": result.text, "provider": result.provider,
-                          "kind": result.kind, "model": result.model, "sources": sources}, indent=2))
+            result, sources = providers.ask(question, hits, provider=args.provider, model=args.model,
+                                            timeout=args.timeout, allow_apple=not args.no_apple)
+        except ai_auth.NotConfigured as exc:
+            _say(str(exc))
+            _say("configure a provider with `mdbx auth set-key <provider>` or `mdbx auth login <provider>`")
+            return 1
+        except ai_auth.AIAuthError as exc:
+            _say(f"error: {exc}")
+            return 1
+        if args.json:
+            print(json.dumps({"question": question, "answer": result.text, "provider": result.provider,
+                              "kind": result.kind, "model": result.model, "sources": sources}, indent=2))
+            return 0
+        print(result.text.rstrip())
+        if sources:
+            print("\nSources:")
+            for s in sources:
+                print(f"  [{s['n']}] {s['source']} · {s['heading']}  ({s['location']})")
+        _say(f"[{result.provider} · {result.kind} · {result.model}]")
         return 0
-    print(result.text.rstrip())
-    if sources:
-        print("\nSources:")
-        for s in sources:
-            print(f"  [{s['n']}] {s['source']} · {s['heading']}  ({s['location']})")
-    _say(f"[{result.provider} · {result.kind} · {result.model}]")
-    return 0
 
 
 def cmd_glean(args) -> int:
@@ -311,7 +335,7 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("search", aliases=["s"], help="search the corpus")
     s.add_argument("query", nargs="+")
     s.add_argument("-m", "--mode", choices=["hybrid", "keyword", "semantic"], default="hybrid")
-    s.add_argument("-n", "--limit", type=int, default=8)
+    s.add_argument("-n", "--limit", type=_passage_limit, default=8)
     s.add_argument("-k", "--kind", choices=["skill", "llms", "memory", "recipe"])
     s.add_argument("-s", "--source", help="substring of skill / llms set name")
     s.add_argument("--full", action="store_true", help="print whole chunks")
@@ -378,7 +402,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("-p", "--provider", default="auto", help="claude | codex | antigravity | apple | auto")
     s.add_argument("--model")
     s.add_argument("-m", "--mode", choices=["hybrid", "keyword", "semantic"], default="hybrid")
-    s.add_argument("-n", "--limit", type=int, default=6, help="corpus passages to include")
+    s.add_argument("-n", "--limit", type=_passage_limit, default=6, help="corpus passages to include (1-10000)")
     s.add_argument("-k", "--kind", choices=["skill", "llms", "memory", "recipe"])
     s.add_argument("-s", "--source", help="substring of skill / llms set name")
     s.add_argument("--no-apple", action="store_true", help="do not fall back to Apple Intelligence")

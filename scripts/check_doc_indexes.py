@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-missing = [e["path"] for e in json.loads((ROOT / "docs" / "high_signal_file_index.json").read_text())
+missing = [e["path"] for e in json.loads((ROOT / "docs" / "high_signal_file_index.json").read_text(encoding="utf-8"))
            if not (ROOT / e["path"]).exists()]
 if missing:
     print("dead index entries:", *missing, sep="\n  ")

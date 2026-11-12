@@ -442,7 +442,6 @@
   {
    "arg": "number",
    "cats": [
-    "expr",
     "qtop"
    ],
    "doc": "Matches a random fraction (0-1) of documents.",
@@ -597,7 +596,7 @@
    "name": "$elemMatch"
   },
   {
-   "arg": "int",
+   "arg": "nonneg",
    "cats": [
     "expr",
     "query"

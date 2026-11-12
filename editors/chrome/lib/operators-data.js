@@ -443,7 +443,6 @@ export default {
   {
    "arg": "number",
    "cats": [
-    "expr",
     "qtop"
    ],
    "doc": "Matches a random fraction (0-1) of documents.",
@@ -598,7 +597,7 @@ export default {
    "name": "$elemMatch"
   },
   {
-   "arg": "int",
+   "arg": "nonneg",
    "cats": [
     "expr",
     "query"

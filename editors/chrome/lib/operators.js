@@ -20,7 +20,7 @@ export class Operator {
   }
 }
 
-/** name -> Operator, in table order (the order drives suggest() tie-breaking like Python's dict). */
+/** name -> Operator, in table order; suggest() breaks ties by descending Unicode code-point order. */
 export const OPERATORS = new Map(DATA.operators.map((o) => [o.name, new Operator(o.name, o.cats, o.arg, o.doc)]));
 export const VARIABLES = DATA.variables;
 export const FIRST_STAGE_ONLY = new Set(DATA.sets.FIRST_STAGE_ONLY);
@@ -112,7 +112,16 @@ function quickMatches(a, b) {
 }
 
 /** difflib.get_close_matches(word, possibilities, n, cutoff). */
+function compareCodePoints(a, b) {
+  const left = Array.from(a, c => c.codePointAt(0)), right = Array.from(b, c => c.codePointAt(0));
+  for (let i = 0; i < Math.min(left.length, right.length); i++) {
+    if (left[i] !== right[i]) return left[i] - right[i];
+  }
+  return left.length - right.length;
+}
+
 export function getCloseMatches(word, possibilities, n = 3, cutoff = 0.72) {
+  if (!(n > 0) || !Number.isInteger(n) || !(cutoff >= 0 && cutoff <= 1)) throw new RangeError("invalid matching options");
   const [b2j, b] = chainB(word);
   const result = [];
   for (const x of possibilities) {
@@ -125,7 +134,7 @@ export function getCloseMatches(word, possibilities, n = 3, cutoff = 0.72) {
     if (score >= cutoff) result.push([score, x]);
   }
   // heapq.nlargest(n, result): tuple order, descending (score, then string).
-  result.sort((p, q) => (q[0] - p[0]) || (p[1] < q[1] ? 1 : p[1] > q[1] ? -1 : 0));
+  result.sort((p, q) => (q[0] - p[0]) || compareCodePoints(q[1], p[1]));
   return result.slice(0, n).map((r) => r[1]);
 }
 

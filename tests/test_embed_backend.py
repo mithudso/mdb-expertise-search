@@ -26,10 +26,19 @@ def test_backend_env_values(monkeypatch):
 
 def test_auto_falls_back_to_onnx_when_ollama_is_down(monkeypatch):
     monkeypatch.setenv("MDBX_EMBED_BACKEND", "auto")
-    monkeypatch.setattr(embed, "_embed_ollama", _ollama_down)
+    calls = []
+    expected = np.array([[1.0, 0.0], [0.0, -1.0]], dtype=np.float32)
+    def down(texts, *_args, **_kwargs):
+        calls.append(("ollama", list(texts)))
+        raise embed.EmbedError("cannot reach Ollama")
+    def onnx(texts, **kwargs):
+        calls.append(("onnx", list(texts)))
+        return expected
+    monkeypatch.setattr(embed, "_embed_ollama", down)
     monkeypatch.setattr(embed_onnx, "available", lambda: True)
-    monkeypatch.setattr(embed_onnx, "embed", _fake_onnx)
-    assert embed.embed(["a", "b"]).shape == (2, 2)
+    monkeypatch.setattr(embed_onnx, "embed", onnx)
+    np.testing.assert_array_equal(embed.embed(["a", "b"]), expected)
+    assert calls == [("ollama", ["a", "b"]), ("onnx", ["a", "b"])]
 
 
 def test_auto_without_onnx_files_keeps_the_ollama_error(monkeypatch):
@@ -44,7 +53,7 @@ def test_ollama_mode_never_uses_onnx(monkeypatch):
     monkeypatch.setenv("MDBX_EMBED_BACKEND", "ollama")
     monkeypatch.setattr(embed, "_embed_ollama", _ollama_down)
     monkeypatch.setattr(embed_onnx, "available", lambda: True)
-    monkeypatch.setattr(embed_onnx, "embed", _fake_onnx)
+    monkeypatch.setattr(embed_onnx, "embed", lambda *a, **k: pytest.fail("ONNX must not be called"))
     with pytest.raises(embed.EmbedError):
         embed.embed(["a"])
 

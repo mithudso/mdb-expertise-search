@@ -121,7 +121,7 @@ def test_cli_export_web(repo, tmp_path, capsys):
 
 def test_search_goldens_are_current():
     r = subprocess.run([sys.executable, str(ROOT / "scripts" / "gen_search_golden.py"), "--check"],
-                       check=False, capture_output=True, text=True, cwd=ROOT)
+                       check=False, capture_output=True, text=True, cwd=ROOT, timeout=30)
     assert r.returncode == 0, r.stdout + r.stderr
 
 

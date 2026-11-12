@@ -72,7 +72,7 @@ $nor|qtop|array+|Matches documents that fail all conditions.
 $comment|qtop|any|Attaches a comment to a query for logs and profiler.
 $expr|qtop|any|Uses aggregation expressions inside a query (can compare fields).
 $jsonSchema|qtop|object|Matches documents that validate against a JSON Schema.
-$sampleRate|qtop,expr|number|Matches a random fraction (0-1) of documents.
+$sampleRate|qtop|number|Matches a random fraction (0-1) of documents.
 $text|qtop|object|Text search on a text index; needs $search; must be the first $match in a pipeline.
 $where|qtop|any|Matches using a JavaScript expression (slow; avoid, not allowed in $match).
 # ---- query: field level
@@ -91,7 +91,7 @@ $options|query,sub|string|Regex flags (i, m, x, s) for $regex.
 $mod|query,expr|array2|Modulo: [divisor, remainder] (query) / remainder of division (expression).
 $all|query|array|Matches arrays containing all listed elements.
 $elemMatch|query,proj|object|Matches arrays with an element satisfying all conditions; also a projection operator.
-$size|query,expr|int|Matches arrays of the given length (query) / returns array length (expression).
+$size|query,expr|nonneg|Matches arrays of the given length (query) / returns array length (expression).
 $not|query,expr|any|Inverts an operator expression (query) / boolean NOT (expression).
 $bitsAllClear|query|any|Matches if all given bit positions are 0.
 $bitsAllSet|query|any|Matches if all given bit positions are 1.
@@ -331,6 +331,11 @@ class Operator:
     cats: frozenset[str]
     arg: str
     doc: str
+
+    def arg_for(self, context: str) -> str:
+        """Argument contracts for operators whose syntax depends on their context."""
+        return {("$search", "text"): "string", ("$size", "expr"): "any",
+                ("$count", "accexpr"): "object"}.get((self.name, context), self.arg)
 
     def is_a(self, *cats: str) -> bool:
         return bool(self.cats & set(cats))

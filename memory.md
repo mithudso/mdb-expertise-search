@@ -143,3 +143,8 @@
 ### Next
 - Add `mdbx` MCP server (see `docs/known-issues.md`).
 - Redact private skill files so they can ship publicly.
+
+
+## v0.7.1 — 2026-11-12 maintenance
+
+Hardened paired MQL parsing/normalization/rewrites, local search/cache identity, editor races, file and updater preservation, privacy gates and fixture isolation. Added maintained documentation navigation and code-only CI packaging. Refreshed static indexes and synthetic MQL goldens only. See docs/repo-bootstrap-audit-2026-11-12.md for exact coverage, validation and retained limits.

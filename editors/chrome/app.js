@@ -1,4 +1,5 @@
 // app — the full-page MongoDB Expertise app: search, documents, recipes, optimizer, lint, operators, about.
+import { consumeHandoff, truncateText } from "./lib/capture.js";
 import { analyze, diagnosticsToDicts, symbolsToDicts } from "./lib/analyze.js";
 import { OPERATORS } from "./lib/operators.js";
 import { optimize } from "./lib/optimize.js";
@@ -24,6 +25,12 @@ db.orders.updateOne({ _id: 1 }, { $set: { qty: 1 }, note: "x" })`;
 const state = { q: "", kind: null, source: null, mode: "keyword", hits: [], selected: -1, lastSearchHash: "#search",
   settings: { semantic: false, host: "http://127.0.0.1:11434" } };
 let index = null;
+let indexProblem = "";
+let searchGeneration = 0;
+let routeGeneration = 0;
+let documentGeneration = 0;
+let settingsGeneration = 0;
+let settingsWrites = Promise.resolve();
 
 // ---------------------------------------------------------------- routing
 
@@ -34,7 +41,7 @@ function parseHash() {
 }
 
 function go(tab, params = {}) {
-  const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== ""));
+  const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== null && v !== undefined));
   const hash = `#${tab}${[...qs].length ? "?" + qs : ""}`;
   if (location.hash === hash) route();
   else location.hash = hash;
@@ -43,11 +50,16 @@ function go(tab, params = {}) {
 function showTab(tab) {
   for (const t of TABS) $(`tab-${t}`).hidden = t !== tab;
   for (const a of document.querySelectorAll(".tabs a")) {
-    a.setAttribute("aria-selected", String(a.dataset.tab === (tab === "doc" ? "search" : tab)));
+    const active = a.dataset.tab === (tab === "doc" ? "search" : tab);
+    a.setAttribute("aria-selected", String(active));
+    a.setAttribute("tabindex", active ? "0" : "-1");
   }
 }
 
 async function route() {
+  const generation = ++routeGeneration;
+  ++searchGeneration;
+  ++documentGeneration;
   const { tab, params } = parseHash();
   showTab(tab);
   if (tab === "search") {
@@ -58,9 +70,15 @@ async function route() {
     $("q").value = q;
     $("mode").value = state.mode;
     state.lastSearchHash = location.hash || "#search";
-    await renderFacets();
-    if (q.trim()) await runSearch(q);
-    else $("q").focus();
+    if (!q.trim()) {
+      await runSearch(q);
+      $("q").focus();
+      await renderFacets(generation);
+      return;
+    }
+    await renderFacets(generation);
+    if (generation !== routeGeneration) return;
+    await runSearch(q);
   } else if (tab === "doc") {
     await showDocument(params.get("path"), Number(params.get("line") || 0), params.get("q") || "");
   } else if (tab === "recipes") {
@@ -79,29 +97,21 @@ async function route() {
 
 async function ensureIndex() {
   if (index) return index;
-  $("search-status").textContent = "Loading the MongoDB expertise index…";
-  const t0 = performance.now();
   try {
     index = await getIndex();
-  } catch (err) {
-    index = null;
-    $("search-status").textContent = `Could not load the index: ${err.message}`;
-    $("search-status").classList.add("error");
+    indexProblem = index ? "" : "This build has no search data.";
+  } catch {
+    indexProblem = "Could not load the packaged index. Try again.";
     return null;
   }
-  if (!index) {
-    $("search-status").textContent = "This build has no search data. Rebuild it with python scripts/package_chrome_extension.py.";
-    $("search-status").classList.add("error");
-    return null;
-  }
-  $("search-status").textContent = `${index.n.toLocaleString()} passages from ${index.meta.files} files loaded in ${Math.round(performance.now() - t0)} ms.`;
   return index;
 }
 
 // ---------------------------------------------------------------- search
 
-async function renderFacets() {
+async function renderFacets(generation = routeGeneration) {
   const idx = await ensureIndex();
+  if (generation !== routeGeneration) return;
   const kinds = $("kinds");
   kinds.replaceChildren(...KINDS.map(([k, label]) => h("button", { type: "button", "aria-pressed": String(state.kind === k),
     onclick: () => go("search", { q: $("q").value, kind: k, mode: state.mode }) }, label)));
@@ -115,14 +125,16 @@ async function renderFacets() {
   }, h("span", { class: "name" }, s.source), h("span", { class: "n" }, s.chunks.toLocaleString()))));
 }
 
-async function queryVector(q) {
-  if (state.mode === "keyword") return { qv: null, note: "" };
-  if (!state.settings.semantic) {
+async function queryVector(q, idx, mode, settings) {
+  if (mode === "keyword") return { qv: null, note: "" };
+  if (!settings.semantic) {
     return { qv: null, note: " · semantic search is off (About → Semantic and hybrid search); showing keyword results" };
   }
   try {
-    const model = (index.meta.vectors && index.meta.vectors.model) || "nomic-embed-text";
-    return { qv: await embedQuery(q, { host: state.settings.host, model }), note: "" };
+    const model = (idx.meta.vectors && idx.meta.vectors.model) || "nomic-embed-text";
+    const qv = await embedQuery(q, { host: settings.host, model });
+    if (!Array.isArray(qv) || qv.length !== idx.dim || !qv.every(Number.isFinite)) throw new EmbedError("the query embedding does not match the index");
+    return { qv, note: "" };
   } catch (err) {
     const msg = err instanceof EmbedError ? err.message : String(err);
     return { qv: null, note: ` · ${msg}; showing keyword results` };
@@ -130,22 +142,33 @@ async function queryVector(q) {
 }
 
 async function runSearch(q) {
-  const idx = await ensureIndex();
-  if (!idx) return;
+  const generation = ++searchGeneration;
+  const settings = { ...state.settings };
+  const opts = { kind: state.kind, source: state.source };
+  let mode = state.mode;
   state.q = q;
+  state.hits = [];
+  state.selected = -1;
+  $("results").replaceChildren();
+  $("detail").replaceChildren();
   const status = $("search-status");
   status.classList.remove("error");
-  if (!idx.vectors && state.mode !== "keyword") state.mode = "keyword";
-  const { qv, note } = await queryVector(q);
-  const opts = { kind: state.kind, source: state.source };
+  if (!q.trim()) { status.textContent = ""; return; }
+  status.textContent = "Searching the MongoDB expertise index…";
+  const idx = await ensureIndex();
+  if (generation !== searchGeneration) return;
+  if (!idx) { status.textContent = indexProblem; status.classList.add("error"); return; }
+  if (!idx.vectors && mode !== "keyword") mode = "keyword";
+  const { qv, note } = await queryVector(q, idx, mode, settings);
+  if (generation !== searchGeneration) return;
   const t0 = performance.now();
   let hits;
-  if (state.mode === "semantic" && qv) hits = idx.semanticVec(qv, 40, opts);
-  else if (state.mode === "hybrid" && qv) hits = idx.hybridVec(q, qv, 40, opts);
+  if (mode === "semantic" && qv) hits = idx.semanticVec(qv, 40, opts);
+  else if (mode === "hybrid" && qv) hits = idx.hybridVec(q, qv, 40, opts);
   else hits = idx.keyword(q, 40, opts);
   const ms = Math.round(performance.now() - t0);
   state.hits = hits;
-  const scope = [state.kind && `kind ${state.kind}`, state.source && `area ${state.source}`].filter(Boolean).join(", ");
+  const scope = [opts.kind && `kind ${opts.kind}`, opts.source && `area ${opts.source}`].filter(Boolean).join(", ");
   status.textContent = `${hits.length} result${hits.length === 1 ? "" : "s"} in ${ms} ms${scope ? ` · ${scope}` : ""}${note}`;
   $("results").replaceChildren(...hits.map((hit, i) => h("li", { "data-i": i, onclick: () => select(i) },
     h("div", { class: "meta" }, h("span", { class: `chip k-${hit.kind}` }, hit.kind), h("span", { class: "src" }, hit.source),
@@ -178,8 +201,13 @@ function select(i) {
 // ---------------------------------------------------------------- documents
 
 async function showDocument(path, line, q) {
-  const idx = await ensureIndex();
+  const generation = ++documentGeneration;
+  $("doc-title").textContent = "";
+  $("doc-actions").replaceChildren();
   const docEl = $("doc");
+  docEl.replaceChildren();
+  const idx = await ensureIndex();
+  if (generation !== documentGeneration) return;
   if (!idx || !path) {
     docEl.replaceChildren(h("p", { class: "status error" }, "Document not found."));
     return;
@@ -280,17 +308,20 @@ function renderOperators() {
 // ---------------------------------------------------------------- about + settings
 
 async function loadSettings() {
+  const generation = settingsGeneration;
   try {
     const { settings } = await chrome.storage.local.get("settings");
+    if (generation !== settingsGeneration) return;
     if (settings) Object.assign(state.settings, settings);
   } catch { /* defaults */ }
   if (state.settings.semantic) state.mode = "hybrid";
 }
 
-async function saveSettings() {
-  try {
-    await chrome.storage.local.set({ settings: state.settings });
-  } catch { /* ignore */ }
+function saveSettings() {
+  const settings = { ...state.settings };
+  const write = settingsWrites.then(() => chrome.storage.local.set({ settings }));
+  settingsWrites = write.catch(() => {});
+  return write;
 }
 
 function originPattern(host) {
@@ -329,6 +360,7 @@ function showOllamaHelp(show) {
 }
 
 async function enableOllama() {
+  const generation = ++settingsGeneration;
   const host = $("ollama-host").value.trim().replace(/\/$/, "");
   const status = $("ollama-status");
   status.classList.remove("error");
@@ -341,23 +373,29 @@ async function enableOllama() {
     return;
   }
   const granted = await chrome.permissions.request({ origins: [pattern] }).catch(() => false);
+  if (generation !== settingsGeneration) return;
   if (!granted) {
     status.textContent = "Permission to reach that address was not granted.";
     status.classList.add("error");
     return;
   }
   const idx = await ensureIndex();
+  if (generation !== settingsGeneration) return;
   const model = (idx && idx.meta.vectors && idx.meta.vectors.model) || "nomic-embed-text";
   status.textContent = `Testing ${host} with ${model}…`;
   try {
     const v = await embedQuery("ping", { host, model });
+    if (generation !== settingsGeneration) return;
+    if (!Array.isArray(v) || !v.every(Number.isFinite)) throw new EmbedError("the model returned an invalid embedding");
     if (idx && idx.dim && v.length !== idx.dim) throw new EmbedError(`the model returned ${v.length} dimensions but the index has ${idx.dim}; pull ${model}`);
     state.settings = { semantic: true, host };
     await saveSettings();
+    if (generation !== settingsGeneration) return;
     state.mode = "hybrid";
     showOllamaHelp(false);
     status.textContent = `On — ${host} answered with ${v.length}-dimension ${model} embeddings. Hybrid is now the default search mode.`;
   } catch (err) {
+    if (generation !== settingsGeneration) return;
     status.textContent = err.message;
     status.classList.add("error");
     showOllamaHelp(/403/.test(err.message));
@@ -365,20 +403,29 @@ async function enableOllama() {
 }
 
 async function disableOllama() {
-  state.settings.semantic = false;
+  const generation = ++settingsGeneration;
+  ++searchGeneration;
+  state.settings = { ...state.settings, semantic: false };
   state.mode = "keyword";
-  await saveSettings();
-  $("ollama-status").textContent = "Off — keyword search only.";
+  const status = $("ollama-status");
+  status.classList.remove("error");
+  status.textContent = "Off — keyword search only.";
+  try {
+    await saveSettings();
+  } catch {
+    if (generation !== settingsGeneration) return;
+    status.textContent = "Off for this session. Saving failed; the previous setting may return after reopening.";
+    status.classList.add("error");
+  }
 }
 
 // ---------------------------------------------------------------- startup
 
 async function consumePending() {
   try {
-    const { appPending } = await chrome.storage.session.get("appPending");
+    const { params } = parseHash();
+    const appPending = await consumeHandoff(chrome.storage.session, params.get("handoff"));
     if (!appPending) return false;
-    await chrome.storage.session.remove("appPending");
-    if (Date.now() - appPending.ts > 60_000 || !appPending.text) return false;
     if (appPending.tab === "lint") {
       $("lint-input").value = appPending.text;
       go("lint");
@@ -388,7 +435,7 @@ async function consumePending() {
       go("optimize");
       runOptimize();
     } else {
-      go("search", { q: appPending.text.slice(0, 500) });
+      go("search", { q: truncateText(appPending.text, 500) });
     }
     return true;
   } catch {
@@ -397,6 +444,18 @@ async function consumePending() {
 }
 
 function wire() {
+  const tabs = [...document.querySelectorAll(".tabs a")];
+  tabs.forEach((tab, i) => tab.addEventListener("keydown", e => {
+    let next;
+    if (e.key === "ArrowRight") next = (i + 1) % tabs.length;
+    else if (e.key === "ArrowLeft") next = (i + tabs.length - 1) % tabs.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = tabs.length - 1;
+    else return;
+    e.preventDefault();
+    tabs[next].focus();
+    go(tabs[next].dataset.tab);
+  }));
   $("search-form").addEventListener("submit", (e) => {
     e.preventDefault();
     go("search", { q: $("q").value, kind: state.kind, source: state.source, mode: $("mode").value });
@@ -420,7 +479,7 @@ function wire() {
     if ($("tab-search").hidden) return;
     const typing = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName);
     if (e.key === "/" && !typing) { e.preventDefault(); $("q").focus(); $("q").select(); }
-    else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && state.hits.length && document.activeElement !== $("facet-filter")) {
+    else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && state.hits.length && document.activeElement !== $("facet-filter") && (!typing || document.activeElement === $("q"))) {
       e.preventDefault();
       select(Math.max(0, Math.min(state.hits.length - 1, state.selected + (e.key === "ArrowDown" ? 1 : -1))));
     } else if (e.key === "Enter" && !typing && state.hits[state.selected]) {

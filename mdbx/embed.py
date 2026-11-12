@@ -14,7 +14,16 @@ import logging
 import os
 
 import numpy as np
-from ollama_client import OllamaClient, OllamaPool, OllamaUnavailable
+
+try:
+    from ollama_client import OllamaClient, OllamaPool, OllamaUnavailable
+except ModuleNotFoundError as exc:
+    if exc.name != 'ollama_client':
+        raise
+    OllamaClient = OllamaPool = None
+
+    class OllamaUnavailable(RuntimeError):
+        pass
 
 from . import embed_onnx
 
@@ -39,6 +48,8 @@ def model() -> str:
 
 def _client(timeout: float, retries: int) -> OllamaClient:
     # MDBX_OLLAMA_HOST wins; otherwise the library reads OLLAMA_URLS / OLLAMA_HOST / OLLAMA_URL.
+    if OllamaClient is None:
+        raise OllamaUnavailable("install the optional ollama extra")
     spec = os.environ.get("MDBX_OLLAMA_HOST") or None
     return OllamaClient(OllamaPool(spec, timeout=timeout, retries=retries), embed_model=model())
 
@@ -55,9 +66,9 @@ def _embed_onnx(texts: list[str], prefix: str) -> np.ndarray:
     if model() != DEFAULT_MODEL:
         raise EmbedError(f"the onnx backend only serves {DEFAULT_MODEL}, not {model()}")
     try:
-        return embed_onnx.embed(texts, prefix=prefix)
-    except embed_onnx.OnnxUnavailable as exc:
-        raise EmbedError(str(exc)) from exc
+        return validate_vectors(embed_onnx.embed(texts, prefix=prefix), len(texts))
+    except Exception as exc:
+        raise EmbedError("ONNX model.onnx unavailable or invalid; verify the local model installation") from exc
 
 
 def embed(
@@ -87,16 +98,24 @@ def _embed_ollama(texts: list[str], prefix: str, timeout: float, retries: int) -
     try:
         vecs = _client(timeout, retries).embed([prefix + t for t in texts], model=model())
     except OllamaUnavailable as exc:
-        log.warning("Ollama embed request failed: %s", exc)
-        raise EmbedError(f"cannot reach Ollama at {host()}: {exc}") from exc
+        log.warning("Ollama embed request failed (%s)", type(exc).__name__)
+        raise EmbedError("cannot reach Ollama; verify the local service and optional ollama extra") from exc
+    return validate_vectors(vecs, len(texts))
+
+
+def validate_vectors(vecs, count: int) -> np.ndarray:
+    """Reject malformed provider data before normalizing in overflow-safe float64."""
     try:
-        arr = np.asarray(vecs, dtype=np.float32)
-    except ValueError as exc:  # ragged or non-numeric vectors
-        raise EmbedError(f"malformed embeddings from Ollama: {exc}") from exc
-    if arr.ndim != 2:
-        raise EmbedError(f"malformed embeddings from Ollama: expected 2-D, got shape {arr.shape}")
-    norms = np.linalg.norm(arr, axis=1, keepdims=True)
-    return arr / np.maximum(norms, 1e-12)
+        arr = np.asarray(vecs, dtype=np.float64)
+    except (ValueError, TypeError, OverflowError) as exc:
+        raise EmbedError("malformed embeddings: expected numeric matrix") from exc
+    if arr.ndim != 2 or arr.shape[0] != count or arr.shape[1] == 0 or not np.isfinite(arr).all():
+        raise EmbedError("malformed embeddings: invalid shape or nonfinite values")
+    scale = np.max(np.abs(arr), axis=1, keepdims=True)
+    if np.any(scale == 0):
+        raise EmbedError("malformed embeddings: zero vector")
+    arr = arr / scale
+    return (arr / np.linalg.norm(arr, axis=1, keepdims=True)).astype(np.float32)
 
 
 def embed_query(text: str, *, retries: int = 0) -> np.ndarray:

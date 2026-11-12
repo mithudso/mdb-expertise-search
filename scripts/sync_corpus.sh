@@ -7,16 +7,19 @@ SKILLS="${MDBX_SKILLS_SRC:-$HOME/.claude/skills}"
 LLMS_SRC="${MDBX_LLMS_SRC:-$HOME/dev/skills-explorer/llms}"
 DOCS_SRC="${MDBX_MONGODB_DOCS_LLMS:-$HOME/dev/llms-explorer/outputs/exports/mongodb.com.llms}"
 
+python3 scripts/sync_corpus_sources.py --check-destination "$PWD/corpus"
 mkdir -p corpus/skills corpus/llms
+sync_tree() { python3 scripts/sync_corpus_sources.py -- "$1" "$2"; }
 for d in "$SKILLS"/mongodb-* "$SKILLS"/atlas-diagnostics-expert "$SKILLS"/atlas-vector-search-pii-isolation; do
-  rsync -aL --exclude .DS_Store --exclude .skillfish.json "$d" corpus/skills/
+  [ -d "$d" ] || continue
+  sync_tree "$d" "corpus/skills/$(basename "$d")"
 done
 for n in atlas-cli atlas-triage-workflows diagnostic-tool-design error-codes-and-troubleshooting \
          ftdc-and-log-tooling kb-backed-troubleshooting mongodb-atlas-data-federation \
          mongodb-drivers mongosh-reference ts-diag-and-diagnostic-workflows; do
-  [ -d "$LLMS_SRC/$n.llms" ] && rsync -a --exclude .DS_Store "$LLMS_SRC/$n.llms" corpus/llms/
+  [ ! -d "$LLMS_SRC/$n.llms" ] || sync_tree "$LLMS_SRC/$n.llms" "corpus/llms/$n.llms"
 done
-[ -d "$DOCS_SRC" ] && rsync -a --exclude .DS_Store "$DOCS_SRC" corpus/llms/
+[ ! -d "$DOCS_SRC" ] || sync_tree "$DOCS_SRC" "corpus/llms/$(basename "$DOCS_SRC")"
 # MQL query-optimization fact families (source-anchored extracts of public MongoDB docs). llms-small and
 # llms-full are omitted: small is a subset of facts (duplicate hits), full repeats facts with context.
 CONCEPTS_SRC="${MDBX_CONCEPTS_SRC:-$HOME/.global-ai-hub/llms-concepts}"
@@ -27,14 +30,23 @@ for d in "$CONCEPTS_SRC"/mongodb-*.llms; do
   [ -d "$d" ] || continue
   b="$(basename "$d")"
   case "$b" in mongodb-atlas-data-federation.llms|mongodb-drivers.llms) continue ;; esac
-  mkdir -p "corpus/llms/$b"
-  for f in llms.txt llms-facts.txt llms-vocabulary.txt manifest.json; do
-    [ -f "$d/$f" ] && cp "$d/$f" "corpus/llms/$b/"
-  done
+  python3 scripts/sync_corpus_sources.py --facts-only -- "$d" "corpus/llms/$b"
 done
 # NOTE: the deep MQL optimizer skill ships only as the redacted mongodb-expert reference
 # (corpus/skills/mongodb-expert/references/deep-mongodb-mql-query-optimizer.md); re-redact it by hand
 # after a re-sync — its live SKILL.md cites workload analyses that must not be committed.
-python3 scripts/redact_corpus.py
-python3 scripts/sweep_customers.py
-[ "${MDBX_SKIP_INDEX:-0}" = 1 ] || .venv/bin/mdbx index
+gate_log="$(mktemp)"
+trap 'rm -f "$gate_log"' EXIT
+if ! python3 scripts/redact_corpus.py >"$gate_log" 2>&1; then
+  echo "corpus redaction failed; private diagnostics withheld" >&2
+  exit 1
+fi
+if ! python3 scripts/sync_corpus_sources.py --check-publication "$PWD/corpus" >"$gate_log" 2>&1; then
+  echo "corpus has publication candidates outside the privacy gate types" >&2
+  exit 1
+fi
+if ! python3 scripts/sweep_customers.py >"$gate_log" 2>&1; then
+  echo "corpus privacy sweep failed; private diagnostics withheld" >&2
+  exit 1
+fi
+[ "${MDBX_SKIP_INDEX:-0}" = 1 ] || .venv/bin/mdbx index --corpus "$PWD/corpus"

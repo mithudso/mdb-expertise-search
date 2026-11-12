@@ -102,6 +102,16 @@
     },
     {
       "code": "bad-argument",
+      "column": 33,
+      "end": 829,
+      "fix": null,
+      "line": 17,
+      "message": "A pipeline must be an array of stages, got number.",
+      "severity": "error",
+      "start": 828
+    },
+    {
+      "code": "bad-argument",
       "column": 43,
       "end": 852,
       "fix": null,
@@ -129,6 +139,16 @@
       "message": "$out must be the last stage of the pipeline.",
       "severity": "error",
       "start": 1000
+    },
+    {
+      "code": "bad-argument",
+      "column": 30,
+      "end": 1173,
+      "fix": null,
+      "line": 23,
+      "message": "$unionWith expects a string or an object, got number.",
+      "severity": "error",
+      "start": 1172
     },
     {
       "code": "stage-position",

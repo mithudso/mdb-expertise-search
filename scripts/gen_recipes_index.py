@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -26,8 +27,26 @@ GROUPS = [
 ]
 
 
+
+def cell(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("|", "\\|").replace("\n", " ").replace("\r", " ")
+
+
+def row(recipe) -> str:
+    path = PurePosixPath(str(recipe.path).replace("\\", "/"))
+    if path.is_absolute() or ".." in path.parts:
+        raise ValueError("recipe path must be corpus-relative")
+    label = cell(recipe.name).replace("[", "\\[").replace("]", "\\]").replace("\x60", "&#96;")
+    destination = quote(path.as_posix(), safe="/")
+    return f"| [{label}](../corpus/{destination}) | {cell(', '.join(recipe.applies_to)) or '-'} | {cell(recipe.summary)} |"
+
+
 def main() -> None:
-    items = {r.name: r for r in recipes.load(ROOT / "corpus")}
+    items = {}
+    for recipe in recipes.load(ROOT / "corpus"):
+        if recipe.name in items:
+            raise ValueError(f"duplicate recipe name {recipe.name!r}: {items[recipe.name].path}, {recipe.path}")
+        items[recipe.name] = recipe
     placed: set[str] = set()
     lines = [
         "# Recipes",
@@ -47,14 +66,14 @@ def main() -> None:
         lines += [f"## {title}", "", "| Recipe | Applies to | Summary |", "|---|---|---|"]
         for r in rows:
             placed.add(r.name)
-            lines.append(f"| [`{r.name}`](../corpus/recipes/{r.name}.md) | {', '.join(r.applies_to) or '-'} | {r.summary} |")
+            lines.append(row(r))
         lines.append("")
     extra = [r for n, r in items.items() if n not in placed]
     if extra:
         lines += ["## Other", "", "| Recipe | Applies to | Summary |", "|---|---|---|"]
-        lines += [f"| [`{r.name}`](../corpus/recipes/{r.name}.md) | {', '.join(r.applies_to) or '-'} | {r.summary} |" for r in extra]
+        lines += [row(r) for r in extra]
         lines.append("")
-    (ROOT / "docs" / "RECIPES.md").write_text("\n".join(lines))
+    (ROOT / "docs" / "RECIPES.md").write_text("\n".join(lines), encoding="utf-8")
     print(f"wrote docs/RECIPES.md ({len(items)} recipes)")
 
 

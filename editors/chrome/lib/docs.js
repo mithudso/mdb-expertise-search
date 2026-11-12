@@ -5,6 +5,7 @@ const M = "https://www.mongodb.com/docs/manual/";
 export const ESR_DOC = M + "tutorial/equality-sort-range-rule/";
 
 export const DOCS = {
+  "index-too-wide": M + "reference/limits/#number-of-fields-in-a-compound-index",
   "where": M + "reference/operator/query/where/",
   "unanchored-regex": M + "reference/operator/query/regex/",
   "case-insensitive-regex": M + "reference/operator/query/regex/",
@@ -45,5 +46,5 @@ export const DOCS = {
 };
 
 export function docFor(code) {
-  return DOCS[code] ?? null;
+  return Object.hasOwn(DOCS, code) ? DOCS[code] : null;
 }

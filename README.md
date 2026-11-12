@@ -25,20 +25,11 @@ Everything runs locally. Search works without network access (keyword mode); sem
 ### 1. Optimize a query (static MQL optimizer)
 
 ```console
-$ echo 'db.events.find({ $or: [{ type: "click" }, { type: "view" }], ts: { $gte: 5, $lte: 5 } }).sort({ ts: -1 }).limit(50)' | mdbx optimize -
-MQL optimizer (static audit) — -: 1 query, no open findings; 2 rewrite(s) applied in 1 iteration(s)
-
-Applied rewrites (result-preserving):
-  ✓ [P4 or-to-in] $or of equalities on one field (type) is an $in: one index scan with point bounds instead of a subplan per branch, and sort-compatible.
-  ✓ [P4 degenerate-range] ts: $gte and $lte carry the same value, which is an equality the planner treats as a range (breaks ESR key order and invites near-tied plans).
-
-Recommended indexes (recommend-only — build on non-prod first, check existing indexes):
-  db.events.createIndex({ type: 1, ts: 1 })
-      ESR order: equality type, ts.
-
-Rewritten query:
-db.events.find({ type: { $in: ["click", "view"] }, ts: 5 }).sort({ ts: -1 }).limit(50)
+$ printf '%s\n' 'db.events.find({ $or: [{ type: "click" }, { type: "view" }] })' | mdbx optimize -
 ```
+
+The optimizer can rewrite supported same-field equalities to `$in`. Inspect its
+report and validate recommendations against your schema and `explain()` output.
 
 It audits `find`, `aggregate`, `count`/`countDocuments`, `distinct`, update/delete filters and change-stream
 pipelines, including pipelines stored in `const` variables. It also reads what you paste from a case:
@@ -56,13 +47,13 @@ P8 pagination). Among them:
 - **Medium:** unanchored or case-insensitive regex, `$ne`/`$nin`/`$exists: false`, `$in` ≥ 201 values ahead of
   a sort, rooted `$or` + sort (SERVER-19114), unindexable `$expr`, deep `skip()`/`$skip`, `batchSize(2)`,
   `$match` buried after stages it does not depend on, `$sort` after `$search`, `$sample` not first.
-- **Auto-applied rewrites:** same-field `$or` → `$in`, degenerate range → equality, `$match` hoisting
-  (layout preserved), `countDocuments({})` → `estimatedDocumentCount()`. It loops until nothing changes (cap 3).
+- **Auto-applied rewrites:** supported same-field `$or` → `$in` and conservative `$match` hoisting
+  (layout preserved). Range equality and estimated counts remain recommendations because array and counting semantics can differ. It loops until nothing changes (cap 3).
 - **Index recommendations:** ESR-ordered `createIndex`, one per `$or` branch, `$lookup` foreign-field indexes,
   covered-query hints (`add _id: 0`, `PROJECTION_COVERED`).
 
 Every finding links the corpus page that explains it (`read more: mdbx show …`). Try the bundled example:
-`mdbx optimize examples/slow-queries.mql` (5 queries, 10 findings, 4 rewrites, 5 index recommendations).
+`mdbx optimize examples/slow-queries.mql`. Counts depend on the current rules.
 Flags: `--read-only`, `--write` (rewrite the file in place), `--json`. Exit code 1 when a high or blocking
 finding remains, so it can gate CI. See the walkthrough in [docs/DEMO-mql-optimizer.md](docs/DEMO-mql-optimizer.md).
 
@@ -141,7 +132,7 @@ linter, recipes and operator reference, so a TSE needs nothing but Chrome:
 - Highlight an error message or a question → the popup shows the best corpus passages.
 - Type `mdb <question>` in the address bar, or open the app: Search (same BM25 ranking as `mdbx search`, area
   facets, document view; optional hybrid search with a local Ollama), Recipes, Optimize, Lint, Operators.
-- Runs locally: no network access, `activeTab` only; only committed (redacted) corpus files are packaged.
+- Runs packaged code locally; optional Ollama search uses a permitted local endpoint. Explicit packaging requires a separate privacy review; tracking alone does not establish safe content.
 
 Build it with `python scripts/package_chrome_extension.py`; install and team rollout:
 [editors/chrome/README.md](editors/chrome/README.md). An unpacked install keeps itself current:
@@ -170,9 +161,9 @@ then an OAuth session, then the Glean CLI through `scripts/glean_cli_helper.py`.
 
 ```bash
 git clone https://github.com/mithudso/mdb-expertise-search && cd mdb-expertise-search
-python3 -m venv .venv && .venv/bin/pip install -e '.[all]'     # or pick: tui, lsp, mcp
+python3 -m venv .venv && .venv/bin/pip install -e '.[all]'     # keyword/editor tools; optional private Ollama adapter: .[ollama]
 ollama pull nomic-embed-text            # optional; enables semantic search
-.venv/bin/mdbx index                    # builds data/mdbx.sqlite (keyword + vectors)
+.venv/bin/mdbx index --skip-semantic    # keyword only; semantic generation is a separate explicit action
 .venv/bin/mdbx optimize examples/slow-queries.mql
 .venv/bin/mdbx search "why is my compound index not used for sort"
 .venv/bin/mdbx tui
@@ -244,3 +235,9 @@ Point `MDBX_CORPUS` at any directory of `.md` / `.txt` files to index your own m
 ## License
 
 MIT
+
+
+Documentation starts at [docs/wiki/README.md](docs/wiki/README.md). Offline test
+commands and automation safeguards are in [docs/TESTING.md](docs/TESTING.md).
+The default install does not fetch the private Ollama adapter. Authenticated users
+can install `.[ollama]`; ONNX and AI provider extras are also explicit choices.

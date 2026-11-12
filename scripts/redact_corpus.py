@@ -19,6 +19,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from maintenance_safety import atomic_write, safe_bytes
+
 ROOT = Path(__file__).resolve().parent.parent
 CORPUS = ROOT / "corpus"
 
@@ -39,9 +42,9 @@ GENERIC_REGEX: list[tuple[re.Pattern, str]] = [
     # stop at quotes/brackets so a path inside JSON or a markdown link keeps its closing delimiter
     (re.compile(r"/Users/[A-Za-z0-9._-]+/[^\s\"'`)\]>,]*"), "<local-path>"),
     (re.compile(r"~/\.(?:claude|global-ai-hub)/[^\s\"'`)\]>,]*"), "<local-path>"),
-    (re.compile(r"\s*\(HELP-\d+\)"), ""),
+    (re.compile(r"[ \t]*\(HELP-\d+\)"), ""),
     (re.compile(r"\bHELP-\d+\b"), "<ticket>"),
-    (re.compile(r"\b[\w.-]*\.corp\.mongodb\.com\b"), "internal.example.com"),
+    (re.compile(r"(?<![\w.-])[\w.-]*\.corp\.mongodb\.com\b"), "internal.example.com"),
     (re.compile(r"^<!--[^\n]*skill-to-llms-txt[^\n]*-->\n", re.MULTILINE), ""),
 ]
 
@@ -66,32 +69,55 @@ def redact_text(text: str, rules: list[tuple[str, str]]) -> str:
 
 
 def is_private(rel: str) -> bool:
-    return any(rel == f or rel.startswith(f) for f in PRIVATE_FILES)
+    return any(rel == f.rstrip("/") or (f.endswith("/") and rel.startswith(f)) for f in PRIVATE_FILES)
 
 
 def main() -> int:
+    if CORPUS.is_symlink() or not CORPUS.resolve().is_relative_to(ROOT.resolve()):
+        print("error: corpus copy is outside the repository", file=sys.stderr); return 1
     rules, patch = load_private()
-    changed = 0
+    if any(not isinstance(old, str) or not old or not isinstance(new, str) for old, new in rules):
+        print("error: invalid private redaction rule", file=sys.stderr); return 1
+    replacements = [new for _, new in rules] + [new for _, new in GENERIC_REGEX]
+    if any(old in new for old, _ in rules for new in replacements):
+        print("error: private redaction rules can reintroduce matches", file=sys.stderr); return 1
+    plan = []
+    errors = 0
     for p in sorted(CORPUS.rglob("*")):
-        rel = str(p.relative_to(ROOT))
-        if not p.is_file() or p.suffix not in {".md", ".txt", ".json", ".jsonl", ".yaml"}:
-            continue
-        if is_private(rel) or rel.startswith(("corpus/recipes/", "corpus/llms/mongodb.com.llms/")):
-            continue
-        old = p.read_text(encoding="utf-8", errors="replace")
-        new = redact_text(old, rules)
-        if new != old:
-            p.write_text(new, encoding="utf-8")
-            changed += 1
-            print(f"redacted {rel}", file=sys.stderr)
+        rel = p.relative_to(ROOT).as_posix()
+        if p.is_symlink():
+            print("error: symlink in redaction input", file=sys.stderr); errors += 1; continue
+        if not p.is_file() or p.suffix.lower() not in {".md", ".txt", ".json", ".jsonl", ".yaml", ".yml", ".csv"}: continue
+        if is_private(rel) or rel.startswith(("corpus/recipes/", "corpus/llms/mongodb.com.llms/")): continue
+        try:
+            original = safe_bytes(p, CORPUS); old = original.decode("utf-8"); new = redact_text(old, rules)
+            if redact_text(new, rules) != new: raise ValueError("non-idempotent redaction")
+        except (OSError, UnicodeError, ValueError):
+            print("error: unreadable or non-idempotent redaction input", file=sys.stderr); errors += 1; continue
+        if new != old: plan.append((p, original, new.encode("utf-8")))
+    if errors: return 1
     if patch and not Path(patch).is_file():
-        print(f"WARNING: PATCH {patch} not found; hand edits NOT applied", file=sys.stderr)
-    if patch and Path(patch).is_file():
-        cmd = ["patch", "-p1", "--forward", "-s", "-i", str(patch)]
-        r = subprocess.run(cmd, check=False, cwd=ROOT, capture_output=True, text=True)
-        status = "applied" if r.returncode == 0 else "FAILED/partial"
-        print(f"patch {status}: {r.stdout.strip() or r.stderr.strip()}", file=sys.stderr)
-    print(f"{changed} file(s) changed", file=sys.stderr)
+        print("error: configured private patch is missing", file=sys.stderr); return 1
+    for p, original, new in plan:
+        if safe_bytes(p, CORPUS) != original:
+            print("error: redaction input changed; retry", file=sys.stderr); return 1
+        atomic_write(p, new, p.stat().st_mode & 0o777)
+    # Validate the configured private patch after generic redaction, matching the patch contract. Never print patch diagnostics.
+    patch_applied = False
+    if patch:
+        if not Path(patch).is_file():
+            print("error: configured private patch is missing", file=sys.stderr); return 1
+        result = subprocess.run(["git", "apply", "--check", str(patch)], cwd=ROOT, capture_output=True, text=True, check=False)
+        if result.returncode:
+            reverse = subprocess.run(["git", "apply", "--reverse", "--check", str(patch)], cwd=ROOT, capture_output=True, text=True, check=False)
+            if reverse.returncode:
+                print("error: configured private patch rejected", file=sys.stderr); return 1
+            patch_applied = True
+    if patch and not patch_applied:
+        result = subprocess.run(["git", "apply", str(patch)], cwd=ROOT, capture_output=True, text=True, check=False)
+        if result.returncode:
+            print("error: configured private patch failed", file=sys.stderr); return 1
+    print(f"{len(plan)} file(s) changed", file=sys.stderr)
     return 0
 
 

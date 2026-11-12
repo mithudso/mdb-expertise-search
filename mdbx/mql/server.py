@@ -10,6 +10,8 @@ from __future__ import annotations
 import logging
 import os
 import sys
+from bisect import bisect_left, bisect_right
+from functools import lru_cache
 
 from lsprotocol import types
 from pygls.lsp.server import LanguageServer
@@ -43,27 +45,40 @@ _COMPLETION_KIND = {
 
 
 def _u16(s: str) -> int:
-    return len(s.encode("utf-16-le")) // 2
+    return sum(2 if ord(ch) > 0xFFFF else 1 for ch in s)
+
+
+@lru_cache(maxsize=8)
+def _positions(text: str):
+    starts, ends, units = [0], [], [0]
+    i = 0
+    for ch in text:
+        units.append(units[-1] + (2 if ord(ch) > 0xFFFF else 1))
+    while i < len(text):
+        if text[i] in "\r\n":
+            ends.append(i)
+            if text[i] == "\r" and text[i:i + 2] == "\r\n":
+                i += 1
+            starts.append(i + 1)
+        i += 1
+    ends.append(len(text))
+    return starts, ends, units
 
 
 def offset_to_position(text: str, offset: int) -> types.Position:
     offset = max(0, min(offset, len(text)))
-    line = text.count("\n", 0, offset)
-    line_start = text.rfind("\n", 0, offset) + 1
-    return types.Position(line=line, character=_u16(text[line_start:offset]))
+    starts, ends, units = _positions(text)
+    line = bisect_right(starts, offset) - 1
+    return types.Position(line=line, character=units[min(offset, ends[line])] - units[starts[line]])
 
 
 def position_to_offset(text: str, pos: types.Position) -> int:
-    lines = text.split("\n")
-    if pos.line >= len(lines):
+    starts, ends, units = _positions(text)
+    line = max(0, pos.line)
+    if line >= len(starts):
         return len(text)
-    base = sum(len(l) + 1 for l in lines[: pos.line])
-    units = 0
-    for i, ch in enumerate(lines[pos.line]):
-        if units >= pos.character:
-            return base + i
-        units += _u16(ch)
-    return base + len(lines[pos.line])
+    target = units[starts[line]] + max(0, pos.character)
+    return bisect_left(units, min(target, units[ends[line]]), starts[line], ends[line] + 1)
 
 
 def to_diagnostic(text: str, d: Diag) -> types.Diagnostic:
@@ -86,9 +101,11 @@ def optimizer_diagnostics(text: str) -> list[Diag]:
         return []
     try:
         rep = optimize(text, apply=False)
-    except Exception:  # the optimizer must never take lint diagnostics down with it
-        log.warning("MQL optimizer failed; publishing lint diagnostics only", exc_info=True)
+    except Exception:  # noqa: BLE001 - optimizer failures must preserve lint diagnostics
+        log.warning("MQL optimizer failed; publishing lint diagnostics only")
         return []
+    if rep.original != text:
+        return []  # normalized offsets cannot safely address this document
     return [Diag(f.start, f.end, _OPT_SEV[f.severity], "opt/" + f.code,
                  f"[{f.severity} {f.pass_id}] {f.message}", f.fix)
             for f in rep.findings if not f.code.endswith("-rewrite")]
@@ -105,16 +122,23 @@ def make_expertise_lookup():
             return None
 
         def lookup(term: str) -> list[str]:
-            con = idx.connect(db)
+            con = None
             try:
+                con = idx.connect(db)
                 hits = srch.keyword(con, term.lstrip("$") + " mongodb", 2, kind="skill")
                 return [f"`{h.location}` — {h.heading.split(' > ')[-1]}" for h in hits]
+            except Exception:  # noqa: BLE001 - optional index failures must preserve built-in docs
+                return []
             finally:
-                con.close()
+                if con is not None:
+                    try:
+                        con.close()
+                    except Exception:  # noqa: BLE001 - cleanup is best-effort for optional enrichment
+                        log.debug("expertise connection cleanup failed")
 
         return lookup
-    except Exception:
-        log.debug("expertise lookup unavailable", exc_info=True)
+    except Exception:  # noqa: BLE001 - optional index initialization must not disable the server
+        log.debug("expertise lookup unavailable")
         return None
 
 
@@ -129,12 +153,14 @@ def build_server() -> LanguageServer:
         results[uri] = res
         diags = [*res.diagnostics, *optimizer_diagnostics(res.text)]
         server.text_document_publish_diagnostics(
-            types.PublishDiagnosticsParams(uri=uri, diagnostics=[to_diagnostic(res.text, d) for d in diags])
+            types.PublishDiagnosticsParams(uri=uri, version=doc.version, diagnostics=[to_diagnostic(res.text, d) for d in diags])
         )
         return res
 
     def current(uri: str) -> Result:
-        return results.get(uri) or refresh(uri)
+        doc = server.workspace.get_text_document(uri)
+        res = results.get(uri)
+        return res if res is not None and res.text == doc.source else refresh(uri)
 
     @server.feature(types.TEXT_DOCUMENT_DID_OPEN)
     def did_open(params: types.DidOpenTextDocumentParams) -> None:
@@ -164,7 +190,7 @@ def build_server() -> LanguageServer:
                 documentation=types.MarkupContent(types.MarkupKind.Markdown, c.doc) if c.doc else None,
                 insert_text_format=types.InsertTextFormat.Snippet,
                 text_edit=types.TextEdit(
-                    types.Range(offset_to_position(res.text, c.start), params.position), c.insert
+                    types.Range(offset_to_position(res.text, c.start), offset_to_position(res.text, c.end)), c.insert
                 ),
                 filter_text=c.label,
                 sort_text=("0" if c.kind in {"stage", "key"} else "1") + c.label,
@@ -204,17 +230,27 @@ def build_server() -> LanguageServer:
         types.CodeActionOptions(code_action_kinds=[types.CodeActionKind.QuickFix]),
     )
     def code_action(params: types.CodeActionParams) -> list[types.CodeAction]:
+        uri = params.text_document.uri
+        doc = server.workspace.get_text_document(uri)
+        res = analyze(doc.source)
+        valid = [to_diagnostic(res.text, d) for d in [*res.diagnostics, *optimizer_diagnostics(res.text)]]
         actions = []
         for d in params.context.diagnostics:
             fix = (d.data or {}).get("fix") if isinstance(d.data, dict) else None
-            if not fix:
+            if not isinstance(fix, str) or not fix or d.source not in {"mql", "mql-optimizer"}:
+                continue
+            if not any(d.range == own.range and d.code == own.code and d.source == own.source
+                       and d.message == own.message and d.data == own.data for own in valid):
                 continue
             actions.append(types.CodeAction(
                 title=f"Replace with {fix}" if len(fix) <= 60 and "\n" not in fix else "Apply optimizer rewrite",
                 kind=types.CodeActionKind.QuickFix,
                 diagnostics=[d],
                 is_preferred=True,
-                edit=types.WorkspaceEdit(changes={params.text_document.uri: [types.TextEdit(d.range, fix)]}),
+                edit=types.WorkspaceEdit(document_changes=[types.TextDocumentEdit(
+                    text_document=types.OptionalVersionedTextDocumentIdentifier(uri=uri, version=doc.version),
+                    edits=[types.TextEdit(d.range, fix)],
+                )]),
             ))
         return actions
 

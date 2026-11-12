@@ -66,8 +66,9 @@ function kindOk(node, kind) {
     if (k === "bool" && (node.kind === "bool" || node.kind === "number")) return true;
     if ((k === "int" || k === "posint" || k === "nonneg" || k === "number") && node.kind === "number") {
       const v = Number(node.value);
+      if (!Number.isFinite(v)) continue;
       if (k === "number") return true;
-      if (!Number.isInteger(v)) continue;
+      if (!Number.isInteger(v) || v < -(2 ** 63) || v >= 2 ** 63) continue;
       if (k === "posint" && v <= 0) continue;
       if (k === "nonneg" && v < 0) continue;
       return true;
@@ -83,12 +84,29 @@ export class Symbol_ {
 }
 
 /** Line (0-based) and UTF-16 column of an offset, as mdbx.mql.server.offset_to_position. */
+function positionLookup(text) {
+  const starts = [0], ends = [];
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === "\r" || text[i] === "\n") {
+      ends.push(i);
+      if (text[i] === "\r" && text[i + 1] === "\n") i++;
+      starts.push(i + 1);
+    }
+  }
+  ends.push(text.length);
+  return offset => {
+    offset = Math.max(0, Math.min(offset, text.length));
+    let lo = 0, hi = starts.length;
+    while (lo + 1 < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (starts[mid] <= offset) lo = mid; else hi = mid;
+    }
+    return { line: lo, column: Math.min(offset, ends[lo]) - starts[lo] };
+  };
+}
+
 export function offsetToPosition(text, offset) {
-  offset = Math.max(0, Math.min(offset, text.length));
-  let line = 0;
-  for (let i = text.indexOf("\n"); i >= 0 && i < offset; i = text.indexOf("\n", i + 1)) line += 1;
-  const lineStart = offset > 0 ? text.lastIndexOf("\n", offset - 1) + 1 : 0;
-  return { line, column: offset - lineStart };
+  return positionLookup(text)(offset);
 }
 
 class Analyzer {
@@ -101,6 +119,8 @@ class Analyzer {
     this.arrays = [];
     this.stageSyms = new Map();
     this.done = new Set();
+    this.contexts = new Map();
+    this.pipelines = new Map();
     this.varCtx = new Map();
     this.vars = new Map();
   }
@@ -152,12 +172,13 @@ class Analyzer {
       const node = st.node;
       if (st.decl) this.vars.set(st.decl, node);
       const ctx = this.varCtx.get(st.decl || "");
-      if (ctx && !this.done.has(node)) this.value(node, ctx);
+      if (ctx) { for (const useCtx of ctx) this.value(node, useCtx); }
       else if (!this.done.has(node)) this.statementNode(node);
       for (const c of node.walk()) {
         if (c.kind === "call" && !this.done.has(c)) this.call(c);
       }
     }
+    this.diags = [...new Map(this.diags.map(d => [JSON.stringify(d), d])).values()];
     this.diags.sort((a, b) => (a.start - b.start) || (a.end - b.end)); // stable, like Python's sort
     return {
       text: this.text, statements: this.statements, diagnostics: this.diags,
@@ -172,8 +193,10 @@ class Analyzer {
         const spec = METHODS.get(String(c.target.value));
         if (!spec) continue;
         c.items.forEach((a, i) => {
-          if (a.kind === "ident" && i < spec.length && spec[i] !== "-" && !this.varCtx.has(String(a.value))) {
-            this.varCtx.set(String(a.value), spec[i]);
+          if (a.kind === "ident" && i < spec.length && spec[i] !== "-") {
+            const contexts = this.varCtx.get(String(a.value)) || [];
+            if (!contexts.includes(spec[i])) contexts.push(spec[i]);
+            this.varCtx.set(String(a.value), contexts);
           }
         });
       }
@@ -200,7 +223,10 @@ class Analyzer {
 
   // ---- dispatch
   value(node, ctx) {
-    if (this.done.has(node)) return;
+    const contexts = this.contexts.get(node) || new Set();
+    if (contexts.has(ctx)) return;
+    contexts.add(ctx);
+    this.contexts.set(node, contexts);
     this.done.add(node);
     if (ctx === "pipeline") {
       this.pipeline(node);
@@ -210,9 +236,9 @@ class Analyzer {
       if (node.kind === "array") this.pipeline(node, { update: true });
       else if (this.need(node, "object", "an update document")) this.update(node);
     } else if (ctx === "proj") {
-      if (node.kind === "object") this.fields(node, { project: true, label: "proj" });
+      if (this.need(node, "object", "a projection document")) this.fields(node, { project: true, label: "proj" });
     } else if (ctx === "sort") {
-      if (node.kind === "object") this.sort(node, { strictStrings: false });
+      if (this.need(node, "object", "a sort document")) this.sort(node, { strictStrings: false });
     } else if (ctx === "auto") {
       this.auto(node);
     }
@@ -266,7 +292,7 @@ class Analyzer {
           this.onProp(p, WARNING, "misplaced-operator", `${p.key} is not a query operator here.`);
         }
       } else if (v !== null && v.kind === "object") {
-        this.fieldValue(v);
+        this.fieldValue(v, { inMatch, first });
       }
     }
   }
@@ -274,6 +300,7 @@ class Analyzer {
   queryTop(p, op, inMatch, first) {
     const v = p.value;
     const name = p.key;
+    if (!this.arg(p, op)) return;
     if (name === "$and" || name === "$or" || name === "$nor") {
       if (v === null) return;
       if (v.kind === "array") {
@@ -312,7 +339,7 @@ class Analyzer {
     }
   }
 
-  fieldValue(obj) {
+  fieldValue(obj, { inMatch = false, first = false } = {}) {
     const keys = obj.props.map((p) => p.key);
     const dollar = keys.filter((k) => k.startsWith("$"));
     if (!dollar.length) return; // embedded-document equality
@@ -322,10 +349,10 @@ class Analyzer {
         `${pyRepr(p.key)} is a field name inside an operator expression; ` +
         "operators and field names cannot be mixed.");
     }
-    this.qops(obj);
+    this.qops(obj, { inMatch, first });
   }
 
-  qops(obj) {
+  qops(obj, { inMatch = false, first = false } = {}) {
     this.objects.push([obj, "qops"]);
     this.dups(obj);
     const keys = new Set(obj.props.map((p) => p.key));
@@ -347,10 +374,11 @@ class Analyzer {
         continue;
       }
       const name = p.key;
+      if (inMatch && ["$near", "$nearSphere"].includes(name)) this.onProp(p, ERROR, "misplaced-operator", name + " is not allowed in $match; use $geoNear.");
       if (name === "$in" || name === "$nin" || name === "$all") {
         this.arg(p, new ops.Operator(name, op.cats, "array", op.doc));
       } else if (name === "$not") {
-        if (v !== null && v.kind === "object") this.qops(v);
+        if (v !== null && v.kind === "object") this.qops(v, { inMatch, first });
         else if (v !== null && !dynOr("regex").has(v.kind)) {
           this.add(v.start, v.end, ERROR, "bad-argument", "$not expects an operator expression or a regex.");
         }
@@ -358,8 +386,8 @@ class Analyzer {
         if (v !== null && v.kind === "object") {
           const inner = v.props.map((q) => q.key);
           if (inner.length && inner.every((k) => ops.OPERATORS.has(k) && ops.OPERATORS.get(k).isA("query", "sub") &&
-              !ops.OPERATORS.get(k).cats.has("qtop"))) this.qops(v);
-          else this.query(v);
+              !ops.OPERATORS.get(k).cats.has("qtop"))) this.qops(v, { inMatch, first });
+          else this.query(v, { inMatch, first });
         } else if (v !== null && !dyn(v.kind)) {
           this.add(v.start, v.end, ERROR, "bad-argument", "$elemMatch expects an object.");
         }
@@ -412,7 +440,7 @@ class Analyzer {
         continue;
       }
       if (op.isA("sub", "ejson")) continue;
-      if (!op.isA("expr", "acc", "proj")) {
+      if (!op.isA("expr", "proj")) {
         this.onProp(p, WARNING, "misplaced-operator", `${p.key} is not an aggregation expression operator.`);
         continue;
       }
@@ -420,7 +448,7 @@ class Analyzer {
       if (p.key === "$literal" || p.key === "$function" || p.key === "$accumulator" || v === null) continue;
       if (p.key === "$cond" && v.kind === "array" && v.items.length !== 3) {
         this.add(v.start, v.end, ERROR, "bad-argument", "$cond array form needs exactly 3 elements [if, then, else].");
-      } else if (op.arg === "array2" && v.kind === "array" && v.items.length !== 2) {
+      } else if (op.arg === "array2" && !kindOk(v, "array2")) {
         this.add(v.start, v.end, ERROR, "bad-argument", `${p.key} expects exactly 2 arguments.`);
       }
       this.expr(v);
@@ -432,10 +460,10 @@ class Analyzer {
     this.objects.push([obj, label]);
     this.dups(obj);
     const flags = [];
-    this.collectProj(obj, flags);
+    this.collectProj(obj, flags, true);
     if (project) {
-      const inc = flags.filter(([p, f]) => f && p.key !== "_id");
-      const exc = flags.filter(([p, f]) => !f && p.key !== "_id");
+      const inc = flags.filter(([p, f, top]) => f && !(top && p.key === "_id"));
+      const exc = flags.filter(([p, f, top]) => !f && !(top && p.key === "_id"));
       if (inc.length && exc.length) {
         for (const [p] of exc) {
           this.onProp(p, ERROR, "projection-mix",
@@ -445,7 +473,7 @@ class Analyzer {
     }
   }
 
-  collectProj(obj, flags) {
+  collectProj(obj, flags, top = false) {
     for (const p of obj.props) {
       const v = p.value;
       if (p.key.startsWith("$")) {
@@ -456,12 +484,12 @@ class Analyzer {
       }
       if (v === null) continue;
       if (v.kind === "number" || v.kind === "bool") {
-        flags.push([p, truthy(v.value)]);
+        flags.push([p, truthy(v.value), top]);
       } else if (v.kind === "object" && !v.props.some((q) => q.key.startsWith("$"))) {
         this.objects.push([v, "fields"]);
         this.collectProj(v, flags);
       } else {
-        flags.push([p, true]);
+        flags.push([p, true, top]);
         this.expr(v);
       }
     }
@@ -497,8 +525,35 @@ class Analyzer {
     const a = v.props[0];
     const op = ops.get(a.key);
     if (op === null) this.unknown(a, "accumulator");
-    else if (!op.isA("acc", "expr")) this.onProp(a, ERROR, "misplaced-operator", `${a.key} is not an accumulator.`);
+    else if (!op.isA("acc")) this.onProp(a, ERROR, "misplaced-operator", `${a.key} is not an accumulator.`);
     else if (a.value !== null && a.key !== "$accumulator") this.expr(a.value);
+  }
+
+  windowOutput(p) {
+    const v = p.value;
+    if (v === null || dyn(v.kind)) return;
+    if (v.kind !== "object") { this.accumulator(p); return; }
+    const operators = v.props.filter(q => q.key !== "window");
+    if (operators.length !== 1 || !operators[0].key.startsWith("$")) {
+      this.onProp(p, ERROR, "stage-shape", "A window output needs one window operator and an optional window specification.");
+      return;
+    }
+    this.objects.push([v, "accexpr"]);
+    const a = operators[0], op = ops.get(a.key);
+    if (op === null) this.unknown(a, "window operator");
+    else if (!op.isA("acc")) this.onProp(a, ERROR, "misplaced-operator", a.key + " is not an accumulator.");
+    else if (a.value !== null) this.expr(a.value);
+    for (const q of v.props) {
+      if (q.key !== "window" || q.value === null) continue;
+      const w = q.value;
+      if (!this.need(w, "object", "a window specification")) continue;
+      for (const bound of w.props) {
+        if (["documents", "range"].includes(bound.key) && bound.value !== null && !kindOk(bound.value, "array2"))
+          this.add(bound.value.start, bound.value.end, ERROR, "bad-argument", "Window bounds need exactly 2 elements.");
+        else if (!["documents", "range", "unit"].includes(bound.key))
+          this.onProp(bound, WARNING, "unknown-field", pyRepr(bound.key) + " is not a window option.");
+      }
+    }
   }
 
   sort(obj, { strictStrings }) {
@@ -559,14 +614,15 @@ class Analyzer {
   updateField(opname, f) {
     const v = f.value;
     if (v === null) return;
-    if ((opname === "$inc" || opname === "$mul") && !dynOr("number", "object").has(v.kind)) {
+    const numericEjson = v.kind === "object" && v.props.length === 1 && ["$numberInt", "$numberLong", "$numberDouble", "$numberDecimal"].includes(v.props[0].key) && v.props[0].value?.kind === "string";
+    if ((opname === "$inc" || opname === "$mul") && !dynOr("number").has(v.kind) && !numericEjson) {
       this.add(v.start, v.end, ERROR, "bad-argument", `${opname} requires a numeric value for ${pyRepr(f.key)}.`);
     } else if (opname === "$pop" && !(dyn(v.kind) || (v.kind === "number" && (v.value === 1 || v.value === -1)))) {
       this.add(v.start, v.end, ERROR, "bad-argument", "$pop requires 1 (last) or -1 (first).");
     } else if (opname === "$rename" && !dynOr("string").has(v.kind)) {
       this.add(v.start, v.end, ERROR, "bad-argument", "$rename requires the new field name as a string.");
     } else if ((opname === "$push" || opname === "$addToSet") && v.kind === "object" && v.props.some((q) => q.key.startsWith("$"))) {
-      this.objects.push([v, "upmods"]);
+      this.objects.push([v, "upmods:" + opname]);
       const allowed = opname === "$push" ? new Set(["$each", "$slice", "$sort", "$position"]) : new Set(["$each"]);
       for (const q of v.props) {
         if (!allowed.has(q.key)) {
@@ -585,14 +641,21 @@ class Analyzer {
 
   // ---- pipelines
   pipeline(node, { update = false, facet = false } = {}) {
-    if (this.done.has(node) && node.kind === "array" && this.arrays.some(([a]) => a === node)) return;
+    const key = String(update) + ":" + String(facet);
+    const contexts = this.pipelines.get(node) || new Set();
+    if (contexts.has(key)) return;
+    contexts.add(key);
+    this.pipelines.set(node, contexts);
     this.done.add(node);
     if (node.kind === "object") {
       this.add(node.start, node.end, ERROR, "bad-argument", "A pipeline must be an array of stages, not an object.");
       return;
     }
-    if (node.kind !== "array") return;
-    this.arrays.push([node, "pipeline"]);
+    if (node.kind !== "array") {
+      if (!dyn(node.kind)) this.add(node.start, node.end, ERROR, "bad-argument", "A pipeline must be an array of stages, got " + node.kind + ".");
+      return;
+    }
+    this.arrays.push([node, update ? "update-pipeline" : "pipeline"]);
     const syms = [];
     const n = node.items.length;
     node.items.forEach((item, i) => {
@@ -660,7 +723,7 @@ class Analyzer {
     const v = p.value;
     const name = p.key;
     if (v === null) return;
-    if (!FREE_FORM.has(name) && !this.arg(p, op)) return;
+    if ((!FREE_FORM.has(name) || ["$out", "$merge", "$unionWith"].includes(name)) && !this.arg(p, op)) return;
     if (name === "$match") {
       if (v.kind === "object") {
         this.query(v, { inMatch: true, first });
@@ -746,7 +809,10 @@ class Analyzer {
     } else if (name === "$setWindowFields" && v.kind === "object") {
       this.objects.push([v, "stage"]);
       for (const q of v.props) {
-        if (q.key === "output" && q.value !== null && q.value.kind === "object") this.accumulatorOutputs(q);
+        if (q.key === "output" && q.value !== null && q.value.kind === "object") {
+          this.objects.push([q.value, "group"]);
+          for (const output of q.value.props) if (output.value !== null) this.windowOutput(output);
+        }
       }
     } else if ((name === "$bucket" || name === "$bucketAuto") && v.kind === "object") {
       this.objects.push([v, "stage"]);
@@ -846,8 +912,9 @@ export function analyze(text) {
 
 /** Diagnostics in the golden/wire shape: adds 0-based line and UTF-16 column of `start`. */
 export function diagnosticsToDicts(text, diagnostics) {
+  const position = positionLookup(text);
   return diagnostics.map((d) => {
-    const { line, column } = offsetToPosition(text, d.start);
+    const { line, column } = position(d.start);
     return { start: d.start, end: d.end, line, column, severity: d.severity, code: d.code, message: d.message, fix: d.fix };
   });
 }

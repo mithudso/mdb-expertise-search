@@ -38,10 +38,18 @@ test("freshPending accepts only recent, non-blank handoffs", () => {
   assert.equal(freshPending(undefined, now), false);
 });
 
+// A syntactic coverage guard for literal finding codes, including multiline ternary severity arguments.
+function findingCodes(source) {
+  return new Set([...source.matchAll(/(?:\b(?:BLOCKING|HIGH|MEDIUM|LOW)|\?\s*(?:HIGH|MEDIUM|LOW)\s*:\s*(?:HIGH|MEDIUM|LOW))\s*,\s*["']([a-z0-9-]+)["']/g)].map(m => m[1]));
+}
+
+test("finding-code guard recognizes multiline and single-quoted codes", () => {
+  assert.deepEqual([...findingCodes("add(HIGH,\n 'synthetic-one', 'm'); f(MEDIUM , \"synthetic-two\", 'm')")], ["synthetic-one", "synthetic-two"]);
+});
+
 test("every finding code the optimizer can emit has a docs link", () => {
   const src = readFileSync(join(root, "lib", "optimize.js"), "utf8");
-  const codes = new Set([...src.matchAll(/(?:MEDIUM|HIGH|LOW|BLOCKING|\?\s*HIGH\s*:\s*MEDIUM|acc\.key === "\$push" \? HIGH : MEDIUM), "([a-z0-9-]+)"/g)].map((m) => m[1]));
-  for (const m of src.matchAll(/add\((?:HIGH|MEDIUM|LOW|docs >= 1000 \? HIGH : MEDIUM), "([a-z0-9-]+)"/g)) codes.add(m[1]);
+  const codes = findingCodes(src);
   assert.ok(codes.size >= 30, `found only ${codes.size} codes`);
   for (const c of codes) assert.ok(docFor(c), `no docs link for ${c}`);
   for (const url of Object.values(DOCS)) assert.match(url, /^https:\/\/www\.mongodb\.com\/docs\//);
@@ -51,11 +59,11 @@ test("Markdown case note for a slow-query log line", () => {
   const rep = optimize(readFileSync(join(FIX, "slowlog-find.txt"), "utf8"));
   const md = toMarkdown(rep);
   assert.match(md, /^\*\*MQL optimizer \(static review\)\*\* — 1 query, 2 high, 4 medium, 1 low/);
-  assert.match(md, /Input: slow-query log line, read as:\n```js\ndb\.orders\.find\(/);
+  assert.match(md, /Input: slow-query log line, read as:\n```js\ndb\.getCollection\("orders"\)\.find\(/);
   assert.match(md, /Logged evidence: plan `COLLSCAN`, 4981 ms, docsExamined 1843220, keysExamined 0, nreturned 20, scan ratio 92,161:1/);
   assert.match(md, /\*\*HIGH\*\* `log-collscan` \(P9\)/);
   assert.match(md, /\[MongoDB docs\]\(https:\/\/www\.mongodb\.com\/docs\/manual\/reference\/explain-results\/\)/);
-  assert.match(md, /```js\ndb\.orders\.createIndex\(\{ customerId: 1, createdAt: -1 \}\)\n```/);
+  assert.match(md, /```js\ndb\.getCollection\("orders"\)\.createIndex\(\{ customerId: 1, createdAt: -1 \}\)\n```/);
   assert.ok(md.trimEnd().endsWith("nReturned unchanged._"));
 });
 
@@ -110,6 +118,18 @@ test("popup code never assigns HTML from page text", () => {
   for (const f of ["popup.js", "app.js", "background.js", "lib/report.js", "lib/capture.js", "lib/ui.js",
     "lib/textsearch.js", "lib/store.js"]) {
     const src = readFileSync(join(root, f), "utf8");
-    assert.doesNotMatch(src, /innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function/, f);
+    assert.equal(hasUnsafeSink(src), false, f);
   }
+});
+
+// Limited syntactic tripwire: direct sinks plus constant bracket names and split string constants.
+// This does not claim to resolve arbitrary aliases or runtime expressions.
+function hasUnsafeSink(source) {
+  const normalized = source.replace(/(["'])([^"']*)\1\s*\+\s*(["'])([^"']*)\3/g, (_m, _q, a, _r, b) => JSON.stringify(a + b));
+  return /innerHTML|outerHTML|insertAdjacentHTML|document\s*(?:\.\s*write|\[\s*["']write["']\s*\])|\beval\s*\(|new\s+Function\s*\(/.test(normalized);
+}
+
+test("HTML-sink guard recognizes constant computed access and spaced calls", () => {
+  for (const sample of ['element["inner" + "HTML"] = value', "element['outerHTML'] = value", 'element["insertAdjacentHTML"] ("beforeend", value)', "document . write (value)", "eval (value)", "new Function ('x')"]) assert.ok(hasUnsafeSink(sample), sample);
+  assert.equal(hasUnsafeSink("element.textContent = value"), false);
 });

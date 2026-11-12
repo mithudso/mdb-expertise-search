@@ -3,71 +3,41 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
-    runs-on: ubuntu-latest
-    env:
-      LIBS_TOKEN: ${{ secrets.LIBS_TOKEN }}
+    runs-on: macos-latest
     strategy:
       matrix:
         python: ["3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
-          node-version: "20"
-      - uses: actions/setup-python@v7
+          node-version-file: .node-version
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: ${{ matrix.python }}
-      # ollama-client / ai-auth are private repos: give git a token when the LIBS_TOKEN secret exists.
-      - name: Git auth for private libraries
-        if: env.LIBS_TOKEN != ''
-        run: git config --global url."https://x-access-token:${LIBS_TOKEN}@github.com/".insteadOf "https://github.com/"
-      - run: pip install -e '.[dev]'
-      - run: ruff check .
-      - run: pytest -q
-      - run: python scripts/sweep_customers.py
-      - run: python scripts/rotate_workflow_logs.py --check
-      - name: Optimizer smoke test on the example file
-        run: mdbx optimize --read-only examples/slow-queries.mql || test $? -eq 1
-      - run: cd editors/vscode && npm install --ignore-scripts && npm test
-      - name: Chrome extension (search, optimizer and lint parity with Python goldens + UI units)
-        run: cd editors/chrome && npm test
-      - run: python scripts/package_chrome_extension.py
-      - name: Index doc paths exist
-        run: python scripts/check_doc_indexes.py
-
-  # Release channel for the Chrome extension auto-updater (scripts/chrome_extension_autoupdate.py --source release):
-  # every push to main republishes the keyword-only build on the rolling "chrome-latest" release.
-  chrome-release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    env:
-      LIBS_TOKEN: ${{ secrets.LIBS_TOKEN }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      # ollama-client / ai-auth are private repos: give git a token when the LIBS_TOKEN secret exists.
-      - name: Git auth for private libraries
-        if: env.LIBS_TOKEN != ''
-        run: git config --global url."https://x-access-token:${LIBS_TOKEN}@github.com/".insteadOf "https://github.com/"
-      - run: pip install -e .
-      - run: python -m mdbx.cli index --skip-semantic
-      - run: python scripts/package_chrome_extension.py --no-vectors
-      - name: Publish rolling release
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - run: python -m pip install -e '.[dev]'
+      - run: npm ci --ignore-scripts --prefix editors/vscode
+      - run: python scripts/offline_test.py -- ruff check .
+      - run: python scripts/offline_test.py -- python -m pytest -q
+      - run: python scripts/offline_test.py -- python -m compileall -q mdbx scripts tests
+      - run: python scripts/offline_test.py -- python scripts/rotate_workflow_logs.py --check
+      - run: python scripts/offline_test.py -- npm test --prefix editors/vscode
+      - run: python scripts/offline_test.py -- npm test --prefix editors/chrome
+      - run: python scripts/offline_test.py -- python scripts/package_chrome_extension.py --no-data
+      - run: python scripts/offline_test.py -- python scripts/check_doc_indexes.py
+      - name: Optimizer command smoke (validate JSON, not just exit code)
         run: |
-          set -euo pipefail
-          zip=$(ls dist/mongodb-expertise-chrome-*.zip)
-          cp "$zip" dist/mongodb-expertise-chrome.zip
-          cp editors/chrome/data/build.json dist/build.json
-          gh release view chrome-latest >/dev/null 2>&1 || \
-            gh release create chrome-latest --prerelease --title "Chrome extension (latest main)" \
-              --notes "Rolling build of editors/chrome from main; consumed by scripts/chrome_extension_autoupdate.py --source release."
-          gh release upload chrome-latest dist/mongodb-expertise-chrome.zip dist/build.json --clobber
+          python scripts/offline_test.py -- python - <<'PY'
+          import json, subprocess, sys
+          r = subprocess.run([sys.executable, '-m', 'mdbx.cli', 'optimize', '--json', '--read-only', 'examples/slow-queries.mql'], capture_output=True, text=True, timeout=30)
+          assert r.returncode in (0, 1), r.stderr
+          assert isinstance(json.loads(r.stdout), dict)
+          PY

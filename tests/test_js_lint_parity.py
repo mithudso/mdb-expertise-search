@@ -40,7 +40,9 @@ gen_lint_golden = _load_script("gen_lint_golden")
 def _inputs() -> list[str]:
     out = []
     for fixtures in FIXTURES:
-        for src in sorted(fixtures.glob("*.txt")):
+        sources = sorted(fixtures.glob("*.txt"))
+        assert sources, f"missing or empty fixture directory: {fixtures}"
+        for src in sources:
             text = src.read_text(encoding="utf-8")
             step = max(1, len(text) // 40)
             out += [text[:i] for i in range(0, len(text) + 1, step)]
@@ -64,7 +66,7 @@ def _words() -> list[str]:
 
 def _run_js(texts: list[str], words: list[str]) -> dict:
     r = subprocess.run(["node", str(BATCH)], input=json.dumps({"texts": texts, "words": words}),
-                       capture_output=True, text=True, check=True, timeout=240)
+                       capture_output=True, encoding="utf-8", check=True, timeout=240)
     return json.loads(r.stdout)
 
 
@@ -109,5 +111,81 @@ def test_every_diagnostic_code_has_a_golden():
     for g in (ROOT / "tests" / "fixtures" / "lint").glob("*.lint.json"):
         seen |= {d["code"] for d in json.loads(g.read_text(encoding="utf-8"))["diagnostics"]}
     source = (ROOT / "mdbx" / "mql" / "analyze.py").read_text(encoding="utf-8")
-    emitted = set(re.findall(r'(?:ERROR|WARNING|INFO|HINT),\s*"([a-z-]+)"', source)) | {"syntax"}
+    emitted = set(re.findall(r"""(?:ERROR|WARNING|INFO|HINT),\s*["']([a-z-]+)["']""", source)) | {"syntax"}
     assert emitted - seen == set(), f"no fixture triggers: {sorted(emitted - seen)}"
+
+
+
+@needs_node
+def test_parser_and_analyzer_adversarial_contracts():
+    script = r"""
+import assert from 'node:assert/strict';
+import {parse} from './editors/chrome/lib/parser.js';
+import {analyze, diagnosticsToDicts} from './editors/chrome/lib/analyze.js';
+import {getCloseMatches, suggest} from './editors/chrome/lib/operators.js';
+const original = 'new Date(0)';
+assert.equal(original.slice(parse(original)[0][0].node.start, parse(original)[0][0].node.end), original);
+const [st, errors] = parse(String.raw`{"\u0024match":{"tag":"\x61\b\f\v\0","face":"\uD83D\uDE00"}}`);
+assert.deepEqual(errors, []);
+assert.equal(st[0].node.props[0].key, '$match');
+assert.equal(st[0].node.props[0].value.props[0].value.value, 'a\b\f\v\0');
+assert.equal(st[0].node.props[0].value.props[1].value.value, '😀');
+for (const src of [String.raw`"\uZZZZ"`, String.raw`"\xGG"`, String.raw`"\u{110000}"`]) assert.ok(parse(src)[1].length);
+for (const name of ['InfinityPipeline','NaNInput']) {
+  const [[s], e] = parse(`db.c.aggregate(${name})`);
+  assert.deepEqual(e, []); assert.equal(s.node.items.length, 1); assert.equal(s.node.items[0].value, name);
+}
+assert.equal(parse('db.café.find({a:1})')[0][0].node.target.target.value, 'café');
+for (const sep of ['\r','\u2028','\u2029']) assert.equal(parse('// note'+sep+'{x:1}')[0].length, 1);
+for (const src of ['[1 2]','{a:1 b:2}','f(1 2)','{,a:1}','f(,1)','@\n{x:1}']) assert.ok(parse(src)[1].length, src);
+assert.doesNotThrow(() => parse('['.repeat(20000)+'0'+']'.repeat(20000)));
+assert.equal(parse('db'+'.x'.repeat(20000))[0][0].node.walk().length, 20001);
+for (const src of ['{a: @"}", b:1}', '{a:[f(1], b:2}', '{a: @/* } */0,b:1}']) {
+  const [[s],e] = parse(src); assert.ok(e.length); assert.deepEqual(s.node.props.map(p=>p.key), ['a','b']);
+}
+const codes = src => analyze(src).diagnostics.map(d=>d.code);
+for (const src of ['db.c.aggregate(42)','db.c.find({},[])','db.c.find({}).sort(false)',
+ 'db.c.aggregate([{$out:7}])','db.c.aggregate([{$merge:7}])','db.c.aggregate([{$unionWith:7}])',
+ 'db.c.find({$jsonSchema:7})','db.c.find({$sampleRate:"bad"})',
+ 'db.c.aggregate([{$project:{x:{$subtract:1}}}])','db.c.updateOne({},{$inc:{n:{value:1}}})',
+ 'db.c.find({a:{$size:-1}})','db.c.aggregate([{$limit:Infinity}])']) assert.ok(codes(src).includes('bad-argument'), src);
+for(const calls of ['db.c.aggregate(p);db.c.updateOne({},p);','db.c.updateOne({},p);db.c.aggregate(p);'])
+ assert.equal(codes('const p=[{$match:{}}];'+calls).filter(c=>c==='stage-position').length,1);
+for(const calls of ['db.c.find(d);db.c.updateOne({},d);','db.c.updateOne({},d);db.c.find(d);'])
+ assert.equal(codes('const d={x:1};'+calls).filter(c=>c==='update-shape').length,1);
+assert.ok(codes('db.c.find({},{keep:1,nested:{_id:0}})').includes('projection-mix'));
+for (const op of ['$near','$nearSphere']) assert.ok(codes(`db.c.aggregate([{$match:{loc:{${op}:{$geometry:{type:'Point',coordinates:[0,0]}}}}}])`).includes('misplaced-operator'));
+assert.deepEqual(codes('db.c.aggregate([{$setWindowFields:{sortBy:{t:1},output:{total:{$sum:"$x",window:{documents:["unbounded","current"]}}}}}])'), []);
+assert.ok(codes('db.c.aggregate([{$group:{_id:null,n:{$abs:"$x"}}}])').includes('misplaced-operator'));
+assert.ok(codes('db.c.aggregate([{$project:{n:{$push:"$x"}}}])').includes('misplaced-operator'));
+assert.deepEqual(getCloseMatches('ab',['ab\uE000','ab\u{10000}'],2), ['ab\u{10000}','ab\uE000']);
+for(const n of [0,-1]) {assert.throws(()=>getCloseMatches('x',['x'],n),RangeError);assert.throws(()=>suggest('$grup',n),RangeError);}
+for(const c of [-0.01,1.01,NaN]) assert.throws(()=>getCloseMatches('x',['x'],1,c),RangeError);
+const count=128, text='x\n'.repeat(count);
+const ds=Array.from({length:count},(_,i)=>({start:2*i,end:2*i+1,severity:'error',code:'synthetic',message:'synthetic',fix:null}));
+const prior=String.prototype.indexOf; let scans=0;
+String.prototype.indexOf=function(needle,...args){ if(needle==='\n'&&String(this)===text)scans++;return Reflect.apply(prior,this,[needle,...args]); };
+try { assert.deepEqual(diagnosticsToDicts(text,ds).map(d=>[d.line,d.column]),ds.map((_,i)=>[i,0])); assert.ok(scans<=4*count, String(scans)); }
+finally {String.prototype.indexOf=prior;}
+"""
+    result = subprocess.run(['node', '--input-type=module', '-e', script], cwd=ROOT, check=False,
+                            capture_output=True, encoding='utf-8', timeout=30)
+    assert result.returncode == 0, result.stderr
+
+
+def test_parity_inputs_reject_missing_directory(tmp_path, monkeypatch):
+    monkeypatch.setitem(globals(), 'FIXTURES', [tmp_path / 'missing'])
+    with pytest.raises((AssertionError, FileNotFoundError, ValueError), match='missing'):
+        _inputs()
+
+
+def test_inventory_recognizes_single_quotes(tmp_path, monkeypatch):
+    fixtures = tmp_path / 'tests/fixtures/lint'
+    fixtures.mkdir(parents=True)
+    (fixtures / 'syntax.lint.json').write_text(json.dumps({'diagnostics':[{'code':'syntax'}]}))
+    target = tmp_path / 'mdbx/mql/analyze.py'
+    target.parent.mkdir(parents=True)
+    target.write_text("emit(WARNING, 'uncovered-code')\n")
+    monkeypatch.setitem(globals(), 'ROOT', tmp_path)
+    with pytest.raises(AssertionError, match='uncovered-code'):
+        test_every_diagnostic_code_has_a_golden()

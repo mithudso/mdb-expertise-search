@@ -16,9 +16,9 @@ import argparse
 import hashlib
 import json
 import math
-import shutil
 import sys
 import tempfile
+from contextlib import closing
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -65,21 +65,18 @@ def build(out_index: Path) -> dict:
     corpus_root = FIX / "corpus"
     with tempfile.TemporaryDirectory() as tmp:
         db = Path(tmp) / "fx.sqlite"
-        con = idx.connect(db)
-        idx.build_keyword(con, corpus_root)
-        import array
+        with closing(idx.connect(db)) as con:
+            idx.build_keyword(con, corpus_root)
+            import array
 
-        for c in corpusmod.iter_chunks(corpus_root):
-            vec = array.array("f", fake_vec(f"{c.heading}\n{c.text}"))
-            con.execute("INSERT OR REPLACE INTO vectors(digest, dim, vec) VALUES (?,?,?)",
-                        (c.digest, DIM, vec.tobytes()))
-        con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model', 'fake-hash-32')")
-        con.commit()
-        con.close()
-        if out_index.exists():
-            shutil.rmtree(out_index)
+            for c in corpusmod.iter_chunks(corpus_root):
+                vec = array.array("f", fake_vec(f"{c.heading}\n{c.text}"))
+                con.execute("INSERT OR REPLACE INTO vectors(digest, dim, vec) VALUES (?,?,?)",
+                            (c.digest, DIM, vec.tobytes()))
+            con.execute("INSERT OR REPLACE INTO meta VALUES('embed_model', 'fake-hash-32')")
+            con.commit()
         export(corpus_root, out_index, db=db, allow_untracked=True)
-    meta = json.loads((out_index / "meta.json").read_text())
+    meta = json.loads((out_index / "meta.json").read_text(encoding="utf-8"))
     meta["built_at"] = meta["mdbx_version"] = "fixture"  # keep the committed fixture stable across builds/releases
     (out_index / "meta.json").write_text(json.dumps(meta, indent=1, ensure_ascii=False), encoding="utf-8")
     wi = WebIndex(out_index)
@@ -111,7 +108,8 @@ def main() -> int:
             tmp_index = Path(tmp) / "index"
             want = json.dumps(build(tmp_index), indent=1) + "\n"
             stale = []
-            if (FIX / "golden.json").read_text() != want:
+            stale.extend(f"index/{p.name}" for p in (FIX / "index").iterdir() if not (tmp_index / p.name).exists())
+            if (FIX / "golden.json").read_text(encoding="utf-8") != want:
                 stale.append("golden.json")
             for f in sorted(tmp_index.iterdir()):
                 cur = FIX / "index" / f.name

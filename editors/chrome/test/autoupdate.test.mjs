@@ -23,7 +23,11 @@ test("readBuild tolerates a missing file and non-OK responses", async () => {
   const runtime = { getURL: (p) => `chrome-extension://x/${p}` };
   assert.equal(await readBuild(async () => ({ ok: false }), runtime), null);
   assert.equal(await readBuild(async () => { throw new Error("nope"); }, runtime), null);
-  assert.deepEqual(await readBuild(async () => ({ ok: true, json: async () => ({ commit: "c1" }) }), runtime), { commit: "c1" });
+  assert.deepEqual(await readBuild(async (url, options) => {
+    assert.equal(url, "chrome-extension://x/data/build.json");
+    assert.deepEqual(options, { cache: "no-store" });
+    return { ok: true, json: async () => ({ commit: "c1" }) };
+  }, runtime), { commit: "c1" });
 });
 
 function fakeChrome(builds) {
@@ -32,7 +36,7 @@ function fakeChrome(builds) {
   const listeners = [];
   const created = [];
   const api = {
-    alarms: { create: (name, opts) => created.push([name, opts]), onAlarm: { addListener: (fn) => listeners.push(fn) } },
+    alarms: { get: async () => null, create: (name, opts) => created.push([name, opts]), onAlarm: { addListener: (fn) => listeners.push(fn) } },
     runtime: { getURL: (p) => `ext://${p}`, reloaded: 0, reload() { this.reloaded += 1; } },
     storage: {
       session: {
@@ -79,4 +83,47 @@ test("a build without data/build.json never reloads", async () => {
   const handlers = startAutoUpdate(api, fetchImpl);
   assert.equal(await handlers.check(), false);
   assert.equal(api.runtime.reloaded, 0);
+});
+
+test("worker restart preserves the baseline and existing alarm schedule", async () => {
+  const { api, fetchImpl, session, created } = fakeChrome([{ commit: "new" }]);
+  session[SESSION_KEY] = "old";
+  api.alarms.get = async name => { assert.equal(name, ALARM); return { name, scheduledTime: 123 }; };
+  const handlers = startAutoUpdate(api, fetchImpl);
+  await handlers.ready;
+  assert.equal(session[SESSION_KEY], "old");
+  assert.deepEqual(created, []);
+  assert.equal(await handlers.check(), true);
+});
+
+test("reload waits for deferred baseline removal and concurrent checks reload once", { timeout: 1000 }, async () => {
+  const { api, fetchImpl, session } = fakeChrome([{ commit: "new" }]);
+  session[SESSION_KEY] = "old";
+  let release, started;
+  const removing = new Promise(resolve => { started = resolve; });
+  const gate = new Promise(resolve => { release = resolve; });
+  api.storage.session.remove = async key => { started(); await gate; delete session[key]; };
+  api.runtime.reload = () => { assert.equal(session[SESSION_KEY], undefined); api.runtime.reloaded++; };
+  const handlers = startAutoUpdate(api, fetchImpl);
+  const first = handlers.check(), second = handlers.check();
+  await removing;
+  assert.equal(api.runtime.reloaded, 0);
+  release();
+  assert.equal(await first, true);
+  assert.equal(await second, false);
+  assert.equal(api.runtime.reloaded, 1);
+});
+
+test("automatic startup and alarm failures are contained and the baseline can retry", async () => {
+  const { api, fetchImpl, session, listeners } = fakeChrome([{ commit: "new" }]);
+  session[SESSION_KEY] = "old";
+  api.alarms.get = async () => { throw Error("synthetic alarm failure"); };
+  let failing = true;
+  api.storage.session.get = async key => { if (failing) throw Error("synthetic storage failure"); return { [key]: session[key] }; };
+  const handlers = startAutoUpdate(api, fetchImpl);
+  await handlers.ready;
+  assert.equal(await listeners[0]({ name: ALARM }), false);
+  assert.equal(session[SESSION_KEY], "old");
+  failing = false;
+  assert.equal(await handlers.check(), true);
 });

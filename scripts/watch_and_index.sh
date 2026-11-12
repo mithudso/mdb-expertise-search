@@ -8,9 +8,9 @@ CORPUS="${MDBX_CORPUS:-corpus}"
 MDBX=".venv/bin/mdbx"
 reindex() { echo "[watch] change detected; reindexing"; "$MDBX" index || echo "[watch] index failed (see above)"; }
 if command -v fswatch >/dev/null; then
-  fswatch -o -l 2 --exclude '/\.' "$CORPUS" | while read -r _; do reindex; done
+  fswatch -o -l 2 --exclude '/\.' -- "$CORPUS" | while read -r _; do reindex; done
 elif command -v inotifywait >/dev/null; then
-  while inotifywait -qq -r -e close_write,create,delete,move "$CORPUS"; do sleep 2; reindex; done
+  while inotifywait -qq -r -e close_write,create,delete,move -- "$CORPUS"; do sleep 2; reindex; done
 else
   echo "install fswatch (macOS) or inotify-tools (Linux)" >&2
   exit 1

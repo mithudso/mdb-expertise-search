@@ -4,7 +4,7 @@ Project: `mdb-expertise-search` (`mdbx`) — hybrid search CLI/TUI over a MongoD
 
 ## Commands
 - Setup: `python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'`
-- Test: `.venv/bin/pytest -q` · Lint: `.venv/bin/ruff check .`
+- Offline macOS tests: `python3 scripts/offline_test.py -- .venv/bin/python -m pytest -q`; lint: `python3 scripts/offline_test.py -- .venv/bin/ruff check .`. See docs/TESTING.md before executing checks.
 - Index: `.venv/bin/mdbx index` · Search: `.venv/bin/mdbx search "..."` · TUI: `.venv/bin/mdbx tui`
 - MQL: `.venv/bin/mdbx lint FILE` · `.venv/bin/mdbx optimize FILE|- [--read-only] [--write] [--json]` (exit 1 on high/blocking)
 - Chrome extension: `cd editors/chrome && npm test` · package (exports search data to `editors/chrome/data/`): `python3 scripts/package_chrome_extension.py` · export only: `mdbx export-web DIR`
@@ -25,3 +25,23 @@ Project: `mdb-expertise-search` (`mdbx`) — hybrid search CLI/TUI over a MongoD
 - Keep `pytest` and `ruff` green before committing; update `docs/` when behavior changes.
 - Log every completed change in `memory.md`; append every user request to `prompts.md`.
 - Do not invent commands, paths or env vars — read the code.
+
+## Repository shape and runtime
+
+Python 3.11+ owns parsing, indexing, CLI, optional Textual UI and stdio MCP/LSP.
+Chrome uses native JavaScript modules; VS Code uses a Node language client. Node 26
+is the tested tool runtime (`.node-version`). There is no application HTTP server,
+central dashboard or operations registry. See [docs/wiki/README.md](docs/wiki/README.md).
+
+## Maintenance boundaries
+
+Use synthetic fixtures for tests. Do not run corpus sync, live indexing, model
+fetches, provider authentication, service installation or extension activation as
+part of routine verification. Tests isolate model/data paths before collection,
+block Python sockets and inherit a narrow filter for the known semantic Git hook;
+macOS checks also use `scripts/offline_test.py` for descendant egress isolation.
+Preserve every other validation/registry hook. Dependency installation is separate.
+
+The default install supports keyword search. Install the private `ollama` extra
+when authorized and authenticated; `onnx` and `ai` remain explicit extras. Static
+retrieval indexes may be regenerated; semantic indexes require separate approval.

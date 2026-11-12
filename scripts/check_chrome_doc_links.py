@@ -16,9 +16,13 @@ SRC = (ROOT / "editors" / "chrome" / "lib" / "docs.js").read_text(encoding="utf-
 
 
 def urls() -> list[str]:
-    base = re.search(r'const M = "([^"]+)"', SRC).group(1)
-    found = {base + m for m in re.findall(r'M \+ "([^"]+)"', SRC)}
-    found |= set(re.findall(r'"(https://[^"]+)"', SRC)) - {base}
+    literal = r"""(["'])(.*?)\1"""
+    base_match = re.search(r"const\s+M\s*=\s*" + literal, SRC)
+    if base_match is None:
+        raise ValueError("docs URL base constant is missing")
+    base = base_match.group(2)
+    found = {base + match.group(2) for match in re.finditer(r"\bM\s*\+\s*" + literal, SRC)}
+    found |= {match.group(2) for match in re.finditer(literal, SRC) if match.group(2).startswith("https://")} - {base}
     return sorted(found)
 
 

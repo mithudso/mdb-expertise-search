@@ -13,6 +13,7 @@ from __future__ import annotations
 import functools
 import logging
 import os
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -72,19 +73,39 @@ def available() -> bool:
 
 
 @functools.lru_cache(maxsize=1)
-def _runtime():
+def _cached_runtime():
     try:
         import onnxruntime as ort
         from tokenizers import Tokenizer
     except ImportError as exc:
         raise OnnxUnavailable("onnxruntime/tokenizers are not installed; pip install 'mdb-expertise-search[onnx]'") from exc
-    model, tok_path = _resolve(download=False)
-    tok = Tokenizer.from_file(str(tok_path))
-    tok.enable_truncation(max_length=MAX_TOKENS)
-    tok.enable_padding()
-    sess = ort.InferenceSession(str(model), providers=["CPUExecutionProvider"])
-    log.debug("loaded %s", model)
-    return sess, tok, {i.name for i in sess.get_inputs()}
+    try:
+        model, tok_path = _resolve(download=False)
+        tok = Tokenizer.from_file(str(tok_path))
+        tok.enable_truncation(max_length=MAX_TOKENS)
+        tok.enable_padding()
+        sess = ort.InferenceSession(str(model), providers=["CPUExecutionProvider"])
+        return sess, tok, {i.name for i in sess.get_inputs()}
+    except Exception as exc:
+        raise OnnxUnavailable("local model.onnx or tokenizer unavailable or invalid") from exc
+
+
+_runtime_lock = threading.RLock()
+
+
+def _locked_runtime():
+    # The lock surrounds cache lookup as well as loading, preventing duplicate cold misses.
+    with _runtime_lock:
+        return _cached_runtime()
+
+
+def _clear_runtime():
+    with _runtime_lock:
+        _cached_runtime.cache_clear()
+
+
+_locked_runtime.cache_clear = _clear_runtime
+_runtime = _locked_runtime
 
 
 def embed(texts: list[str], *, prefix: str = "search_document: ") -> np.ndarray:
@@ -100,7 +121,11 @@ def embed(texts: list[str], *, prefix: str = "search_document: ") -> np.ndarray:
         feed = {"input_ids": ids, "attention_mask": mask}
         if "token_type_ids" in names:
             feed["token_type_ids"] = np.zeros_like(ids)
-        hidden = sess.run(None, feed)[0]  # (batch, tokens, dim)
+        try:
+            hidden = sess.run(None, feed)[0]
+        except Exception as exc:
+            raise OnnxUnavailable("ONNX inference failed") from exc
+        #  # (batch, tokens, dim)
         m = mask[..., None].astype(np.float32)
         pooled = (hidden * m).sum(1) / np.maximum(m.sum(1), 1.0)  # mean pooling over real tokens
         out.append(pooled / np.maximum(np.linalg.norm(pooled, axis=1, keepdims=True), 1e-12))

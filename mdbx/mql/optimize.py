@@ -15,10 +15,12 @@ pipelines) lives in ``normalize.py``.
 """
 from __future__ import annotations
 
+import json
+import math
 import re
 from dataclasses import dataclass, field
 
-from .normalize import Normalized, normalize
+from .normalize import Normalized, _coll_ref, normalize
 from .parser import Node, Prop, Statement, parse
 
 BLOCKING, HIGH, MEDIUM, LOW = "blocking", "high", "medium", "low"
@@ -75,13 +77,13 @@ class IndexRec:
 
     def shell(self) -> str:
         body = ", ".join(f"{_key(k)}: {d}" for k, d in self.keys)
-        return f"db.{self.collection}.createIndex({{ {body} }})"
+        return f"{_coll_ref(self.collection)}.createIndex({{ {body} }})"
 
 
 @dataclass
 class Target:
     kind: str  # find | aggregate | write | count | distinct | watch
-    collection: str
+    collection: str | None
     method: str
     start: int
     end: int
@@ -90,6 +92,7 @@ class Target:
     sort: Node | None = None
     pipeline: Node | None = None
     chain: dict[str, Node] = field(default_factory=dict)  # cursor method -> its call node
+    evidence: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -112,7 +115,7 @@ class Report:
 
 
 def _key(k: str) -> str:
-    return k if re.fullmatch(r"[A-Za-z_$][\w$]*", k) else repr(k).replace("'", '"')
+    return k if re.fullmatch(r"[A-Za-z_$][\w$]*", k) else json.dumps(k)
 
 
 @dataclass
@@ -125,12 +128,13 @@ class _Pred:
 class _Audit:
     def __init__(self, text: str):
         self.text = text
-        self.statements, _ = parse(text)
-        self.vars: dict[str, Node] = {s.decl: s.node for s in self.statements if s.decl}
+        self.statements, self.errors = parse(text)
+        self.vars: dict[str, Node] = {}
         self.findings: list[Finding] = []
         self.indexes: list[IndexRec] = []
         self.targets: list[Target] = []
         self.seen_pipelines: set[int] = set()
+        self.index_keys: set[tuple] = set()
 
     def src(self, n: Node) -> str:
         return self.text[n.start : n.end]
@@ -153,6 +157,8 @@ class _Audit:
     # ---- target discovery
     def run(self) -> None:
         for st in self.statements:
+            if st.decl and not self.errors:
+                self.vars[st.decl] = st.node
             self.statement(st)
 
     def statement(self, st: Statement) -> None:
@@ -176,14 +182,17 @@ class _Audit:
             n = n.target.target
         calls.reverse()
         coll = None
+        receiver = False
         if n is not None and n.kind == "member" and n.target is not None and n.target.kind == "ident" \
                 and n.target.value == "db":
-            coll = str(n.value)
+            receiver = True
+            coll = str(n.value) if n.value != "?" else None
         if calls and calls[0][0] == "getCollection" and n is not None and n.kind == "ident" and n.value == "db":
             args = calls[0][1].items
-            coll = str(args[0].value) if args and args[0].kind == "string" else "collection"
+            receiver = True
+            coll = str(args[0].value) if args and args[0].kind == "string" else None
             calls = calls[1:]
-        if coll is None or not calls or calls[0][0] not in TARGET_METHODS:
+        if not receiver or not calls or calls[0][0] not in TARGET_METHODS:
             return
         method, base = calls[0]
         t = Target(self._kind(method), coll, method, call.start, call.end,
@@ -196,9 +205,10 @@ class _Audit:
                 t.filter = self.resolve(base.items[argi])
             if method in {"find", "findOne"} and len(base.items) > 1:
                 t.projection = self.resolve(base.items[1])
-            if method == "findOneAndUpdate" and len(base.items) > 2:
-                opts = base.items[2]
-                for p in opts.props if opts.kind == "object" else []:
+            opti = 1 if method == "findOneAndDelete" else 2
+            if method in {"findOneAndUpdate", "findOneAndReplace", "findOneAndDelete"} and len(base.items) > opti:
+                opts = self.resolve(base.items[opti])
+                for p in opts.props if opts is not None and opts.kind == "object" else []:
                     if p.key == "sort":
                         t.sort = p.value
                     if p.key == "projection":
@@ -226,6 +236,9 @@ class _Audit:
             preds = self.filter(t.filter, has_sort=has_sort)
         if t.pipeline is not None and t.pipeline.kind == "array":
             if id(t.pipeline) in self.seen_pipelines:
+                stages = [(it.props[0].key, it.props[0].value, it) for it in t.pipeline.items
+                          if it.kind == "object" and len(it.props) == 1]
+                self.recommend_pipeline(t, stages)
                 return
             self.seen_pipelines.add(id(t.pipeline))
             self.pipeline(t, t.pipeline)
@@ -265,9 +278,9 @@ class _Audit:
                      "or estimatedDocumentCount() for an unfiltered total (reads metadata only).", ref="perf")
         if t.method == "countDocuments" and (t.filter is None or (t.filter.kind == "object" and not t.filter.props)):
             self.add(base, MEDIUM, "count-all", "P6",
-                     "countDocuments({}) scans the collection or the _id index. For a whole-collection total use "
-                     "estimatedDocumentCount(), which reads collection metadata.",
-                     fix=f"db.{t.collection}.estimatedDocumentCount()" if base.end == t.end else None, ref="perf")
+                     "countDocuments({}) scans the collection or the _id index. If an approximate total is acceptable, "
+                     "consider estimatedDocumentCount(), which reads metadata and does not preserve exact count "
+                     "or skip/limit semantics. Keep countDocuments() when an exact count is required.", ref="perf")
         if t.method == "distinct":
             self.add(base.target, LOW, "distinct-16mb", "P6",
                      "distinct() returns one document capped at 16 MB and can use DISTINCT_SCAN only with an index "
@@ -322,22 +335,20 @@ class _Audit:
         assert v is not None
         if v.kind == "regex":
             self.regex_rule(v, str(v.value).rsplit("/", 1)[0], str(v.value).rsplit("/", 1)[1])
-            return [_Pred(name, "regex" if _anchored(str(v.value)) and "i" not in str(v.value).rsplit("/", 1)[1]
+            return [_Pred(name, "regex" if _anchored(*str(v.value).rsplit("/", 1)) and "i" not in str(v.value).rsplit("/", 1)[1]
                           else "other")]
         if v.kind != "object" or not v.props or not all(q.key.startswith("$") for q in v.props):
             return [_Pred(name, "eq")]
         keys = {q.key: q for q in v.props}
         out: list[_Pred] = []
-        # degenerate range: { $gte: X, $lte: X } is an equality
+        # Array elements may satisfy the two bounds independently.
         lo, hi = keys.get("$gte"), keys.get("$lte")
         if lo and hi and lo.value is not None and hi.value is not None and \
                 self.src(lo.value).strip() == self.src(hi.value).strip():
-            only = len(v.props) == 2
             self.add(v, MEDIUM, "degenerate-range", "P4",
-                     f"{name}: $gte and $lte carry the same value, which is an equality the planner treats as a "
-                     "range (breaks ESR key order and invites near-tied plans). Rewrite to an equality.",
-                     fix=self.src(lo.value) if only else None)
-            return [_Pred(name, "eq")]
+                     f"{name}: $gte and $lte carry the same value. Equality is equivalent only with proven "
+                     "scalar field semantics; different array elements can satisfy the two bounds. "
+                     "Reported, not applied.")
         for op, q in keys.items():
             qv = q.value
             if op in {"$eq"}:
@@ -366,8 +377,9 @@ class _Audit:
                 out.append(_Pred(name, "range"))
             elif op in _NEG_OPS or (op == "$exists" and qv is not None and qv.kind == "bool" and not qv.value):
                 self.add(q, MEDIUM, "negation", "P4",
-                         f"{name}: {op}{'' if op != '$exists' else ': false'} cannot use selective index bounds and "
-                         "also matches documents missing the field. Where the domain is known, match the wanted "
+                         f"{name}: {op}{'' if op != '$exists' else ': false'} cannot use selective index bounds and " +
+                         ("excludes missing fields for $ne: null. " if op == "$ne" and qv is not None and qv.kind == "null"
+                          else "may also match documents missing the field. ") + "Where the domain is known, match the wanted "
                          "values positively ($in / equality) — this changes results unless the field is always "
                          "present, so it is not auto-applied.")
                 out.append(_Pred(name, "neg"))
@@ -382,28 +394,28 @@ class _Audit:
                     flags += f2
                 if qv is not None:
                     self.regex_rule(qv, pat, flags)
-                out.append(_Pred(name, "regex" if pat.startswith(("^", "\\A")) and "i" not in flags else "other"))
+                out.append(_Pred(name, "regex" if _anchored(pat, flags) and "i" not in flags else "other"))
             elif op == "$elemMatch":
                 out.append(_Pred(name, "other"))
         return out or [_Pred(name, "other")]
 
     def regex_rule(self, node: Node, pat: str, flags: str) -> None:
-        if not pat.startswith(("^", "\\A")):
+        if not _anchored(pat, flags):
             self.add(node, MEDIUM, "unanchored-regex", "P4",
                      f"/{pat}/ is not anchored, so it scans every index key (or document). Anchor it with ^ if "
                      "the value is a prefix, or use Atlas Search for substring / full-text matching.")
         elif "i" in flags:
             self.add(node, MEDIUM, "case-insensitive-regex", "P4",
                      f"/{pat}/{flags}: a case-insensitive regex cannot use tight index bounds even when anchored. "
-                     "Store a normalized lower-case copy, or query with a strength-2 collation that matches an "
-                     "index built with the same collation.", ref="index")
+                     "$regex is not collation-aware. Consider a normalized lower-case field, or collation-backed "
+                     "equality when equality preserves the intended matching semantics.", ref="index")
 
     def or_rules(self, parent: Node, p: Prop, *, has_sort: bool, rooted: bool) -> None:
         v = p.value
         assert v is not None
         branches = [it for it in v.items if it.kind == "object"]
         fields = {b.props[0].key for b in branches if len(b.props) == 1}
-        simple = all(len(b.props) == 1 and not b.props[0].key.startswith("$") and b.props[0].value is not None
+        simple = len(branches) == len(v.items) and all(len(b.props) == 1 and not b.props[0].key.startswith("$") and b.props[0].value is not None
                      and _is_eq_value(b.props[0].value) for b in branches)
         if len(branches) >= 2 and simple and len(fields) == 1:
             f = fields.pop()
@@ -432,8 +444,9 @@ class _Audit:
         op = v.props[0].key
         args = v.props[0].value
         simple = op in {"$eq", "$lt", "$lte", "$gt", "$gte"} and args is not None and args.kind == "array" and \
-            len(args.items) == 2 and sum(1 for a in args.items if a.kind == "string" and str(a.value).startswith("$")
-                                         and not str(a.value).startswith("$$")) == 1
+            len(args.items) == 2 and any(
+                a.kind == "string" and str(a.value).startswith("$") and not str(a.value).startswith("$$")
+                and _constant_expr(args.items[1 - i]) for i, a in enumerate(args.items))
         if not simple:
             self.add(p, MEDIUM, "expr-unindexable", "P4",
                      f"$expr with {op} is evaluated per document and cannot use index bounds (only a plain "
@@ -499,7 +512,8 @@ class _Audit:
             if used is None:
                 continue
             j = i
-            while j > 0 and stages[j - 1][0] in _TRANSPARENT and not (_produced(stages[j - 1]) & used):
+            while j > 0 and stages[j - 1][0] in _TRANSPARENT and "*" not in _produced(stages[j - 1]) \
+                    and not (_produced(stages[j - 1]) & used):
                 j -= 1
             if j == i:
                 continue
@@ -519,16 +533,13 @@ class _Audit:
             return  # one hoist per iteration; the loop re-runs on the rewritten text
 
     def _rebuild_array(self, arr: Node, order: list[Node]) -> str:
-        first, last = arr.items[0], arr.items[-1]
-        inner = self.text[first.start : last.end]
-        multiline = "\n" in inner
-        if multiline:
-            line_start = self.text.rfind("\n", 0, first.start) + 1
-            indent = self.text[line_start : first.start]
-            body = (",\n" + indent).join(self.src(n) for n in order)
-        else:
-            body = ", ".join(self.src(n) for n in order)
-        return self.text[arr.start : first.start] + body + self.text[last.end : arr.end]
+        # Keep separators and comments in place; replace only each stage's source span.
+        out, pos = [], arr.start
+        for original, replacement in zip(arr.items, order):
+            out.extend((self.text[pos:original.start], self.src(replacement)))
+            pos = original.end
+        out.append(self.text[pos:arr.end])
+        return "".join(out)
 
     def group(self, stages: list, i: int, v: Node) -> None:
         later = stages[i + 1 :]
@@ -576,7 +587,7 @@ class _Audit:
                   why: str = "") -> None:
         if t.filter is not None and t.filter.kind == "object":
             ors = [p for p in t.filter.props if p.key == "$or" and p.value is not None and p.value.kind == "array"]
-            if ors and not any(f.code == "or-to-in" for f in self.findings if f.start == ors[0].start):
+            if ors:
                 for b in ors[0].value.items:  # type: ignore[union-attr]
                     if b.kind == "object":
                         bp = preds + self.quiet_filter(b)
@@ -592,6 +603,8 @@ class _Audit:
         return out
 
     def _emit(self, t: Target, preds: list[_Pred], sort: Node | None, proj: Node | None, why: str) -> None:
+        if t.collection is None:
+            return
         eq = _uniq(p.field for p in preds if p.kind in {"eq", "in"})
         rng = _uniq(p.field for p in preds if p.kind in {"range", "regex"} and p.field not in eq)
         srt: list[tuple[str, int]] = []
@@ -606,6 +619,11 @@ class _Audit:
         keys = [(f, 1) for f in eq] + [(f, d) for f, d in srt if f not in eq]
         keys += [(f, 1) for f in rng if f not in {k for k, _ in keys}]
         if not keys:
+            return
+        if len(keys) > 32:
+            self.add((t.start, t.end), MEDIUM, "index-too-wide", "P2",
+                     "This shape needs more than MongoDB's 32 compound-index fields. No build command is emitted; "
+                     "choose a narrower index using measured selectivity and the required sort.", ref="index")
             return
         parts = []
         if eq:
@@ -632,7 +650,9 @@ class _Audit:
         rec = IndexRec(t.collection, keys, rationale)
         if [k for k, _ in keys] == ["_id"]:  # served by the built-in _id index
             return
-        if all(r.shell() != rec.shell() for r in self.indexes):
+        identity = (rec.collection, tuple(rec.keys))
+        if identity not in self.index_keys:
+            self.index_keys.add(identity)
             self.indexes.append(rec)
 
     def recommend_pipeline(self, t: Target, stages: list) -> None:
@@ -654,13 +674,39 @@ def _num(n: Node | None) -> float | None:
     if n is None or n.kind != "number":
         return None
     try:
-        return float(n.value)  # type: ignore[arg-type]
-    except (TypeError, ValueError):
+        value = float(n.value)  # type: ignore[arg-type]
+        return value if math.isfinite(value) else None
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
-def _anchored(regex_value: str) -> bool:
-    return regex_value.startswith(("^", "\\A"))
+def _anchored(regex_value: str, flags: str = "") -> bool:
+    # Conservatively reject alternation, even inside a group, and multiline ^.
+    if not regex_value.startswith(("^", "\\A")) or ("m" in flags and regex_value.startswith("^")):
+        return False
+    escaped = False
+    for ch in regex_value:
+        if escaped:
+            escaped = False
+        elif ch == "\\":
+            escaped = True
+        elif ch == "|":
+            return False
+    return True
+
+
+def _constant_expr(node: Node) -> bool:
+    if node.kind in {"number", "bool", "null"}:
+        return True
+    if node.kind == "string":
+        return not str(node.value).startswith("$")
+    if node.kind == "array":
+        return all(_constant_expr(it) for it in node.items)
+    if node.kind == "object":
+        if len(node.props) == 1 and node.props[0].key == "$literal":
+            return True
+        return all(p.value is not None and _constant_expr(p.value) for p in node.props)
+    return False
 
 
 def _is_eq_value(v: Node) -> bool:
@@ -697,7 +743,9 @@ def _match_fields(v: Node) -> set[str] | None:
     for p in v.props:
         if p.key in {"$expr", "$where", "$text", "$jsonSchema"}:
             return None
-        if p.key in {"$and", "$or", "$nor"} and p.value is not None and p.value.kind == "array":
+        if p.key in {"$and", "$or", "$nor"}:
+            if p.value is None or p.value.kind != "array":
+                return None
             for it in p.value.items:
                 if it.kind != "object":
                     return None
@@ -707,6 +755,8 @@ def _match_fields(v: Node) -> set[str] | None:
                 out |= sub
         elif not p.key.startswith("$"):
             out.add(p.key.split(".")[0])
+        elif p.key != "$comment":
+            return None
     return out
 
 
@@ -717,26 +767,21 @@ def _produced(stage: tuple) -> set[str]:
         return {"*"}
     if name in {"$addFields", "$set"} and v.kind == "object":
         return {p.key.split(".")[0] for p in v.props}
-    if name == "$project" and v.kind == "object":
-        out = set()
-        for p in v.props:
-            pv = p.value
-            if pv is None or not (pv.kind in {"number", "bool"}):
-                out.add(p.key.split(".")[0])  # computed / renamed field
-        return out
+    if name == "$project":
+        return {"*"}  # inclusion, exclusion, nested and computed fields all affect dependencies
     if name == "$lookup" and v.kind == "object":
         return {str(p.value.value).split(".")[0] for p in v.props
                 if p.key == "as" and p.value is not None and p.value.kind == "string"} or {"*"}
     if name == "$unwind":
         path = v.value if v.kind == "string" else next(
             (p.value.value for p in v.props if p.key == "path" and p.value is not None), None)
-        extra = {str(p.value.value) for p in (v.props if v.kind == "object" else [])
+        extra = {str(p.value.value).split(".")[0] for p in (v.props if v.kind == "object" else [])
                  if p.key == "includeArrayIndex" and p.value is not None}
         return ({str(path).lstrip("$").split(".")[0]} if path else {"*"}) | extra
     if name == "$unset":
         names = [v] if v.kind == "string" else v.items if v.kind == "array" else []
-        return {str(n.value).split(".")[0] for n in names if n.kind == "string"}
-    return set()
+        return {str(n.value).split(".")[0] for n in names} if names and all(n.kind == "string" for n in names) else {"*"}
+    return set() if name == "$sort" and v.kind == "object" else {"*"}
 
 
 def _slices(stage: tuple, fieldname: str) -> bool:
@@ -780,7 +825,12 @@ def _evidence_findings(ev: dict, start: int, end: int) -> list[Finding]:
 
     def num(k):
         v = ev.get(k)
-        return v if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+        if not isinstance(v, (int, float)) or isinstance(v, bool):
+            return None
+        try:
+            return v if math.isfinite(v) else None
+        except OverflowError:
+            return None
 
     plan = str(ev.get("planSummary", ""))
     if "COLLSCAN" in plan:
@@ -818,6 +868,12 @@ def optimize(text: str, *, apply: bool = True, max_iters: int = 3) -> Report:
     norm: Normalized = normalize(text)
     current = norm.text
     applied: list[Finding] = []
+    evidence = [q.evidence for q in norm.queries]
+    evidence_by_start = {}
+    offset = 0
+    for query in norm.queries:
+        evidence_by_start[offset] = query.evidence
+        offset += len(query.text) + 1
     iters = 0
     while True:
         iters += 1
@@ -825,18 +881,29 @@ def optimize(text: str, *, apply: bool = True, max_iters: int = 3) -> Report:
         audit.run()
         if iters == 1:
             n_input = len(audit.targets)
-        if not apply or iters > max_iters:
+        if not apply or iters > max_iters or audit.errors:
             break
         new, chosen = _apply(current, audit.findings)
-        if not chosen or new == current:
+        if not chosen or new == current or parse(new)[1]:
             break
+        # Carry source identities through edits. A replaced call is retired; its evidence stays
+        # in Report.evidence, and cannot slide to the next surviving target.
+        moved_evidence = {}
+        edit_index = shift = 0
+        for start, ev in evidence_by_start.items():
+            while edit_index < len(chosen) and chosen[edit_index].end <= start:
+                edit = chosen[edit_index]
+                shift += len(edit.fix) - (edit.end - edit.start)
+                edit_index += 1
+            if edit_index == len(chosen) or chosen[edit_index].start > start:
+                moved_evidence[start + shift] = ev
+        evidence_by_start = moved_evidence
         applied += chosen
         current = new
-    evidence = [q.evidence for q in norm.queries]
-    for i, ev in enumerate(evidence):
-        if ev:
-            t = audit.targets[i] if i < len(audit.targets) else None
-            audit.findings += _evidence_findings(ev, t.start if t else 0, t.end if t else 1)
+    for target in audit.targets:
+        target.evidence = evidence_by_start.get(target.start, {})
+        if target.evidence:
+            audit.findings += _evidence_findings(target.evidence, target.start, target.end)
     audit.findings.sort(key=lambda f: (SEVERITY_ORDER[f.severity], f.start))
     return Report(norm.text, current, audit.targets, audit.findings, applied, audit.indexes, iters, n_input,
                   norm.kind, norm.text if norm.changed else None, evidence)
@@ -894,8 +961,7 @@ def to_dict(rep: Report) -> dict:
     return {
         "input": {"kind": rep.input_kind, "interpreted": rep.interpreted},
         "queries": [{"kind": x.kind, "collection": x.collection, "method": x.method, **pos(x.start),
-                     "evidence": rep.evidence[i] if i < len(rep.evidence) else {}}
-                    for i, x in enumerate(rep.targets)],
+                     "evidence": x.evidence} for x in rep.targets],
         "findings": [{"severity": f.severity, "code": f.code, "pass": f.pass_id, "message": f.message,
                       "ref": f.ref, **pos(f.start)} for f in rep.findings if not f.code.endswith("-rewrite")],
         "applied": [{"code": f.code, "pass": f.pass_id, "message": f.message} for f in rep.applied],

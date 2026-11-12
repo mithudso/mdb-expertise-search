@@ -8,6 +8,8 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
+from .safety import open_confined
+
 log = logging.getLogger("mdbx.corpus")
 
 TEXT_SUFFIXES = {".md", ".txt"}
@@ -21,7 +23,7 @@ KIND_LABELS = {
     "recipes": "recipe",
 }
 
-_HEADING = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
+_HEADING = re.compile(r"^(#{1,6})[ \t]+(.+)$")
 
 
 @dataclass(frozen=True)
@@ -43,7 +45,7 @@ def classify(rel: Path) -> tuple[str, str]:
     parts = rel.parts
     if parts[0] == "recipes":
         return "recipe", rel.stem
-    if parts[0] == "skills":
+    if parts[0] == "skills" and len(parts) > 1:
         return "skill", parts[1]
     if len(parts) > 1 and parts[1] == "memory-central":
         return "memory", rel.stem.removesuffix("_llms")
@@ -54,7 +56,7 @@ def classify(rel: Path) -> tuple[str, str]:
 
 def iter_files(root: Path) -> Iterator[Path]:
     for p in sorted(root.rglob("*")):
-        if p.is_file() and p.suffix in TEXT_SUFFIXES and not p.name.startswith("."):
+        if not p.is_symlink() and p.is_file() and p.suffix in TEXT_SUFFIXES and not p.name.startswith("."):
             yield p
 
 
@@ -64,6 +66,8 @@ def chunk_text(text: str, *, max_chars: int = MAX_CHUNK_CHARS) -> list[tuple[str
     Pieces break at markdown headings and are packed up to ``max_chars``; a single
     oversized paragraph is split on line boundaries, then hard-wrapped.
     """
+    if isinstance(max_chars, bool) or not isinstance(max_chars, int) or max_chars < 1:
+        raise ValueError("max_chars must be positive")
     out: list[tuple[str, int, str]] = []
     stack: list[tuple[int, str]] = []
     buf: list[str] = []
@@ -80,11 +84,17 @@ def chunk_text(text: str, *, max_chars: int = MAX_CHUNK_CHARS) -> list[tuple[str
             out.append((crumb(), buf_line, body))
         buf, buf_len = [], 0
 
-    in_fence = False
+    fence = None
     for i, line in enumerate(text.splitlines(), start=1):
-        if line.lstrip().startswith("```"):
-            in_fence = not in_fence
-        m = None if in_fence else _HEADING.match(line)
+        marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+        was_fenced = fence is not None
+        if marker:
+            run = marker.group(1)
+            if fence is None:
+                fence = (run[0], len(run))
+            elif run[0] == fence[0] and len(run) >= fence[1] and not marker.group(2).strip():
+                fence = None
+        m = None if was_fenced or marker else _HEADING.match(line)
         if m:
             if buf_len >= MIN_CHUNK_CHARS:
                 flush()  # a heading-only stub is carried into the next chunk instead
@@ -95,7 +105,7 @@ def chunk_text(text: str, *, max_chars: int = MAX_CHUNK_CHARS) -> list[tuple[str
             buf_line = i
         pieces = [line[k : k + max_chars] for k in range(0, len(line), max_chars)] or [""]
         for piece in pieces:
-            if buf_len + len(piece) + 1 > max_chars and buf_len >= MIN_CHUNK_CHARS:
+            if buf and buf_len + len(piece) + 1 > max_chars:
                 flush()
                 buf_line = i
             if not buf:
@@ -103,13 +113,13 @@ def chunk_text(text: str, *, max_chars: int = MAX_CHUNK_CHARS) -> list[tuple[str
             buf.append(piece)
             buf_len += len(piece) + 1
     flush()
-    return _merge_tiny(out)
+    return _merge_tiny(out, max_chars)
 
 
-def _merge_tiny(pieces: list[tuple[str, int, str]]) -> list[tuple[str, int, str]]:
+def _merge_tiny(pieces: list[tuple[str, int, str]], max_chars: int = MAX_CHUNK_CHARS) -> list[tuple[str, int, str]]:
     merged: list[tuple[str, int, str]] = []
     for head, line, body in pieces:
-        if merged and len(body) < MIN_CHUNK_CHARS and len(merged[-1][2]) + len(body) < MAX_CHUNK_CHARS:
+        if merged and len(body) < MIN_CHUNK_CHARS and len(merged[-1][2]) + len(body) + 1 <= max_chars:
             ph, pl, pb = merged[-1]
             merged[-1] = (ph, pl, pb + "\n" + body)
         else:
@@ -121,10 +131,10 @@ def iter_chunks(root: Path) -> Iterator[Chunk]:
     for path in iter_files(root):
         rel = path.relative_to(root)
         try:
-            text = path.read_text(encoding="utf-8", errors="replace")
-        except OSError as exc:
-            log.warning("skipping unreadable corpus file %s: %s", path, exc)
-            continue
+            with open_confined(root, rel.as_posix()) as stream:
+                text = stream.read()
+        except (OSError, ValueError, UnicodeError) as exc:
+            raise ValueError("corpus contains an unreadable or unsafe text file") from exc
         kind, source = classify(rel)
         for head, line, body in chunk_text(text):
             yield Chunk(str(rel), source, kind, head or path.stem, line, body)

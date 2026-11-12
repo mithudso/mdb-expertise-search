@@ -11,7 +11,7 @@ Same contract as the Glean native-messaging hosts in mdb-case-assistant / tam-da
     python scripts/glean_cli_helper.py api users/me
     python scripts/glean_cli_helper.py chat "Summarise ..."
 
-Exit codes: 0 ok · 1 failed · 2 glean CLI not installed · 3 not authenticated (run login).
+Exit codes: 0 ok · 1 failed · 2 glean CLI or ai-auth library not installed · 3 not authenticated (run login).
 Requires the Glean CLI (``brew install gleanwork/tap/glean-cli``) and the ai-auth library, which owns the
 implementation (``ai_auth/glean_helper.py``): ``pip install 'mdb-expertise-search[ai]'``.
 """
@@ -22,10 +22,13 @@ import sys
 
 try:
     from ai_auth.glean_helper import main
-except ImportError:  # pragma: no cover
-    print(json.dumps({"ok": False, "code": 2, "error": "ai-auth library not installed",
-                      "remediation": "pip install 'mdb-expertise-search[ai]' or pip install -e ~/dev/libraries/ai-auth"}))
-    sys.exit(2)
+except ImportError as error:
+    absent = isinstance(error, ModuleNotFoundError) and error.name in {"ai_auth", "ai_auth.glean_helper"}
+    code = 2 if absent else 1
+    print(json.dumps({"ok": False, "code": code,
+                      "error": "ai-auth library not installed" if absent else "ai-auth helper import failed",
+                      "remediation": "Install the ai extra or repair its dependencies."}))
+    sys.exit(code)
 
 if __name__ == "__main__":
     sys.exit(main())

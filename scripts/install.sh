@@ -6,7 +6,8 @@
 # 3. installs mdbx with all extras     6. installs the corpus auto-update agent (macOS launchd), then smoke-tests
 # Re-run any time: every step is idempotent.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+cd "$(dirname "$SCRIPT_PATH")/.."
 
 NO_MODEL=0 NO_INDEX=0 NO_AGENT=0
 for a in "$@"; do
@@ -14,7 +15,7 @@ for a in "$@"; do
     --no-model) NO_MODEL=1 ;;
     --no-index) NO_INDEX=1 ;;
     --no-agent) NO_AGENT=1 ;;
-    -h|--help) sed -n 2,7p "$0"; exit 0 ;;
+    -h|--help) sed -n 2,7p "$SCRIPT_PATH"; exit 0 ;;
     *) echo "unknown option: $a" >&2; exit 2 ;;
   esac
 done
@@ -29,7 +30,7 @@ pick_python() {
   done
   return 1
 }
-PY="$(pick_python)" || { echo "error: need Python 3.11-3.13 (try: brew install python@3.13)" >&2; exit 1; }
+
 
 say "Updating code"
 git pull --ff-only || echo "note: not fast-forwarding (local changes or no upstream); continuing with the current checkout"
@@ -39,7 +40,10 @@ if [ -x .venv/bin/python ]; then
   cur="$(.venv/bin/python -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
   case "$cur" in 3.11|3.12|3.13) ;; *) echo "recreating .venv: it uses Python $cur"; rm -rf .venv ;; esac
 fi
-[ -x .venv/bin/python ] || "$PY" -m venv .venv
+if [ ! -x .venv/bin/python ]; then
+  PY="$(pick_python)" || { echo "error: need Python 3.11-3.13 (try: brew install python@3.13)" >&2; exit 1; }
+  "$PY" -m venv .venv
+fi
 .venv/bin/python --version
 
 say "Installing mdbx with extras (dev, tui, lsp, mcp, onnx)"

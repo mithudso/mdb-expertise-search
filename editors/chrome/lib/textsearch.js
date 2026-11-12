@@ -13,7 +13,7 @@ export const STOPWORDS = new Set(["a", "an", "and", "are", "as", "at", "be", "bu
   "i", "if", "in", "is", "it", "my", "of", "on", "or", "so", "that", "the", "this", "to", "was", "what", "when", "where",
   "which", "why", "with", "you", "your", "can", "not"]);
 const TOKEN_CHAR = /[\p{L}\p{N}\p{Co}_]/u;
-const WORD = /[\p{L}\p{N}_]+/gu; // Python re \w+
+const WORD = /[\p{L}\p{N}_][\p{L}\p{N}\p{M}_]*/gu;
 const PORTER_MAX = 64;
 const enc = new TextEncoder();
 
@@ -30,7 +30,7 @@ export function rawTokenSpans(text) {
   let start = 0;
   let i = 0;
   for (const c of text) {
-    if (TOKEN_CHAR.test(c)) {
+    if (TOKEN_CHAR.test(c) || (cur && /\p{M}/u.test(c))) {
       if (!cur) start = i;
       cur += c;
     } else if (cur) {
@@ -240,14 +240,20 @@ export class SearchIndex {
     return [];
   }
 
+  *rankedHits(ranked, via) {
+    for (const [i, score] of ranked) yield this.hit(i, score, via);
+  }
+
   keyword(query, limit = 10, { kind = null, source = null } = {}) {
-    const ranked = this.keywordRanked(query, kind, source).slice(0, limit * 3);
-    return dedupe(ranked.map(([i, s]) => this.hit(i, s, "keyword")), limit);
+    const ranked = this.keywordRanked(query, kind, source);
+    return dedupe(this.rankedHits(ranked, "keyword"), limit);
   }
 
   semanticVec(qv, limit = 10, { kind = null, source = null } = {}) {
     if (!this.vectors) return [];
     const dim = this.dim;
+    if (!Array.isArray(qv) || qv.length !== dim) throw new EmbedError("query embedding dimension does not match the index");
+    if (!qv.every(Number.isFinite)) throw new EmbedError("query embedding must contain finite numbers");
     const ranked = [];
     for (let i = 0; i < this.n; i++) {
       const vi = this.rows[i][6];
@@ -258,7 +264,7 @@ export class SearchIndex {
       ranked.push([i, s / 127.0]);
     }
     ranked.sort((a, b) => b[1] - a[1] || a[0] - b[0]);
-    return dedupe(ranked.slice(0, limit * 3).map(([i, s]) => this.hit(i, s, "semantic")), limit);
+    return dedupe(this.rankedHits(ranked, "semantic"), limit);
   }
 
   hybridVec(query, qv, limit = 10, opts = {}) {
@@ -285,6 +291,7 @@ export class SearchIndex {
     const pi = this.paths.indexOf(path);
     if (pi < 0) return null;
     const parts = this.rows.map((r, i) => [r, i]).filter(([r]) => r[0] === pi).sort((a, b) => a[0][3] - b[0][3]);
+    if (!parts.length) return null;
     return { path, source: this.sources[parts[0][0][1]], kind: this.kinds[parts[0][0][2]],
       chunks: parts.map(([r, i]) => ({ id: i, line: r[3], heading: r[4], text: r[5] })) };
   }
@@ -296,10 +303,11 @@ export class SearchIndex {
 }
 
 export function dedupe(hits, limit) {
+  if (limit <= 0) return [];
   const seen = new Set();
   const out = [];
   for (const h of hits) {
-    const key = h.text.split(/\s+/).filter(Boolean).join(" ").slice(0, 300);
+    const key = h.text.split(/\s+/).filter(Boolean).join(" ");
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(h);
@@ -352,17 +360,16 @@ export async function embedQuery(query, { host = "http://127.0.0.1:11434", model
   fetchImpl = fetch, timeoutMs = 8000 } = {}) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-  let res;
   try {
-    res = await fetchImpl(`${host.replace(/\/$/, "")}/api/embed`, {
+    let res;
+    try {
+      res = await fetchImpl(`${host.replace(/\/$/, "")}/api/embed`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ model, input: ["search_query: " + query] }), signal: ctrl.signal,
-    });
-  } catch (err) {
-    throw new EmbedError(`cannot reach Ollama at ${host} (${err && err.name === "AbortError" ? "timed out" : err.message})`);
-  } finally {
-    clearTimeout(timer);
-  }
+      });
+    } catch (err) {
+      throw new EmbedError(`cannot reach Ollama (${ctrl.signal.aborted || err?.name === "AbortError" ? "timed out" : "connection failed"})`);
+    }
   if (res.status === 403) {
     throw new EmbedError("Ollama refused the extension (HTTP 403). Allow it with OLLAMA_ORIGINS=chrome-extension://* and restart Ollama.");
   }
@@ -370,11 +377,18 @@ export async function embedQuery(query, { host = "http://127.0.0.1:11434", model
   let data;
   try {
     data = await res.json();
-  } catch {
-    throw new EmbedError("Ollama returned a response that is not JSON");
+  } catch (err) {
+    throw new EmbedError(ctrl.signal.aborted || err?.name === "AbortError" ? "Ollama request timed out" : "Ollama returned a response that is not JSON");
   }
   const v = data && Array.isArray(data.embeddings) ? data.embeddings[0] : null;
   if (!Array.isArray(v) || !v.length) throw new EmbedError("Ollama returned no embedding");
-  const n = Math.sqrt(v.reduce((s, x) => s + x * x, 0)) || 1;
-  return v.map((x) => x / n);
+  if (!v.every(Number.isFinite)) throw new EmbedError("Ollama embedding must contain finite numbers");
+  const scale = v.reduce((s, x) => Math.max(s, Math.abs(x)), 0);
+  if (!scale) throw new EmbedError("Ollama returned a zero embedding");
+  const scaled = v.map(x => x / scale);
+  const norm = Math.sqrt(scaled.reduce((s, x) => s + x * x, 0));
+  return scaled.map(x => x / norm);
+  } finally {
+    clearTimeout(timer);
+  }
 }

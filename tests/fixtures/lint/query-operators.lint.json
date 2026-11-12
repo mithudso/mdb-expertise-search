@@ -6,7 +6,7 @@
       "end": 830,
       "fix": null,
       "line": 12,
-      "message": "$or requires a non-empty array.",
+      "message": "$or expects a non-empty array, got array.",
       "severity": "error",
       "start": 828
     },
@@ -36,7 +36,7 @@
       "end": 900,
       "fix": null,
       "line": 14,
-      "message": "$nor expects a non-empty array.",
+      "message": "$nor expects a non-empty array, got object.",
       "severity": "error",
       "start": 892
     },
@@ -296,7 +296,7 @@
       "end": 1862,
       "fix": null,
       "line": 46,
-      "message": "$size expects an integer, got string.",
+      "message": "$size expects a non-negative integer, got string.",
       "severity": "error",
       "start": 1859
     },
@@ -306,9 +306,19 @@
       "end": 1881,
       "fix": null,
       "line": 46,
-      "message": "$size expects an integer, got number.",
+      "message": "$size expects a non-negative integer, got number.",
       "severity": "error",
       "start": 1878
+    },
+    {
+      "code": "bad-argument",
+      "column": 62,
+      "end": 1899,
+      "fix": null,
+      "line": 46,
+      "message": "$size expects a non-negative integer, got number.",
+      "severity": "error",
+      "start": 1897
     },
     {
       "code": "bad-argument",
@@ -466,7 +476,7 @@
       "end": 2732,
       "fix": null,
       "line": 60,
-      "message": "$text expects an object with $search.",
+      "message": "$text expects an object, got string.",
       "severity": "error",
       "start": 2724
     },
@@ -476,7 +486,7 @@
       "end": 2757,
       "fix": null,
       "line": 61,
-      "message": "$text expects an object with $search.",
+      "message": "$text expects an object, got array.",
       "severity": "error",
       "start": 2755
     },
@@ -519,6 +529,16 @@
       "message": "$where runs JavaScript per document, cannot use indexes and is an injection risk; prefer $expr or regular operators.",
       "severity": "warning",
       "start": 3098
+    },
+    {
+      "code": "syntax",
+      "column": 32,
+      "end": 3119,
+      "fix": null,
+      "line": 68,
+      "message": "expected ','",
+      "severity": "error",
+      "start": 3118
     },
     {
       "code": "syntax",
@@ -601,6 +621,26 @@
       "start": 3350
     },
     {
+      "code": "bad-argument",
+      "column": 25,
+      "end": 3389,
+      "fix": null,
+      "line": 76,
+      "message": "$sampleRate expects a number, got string.",
+      "severity": "error",
+      "start": 3383
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 35,
+      "end": 3453,
+      "fix": null,
+      "line": 79,
+      "message": "$near is not allowed in $match; use $geoNear.",
+      "severity": "error",
+      "start": 3448
+    },
+    {
       "code": "misplaced-operator",
       "column": 52,
       "end": 3476,
@@ -659,6 +699,16 @@
       "message": "$near is not allowed in $match; use $geoNear.",
       "severity": "error",
       "start": 3540
+    },
+    {
+      "code": "misplaced-operator",
+      "column": 35,
+      "end": 3600,
+      "fix": null,
+      "line": 81,
+      "message": "$near is not allowed in $match; use $geoNear.",
+      "severity": "error",
+      "start": 3595
     },
     {
       "code": "stage-shape",
@@ -726,7 +776,7 @@
       "end": 4074,
       "fix": null,
       "line": 95,
-      "message": "$or requires a non-empty array.",
+      "message": "$or expects a non-empty array, got array.",
       "severity": "error",
       "start": 4072
     },

@@ -45,3 +45,8 @@
     Also is there a way to package the symantic search such that a separate ollama process isn't required"
     (→ `scripts/sync_corpus.sh`, `scripts/corpus_autoupdate.py`, ONNX embedding parity test)
 14. "Write a small install script that does all of what you need with one command" (→ `scripts/install.sh`)
+
+
+## v0.7.1 — 2026-11-12 maintenance
+
+Requested full repository bootstrap and exhaustive maintained-source optimization in an isolated worktree, with protected data preserved, offline synthetic verification and checked PR delivery. Semantic generation and service activation remain separately scoped.

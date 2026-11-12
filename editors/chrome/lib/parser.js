@@ -7,12 +7,13 @@
 //
 // Keep in step with the Python reference: tests/fixtures/optimizer/*.golden.json pins the output.
 
-const IDENT = /[A-Za-z_$][\w$]*/y;
-const NUMBER = /[-+]?(?:0[xX][0-9a-fA-F]+|(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?|Infinity|NaN)/y;
+const IDENT = /[A-Za-z_$][\p{L}\p{N}_$]*/uy;
+const NUMBER = /[-+]?(?:0[xX][0-9a-fA-F]+|(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?|(?:Infinity|NaN)(?![\p{L}\p{N}_$]))/uy;
 const PROP_NUM = /-?\d+(?:\.\d+)?/y;
-const DECL_REST = /\s+([A-Za-z_$][\w$]*)\s*=/y;
-const USE_REST = /[ \t]+[\w$-]+[ \t]*(?=\n|;|$)/y;
-const FLAGS = /[a-z]*/y;
+const DECL_REST = /\s+([A-Za-z_$][\p{L}\p{N}_$]*)\s*=/uy;
+const USE_REST = /[ \t]+[\p{L}\p{N}_$-]+[ \t]*(?=\n|;|$)/uy;
+const FLAGS = /[a-z]*/uy;
+const LINE_END = /[\n\r\u2028\u2029]/g;
 const KEYWORDS = { true: "bool", false: "bool", null: "null", undefined: "undefined" };
 const DECL = new Set(["const", "let", "var"]);
 
@@ -37,10 +38,14 @@ export class Node {
 
   /** Every node in this subtree, in the same order as the Python Node.walk(). */
   walk(out = []) {
-    out.push(this);
-    for (const p of this.props) if (p.value !== null) p.value.walk(out);
-    for (const i of this.items) i.walk(out);
-    if (this.target !== null) this.target.walk(out);
+    const stack = [this];
+    while (stack.length) {
+      const node = stack.pop();
+      out.push(node);
+      const children = [...node.props.filter(p => p.value !== null).map(p => p.value), ...node.items];
+      if (node.target !== null) children.push(node.target);
+      for (let i = children.length - 1; i >= 0; i--) stack.push(children[i]);
+    }
     return out;
   }
 }
@@ -87,6 +92,7 @@ class Parser {
     this.n = text.length;
     this.i = 0;
     this.errors = [];
+    this.depth = 0;
   }
 
   ws() {
@@ -96,8 +102,8 @@ class Parser {
       if (isSpace(c)) {
         this.i += 1;
       } else if (s.startsWith("//", this.i)) {
-        const j = s.indexOf("\n", this.i);
-        this.i = j < 0 ? n : j;
+        const m = matchAt(LINE_END, s, this.i);
+        this.i = m === null ? n : m.index;
       } else if (s.startsWith("/*", this.i)) {
         const j = s.indexOf("*/", this.i + 2);
         if (j < 0) {
@@ -155,6 +161,7 @@ class Parser {
     }
     const node = this.expression();
     if (node === null) {
+      this.err(this.i, this.i + 1, "unexpected " + pyRepr(this.s.slice(this.i, this.i + 1)));
       this.resync();
       return null;
     }
@@ -163,11 +170,23 @@ class Parser {
   }
 
   resync() {
-    const j = this.s.indexOf("\n", this.i);
-    this.i = j < 0 ? this.n : j + 1;
+    const m = matchAt(LINE_END, this.s, this.i);
+    this.i = m === null ? this.n : m.index + 1;
   }
 
   expression() {
+    this.ws();
+    if (this.depth >= 80) {
+      const start = this.i;
+      this.err(start, start + 1, "maximum syntax nesting exceeded");
+      this.skipBadValue(new Set());
+      return new Node("error", start, this.i);
+    }
+    this.depth++;
+    try { return this.parseExpression(); } finally { this.depth--; }
+  }
+
+  parseExpression() {
     let node = this.primary();
     if (node === null) return null;
     for (;;) {
@@ -213,6 +232,7 @@ class Parser {
     this.i += 1;
     const args = [];
     let closed = false;
+    let expectValue = true;
     for (;;) {
       this.ws();
       if (this.i >= this.n) {
@@ -226,9 +246,17 @@ class Parser {
         break;
       }
       if (c === ",") {
+        if (expectValue) this.err(this.i, this.i + 1, "unexpected ','");
+        expectValue = true;
         this.i += 1;
         continue;
       }
+      if (c === "]" || c === "}") {
+        this.err(this.i, this.i + 1, "unexpected " + pyRepr(c) + "; expected ')'");
+        break;
+      }
+      if (!expectValue) this.err(this.i, this.i + 1, "expected ','");
+      expectValue = false;
       const before = this.i;
       const arg = this.expression();
       if (arg === null) this.skipBadValue(new Set([")"]));
@@ -243,19 +271,18 @@ class Parser {
   }
 
   skipBadValue(closers) {
-    let depth = 0;
+    const stack = [];
     const start = this.i;
     while (this.i < this.n) {
       const c = this.s[this.i];
-      if ("{[(".includes(c)) {
-        depth += 1;
-      } else if ("}])".includes(c)) {
-        if (depth === 0 && closers.has(c)) break;
-        depth = Math.max(depth - 1, 0);
-      } else if (c === "," && depth === 0) {
-        break;
-      }
-      this.i += 1;
+      if ('"\'\x60'.includes(c)) { this.string(); continue; }
+      if (this.s.startsWith("//", this.i) || this.s.startsWith("/*", this.i)) { this.ws(); continue; }
+      if ("{[(".includes(c)) stack.push({"{": "}", "[": "]", "(": ")"}[c]);
+      else if ("}])".includes(c)) {
+        if (!stack.length || c !== stack[stack.length - 1]) break;
+        stack.pop();
+      } else if (c === "," && !stack.length) break;
+      this.i++;
     }
     if (this.i > start) this.err(start, this.i, "unexpected tokens");
   }
@@ -283,7 +310,11 @@ class Parser {
         const kind = KEYWORDS[word];
         return new Node(kind, m.index, this.i, kind === "bool" ? word === "true" : null);
       }
-      if (word === "new") return this.primary();
+      if (word === "new") {
+        const node = this.expression();
+        if (node !== null) node.start = m.index;
+        return node;
+      }
       return new Node("ident", m.index, this.i, word);
     }
     return null;
@@ -297,16 +328,39 @@ class Parser {
     while (this.i < this.n) {
       const c = this.s[this.i];
       if (c === "\\" && this.i + 1 < this.n) {
-        const nxt = this.s[this.i + 1];
-        buf += { n: "\n", t: "\t", r: "\r" }[nxt] ?? nxt;
+        const escapeStart = this.i, nxt = this.s[this.i + 1];
         this.i += 2;
+        if ("\n\r\u2028\u2029".includes(nxt)) {
+          if (nxt === "\r" && this.s[this.i] === "\n") this.i++;
+          continue;
+        }
+        if (nxt === "u" || nxt === "x") {
+          let digits, valid;
+          const width = nxt === "u" ? 4 : 2;
+          if (nxt === "u" && this.s[this.i] === "{") {
+            const close = this.s.indexOf("}", this.i + 1);
+            digits = close < 0 ? "" : this.s.slice(this.i + 1, close);
+            valid = /^[0-9a-fA-F]{1,6}$/.test(digits) && parseInt(digits, 16) <= 0x10ffff;
+            if (valid) this.i = close + 1;
+          } else {
+            digits = this.s.slice(this.i, this.i + width);
+            valid = digits.length === width && /^[0-9a-fA-F]+$/.test(digits);
+            if (valid) this.i += width;
+          }
+          if (valid) buf += String.fromCodePoint(parseInt(digits, 16));
+          else this.err(escapeStart, this.i, "invalid string escape");
+          continue;
+        }
+        if (/[0-9]/.test(nxt) && (nxt !== "0" || /[0-9]/.test(this.s[this.i] || "")))
+          this.err(escapeStart, this.i, "unsupported numeric string escape");
+        buf += { n: "\n", t: "\t", r: "\r", b: "\b", f: "\f", v: "\v", "0": "\0" }[nxt] ?? nxt;
         continue;
       }
       if (c === q) {
         this.i += 1;
         return new Node("string", start, this.i, buf);
       }
-      if (c === "\n" && q !== "`") break;
+      if ("\n\r\u2028\u2029".includes(c) && q !== "`") break;
       buf += c;
       this.i += 1;
     }
@@ -353,6 +407,7 @@ class Parser {
     this.i += 1;
     const items = [];
     let closed = false;
+    let expectValue = true;
     for (;;) {
       this.ws();
       if (this.i >= this.n) {
@@ -366,6 +421,8 @@ class Parser {
         break;
       }
       if (c === ",") {
+        if (expectValue) this.err(this.i, this.i + 1, "unexpected ','");
+        expectValue = true;
         this.i += 1;
         continue;
       }
@@ -373,6 +430,8 @@ class Parser {
         this.err(this.i, this.i + 1, `unexpected '${c}'; expected ']'`);
         break;
       }
+      if (!expectValue) this.err(this.i, this.i + 1, "expected ','");
+      expectValue = false;
       const before = this.i;
       const val = this.expression();
       if (val === null) this.skipBadValue(new Set(["]"]));
@@ -390,6 +449,7 @@ class Parser {
     this.i += 1;
     const props = [];
     let closed = false;
+    let expectValue = true;
     for (;;) {
       this.ws();
       if (this.i >= this.n) {
@@ -403,6 +463,8 @@ class Parser {
         break;
       }
       if (c === ",") {
+        if (expectValue) this.err(this.i, this.i + 1, "unexpected ','");
+        expectValue = true;
         this.i += 1;
         continue;
       }
@@ -410,6 +472,8 @@ class Parser {
         this.err(this.i, this.i + 1, `unexpected '${c}'; expected '}'`);
         break;
       }
+      if (!expectValue) this.err(this.i, this.i + 1, "expected ','");
+      expectValue = false;
       const before = this.i;
       const prop = this.prop();
       if (prop !== null) props.push(prop);

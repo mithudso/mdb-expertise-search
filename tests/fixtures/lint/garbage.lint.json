@@ -2,16 +2,6 @@
   "diagnostics": [
     {
       "code": "syntax",
-      "column": 14,
-      "end": 15,
-      "fix": null,
-      "line": 0,
-      "message": "unclosed '('",
-      "severity": "error",
-      "start": 14
-    },
-    {
-      "code": "syntax",
       "column": 0,
       "end": 112,
       "fix": null,
@@ -46,19 +36,109 @@
       "end": 118,
       "fix": null,
       "line": 2,
-      "message": "unexpected ']'; expected '}'",
+      "message": "unexpected ']'; expected ')'",
       "severity": "error",
       "start": 117
     },
     {
       "code": "syntax",
       "column": 6,
-      "end": 520,
+      "end": 118,
       "fix": null,
       "line": 2,
-      "message": "unexpected tokens",
+      "message": "unexpected ']'",
       "severity": "error",
       "start": 117
+    },
+    {
+      "code": "syntax",
+      "column": 2,
+      "end": 123,
+      "fix": null,
+      "line": 3,
+      "message": "property 'a' has no value",
+      "severity": "error",
+      "start": 122
+    },
+    {
+      "code": "syntax",
+      "column": 8,
+      "end": 129,
+      "fix": null,
+      "line": 3,
+      "message": "expected a value for 'b'",
+      "severity": "error",
+      "start": 128
+    },
+    {
+      "code": "syntax",
+      "column": 10,
+      "end": 131,
+      "fix": null,
+      "line": 3,
+      "message": "expected a property name",
+      "severity": "error",
+      "start": 130
+    },
+    {
+      "code": "syntax",
+      "column": 10,
+      "end": 133,
+      "fix": null,
+      "line": 3,
+      "message": "unexpected tokens",
+      "severity": "error",
+      "start": 130
+    },
+    {
+      "code": "syntax",
+      "column": 15,
+      "end": 153,
+      "fix": null,
+      "line": 3,
+      "message": "unterminated string",
+      "severity": "error",
+      "start": 135
+    },
+    {
+      "code": "syntax",
+      "column": 0,
+      "end": 155,
+      "fix": null,
+      "line": 4,
+      "message": "expected ':'",
+      "severity": "error",
+      "start": 154
+    },
+    {
+      "code": "syntax",
+      "column": 0,
+      "end": 183,
+      "fix": null,
+      "line": 4,
+      "message": "unexpected tokens",
+      "severity": "error",
+      "start": 154
+    },
+    {
+      "code": "syntax",
+      "column": 30,
+      "end": 185,
+      "fix": null,
+      "line": 4,
+      "message": "unexpected ','",
+      "severity": "error",
+      "start": 184
+    },
+    {
+      "code": "syntax",
+      "column": 0,
+      "end": 520,
+      "fix": null,
+      "line": 5,
+      "message": "unterminated comment",
+      "severity": "error",
+      "start": 194
     }
   ],
   "source": "tests/fixtures/lint/garbage.txt",
@@ -80,7 +160,7 @@
           "start": 77
         }
       ],
-      "end": 520,
+      "end": 117,
       "kind": "method",
       "name": "db.orders.find",
       "start": 0

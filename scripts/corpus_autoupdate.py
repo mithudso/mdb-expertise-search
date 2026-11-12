@@ -19,7 +19,7 @@ machine that holds the sources has to refresh it. A launchd agent runs ``run`` o
 
 Source locations come from the ``MDBX_*_SRC`` variables ``sync_corpus.sh`` documents. Private redaction
 rules and the customer denylist stay in ``~/.config/mdbx/`` (``redactions.py``, ``denylist.txt``); the
-pass warns when they are missing, because then only the built-in markers are checked. Log:
+pass aborts if the denylist is missing and warns if private redaction rules are missing. Log:
 ``~/Library/Logs/mdbx-corpus-autoupdate.log``.
 """
 from __future__ import annotations
@@ -34,6 +34,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from maintenance_safety import confined_corpus_path, lock, mark_clone, scrub, verify_clone
+
 ROOT = Path(__file__).resolve().parent.parent
 HOME = Path.home()
 CONFIG_PATH = Path(os.environ.get("MDBX_CORPUS_AUTOUPDATE_CONFIG", HOME / ".config" / "mdbx" / "corpus-autoupdate.json"))
@@ -44,12 +47,12 @@ AGENT_PLIST = HOME / "Library" / "LaunchAgents" / f"{AGENT_LABEL}.plist"
 DEFAULT_REPO = "https://github.com/mithudso/mdb-expertise-search.git"
 #: Files whose live source cites private workload analyses: only ever kept at their committed, hand-redacted text.
 PROTECTED = ["corpus/skills/mongodb-expert/references/deep-mongodb-mql-query-optimizer.md"]
-STATE_KEYS = ("repo", "branch", "clone_dir", "python", "interval_min")
+STATE_KEYS = ("repo", "branch", "clone_dir", "python", "interval_min", "environment")
 HIT_RE = re.compile(r"^(corpus/[^:]+):\d+:")
 
 
 def log(msg: str) -> None:
-    line = f"[{dt.datetime.now().isoformat(timespec='seconds')}] {msg}"
+    line = f"[{dt.datetime.now().isoformat(timespec='seconds')}] {scrub(msg)}"
     print(line, flush=True)
     try:
         LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -84,12 +87,25 @@ def effective_config(args) -> dict:
         val = getattr(args, key, None)
         if val is not None:
             cfg[key] = str(val) if isinstance(val, Path) else val
-    cfg.setdefault("repo", origin_url() or DEFAULT_REPO)
+    if "repo" not in cfg: cfg["repo"] = origin_url() or DEFAULT_REPO
     cfg.setdefault("branch", "main")
     cfg.setdefault("clone_dir", str(DEFAULT_CLONE_DIR))
     cfg.setdefault("python", sys.executable)
     cfg.setdefault("interval_min", 360)
+    validate_config(cfg)
     return cfg
+
+
+SOURCE_ENV = ("MDBX_DENYLIST", "MDBX_REDACTIONS", "MDBX_SKILLS_SRC", "MDBX_LLMS_SRC", "MDBX_MONGODB_DOCS_LLMS", "MDBX_CONCEPTS_SRC")
+
+def validate_config(cfg):
+    for key in ("repo", "branch", "clone_dir", "python"):
+        if not isinstance(cfg.get(key), str) or not cfg[key].strip(): raise ValueError("invalid updater configuration")
+    if type(cfg.get("interval_min")) is not int or cfg["interval_min"] < 1: raise ValueError("invalid update interval")
+    cfg["clone_dir"] = str(Path(cfg["clone_dir"]).expanduser().resolve())
+    environment = cfg.get("environment", {})
+    if not isinstance(environment, dict) or any(k not in SOURCE_ENV or not isinstance(v, str) or not v for k, v in environment.items()): raise ValueError("invalid updater environment")
+    cfg["environment"] = {**environment, **{key: str(Path(os.environ[key]).expanduser().resolve()) for key in SOURCE_ENV if os.environ.get(key)}}
 
 
 def git(args: list[str], cwd: Path, timeout: int = 300) -> subprocess.CompletedProcess:
@@ -99,69 +115,88 @@ def git(args: list[str], cwd: Path, timeout: int = 300) -> subprocess.CompletedP
 def must_git(args: list[str], cwd: Path, what: str) -> str:
     res = git(args, cwd)
     if res.returncode != 0:
-        raise RuntimeError(f"{what} failed: {(res.stderr or res.stdout).strip()[-400:]}")
+        raise RuntimeError(f"{what} failed")
     return res.stdout
 
 
 def ensure_clone(cfg: dict) -> Path:
-    clone = Path(cfg["clone_dir"])
-    if not (clone / ".git").is_dir():
-        clone.parent.mkdir(parents=True, exist_ok=True)
-        log(f"cloning {cfg['repo']} → {clone}")
-        res = subprocess.run(["git", "clone", "--branch", cfg["branch"], "--single-branch", cfg["repo"], str(clone)],
-                             capture_output=True, text=True, timeout=900, check=False)
-        if res.returncode != 0:
-            raise RuntimeError(f"git clone failed: {res.stderr.strip()[-400:]}")
-    return clone
+    clone = Path(cfg["clone_dir"]).resolve()
+    if clone == ROOT.resolve(): raise RuntimeError("refusing the working checkout as a maintenance clone")
+    if clone.exists(): return verify_clone(clone, cfg["repo"], ROOT, git)
+    clone.parent.mkdir(parents=True, exist_ok=True)
+    log("creating updater-owned clone")
+    res = subprocess.run(["git", "clone", "--branch", cfg["branch"], "--single-branch", "--", cfg["repo"], str(clone)], capture_output=True, text=True, timeout=900, check=False)
+    if res.returncode: raise RuntimeError("git clone failed")
+    mark_clone(clone, cfg["repo"])
+    return verify_clone(clone, cfg["repo"], ROOT, git)
 
 
 def reset_to_origin(clone: Path, branch: str) -> None:
-    must_git(["fetch", "--quiet", "origin", branch], clone, "git fetch")
+    must_git(["fetch", "--quiet", "origin", f"+refs/heads/{branch}:refs/remotes/origin/{branch}"], clone, "git fetch")
     must_git(["reset", "--hard", f"origin/{branch}"], clone, "git reset")
     must_git(["clean", "-fdq", "corpus"], clone, "git clean")
 
 
 def sweep(clone: Path, python: str) -> tuple[int, list[str]]:
-    res = subprocess.run([python, str(clone / "scripts" / "sweep_customers.py")], cwd=str(clone),
-                         capture_output=True, text=True, timeout=600, check=False)
-    files = sorted({m.group(1) for ln in (res.stdout + res.stderr).splitlines() if (m := HIT_RE.match(ln))})
+    res = subprocess.run([python, str(clone / "scripts" / "sweep_customers.py"), "--json"], cwd=str(clone),
+                         capture_output=True, text=True, timeout=600, check=False, env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"))
+    try:
+        result = json.loads(res.stdout)
+        if result.get("status") not in {"clean", "markers"} or res.returncode not in (0, 1): raise ValueError()
+        files = result["files"]
+        if not isinstance(files, list) or not all(isinstance(p, str) for p in files): raise ValueError()
+        for rel in files: confined_corpus_path(clone, rel)
+    except (ValueError, KeyError, TypeError, RuntimeError):
+        log(f"sweep execution failed (exit {res.returncode})")
+        return 2, []
     return res.returncode, files
 
 
 def restore_committed(clone: Path, files: list[str]) -> None:
     """Put each file back to its committed text; delete the ones that are new."""
     for rel in files:
-        tracked = git(["ls-files", "--error-unmatch", rel], clone).returncode == 0
+        candidate = confined_corpus_path(clone, rel)
+        tracked = git(["--literal-pathspecs", "ls-files", "--error-unmatch", "--", rel], clone).returncode == 0
         if tracked:
-            must_git(["checkout", "HEAD", "--", rel], clone, f"git checkout {rel}")
+            must_git(["--literal-pathspecs", "checkout", "HEAD", "--", rel], clone, f"git checkout {rel}")
         else:
-            (clone / rel).unlink(missing_ok=True)
+            candidate.unlink(missing_ok=True)
         log(f"  held back {rel} ({'kept committed text' if tracked else 'new file dropped'})")
 
 
 def run_update(cfg: dict, *, dry_run: bool = False) -> int:
+    clone = Path(cfg["clone_dir"])
+    try:
+        with lock(clone.with_name("." + clone.name + ".corpus-update.lock")):
+            return _run_update(cfg, dry_run=dry_run)
+    except RuntimeError as error:
+        if str(error) != "maintenance operation is busy": raise
+        log("busy: another corpus update is active"); return 0
+
+
+def _run_update(cfg: dict, *, dry_run: bool = False) -> int:
     clone = ensure_clone(cfg)
     reset_to_origin(clone, cfg["branch"])
     py = cfg["python"]
-    denylist = Path(os.environ.get("MDBX_DENYLIST", HOME / ".config" / "mdbx" / "denylist.txt"))
+    denylist = Path(cfg.get("environment", {}).get("MDBX_DENYLIST", os.environ.get("MDBX_DENYLIST", HOME / ".config" / "mdbx" / "denylist.txt")))
     if not denylist.is_file():  # built-in markers do not catch customer names; refuse to publish without the list
         log(f"abort: customer denylist {denylist} missing; nothing synced")
         return 1
     if not (HOME / ".config" / "mdbx" / "redactions.py").is_file():
         log("warning: ~/.config/mdbx/redactions.py missing; only generic redaction rules apply")
-    env = dict(os.environ, MDBX_SKIP_INDEX="1")
+    env = dict(os.environ, **cfg.get("environment", {}), MDBX_SKIP_INDEX="1", PYTHONDONTWRITEBYTECODE="1")
     sync = subprocess.run(["bash", str(clone / "scripts" / "sync_corpus.sh")], cwd=str(clone), env=env,
                           capture_output=True, text=True, timeout=1800, check=False)
-    tail = (sync.stderr or sync.stdout).strip().splitlines()[-1:] or [""]
-    log(f"sync_corpus.sh exit {sync.returncode}: {tail[0][:200]}")
-    # the script's own sweep may have stopped it before finishing; redaction ran first, so go on to the gate.
-    restore_committed(clone, [p for p in PROTECTED if (clone / p).exists()])
+    log(f"sync_corpus.sh exit {sync.returncode}")
+    if sync.returncode:
+        log("abort: source sync failed; nothing committed"); return 1
+    restore_committed(clone, PROTECTED)
     for attempt in (1, 2):
         rc, hits = sweep(clone, py)
         if rc == 0:
             break
         if attempt == 2 or not hits:
-            log(f"abort: sweep still reports markers ({len(hits)} files); nothing committed")
+            log(f"abort: sweep gate failed (exit {rc}, {len(hits)} marker files); nothing committed")
             reset_to_origin(clone, cfg["branch"])
             return 1
         log(f"sweep flagged {len(hits)} file(s); holding them back")
@@ -184,7 +219,10 @@ def run_update(cfg: dict, *, dry_run: bool = False) -> int:
     pull = git(["pull", "--rebase", "--quiet", "origin", cfg["branch"]], clone)
     if pull.returncode != 0:
         git(["rebase", "--abort"], clone)
-        raise RuntimeError(f"git pull --rebase failed: {pull.stderr.strip()[-300:]}")
+        raise RuntimeError("git pull --rebase failed")
+    rc, _hits = sweep(clone, py)
+    if rc:
+        log(f"abort: outgoing rebased tree failed sweep (exit {rc}); nothing pushed"); return 1
     must_git(["push", "origin", f"HEAD:{cfg['branch']}"], clone, "git push")
     log("pushed corpus refresh to origin/" + cfg["branch"])
     return 0
@@ -199,7 +237,7 @@ def agent_plist(cfg: dict) -> dict:
         "StandardOutPath": str(LOG_PATH),
         "StandardErrorPath": str(LOG_PATH),
         "EnvironmentVariables": {"PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin", "HOME": str(HOME),
-                                 "MDBX_CORPUS_AUTOUPDATE_CONFIG": str(CONFIG_PATH)},
+                                 "MDBX_CORPUS_AUTOUPDATE_CONFIG": str(CONFIG_PATH), **cfg.get("environment", {})},
     }
 
 
@@ -216,7 +254,7 @@ def install_agent(cfg: dict) -> int:
     res = subprocess.run(["launchctl", "bootstrap", f"gui/{uid}", str(AGENT_PLIST)], capture_output=True, text=True,
                          check=False)
     if res.returncode != 0:
-        print(f"launchctl bootstrap failed: {res.stderr.strip()}", file=sys.stderr)
+        print("launchctl bootstrap failed", file=sys.stderr)
         return 1
     print(f"agent installed: {AGENT_PLIST} (every {cfg['interval_min']} min)")
     print(f"config: {CONFIG_PATH}\nlog:    {LOG_PATH}\nclone:  {cfg['clone_dir']}")
@@ -237,11 +275,12 @@ def uninstall_agent() -> int:
 def status(cfg: dict) -> int:
     last = ""
     try:
-        lines = LOG_PATH.read_text(encoding="utf-8").splitlines()
-        last = lines[-1] if lines else ""
+        with LOG_PATH.open("rb") as stream:
+            stream.seek(0, 2); end = stream.tell(); size = min(end, 8192); stream.seek(end - size)
+            lines = stream.read(size).decode("utf-8", errors="replace").splitlines(); last = lines[-1] if lines else ""
     except OSError:
         pass
-    print(json.dumps({"agent": "installed" if AGENT_PLIST.exists() else "not installed", "repo": cfg["repo"],
+    print(json.dumps({"agent": "installed" if AGENT_PLIST.exists() else "not installed", "repo": scrub(cfg["repo"]),
                       "branch": cfg["branch"], "clone_dir": cfg["clone_dir"], "interval_min": cfg["interval_min"],
                       "log": str(LOG_PATH), "last_log_line": last}, indent=2))
     return 0
@@ -260,9 +299,19 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("status")
     r = sub.add_parser("run", help="one refresh pass")
     r.add_argument("--dry-run", action="store_true")
-    a = ap.parse_args(argv)
-    cfg = effective_config(a)
+    raw = list(sys.argv[1:] if argv is None else argv)
+    front, rest = [], []
+    values = {"--repo", "--branch", "--clone-dir", "--python", "--interval-min", "--install-dir", "--source"}
+    while raw:
+        token = raw.pop(0)
+        if token in values:
+            front.append(token)
+            if raw: front.append(raw.pop(0))
+        elif token.split("=", 1)[0] in values or token == "--no-vectors": front.append(token)
+        else: rest.append(token)
+    a = ap.parse_args(front + rest)
     try:
+        cfg = effective_config(a)
         if a.cmd == "install-agent":
             return install_agent(cfg)
         if a.cmd == "uninstall-agent":
@@ -270,8 +319,8 @@ def main(argv: list[str] | None = None) -> int:
         if a.cmd == "status":
             return status(cfg)
         return run_update(cfg, dry_run=a.dry_run)
-    except (RuntimeError, subprocess.SubprocessError) as exc:
-        log(f"error: {exc}")
+    except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as exc:
+        log(f"error: {type(exc).__name__}; maintenance operation failed")
         return 1
 
 

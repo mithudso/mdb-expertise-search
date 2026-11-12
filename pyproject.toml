@@ -4,16 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mdb-expertise-search"
-version = "0.7.0"
+version = "0.7.1"
 description = "Hybrid keyword + semantic search CLI and TUI over a curated MongoDB / Atlas expertise corpus"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 keywords = ["mongodb", "atlas", "semantic-search", "fts5", "tui", "llms.txt"]
-dependencies = ["numpy>=1.26", "ollama-client @ git+https://github.com/mithudso/ollama-client.git"]
+dependencies = ["numpy>=1.26"]
 
 [project.optional-dependencies]
+ollama = ["ollama-client @ git+https://github.com/mithudso/ollama-client.git@740aca7cbc5aab4941779f35f1ca17b59fe73c7f"]
 tui = ["textual>=0.80", "rich>=13"]
 lsp = ["pygls>=2.0", "lsprotocol>=2025.0"]
 mcp = ["mcp>=2.0"]

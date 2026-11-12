@@ -5,6 +5,7 @@ import logging
 import re
 import sqlite3
 from collections import Counter
+from contextlib import closing
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -56,8 +57,8 @@ def _filters(kind: str | None, source: str | None) -> tuple[str, list]:
         clauses.append("c.kind = ?")
         params.append(kind)
     if source:
-        clauses.append("c.source LIKE ?")
-        params.append(f"%{source}%")
+        clauses.append("c.source LIKE ? ESCAPE '!'")
+        params.append("%" + source.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%")
     return (" AND " + " AND ".join(clauses)) if clauses else "", params
 
 
@@ -69,6 +70,9 @@ def keyword(
     kind: str | None = None,
     source: str | None = None,
 ) -> list[Hit]:
+    _limit(limit)
+    if limit == 0:
+        return []
     terms = _terms(query)
     if not terms:
         return []
@@ -77,21 +81,18 @@ def keyword(
         "SELECT c.*, bm25(chunks_fts, 4.0, 1.0, 2.0) AS rank, "
         "snippet(chunks_fts, 1, '[', ']', ' … ', 24) AS snip "
         "FROM chunks_fts JOIN chunks c ON c.id = chunks_fts.rowid "
-        f"WHERE chunks_fts MATCH ?{extra} ORDER BY rank LIMIT ?"
+        f"WHERE chunks_fts MATCH ?{extra} ORDER BY rank, c.id"
     )
-    rows: list[sqlite3.Row] = []
     for op in ("AND", "OR"):
-        rows = con.execute(sql, [_fts_query(terms, op), *fparams, limit * 3]).fetchall()
-        if rows:
-            break
-    return _dedupe(
-        [
-            Hit(r["id"], r["path"], r["source"], r["kind"], r["heading"], r["line"], r["text"],
-                -r["rank"], "keyword", r["snip"])
-            for r in rows
-        ],
-        limit,
-    )
+        with closing(con.execute(sql, [_fts_query(terms, op), *fparams])) as cursor:
+            hits = _dedupe(
+                (Hit(r["id"], r["path"], r["source"], r["kind"], r["heading"], r["line"], r["text"],
+                     -r["rank"], "keyword", r["snip"]) for r in cursor), limit,
+            )
+        if hits:
+            return hits
+    return []
+
 
 
 class VectorStore:
@@ -99,16 +100,17 @@ class VectorStore:
 
     def __init__(self, con: sqlite3.Connection):
         rows = con.execute(
-            "SELECT c.id, v.dim, v.vec FROM chunks c JOIN vectors v ON v.digest = c.digest"
+            "SELECT c.id, c.digest, v.dim, v.vec FROM chunks c JOIN vectors v ON v.digest = c.digest WHERE c.digest NOT IN (SELECT digest FROM invalid_vectors) ORDER BY c.id"
         ).fetchall()
         # Skip corrupt blobs and vectors left over from a model with another dimension.
-        good = [r for r in rows if len(r["vec"]) == 4 * r["dim"]]
+        good = [r for r in rows if r["dim"] > 0 and len(r["vec"]) == 4 * r["dim"] and np.isfinite(np.frombuffer(r["vec"], dtype=np.float32)).all() and np.any(np.frombuffer(r["vec"], dtype=np.float32))]
         if good:
             dim = Counter(r["dim"] for r in good).most_common(1)[0][0]
             good = [r for r in good if r["dim"] == dim]
         if len(good) != len(rows):
             log.warning("ignored %d inconsistent vector(s); re-run `mdbx index`", len(rows) - len(good))
         rows = good
+        self.revision = _revision(con)
         self.ids = np.array([r["id"] for r in rows], dtype=np.int64)
         self.matrix = (
             np.vstack([np.frombuffer(r["vec"], dtype=np.float32) for r in rows])
@@ -129,10 +131,19 @@ def semantic(
     source: str | None = None,
     store: VectorStore | None = None,
 ) -> list[Hit]:
-    store = store or VectorStore(con)
+    _limit(limit)
+    if limit == 0:
+        return []
+    identity = con.execute("SELECT value FROM meta WHERE key='embed_model'").fetchone()
+    if identity is None or identity[0] != embedmod.model():
+        raise embedmod.EmbedError("index model identity does not match the active model")
+    if store is None or store.revision != _revision(con):
+        store = VectorStore(con)
     if not len(store):
         raise embedmod.EmbedError("no vectors indexed — run `mdbx index`")
     qv = embedmod.embed_query(query)
+    if qv.ndim != 1 or not np.isfinite(qv).all() or not np.any(qv):
+        raise embedmod.EmbedError("query embedding is invalid")
     if qv.shape[0] != store.matrix.shape[1]:
         raise embedmod.EmbedError(
             f"query embedding has {qv.shape[0]} dims but the index has {store.matrix.shape[1]} — "
@@ -144,7 +155,7 @@ def semantic(
     if extra:  # restrict before ranking so a filter cannot be starved by unrelated top matches
         allowed = [r[0] for r in con.execute(f"SELECT c.id FROM chunks c WHERE 1=1{extra}", fparams)]
         order = order[np.isin(store.ids, allowed)[order]]
-    ranked = [(int(store.ids[i]), float(sims[i])) for i in order[: limit * 3]]
+    ranked = [(int(store.ids[i]), float(sims[i])) for i in order]
     rows: dict[int, sqlite3.Row] = {}
     for i in range(0, len(ranked), 500):  # stay under SQLite's bound-variable limit
         ids = [rid for rid, _ in ranked[i : i + 500]]
@@ -176,6 +187,9 @@ def hybrid(
     mismatch). The fallback is never silent: it is logged at WARNING and, when the caller passes a
     ``notes`` list, the reason is appended there so the CLI / TUI / MCP surface can show it.
     """
+    _limit(limit)
+    if limit == 0:
+        return []
     kw = keyword(con, query, limit * 3, kind=kind, source=source)
     try:
         sm = semantic(con, query, limit * 3, kind=kind, source=source, store=store)
@@ -209,10 +223,8 @@ def hybrid(
 
 def fallback_note(exc: Exception) -> str:
     """One line telling the user that semantic search did not run and why."""
-    note = f"semantic search unavailable ({exc}); showing keyword results only"
-    if not embedmod.embed_onnx.available():
-        note += " (to run without Ollama: pip install 'mdb-expertise-search[onnx]' && mdbx embed-fetch)"
-    return note
+    # Never include provider exception text: URLs may contain credentials or forged log lines.
+    return "semantic search unavailable (embedding backend or index incompatible); showing keyword results only"
 
 
 def search(con, query, mode="hybrid", limit=10, *, notes: list[str] | None = None, **kw) -> list[Hit]:
@@ -232,10 +244,13 @@ def _lead(text: str, n: int = 220) -> str:
 
 
 def _dedupe(hits: list[Hit], limit: int) -> list[Hit]:
+    _limit(limit)
+    if limit == 0:
+        return []
     seen: set[str] = set()
     out: list[Hit] = []
     for h in hits:
-        key = " ".join(h.text.split())[:300]
+        key = " ".join(h.text.split())
         if key in seen:
             continue
         seen.add(key)
@@ -243,3 +258,13 @@ def _dedupe(hits: list[Hit], limit: int) -> list[Hit]:
         if len(out) >= limit:
             break
     return out
+
+
+def _limit(value: int) -> None:
+    if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= 10000:
+        raise ValueError("limit must be between 0 and 10000")
+
+
+def _revision(con):
+    # total_changes sees local updates; data_version sees commits from other connections.
+    return (id(con), con.total_changes, con.execute("PRAGMA data_version").fetchone()[0])

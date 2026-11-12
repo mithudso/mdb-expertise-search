@@ -71,7 +71,13 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--check", action="store_true")
     a = ap.parse_args()
+    if not LINT.is_dir() or not OPTIMIZER.is_dir():
+        print("missing fixture directory")
+        return 1
     pairs = inputs()
+    if not pairs or len({out for _, out in pairs}) != len(pairs):
+        print("empty or colliding fixture outputs")
+        return 1
     wanted = {out for _, out in pairs}
     orphans = sorted(p for p in LINT.glob("*.lint.json") if p not in wanted)
     stale = []

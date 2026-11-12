@@ -23,15 +23,27 @@ export function h(tag, attrs = {}, ...children) {
   return el;
 }
 
+const copies = new WeakMap();
+
 export async function copyText(text, btn) {
-  const label = btn.textContent;
+  const prior = copies.get(btn);
+  if (prior?.timer) clearTimeout(prior.timer);
+  const current = { label: prior?.label ?? btn.textContent, timer: null };
+  copies.set(btn, current);
+  let label;
   try {
     await navigator.clipboard.writeText(text);
-    btn.textContent = "Copied";
+    label = "Copied";
   } catch {
-    btn.textContent = "Copy failed";
+    label = "Copy failed";
   }
-  setTimeout(() => { btn.textContent = label; }, 1500);
+  if (copies.get(btn) !== current) return;
+  btn.textContent = label;
+  current.timer = setTimeout(() => {
+    if (copies.get(btn) !== current) return;
+    btn.textContent = current.label;
+    copies.delete(btn);
+  }, 1500);
 }
 
 export function copyButton(getText, label = "Copy") {
@@ -110,7 +122,7 @@ export function renderReport(rep, { refLink = () => null, extra = [] } = {}) {
 
 // ---- minimal, safe markdown for corpus pages
 
-const INLINE = /(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\((https?:\/\/[^)\s]+)\))/g;
+const INLINE = /(`[^`]+`|\*\*[^*]+\*\*|\[[^\[\]]+\]\((https?:\/\/[^)\s]+)\))/g;
 
 function inline(text, mark) {
   const out = [];
@@ -173,7 +185,10 @@ export function renderMarkdown(text, { mark = null } = {}) {
       frag.append(h(`h${Math.min(6, hm[1].length + 2)}`, {}, inline(hm[2], mark)));
     } else if (/^\s*([-*]|\d+\.)\s+/.test(line)) {
       flushPara();
-      if (!list) list = h(/^\s*\d+\./.test(line) ? "ol" : "ul", {});
+      const number = /^\s*(\d+)\./.exec(line);
+      const tag = number ? "OL" : "UL";
+      if (list && list.tagName !== tag) flushList();
+      if (!list) list = h(tag.toLowerCase(), number ? { start: number[1] } : {});
       list.append(h("li", {}, inline(line.replace(/^\s*([-*]|\d+\.)\s+/, ""), mark)));
     } else if (/^\s*\|/.test(line)) {
       flushPara(); flushList();
@@ -195,8 +210,8 @@ export function renderMarkdown(text, { mark = null } = {}) {
 
 /** A regex that marks the search words of `query` (stopwords skipped, loose stemming by prefix), or null. */
 export function markFor(query) {
-  const words = (String(query).match(/[\p{L}\p{N}_$]{2,}/gu) || []).map((w) => w.replace(/^\$/, ""))
+  const words = (String(query).normalize("NFC").match(/[\p{L}\p{N}_$][\p{L}\p{N}\p{M}_$]*/gu) || []).map((w) => w.replace(/^\$/, ""))
     .filter((w) => w.length > 2 && !STOPWORDS.has(w.toLowerCase()) && !EXTRA_STOP.has(w.toLowerCase()))
     .map((w) => w.slice(0, Math.max(3, w.length - 2)).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  return words.length ? new RegExp(`\\b(?:${words.join("|")})\\w*`, "giu") : null;
+  return words.length ? new RegExp(`(?<![\\p{L}\\p{N}\\p{M}_])(?:${words.join("|")})[\\p{L}\\p{N}\\p{M}_]*`, "giu") : null;
 }

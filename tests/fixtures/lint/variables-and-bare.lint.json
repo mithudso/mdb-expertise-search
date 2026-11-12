@@ -26,7 +26,7 @@
       "end": 209,
       "fix": null,
       "line": 4,
-      "message": "$or requires a non-empty array.",
+      "message": "$or expects a non-empty array, got array.",
       "severity": "error",
       "start": 207
     },
@@ -236,7 +236,7 @@
       "end": 1528,
       "fix": null,
       "line": 50,
-      "message": "$or requires a non-empty array.",
+      "message": "$or expects a non-empty array, got array.",
       "severity": "error",
       "start": 1526
     }

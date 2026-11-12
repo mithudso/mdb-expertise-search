@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import index as idx
+from .safety import open_confined
 
 _FM = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 
@@ -27,7 +28,8 @@ class Recipe:
     @property
     def text(self) -> str:
         base = self.root or idx.default_corpus()
-        return (base / self.path).read_text(encoding="utf-8", errors="replace")
+        with open_confined(base, self.path) as stream:
+            return stream.read()
 
 
 def _list_value(raw: str) -> list[str]:
@@ -50,12 +52,17 @@ def parse_frontmatter(text: str) -> dict[str, str]:
 
 
 def load(root: Path | None = None) -> list[Recipe]:
-    root = root or idx.default_corpus()
+    root = (root or idx.default_corpus()).resolve()
     recipes: list[Recipe] = []
     for p in sorted((root / "recipes").glob("*.md")):
-        if p.name.lower() == "readme.md":
+        if not p.is_file() or p.name.lower() == "readme.md":
             continue
-        fm = parse_frontmatter(p.read_text(encoding="utf-8", errors="replace"))
+        relative = p.relative_to(root).as_posix()
+        try:
+            with open_confined(root, relative) as stream:
+                fm = parse_frontmatter(stream.read())
+        except ValueError:
+            continue  # unsafe entries cannot become recipes or hide valid regular recipes
         recipes.append(
             Recipe(
                 name=fm.get("name") or p.stem,
@@ -63,7 +70,7 @@ def load(root: Path | None = None) -> list[Recipe]:
                 summary=fm.get("summary", ""),
                 applies_to=_list_value(fm.get("applies_to", "")),
                 sources=_list_value(fm.get("sources", "")),
-                path=str(p.relative_to(root)),
+                path=relative,
                 root=root,
             )
         )

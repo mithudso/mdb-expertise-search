@@ -14,19 +14,21 @@ Accepted input, in the order it is recognised:
 Values are copied from the source text, so relaxed JSON and mongosh literals survive. Extended-JSON
 wrappers (``{"$date": ...}``, ``{"$oid": ...}``, ``{"$numberLong": ...}``) become mongosh literals.
 Log and profiler measurements are kept as ``evidence`` for the optimizer's P9 findings.
+Integer evidence outside JavaScript's safe integer range uses exact decimal strings in both ports.
+Nonfinite measurements are omitted. Decimal-string evidence does not participate in ratio arithmetic.
 """
 from __future__ import annotations
 
 import json
+import math
 import re
 from dataclasses import dataclass, field
 
 from .parser import Node, parse
 
-#: db.coll.method(  |  db["coll"].method(  |  db.getCollection(
-_MONGOSH_CALL = re.compile(
-    r"\bdb\s*(?:(?:\.\s*[A-Za-z_$][\w$]*|\[[^\]]*\])\s*\.\s*[A-Za-z_$][\w$]*\s*\(|\.\s*getCollection\s*\()")
-_IDENT = re.compile(r"[A-Za-z_$][\w$]*\Z")
+_INTEGER = re.compile(r"-?(?:0|[1-9][0-9]*)\Z")
+_DOUBLE = re.compile(r"-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\Z")
+_META = {"$db", "lsid", "$clusterTime"}
 _VERBS = ("find", "aggregate", "count", "distinct", "update", "delete", "findAndModify", "findandmodify")
 #: measurements copied from a log line / profiler entry (profiler `millis` is renamed durationMillis)
 EVIDENCE_KEYS = ("planSummary", "keysExamined", "docsExamined", "nreturned", "durationMillis", "hasSortStage",
@@ -55,24 +57,42 @@ class Normalized:
 
 
 def normalize(text: str) -> Normalized:
-    if _MONGOSH_CALL.search(text):
+    statements, errors = parse(text)
+    if any(_db_call(st.node) for st in statements):
         return Normalized(text, "mongosh", [])
-    statements, _ = parse(text)
     queries: list[Query] = []
+    unknown = bool(errors)
     for st in statements:
         node = st.node
+        if node.kind not in {"object", "array"}:
+            unknown = True
+            continue
+        if any(error.start < node.end and node.start < error.end for error in errors):
+            return Normalized(text, "mongosh", [])
         if node.kind == "object":
             q = _from_object(text, node)
-        elif node.kind == "array" and node.items and all(
+        elif node.kind == "array" and all(
                 i.kind == "object" and len(i.props) == 1 and i.props[0].key.startswith("$") for i in node.items):
-            q = Query(f"db.{PLACEHOLDER}.aggregate({_lit(text, node)})", "pipeline", None)
+            q = [Query(f"db.{PLACEHOLDER}.aggregate({_lit(text, node)})", "pipeline", None)]
         else:
             q = None
-        if q is not None:
-            queries.append(q)
-    if not queries:
+        if q is None:
+            return Normalized(text, "mongosh", [])
+        queries.extend(q)
+    # Slow-log excerpts can have a timestamp/header before the structured records. Do not discard
+    # unknown statements from command or bare-query input, where they may be executable code.
+    if not queries or (unknown and any(q.kind not in {"log", "profile"} for q in queries)):
         return Normalized(text, "mongosh", [])
     return Normalized("\n".join(q.text for q in queries) + "\n", queries[0].kind, queries)
+
+
+def _db_call(node: Node) -> bool:
+    """Recognize actual call syntax, without scanning string or comment contents."""
+    if node.kind != "call":
+        return False
+    while node.target is not None and node.kind in {"call", "member"}:
+        node = node.target
+    return node.kind == "ident" and node.value == "db"
 
 
 def _props(node: Node | None) -> dict[str, Node]:
@@ -81,7 +101,7 @@ def _props(node: Node | None) -> dict[str, Node]:
     return {p.key: p.value for p in node.props if p.value is not None}
 
 
-def _from_object(text: str, node: Node) -> Query | None:
+def _from_object(text: str, node: Node) -> list[Query] | None:
     top = _props(node)
     attr = _props(top.get("attr"))
     if attr and ("command" in attr or "originatingCommand" in attr):  # structured log line
@@ -100,52 +120,70 @@ def _from_object(text: str, node: Node) -> Query | None:
         op = _str(top.get("op"))
         if op in {"update", "remove", "delete"} and "q" in c and ns and "." in ns:
             # profiler write entries hold one statement ({q, u, multi} / {q, limit}), not a command
-            db = _coll_ref(ns.split(".", 1)[1])
-            if op == "update":
-                multi = "multi" in c and c["multi"].kind == "bool" and c["multi"].value
-                upd = _lit(text, c["u"]) if "u" in c else "{}"
-                s = f"{db}.{'updateMany' if multi else 'updateOne'}({_lit(text, c['q'])}, {upd})"
-            else:
-                one = "limit" in c and c["limit"].kind == "number" and c["limit"].value == 1
-                s = f"{db}.{'deleteOne' if one else 'deleteMany'}({_lit(text, c['q'])})"
-            return Query(s, "profile", ns.split(".", 1)[1], ev)
+            coll = ns.split(".", 1)[1]
+            s = _write_call(text, _coll_ref(coll), c, "update" if op == "update" else "delete")
+            return [Query(s, "profile", coll, ev)] if s is not None else None
         return _from_command(text, cmd, ns, "profile", ev)
     if any(v in top and top[v].kind == "string" for v in _VERBS):
         return _from_command(text, node, None, "command", {})
-    if node.props:  # a bare filter document
-        return Query(f"db.{PLACEHOLDER}.find({_lit(text, node)})", "filter", None)
-    return None
+    return [Query(f"db.{PLACEHOLDER}.find({_lit(text, node)})", "filter", None)]
 
 
 def _evidence(src: dict[str, Node], cmd: dict[str, Node]) -> dict:
     ev: dict = {}
     for k in EVIDENCE_KEYS:
         if k in src:
-            v = _scalar(src[k])
+            v = _evidence_scalar(src[k])
             if v is not None:
                 ev[k] = v
-    if "durationMillis" not in ev and "millis" in src and _scalar(src["millis"]) is not None:
-        ev["durationMillis"] = _scalar(src["millis"])
-    if "maxTimeMS" in cmd and _scalar(cmd["maxTimeMS"]) is not None:
-        ev["maxTimeMS"] = _scalar(cmd["maxTimeMS"])
+    if "durationMillis" not in ev and "millis" in src and _evidence_scalar(src["millis"]) is not None:
+        ev["durationMillis"] = _evidence_scalar(src["millis"])
+    if "maxTimeMS" in cmd and _evidence_scalar(cmd["maxTimeMS"]) is not None:
+        ev["maxTimeMS"] = _evidence_scalar(cmd["maxTimeMS"])
     return ev
+
+
+def _evidence_scalar(node: Node):
+    value = _scalar(node)
+    # JSON numbers have only JavaScript's safe integer range in the browser port. Preserve larger
+    # exact integers as decimal strings in both APIs; they are not used for ratio arithmetic.
+    return str(value) if isinstance(value, int) and not isinstance(value, bool) and abs(value) > 2**53 - 1 else value
 
 
 def _scalar(n: Node):
     if n.kind == "number":
         v = n.value
+        try:
+            if isinstance(v, bool) or not math.isfinite(v):
+                return None
+        except (TypeError, OverflowError):
+            return None
         return int(v) if isinstance(v, float) and v.is_integer() else v
     if n.kind in {"string", "bool"}:
         return n.value
     if n.kind == "object":  # {"$numberLong": "123"}
         p = _props(n)
-        for k in ("$numberLong", "$numberInt", "$numberDouble"):
-            if k in p and p[k].kind == "string":
-                try:
-                    f = float(str(p[k].value))
-                    return int(f) if f.is_integer() else f
-                except ValueError:
-                    return None
+        if len(p) == 1:
+            k, value = next(iter(p.items()))
+            if value.kind == "string":
+                return _numeric_wrapper(k, str(value.value))
+    return None
+
+
+def _numeric_wrapper(key: str, raw: str):
+    if key in {"$numberLong", "$numberInt"}:
+        # Bound before int() so malformed oversized strings cannot consume arbitrary work.
+        if len(raw) > 20 or not _INTEGER.fullmatch(raw):
+            return None
+        value = int(raw)
+        bits = 64 if key == "$numberLong" else 32
+        return value if -(1 << (bits - 1)) <= value < (1 << (bits - 1)) else None
+    if key == "$numberDouble" and _DOUBLE.fullmatch(raw):
+        try:
+            value = float(raw)
+            return value if math.isfinite(value) else None
+        except (ValueError, OverflowError):
+            return None
     return None
 
 
@@ -154,10 +192,45 @@ def _str(n: Node | None) -> str | None:
 
 
 def _coll_ref(name: str) -> str:
-    return f"db.{name}" if _IDENT.match(name) else f"db.getCollection({json.dumps(name)})"
+    # Property syntax can collide with database methods and inherited object properties.
+    return f"db.getCollection({json.dumps(name)})"
 
 
-def _from_command(text: str, cmd: Node | None, ns: str | None, kind: str, ev: dict) -> Query | None:
+def _options(text: str, c: dict[str, Node], keys: tuple[str, ...]) -> str:
+    body = ", ".join(f"{key}: {_lit(text, c[key])}" for key in keys if key in c)
+    return f", {{{body}}}" if body else ""
+
+
+def _write_call(text: str, db: str, c: dict[str, Node], verb: str, shared: dict[str, Node] | None = None) -> str | None:
+    option_keys = ("upsert", "arrayFilters", "collation", "hint", "let", "writeConcern", "bypassDocumentValidation", "comment") \
+        if verb == "update" else ("collation", "hint", "let", "writeConcern", "comment")
+    fields = {"q", "u", "multi"} if verb == "update" else {"q", "limit"}
+    if set(c) - (fields | set(option_keys)) or "q" not in c:
+        return None
+    options = dict(shared or {})
+    options.update({key: c[key] for key in option_keys if key in c})
+    args = _lit(text, c["q"])
+    if verb == "update":
+        if "u" not in c or ("multi" in c and c["multi"].kind != "bool"):
+            return None
+        update = c["u"]
+        replacement = update.kind == "object" and not any(p.key.startswith("$") for p in update.props)
+        if update.kind not in {"object", "array"}:
+            return None
+        multi = "multi" in c and c["multi"].value is True
+        if replacement and multi:
+            return None
+        method = "replaceOne" if replacement else "updateMany" if multi else "updateOne"
+        args += ", " + _lit(text, update)
+    else:
+        limit = _scalar(c["limit"]) if "limit" in c else None
+        if isinstance(limit, bool) or limit not in (0, 1):
+            return None
+        method = "deleteOne" if limit == 1 else "deleteMany"
+    return f"{db}.{method}({args}{_options(text, options, option_keys)})"
+
+
+def _from_command(text: str, cmd: Node | None, ns: str | None, kind: str, ev: dict) -> list[Query] | None:
     c = _props(cmd)
     verb = next((v for v in _VERBS if v in c and c[v].kind == "string"), None)
     coll = str(c[verb].value) if verb else None
@@ -167,44 +240,82 @@ def _from_command(text: str, cmd: Node | None, ns: str | None, kind: str, ev: di
         return None
     db = _coll_ref(coll)
     lit = lambda key, default="{}": _lit(text, c[key]) if key in c else default
+    allowed = {
+        "find": {"filter", "projection", "sort", "skip", "limit", "hint", "batchSize", "collation", "maxTimeMS", "comment", "min", "max", "returnKey", "showRecordId", "allowDiskUse"},
+        "aggregate": {"pipeline", "cursor", "allowDiskUse", "maxTimeMS", "collation", "hint", "let", "comment", "readConcern", "writeConcern", "bypassDocumentValidation"},
+        "count": {"query", "skip", "limit", "hint", "collation", "maxTimeMS", "comment", "readConcern"},
+        "distinct": {"key", "query", "collation", "maxTimeMS", "comment", "readConcern"},
+        "update": {"updates", "let", "writeConcern", "bypassDocumentValidation", "comment"},
+        "delete": {"deletes", "let", "writeConcern", "comment"},
+        "findAndModify": {"query", "sort", "remove", "update", "new", "fields", "upsert", "collation", "arrayFilters", "hint", "let", "maxTimeMS", "writeConcern", "bypassDocumentValidation", "comment"},
+    }
+    canonical = "findAndModify" if verb == "findandmodify" else verb
+    if set(c) - (_META | {verb} | allowed[canonical]):
+        return None  # retain the complete source when conversion cannot preserve an option
     if verb == "find":
         args = lit("filter") + (f", {lit('projection')}" if "projection" in c else "")
         s = f"{db}.find({args})"
         for key, meth in (("sort", "sort"), ("skip", "skip"), ("limit", "limit"), ("hint", "hint"),
-                          ("batchSize", "batchSize")):
+                          ("batchSize", "batchSize"), ("collation", "collation"), ("maxTimeMS", "maxTimeMS"),
+                          ("comment", "comment"), ("min", "min"), ("max", "max"), ("returnKey", "returnKey"),
+                          ("showRecordId", "showRecordId"), ("allowDiskUse", "allowDiskUse")):
             if key in c:
                 s += f".{meth}({lit(key)})"
     elif verb == "aggregate":
-        s = f"{db}.aggregate({lit('pipeline', '[]')})"
+        opts = {k: v for k, v in c.items() if k in allowed[verb] - {"pipeline", "cursor"}}
+        if "cursor" in c:
+            cursor = _props(c["cursor"])
+            if c["cursor"].kind != "object" or set(cursor) - {"batchSize"}:
+                return None
+            opts.update(cursor)
+        s = f"{db}.aggregate({lit('pipeline', '[]')}{_options(text, opts, tuple(sorted(opts)))})"
     elif verb == "count":
-        s = f"{db}.count({lit('query')})"
+        s = f"{db}.count({lit('query')}{_options(text, c, ('skip', 'limit', 'hint', 'collation', 'maxTimeMS', 'comment', 'readConcern'))})"
     elif verb == "distinct":
-        s = f"{db}.distinct({lit('key', repr(''))}, {lit('query')})"
+        s = f"{db}.distinct({lit('key', repr(''))}, {lit('query')}{_options(text, c, ('collation', 'maxTimeMS', 'comment', 'readConcern'))})"
     elif verb == "update":
-        first = c["updates"].items[0] if "updates" in c and c["updates"].kind == "array" and c["updates"].items \
-            else None
-        u = _props(first)
-        if "q" not in u:
-            return None
-        multi = "multi" in u and u["multi"].kind == "bool" and u["multi"].value
-        s = f"{db}.{'updateMany' if multi else 'updateOne'}({_lit(text, u['q'])}, " \
-            f"{_lit(text, u['u']) if 'u' in u else '{}'})"
+        return _batch(text, c, db, coll, verb, "updates", kind, ev)
     elif verb == "delete":
-        first = c["deletes"].items[0] if "deletes" in c and c["deletes"].kind == "array" and c["deletes"].items \
-            else None
-        d = _props(first)
-        if "q" not in d:
-            return None
-        one = "limit" in d and d["limit"].kind == "number" and d["limit"].value == 1
-        s = f"{db}.{'deleteOne' if one else 'deleteMany'}({_lit(text, d['q'])})"
+        return _batch(text, c, db, coll, verb, "deletes", kind, ev)
     else:  # findAndModify
         remove = "remove" in c and c["remove"].kind == "bool" and c["remove"].value
-        sort = f", {{ sort: {lit('sort')} }}" if "sort" in c else ""
+        options = {k: v for k, v in c.items() if k in allowed[canonical] - {"query", "remove", "update", "new", "fields"}}
+        if "fields" in c:
+            options["projection"] = c["fields"]
+        if "new" in c:
+            options["returnNewDocument"] = c["new"]
+        # Keep the historic sort layout for existing report fixtures.
+        suffix = _options(text, options, tuple(options))
+        if "sort" in options and len(options) == 1:
+            suffix = f", {{ sort: {lit('sort')} }}"
         if remove:
-            s = f"{db}.findOneAndDelete({lit('query')}{sort})"
+            if "update" in c or "upsert" in c or "new" in c or "arrayFilters" in c:
+                return None
+            s = f"{db}.findOneAndDelete({lit('query')}{suffix})"
         else:
-            s = f"{db}.findOneAndUpdate({lit('query')}, {lit('update')}{sort})"
-    return Query(s, kind, coll, ev)
+            update = c.get("update")
+            if update is None or update.kind not in {"object", "array"}:
+                return None
+            replacement = update.kind == "object" and not any(p.key.startswith("$") for p in update.props)
+            s = f"{db}.{'findOneAndReplace' if replacement else 'findOneAndUpdate'}({lit('query')}, {lit('update')}{suffix})"
+    return [Query(s, kind, coll, ev)]
+
+
+def _batch(text: str, c: dict[str, Node], db: str, coll: str, verb: str, key: str, kind: str, ev: dict) -> list[Query] | None:
+    operations = c.get(key)
+    if operations is None or operations.kind != "array" or not operations.items:
+        return None
+    shared = {k: v for k, v in c.items() if k in {"let", "writeConcern", "bypassDocumentValidation", "comment"}}
+    queries = []
+    for operation in operations.items:
+        if operation.kind != "object":
+            return None
+        s = _write_call(text, db, _props(operation), verb, shared)
+        if s is None:
+            return None
+        # Batch measurements cannot be attributed to each individual operation.
+        queries.append(Query(s, kind, coll, ev if len(operations.items) == 1 else {}))
+    return queries
 
 
 # ---- literal copying with extended-JSON conversion
@@ -225,7 +336,11 @@ def _lit(text: str, node: Node) -> str:
 
 
 def _one_line(s: str) -> str:
-    # collapse newlines (and the indentation after them) outside strings so each query stays on one line
+    # Keep line terminators when comment markers occur. They can also occur inside regex literals;
+    # preserving the layout is safer than guessing whether a slash starts a comment.
+    if "//" in s or "/*" in s:
+        return s.strip()
+    # Collapse newlines and indentation outside strings when no comment boundary can be extended.
     res, i, quote = [], 0, None
     while i < len(s):
         ch = s[i]
@@ -240,7 +355,7 @@ def _one_line(s: str) -> str:
         elif ch in "\"'`":
             quote = ch
             res.append(ch)
-        elif ch in "\r\n":
+        elif ch in "\r\n\u2028\u2029":
             while i + 1 < len(s) and s[i + 1] in " \t\r\n":
                 i += 1
             if res and res[-1] not in " [{(":
@@ -268,7 +383,9 @@ def _ejson_edits(text: str, node: Node, edits: list[tuple[int, int, str]]) -> No
                 inner = _scalar(v)
                 rep = f"new Date({inner})" if inner is not None else None
             elif p.key in {"$numberLong", "$numberInt", "$numberDouble"} and v.kind == "string":
-                rep = str(v.value)
+                value = _numeric_wrapper(p.key, str(v.value))
+                if value is not None:
+                    rep = f"NumberLong({json.dumps(str(v.value))})" if p.key == "$numberLong" else str(v.value)
             elif p.key == "$numberDecimal" and v.kind == "string":
                 rep = f"NumberDecimal({vs})"
         if rep is not None:

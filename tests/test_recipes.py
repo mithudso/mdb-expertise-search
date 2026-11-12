@@ -47,12 +47,18 @@ def test_find_exact_and_fuzzy(root):
 
 
 def test_recipes_are_searchable_by_kind(root, tmp_path):
+    from contextlib import closing
+
     from mdbx import search
 
-    con = index.connect(tmp_path / "r.sqlite")
-    index.build_keyword(con, root)
-    hits = search.keyword(con, "shardCollection hashed", kind="recipe")
-    assert hits and hits[0].kind == "recipe" and hits[0].source == "shard-a-collection"
+    skill = root / 'skills' / 'synthetic-kind' / 'SKILL.md'
+    skill.parent.mkdir(parents=True)
+    skill.write_text('# Synthetic skill\nshardCollection hashed\n')
+    with closing(index.connect(tmp_path / "r.sqlite")) as con:
+        index.build_keyword(con, root)
+        assert {'recipe','skill'} <= {h.kind for h in search.keyword(con,'shardCollection hashed')}
+        hits = search.keyword(con, "shardCollection hashed", kind="recipe")
+        assert hits and all(h.kind == 'recipe' for h in hits) and hits[0].source == 'shard-a-collection'
 
 
 def test_cli_recipes(root, capsys):
@@ -75,3 +81,14 @@ def test_mcp_recipe_tools(root):
     assert "sh.shardCollection" in m.mdb_recipe("shard a collection")
     with pytest.raises(ValueError):
         m.mdb_recipe("nope")
+
+
+def test_review_recipe_paths_are_confined_and_directories_skipped(root):
+    (root/'recipes'/'extra.md').mkdir()
+    outside = root.parent/'outside.md'
+    outside.write_text('synthetic outside content')
+    (root/'recipes'/'escape.md').symlink_to(outside)
+    assert {r.path for r in recipes.load(root)} == {'recipes/atlas-private-link.md','recipes/shard-a-collection.md'}
+    item = recipes.Recipe('escape','Escape','',path='recipes/escape.md',root=root)
+    with pytest.raises(ValueError):
+        _ = item.text
