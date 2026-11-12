@@ -62,3 +62,10 @@ optimizer expectations using independent semantics and separate behavior tests.
 ## 2026-11-12 — selected maintenance scope
 
 Resume only mdb-expertise-search through verified PR delivery. Preserve the original five-iteration/two-gate caps, completed evidence and serialization freeze. Apply focused corroborated repairs with synthetic factories, scratch state, process-tree egress denial and isolated fixture Git hooks. Preserve unrelated work and live services/models/indexes.
+
+Version: 2026.11.12.2
+Delta: Preserve outstanding local changes and synchronize cross-system Git work.
+
+## 2026-11-12 — Git reconciliation
+
+For all of my repos in this directory, get them up to date. commit anything outstanding and get current with the most recent branch, there was a lot of work done on other systems optimizing all of them.

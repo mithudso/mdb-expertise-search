@@ -348,6 +348,10 @@ def test_fixture_vectors_use_canonical_duplicate_body_heading(tmp_path,monkeypat
     module=script('gen_search_golden');monkeypatch.setattr(module,'FIX',tmp_path)
     root=tmp_path/'corpus';root.mkdir()
     for name in ('A','Z'):(root/(name+'.md')).write_text('# '+name+'\n'+'alpha body '*500)
+    headings_by_digest={}
+    for chunk in module.corpusmod.iter_chunks(root):
+        headings_by_digest.setdefault(chunk.digest,set()).add(chunk.heading)
+    assert any(len(headings)>1 for headings in headings_by_digest.values())
     out=tmp_path/'index';module.build(out)
     rows=json.loads((out/'chunks.json').read_text())['rows']
     assert rows and all(row[6]>=0 for row in rows)

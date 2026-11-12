@@ -160,3 +160,14 @@ for scope, final verification and retained migration-dependent defects.
 ## 2026-11-12 — selected maintenance repair continuation
 
 Applied corroborated preservation, index identity, parser/editor, updater and offline-test isolation repairs. Both blind gates remain spent; optimizer status is BLIND-AUDIT-DISSENT. Frozen chunk/search serialization and protected data remain unchanged. Integrated Python:666 passed,2 platform/model skips; Chrome280 and VSCode20 passed. Final upstream integration, CI and remote delivery evidence are tracked in PR7 and the external maintenance receipt.
+
+Version: 2026.11.12.2
+Delta: Preserve outstanding local changes and synchronize cross-system Git work.
+
+## 2026-11-12 — Git reconciliation
+
+Preserve the existing project-local MCP disable configuration. The server definition remains available under _disabled_mcpServers.
+
+Git reconciliation is separate from paused optimization work. Preserve generated logs, local backups and concurrent work. Verification and delivery receipts are recorded by the fleet synchronization task TASK-1968. Verification: scoped local checks passed. Remaining: final commit, CI and verified remote delivery.
+
+CI initially failed before tests because the runner lacked access to private ollama-client. Configured a dedicated read-only deploy key for that dependency and stored it only as a repository Actions secret. Added strict SSH host verification using GitHub's HTTPS metadata and an exact dependency URL rewrite. The key cannot write to the dependency. Remaining: final CI and verified remote delivery.
