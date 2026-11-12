@@ -253,7 +253,8 @@ def test_actual_linux_guard_is_inherited_by_python_and_node(tmp_path):
     # Running this test outside the offline launcher fails before opening sockets.
     assert guard.linux_isolated(), guard.linux_isolation_diagnostic()
     assert shutil.which('node'), 'the maintained CI setup supplies Node'
-    _blocked()
+    # pytest mocks connect; the fresh Python parent probe below performs the
+    # actual four-address checks before its Node and Python descendants do so.
     probe, _node = _egress_probe()
     result = subprocess.run([sys.executable, str(ROOT / 'scripts/offline_test.py'), '--',
                              sys.executable, '-c', probe],
@@ -308,3 +309,43 @@ def test_diagnostic_io_errors_have_only_type_and_errno(guard, isolated):
     row = json.loads(guard.linux_isolation_diagnostic())
     assert row['ipv6_error'] == {'type': 'FileNotFoundError', 'errno': 2}
     assert str(proc) not in json.dumps(row)
+
+
+def test_exact_empty_ipv4_table_is_isolated_but_other_empty_like_text_is_not(guard, isolated, monkeypatch):
+    proc, _sysfs = isolated
+    route = proc / 'net/route'
+    header = route.read_text()
+    route.write_bytes(b'')
+    assert guard.linux_isolated()
+    diagnostic = json.loads(guard.linux_isolation_diagnostic())
+    assert diagnostic['predicates']['routeheader_ok']
+    assert diagnostic['failed_predicates'] == []
+    for content in [b'\n', b' ', b'Iface\n', b'not a route header\n']:
+        route.write_bytes(content)
+        assert not guard.linux_isolated()
+        assert not json.loads(guard.linux_isolation_diagnostic())['predicates']['routeheader_ok']
+    route.write_text(header)
+    assert guard.linux_isolated()
+    route.unlink()
+    assert not guard.linux_isolated()
+    original = Path.read_text
+    def unreadable(path, *args, **kwargs):
+        if path == route:
+            raise PermissionError(13, 'SYNTH_SECRET/private/path')
+        return original(path, *args, **kwargs)
+    monkeypatch.setattr(Path, 'read_text', unreadable)
+    assert not guard.linux_isolated()
+    diagnostic = guard.linux_isolation_diagnostic()
+    assert 'SYNTH_SECRET' not in diagnostic
+    assert json.loads(diagnostic)['ipv4_error'] == {'type': 'PermissionError', 'errno': 13}
+
+
+def test_generic_pytest_socket_mock_is_not_accepted_as_egress_proof(monkeypatch):
+    calls = []
+    def mocked(handle, address):
+        calls.append(address)
+        raise OSError('synthetic pytest denial without kernel errno')
+    monkeypatch.setattr(socket.socket, 'connect', mocked)
+    with pytest.raises(AssertionError):
+        _blocked()
+    assert calls == [('192.0.2.1', 9)]

@@ -25,8 +25,10 @@ The wrapper denies outbound traffic for descendants, including loopback. An exac
 owned synthetic listener port may be allowed explicitly; never allow a real model,
 service or index endpoint. Python socket patches alone do not cover descendants.
 macOS uses sandbox-exec. Linux requires a non-root runner with passwordless sudo
-and unshare; the child gets an isolated network namespace with no configured
-interfaces and drops back to the runner uid/gid. Linux does not accept host fixture-
+and unshare/setpriv; the child gets an isolated network namespace with only a
+down loopback interface, drops all groups/capabilities and returns to the runner
+uid/gid with NoNewPrivs. Nested execution reuses it only after kernel checks,
+including exactly empty or header-only IPv4 routes and inert IPv6 reject routes. Linux does not accept host fixture-
 port exceptions. Unsupported platforms fail closed. CI covers macOS and Ubuntu
 on Python 3.11, 3.12 and 3.13; dependency downloads precede isolated checks.
 

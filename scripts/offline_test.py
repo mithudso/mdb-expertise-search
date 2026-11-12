@@ -49,9 +49,11 @@ def linux_isolated():
         flags = _interface_flags('lo')
         if flags & 1 or not flags & 8:  # IFF_UP must be clear; IFF_LOOPBACK must be set.
             return False
-        routes = (_PROC / 'net/route').read_text(encoding='ascii').splitlines()
+        route_text = (_PROC / 'net/route').read_text(encoding='ascii')
+        routes = route_text.splitlines()
         header = ['Iface', 'Destination', 'Gateway', 'Flags', 'RefCnt', 'Use', 'Metric', 'Mask', 'MTU', 'Window', 'IRTT']
-        if not routes or routes[0].split() != header or any(line.strip() for line in routes[1:]):
+        if route_text and (not routes or routes[0].split() != header or
+                           any(line.strip() for line in routes[1:])):
             return False
         # Linux can expose inert kernel null routes even with loopback down.
         # Only RTF_REJECT entries on that down interface are acceptable.
@@ -108,11 +110,13 @@ def linux_isolation_diagnostic():
         state['interface_error'] = {'type': type(error).__name__, 'errno': getattr(error, 'errno', None)}
     for version, name in [('ipv4', 'route'), ('ipv6', 'ipv6_route')]:
         try:
-            rows = (_PROC / 'net' / name).read_text(encoding='ascii').splitlines()
+            route_text = (_PROC / 'net' / name).read_text(encoding='ascii')
+            rows = route_text.splitlines()
             if version == 'ipv4':
                 header = ['Iface', 'Destination', 'Gateway', 'Flags', 'RefCnt', 'Use',
                           'Metric', 'Mask', 'MTU', 'Window', 'IRTT']
                 fields = rows[0].split() if rows else []
+                state['ipv4_file_empty'] = route_text == ''
                 state['ipv4_header_matches'] = fields == header
                 state['ipv4_header_field_count'] = len(fields)
                 rows = rows[1:]
@@ -151,7 +155,8 @@ def linux_isolation_diagnostic():
                               interfaces.get('loopback_seen') is True and
                               interfaces.get('other_count') == 0,
         'lo_down_loopback': bool(flags & 8) and not flags & 1,
-        'routeheader_ok': state.get('ipv4_header_matches') is True,
+        'routeheader_ok': state.get('ipv4_file_empty') is True or
+                          state.get('ipv4_header_matches') is True,
         'ipv4_empty': ipv4.get('rows') == 0 and 'ipv4_error' not in state,
         'ipv6_reject_only': ipv6.get('format_ok') is True and
                             all(ipv6.get('on_loopback', [])) and

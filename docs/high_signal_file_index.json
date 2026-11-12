@@ -7,7 +7,7 @@
   {
     "path": ".env.example",
     "purpose": "docs/config",
-    "bytes": 595
+    "bytes": 1303
   },
   {
     "path": ".gitattributes",
@@ -52,7 +52,7 @@
   {
     "path": ".github/workflows/ci.yml",
     "purpose": "docs/config",
-    "bytes": 3365
+    "bytes": 3565
   },
   {
     "path": ".gitignore",
@@ -62,7 +62,7 @@
   {
     "path": ".mcp.json",
     "purpose": "docs/config",
-    "bytes": 103
+    "bytes": 148
   },
   {
     "path": ".node-version",
@@ -92,12 +92,12 @@
   {
     "path": "AGENTS.md",
     "purpose": "docs/config",
-    "bytes": 308
+    "bytes": 659
   },
   {
     "path": "CLAUDE.md",
     "purpose": "docs/config",
-    "bytes": 4580
+    "bytes": 5063
   },
   {
     "path": "CODE_OF_CONDUCT.md",
@@ -142,7 +142,7 @@
   {
     "path": "docs/DEVELOPMENT.md",
     "purpose": "docs/config",
-    "bytes": 3806
+    "bytes": 4167
   },
   {
     "path": "docs/INSTALLATION.md",
@@ -172,7 +172,7 @@
   {
     "path": "docs/TESTING.md",
     "purpose": "docs/config",
-    "bytes": 3484
+    "bytes": 4276
   },
   {
     "path": "docs/archive/.gitkeep",
@@ -182,7 +182,12 @@
   {
     "path": "docs/caching-and-optimization.md",
     "purpose": "docs/config",
-    "bytes": 1284
+    "bytes": 2303
+  },
+  {
+    "path": "docs/code-deep-optimizer-2026-11-12.md",
+    "purpose": "docs/config",
+    "bytes": 31312
   },
   {
     "path": "docs/codebase-overview.md",
@@ -202,12 +207,12 @@
   {
     "path": "docs/integrations-and-assumptions.md",
     "purpose": "docs/config",
-    "bytes": 1747
+    "bytes": 1657
   },
   {
     "path": "docs/known-issues.md",
     "purpose": "docs/config",
-    "bytes": 6502
+    "bytes": 8295
   },
   {
     "path": "docs/logging.md",
@@ -227,12 +232,12 @@
   {
     "path": "docs/repo-bootstrap-audit-2026-11-12.md",
     "purpose": "docs/config",
-    "bytes": 4220
+    "bytes": 20471
   },
   {
     "path": "docs/requirements.md",
     "purpose": "docs/config",
-    "bytes": 1141
+    "bytes": 1168
   },
   {
     "path": "docs/runbooks/rebuild-index.md",
@@ -240,9 +245,19 @@
     "bytes": 390
   },
   {
+    "path": "docs/source-coverage-2026-11-12.md",
+    "purpose": "docs/config",
+    "bytes": 26823
+  },
+  {
+    "path": "docs/source-inventory-2026-11-12.json",
+    "purpose": "docs/config",
+    "bytes": 51981
+  },
+  {
     "path": "docs/wiki/README.md",
     "purpose": "docs/config",
-    "bytes": 1374
+    "bytes": 1484
   },
   {
     "path": "editors/chrome/README.md",
@@ -257,12 +272,12 @@
   {
     "path": "editors/chrome/app.html",
     "purpose": "docs/config",
-    "bytes": 6798
+    "bytes": 6831
   },
   {
     "path": "editors/chrome/app.js",
     "purpose": "docs/config",
-    "bytes": 23897
+    "bytes": 25065
   },
   {
     "path": "editors/chrome/background.js",
@@ -292,17 +307,17 @@
   {
     "path": "editors/chrome/lib/analyze.js",
     "purpose": "docs/config",
-    "bytes": 41311
+    "bytes": 43090
   },
   {
     "path": "editors/chrome/lib/autoupdate.js",
     "purpose": "docs/config",
-    "bytes": 4138
+    "bytes": 4345
   },
   {
     "path": "editors/chrome/lib/capture.js",
     "purpose": "docs/config",
-    "bytes": 3094
+    "bytes": 3986
   },
   {
     "path": "editors/chrome/lib/docs.js",
@@ -312,32 +327,32 @@
   {
     "path": "editors/chrome/lib/normalize.js",
     "purpose": "docs/config",
-    "bytes": 15844
+    "bytes": 16635
   },
   {
     "path": "editors/chrome/lib/operators-data.js",
     "purpose": "docs/config",
-    "bytes": 40336
+    "bytes": 41130
   },
   {
     "path": "editors/chrome/lib/operators.js",
     "purpose": "docs/config",
-    "bytes": 5172
+    "bytes": 5342
   },
   {
     "path": "editors/chrome/lib/operators.json",
     "purpose": "docs/config",
-    "bytes": 40228
+    "bytes": 41022
   },
   {
     "path": "editors/chrome/lib/optimize.js",
     "purpose": "docs/config",
-    "bytes": 46604
+    "bytes": 49024
   },
   {
     "path": "editors/chrome/lib/parser.js",
     "purpose": "docs/config",
-    "bytes": 17282
+    "bytes": 18619
   },
   {
     "path": "editors/chrome/lib/report.js",
@@ -347,17 +362,17 @@
   {
     "path": "editors/chrome/lib/store.js",
     "purpose": "docs/config",
-    "bytes": 5884
+    "bytes": 6104
   },
   {
     "path": "editors/chrome/lib/textsearch.js",
     "purpose": "docs/config",
-    "bytes": 13797
+    "bytes": 14271
   },
   {
     "path": "editors/chrome/lib/ui.js",
     "purpose": "docs/config",
-    "bytes": 9590
+    "bytes": 11525
   },
   {
     "path": "editors/chrome/lib/unicode61.js",
@@ -377,7 +392,7 @@
   {
     "path": "editors/chrome/popup.css",
     "purpose": "docs/config",
-    "bytes": 4997
+    "bytes": 5047
   },
   {
     "path": "editors/chrome/popup.html",
@@ -387,7 +402,7 @@
   {
     "path": "editors/chrome/popup.js",
     "purpose": "docs/config",
-    "bytes": 6947
+    "bytes": 7142
   },
   {
     "path": "editors/chrome/screenshot-app.png",
@@ -405,9 +420,14 @@
     "bytes": 157137
   },
   {
+    "path": "editors/chrome/test/app-completion.mjs",
+    "purpose": "docs/config",
+    "bytes": 946
+  },
+  {
     "path": "editors/chrome/test/autoupdate.test.mjs",
     "purpose": "docs/config",
-    "bytes": 5885
+    "bytes": 5975
   },
   {
     "path": "editors/chrome/test/batch.mjs",
@@ -425,19 +445,29 @@
     "bytes": 2461
   },
   {
+    "path": "editors/chrome/test/counted-source.mjs",
+    "purpose": "docs/config",
+    "bytes": 958
+  },
+  {
     "path": "editors/chrome/test/debug-app.mjs",
     "purpose": "docs/config",
-    "bytes": 2373
+    "bytes": 1679
   },
   {
     "path": "editors/chrome/test/dom-fixture.mjs",
     "purpose": "docs/config",
-    "bytes": 7932
+    "bytes": 8642
   },
   {
     "path": "editors/chrome/test/e2e.mjs",
     "purpose": "docs/config",
-    "bytes": 10838
+    "bytes": 11538
+  },
+  {
+    "path": "editors/chrome/test/extension-under-test.mjs",
+    "purpose": "docs/config",
+    "bytes": 481
   },
   {
     "path": "editors/chrome/test/integrity.test.mjs",
@@ -447,7 +477,7 @@
   {
     "path": "editors/chrome/test/language-boundaries.test.mjs",
     "purpose": "docs/config",
-    "bytes": 4550
+    "bytes": 6747
   },
   {
     "path": "editors/chrome/test/lint-batch.mjs",
@@ -457,32 +487,42 @@
   {
     "path": "editors/chrome/test/lint-parity.test.mjs",
     "purpose": "docs/config",
-    "bytes": 2848
+    "bytes": 2824
   },
   {
     "path": "editors/chrome/test/normalization-boundaries.test.mjs",
     "purpose": "docs/config",
-    "bytes": 2752
+    "bytes": 3366
   },
   {
     "path": "editors/chrome/test/optimizer-boundaries.test.mjs",
     "purpose": "docs/config",
-    "bytes": 4768
+    "bytes": 7337
   },
   {
     "path": "editors/chrome/test/page-races.test.mjs",
     "purpose": "docs/config",
-    "bytes": 14074
+    "bytes": 14318
   },
   {
     "path": "editors/chrome/test/parity.test.mjs",
     "purpose": "docs/config",
-    "bytes": 11331
+    "bytes": 11931
+  },
+  {
+    "path": "editors/chrome/test/postgate-editors.test.mjs",
+    "purpose": "docs/config",
+    "bytes": 15160
+  },
+  {
+    "path": "editors/chrome/test/postgate-mql.test.mjs",
+    "purpose": "docs/config",
+    "bytes": 3170
   },
   {
     "path": "editors/chrome/test/rendering.test.mjs",
     "purpose": "docs/config",
-    "bytes": 2571
+    "bytes": 2448
   },
   {
     "path": "editors/chrome/test/run-tests.mjs",
@@ -492,7 +532,7 @@
   {
     "path": "editors/chrome/test/search-batch.mjs",
     "purpose": "docs/config",
-    "bytes": 1400
+    "bytes": 1558
   },
   {
     "path": "editors/chrome/test/search-parity.test.mjs",
@@ -502,17 +542,17 @@
   {
     "path": "editors/chrome/test/search-rendering-boundaries.test.mjs",
     "purpose": "docs/config",
-    "bytes": 5926
+    "bytes": 6389
   },
   {
     "path": "editors/chrome/test/ui-boundaries.test.mjs",
     "purpose": "docs/config",
-    "bytes": 6575
+    "bytes": 7182
   },
   {
     "path": "editors/chrome/test/ui.test.mjs",
     "purpose": "docs/config",
-    "bytes": 7946
+    "bytes": 9032
   },
   {
     "path": "editors/helix-languages.toml",
@@ -542,7 +582,7 @@
   {
     "path": "editors/vscode/extension.js",
     "purpose": "docs/config",
-    "bytes": 1906
+    "bytes": 5001
   },
   {
     "path": "editors/vscode/language-configuration.json",
@@ -562,17 +602,27 @@
   {
     "path": "editors/vscode/server-path.js",
     "purpose": "docs/config",
-    "bytes": 916
+    "bytes": 936
+  },
+  {
+    "path": "editors/vscode/server-process.js",
+    "purpose": "docs/config",
+    "bytes": 2285
   },
   {
     "path": "editors/vscode/syntaxes/mql.tmLanguage.json",
     "purpose": "docs/config",
-    "bytes": 4843
+    "bytes": 4883
+  },
+  {
+    "path": "editors/vscode/test/lifecycle.test.js",
+    "purpose": "docs/config",
+    "bytes": 8476
   },
   {
     "path": "editors/vscode/test/server-path.test.js",
     "purpose": "docs/config",
-    "bytes": 8912
+    "bytes": 10545
   },
   {
     "path": "examples/orders.mql",
@@ -592,32 +642,32 @@
   {
     "path": "mdbx/cli.py",
     "purpose": "mdbx command entry point",
-    "bytes": 16675
+    "bytes": 17277
   },
   {
     "path": "mdbx/corpus.py",
     "purpose": "Corpus discovery, classification, chunking",
-    "bytes": 5436
+    "bytes": 6544
   },
   {
     "path": "mdbx/embed.py",
     "purpose": "Embedding client: Ollama or in-process ONNX",
-    "bytes": 4913
+    "bytes": 5074
   },
   {
     "path": "mdbx/embed_onnx.py",
     "purpose": "In-process nomic-embed-text ONNX embedder",
-    "bytes": 5564
+    "bytes": 5616
   },
   {
     "path": "mdbx/index.py",
     "purpose": "SQLite schema + keyword/semantic index builds",
-    "bytes": 10857
+    "bytes": 12288
   },
   {
     "path": "mdbx/mcp_server.py",
     "purpose": "MCP server (stdio)",
-    "bytes": 6342
+    "bytes": 7708
   },
   {
     "path": "mdbx/mql/__init__.py",
@@ -627,62 +677,62 @@
   {
     "path": "mdbx/mql/analyze.py",
     "purpose": "Context-aware MQL lint + outline",
-    "bytes": 42556
+    "bytes": 45584
   },
   {
     "path": "mdbx/mql/features.py",
     "purpose": "LSP completion and hover logic",
-    "bytes": 8543
+    "bytes": 10053
   },
   {
     "path": "mdbx/mql/normalize.py",
     "purpose": "docs/config",
-    "bytes": 18516
+    "bytes": 19010
   },
   {
     "path": "mdbx/mql/operators.py",
     "purpose": "MQL operator table",
-    "bytes": 21070
+    "bytes": 21460
   },
   {
     "path": "mdbx/mql/optimize.py",
     "purpose": "Static MQL query optimizer",
-    "bytes": 50491
+    "bytes": 55660
   },
   {
     "path": "mdbx/mql/parser.py",
     "purpose": "Tolerant mongosh/MQL parser",
-    "bytes": 17727
+    "bytes": 20307
   },
   {
     "path": "mdbx/mql/server.py",
     "purpose": "mql-lsp language server (lint + optimizer diagnostics)",
-    "bytes": 10560
+    "bytes": 12457
   },
   {
     "path": "mdbx/providers.py",
     "purpose": "docs/config",
-    "bytes": 4780
+    "bytes": 4879
   },
   {
     "path": "mdbx/recipes.py",
     "purpose": "docs/config",
-    "bytes": 3027
+    "bytes": 4032
   },
   {
     "path": "mdbx/safety.py",
     "purpose": "docs/config",
-    "bytes": 8386
+    "bytes": 20460
   },
   {
     "path": "mdbx/search.py",
     "purpose": "Keyword, semantic, hybrid ranking",
-    "bytes": 11980
+    "bytes": 12555
   },
   {
     "path": "mdbx/tui.py",
     "purpose": "Textual TUI",
-    "bytes": 12491
+    "bytes": 14970
   },
   {
     "path": "mdbx/unicode61.py",
@@ -692,17 +742,17 @@
   {
     "path": "mdbx/webexport.py",
     "purpose": "docs/config",
-    "bytes": 24469
+    "bytes": 26813
   },
   {
     "path": "memory.md",
     "purpose": "docs/config",
-    "bytes": 13386
+    "bytes": 15800
   },
   {
     "path": "prompts.md",
     "purpose": "docs/config",
-    "bytes": 4021
+    "bytes": 5603
   },
   {
     "path": "pyproject.toml",
@@ -712,72 +762,77 @@
   {
     "path": "scripts/check_chrome_doc_links.py",
     "purpose": "docs/config",
-    "bytes": 1571
+    "bytes": 2310
   },
   {
     "path": "scripts/check_doc_indexes.py",
     "purpose": "Validate index paths",
-    "bytes": 469
+    "bytes": 1870
   },
   {
     "path": "scripts/chrome_extension_autoupdate.py",
     "purpose": "docs/config",
-    "bytes": 23274
+    "bytes": 27027
+  },
+  {
+    "path": "scripts/ci_private_dependency.py",
+    "purpose": "docs/config",
+    "bytes": 1683
   },
   {
     "path": "scripts/corpus_autoupdate.py",
     "purpose": "docs/config",
-    "bytes": 15518
+    "bytes": 18830
   },
   {
     "path": "scripts/gen_chrome_operators.py",
     "purpose": "docs/config",
-    "bytes": 2610
+    "bytes": 3498
   },
   {
     "path": "scripts/gen_file_index.py",
     "purpose": "Regenerate this index",
-    "bytes": 4458
+    "bytes": 4466
   },
   {
     "path": "scripts/gen_lint_golden.py",
     "purpose": "docs/config",
-    "bytes": 4114
+    "bytes": 5248
   },
   {
     "path": "scripts/gen_optimizer_golden.py",
     "purpose": "docs/config",
-    "bytes": 2414
+    "bytes": 3054
   },
   {
     "path": "scripts/gen_recipes_index.py",
     "purpose": "docs/config",
-    "bytes": 3739
+    "bytes": 4260
   },
   {
     "path": "scripts/gen_search_golden.py",
     "purpose": "docs/config",
-    "bytes": 6925
+    "bytes": 6366
   },
   {
     "path": "scripts/gen_unicode61.py",
     "purpose": "docs/config",
-    "bytes": 7168
+    "bytes": 7290
   },
   {
     "path": "scripts/glean_cli_helper.py",
     "purpose": "docs/config",
-    "bytes": 1635
+    "bytes": 1920
   },
   {
     "path": "scripts/install.sh",
     "purpose": "docs/config",
-    "bytes": 2960
+    "bytes": 3533
   },
   {
     "path": "scripts/maintenance_safety.py",
     "purpose": "docs/config",
-    "bytes": 3881
+    "bytes": 11284
   },
   {
     "path": "scripts/make_chrome_icons.py",
@@ -787,47 +842,52 @@
   {
     "path": "scripts/offline_test.py",
     "purpose": "docs/config",
-    "bytes": 1355
+    "bytes": 11791
   },
   {
     "path": "scripts/package_chrome_extension.py",
     "purpose": "docs/config",
-    "bytes": 6018
+    "bytes": 8530
   },
   {
     "path": "scripts/redact_corpus.py",
     "purpose": "Redact customer/internal references",
-    "bytes": 6236
+    "bytes": 9728
   },
   {
     "path": "scripts/rotate_workflow_logs.py",
     "purpose": "Rotate memory.md/prompts.md into docs/archive/",
-    "bytes": 4635
+    "bytes": 4728
   },
   {
     "path": "scripts/sweep_customers.py",
     "purpose": "Customer-marker sweep",
-    "bytes": 3632
+    "bytes": 5034
   },
   {
     "path": "scripts/sync_corpus.sh",
     "purpose": "Rebuild corpus from local skills + reindex",
-    "bytes": 2974
+    "bytes": 185
   },
   {
     "path": "scripts/sync_corpus_sources.py",
     "purpose": "docs/config",
-    "bytes": 5004
+    "bytes": 8401
+  },
+  {
+    "path": "scripts/sync_corpus_transaction.py",
+    "purpose": "docs/config",
+    "bytes": 8857
   },
   {
     "path": "scripts/test_isolation.py",
     "purpose": "docs/config",
-    "bytes": 10019
+    "bytes": 10152
   },
   {
     "path": "scripts/watch_and_index.sh",
     "purpose": "Reindex on corpus changes (fswatch/inotifywait)",
-    "bytes": 855
+    "bytes": 1197
   },
   {
     "path": "tests/__init__.py",
@@ -997,7 +1057,7 @@
   {
     "path": "tests/fixtures/optimizer/bare-filter.golden.json",
     "purpose": "docs/config",
-    "bytes": 5676
+    "bytes": 3833
   },
   {
     "path": "tests/fixtures/optimizer/bare-filter.txt",
@@ -1007,7 +1067,7 @@
   {
     "path": "tests/fixtures/optimizer/bare-pipeline.golden.json",
     "purpose": "docs/config",
-    "bytes": 8370
+    "bytes": 8020
   },
   {
     "path": "tests/fixtures/optimizer/bare-pipeline.txt",
@@ -1027,7 +1087,7 @@
   {
     "path": "tests/fixtures/optimizer/mongosh-examples.golden.json",
     "purpose": "docs/config",
-    "bytes": 27359
+    "bytes": 27615
   },
   {
     "path": "tests/fixtures/optimizer/mongosh-examples.txt",
@@ -1047,7 +1107,7 @@
   {
     "path": "tests/fixtures/optimizer/mongosh-rules.golden.json",
     "purpose": "docs/config",
-    "bytes": 90475
+    "bytes": 90605
   },
   {
     "path": "tests/fixtures/optimizer/mongosh-rules.txt",
@@ -1087,27 +1147,37 @@
   {
     "path": "tests/test_cdo_hardening.py",
     "purpose": "Embed/index/search hardening tests",
-    "bytes": 5943
+    "bytes": 6129
   },
   {
     "path": "tests/test_chrome_autoupdate.py",
     "purpose": "docs/config",
-    "bytes": 12201
+    "bytes": 12561
+  },
+  {
+    "path": "tests/test_ci_public_install.py",
+    "purpose": "docs/config",
+    "bytes": 2254
   },
   {
     "path": "tests/test_core.py",
     "purpose": "Core unit tests",
-    "bytes": 11098
+    "bytes": 11556
   },
   {
     "path": "tests/test_core_preservation.py",
     "purpose": "docs/config",
-    "bytes": 17669
+    "bytes": 18726
   },
   {
     "path": "tests/test_corpus_autoupdate.py",
     "purpose": "docs/config",
-    "bytes": 8052
+    "bytes": 9036
+  },
+  {
+    "path": "tests/test_corpus_generation.py",
+    "purpose": "docs/config",
+    "bytes": 6226
   },
   {
     "path": "tests/test_embed_backend.py",
@@ -1117,86 +1187,126 @@
   {
     "path": "tests/test_generator_preservation.py",
     "purpose": "docs/config",
-    "bytes": 4552
+    "bytes": 4749
+  },
+  {
+    "path": "tests/test_iteration2_python.py",
+    "purpose": "docs/config",
+    "bytes": 8513
+  },
+  {
+    "path": "tests/test_iteration2_scripts.py",
+    "purpose": "docs/config",
+    "bytes": 19532
   },
   {
     "path": "tests/test_js_lint_parity.py",
     "purpose": "docs/config",
-    "bytes": 9498
+    "bytes": 9410
   },
   {
     "path": "tests/test_js_parity.py",
     "purpose": "docs/config",
-    "bytes": 2081
+    "bytes": 2682
+  },
+  {
+    "path": "tests/test_lint_preservation.py",
+    "purpose": "docs/config",
+    "bytes": 1403
+  },
+  {
+    "path": "tests/test_linux_offline_guard.py",
+    "purpose": "docs/config",
+    "bytes": 17199
   },
   {
     "path": "tests/test_lsp_e2e.py",
     "purpose": "LSP stdio end-to-end test",
-    "bytes": 8144
+    "bytes": 11055
   },
   {
     "path": "tests/test_maintenance.py",
     "purpose": "docs/config",
-    "bytes": 8800
+    "bytes": 9205
   },
   {
     "path": "tests/test_mcp.py",
     "purpose": "MCP tool tests",
-    "bytes": 5411
+    "bytes": 6238
   },
   {
     "path": "tests/test_mql.py",
     "purpose": "MQL parser/analyzer/feature tests",
-    "bytes": 17814
+    "bytes": 18749
   },
   {
     "path": "tests/test_normalize.py",
     "purpose": "docs/config",
-    "bytes": 9025
+    "bytes": 9552
   },
   {
     "path": "tests/test_optimize.py",
     "purpose": "Static optimizer tests",
-    "bytes": 14188
+    "bytes": 14433
+  },
+  {
+    "path": "tests/test_postgate_core.py",
+    "purpose": "docs/config",
+    "bytes": 24223
+  },
+  {
+    "path": "tests/test_postgate_mql.py",
+    "purpose": "docs/config",
+    "bytes": 10620
+  },
+  {
+    "path": "tests/test_postgate_python.py",
+    "purpose": "docs/config",
+    "bytes": 29808
   },
   {
     "path": "tests/test_providers.py",
     "purpose": "docs/config",
-    "bytes": 8414
+    "bytes": 9705
+  },
+  {
+    "path": "tests/test_publication_preservation.py",
+    "purpose": "docs/config",
+    "bytes": 10185
   },
   {
     "path": "tests/test_recipes.py",
     "purpose": "docs/config",
-    "bytes": 3614
+    "bytes": 3989
   },
   {
     "path": "tests/test_test_isolation.py",
     "purpose": "docs/config",
-    "bytes": 9935
+    "bytes": 10269
   },
   {
     "path": "tests/test_tooling_integrity.py",
     "purpose": "docs/config",
-    "bytes": 9487
+    "bytes": 11170
   },
   {
     "path": "tests/test_tooling_regressions.py",
     "purpose": "docs/config",
-    "bytes": 10603
+    "bytes": 11320
   },
   {
     "path": "tests/test_tui.py",
     "purpose": "TUI pilot test",
-    "bytes": 5763
+    "bytes": 10746
   },
   {
     "path": "tests/test_unicode61.py",
     "purpose": "docs/config",
-    "bytes": 4681
+    "bytes": 5208
   },
   {
     "path": "tests/test_web_search.py",
     "purpose": "docs/config",
-    "bytes": 6986
+    "bytes": 7254
   }
 ]

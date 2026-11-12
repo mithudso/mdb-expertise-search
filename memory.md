@@ -171,3 +171,8 @@ Preserve the existing project-local MCP disable configuration. The server defini
 Git reconciliation is separate from paused optimization work. Preserve generated logs, local backups and concurrent work. Verification and delivery receipts are recorded by the fleet synchronization task TASK-1968. Verification: scoped local checks passed. Remaining: final commit, CI and verified remote delivery.
 
 CI initially failed before tests because the runner lacked access to private ollama-client. Configured a dedicated read-only deploy key for that dependency and stored it only as a repository Actions secret. Added strict SSH host verification using GitHub's HTTPS metadata and an exact dependency URL rewrite. The key cannot write to the dependency. Remaining: final CI and verified remote delivery.
+
+
+## 2026-11-12 — final supported repair validation
+
+Full local Python673 passed/2 platform/model skips; Chrome280 and VSCode20 passed. Ruff, syntax, catalog freshness, wheel and code-only packages passed. Actual Ubuntu CI identified exactly-empty route-file recognition, now covered by a red-to-green regression while all other kernel predicates remain. Real egress evidence uses fresh Python/Node descendants. Final six-job CI and verified remote delivery remain enforced by PR7. BLIND-AUDIT-DISSENT and serialization/schema limitations remain explicit.

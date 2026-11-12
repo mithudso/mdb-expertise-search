@@ -1,35 +1,65 @@
 # Maintained-source coverage — 2026-11-12
 
-The complete maintained runtime, tools, tests, configuration and editor surface is
-145 files at repair checkpoint `a96aee5409964dbf45cdef0b18b6708970a53280`.
-The initial112-file diagnostic collection is complete (109 external plus3 native).
-Gate1 covers129 unique checkpoint files, with130 substantive reports because one
-generator changed hashes. The128 unchanged hashes and current generator report
-were independently reconciled. Gate2 reviews all145 current files, including16
-additional maintained files; its result is pending in this in-progress ledger.
+This inventory separates frozen review inputs from later repair bytes and
+additions. The final blind result is **BLIND-AUDIT-DISSENT**.
 
-Each file receives the injection gate and15 per-file verdicts: C1–C3, S1–S5,
-P1–P2, M1, intra-file M2, M4, T1 and T4 (test-only; N/A elsewhere).
-Repo M3, T2, T3, cross-file M2 and test-performance decisions are recorded separately
-in the optimizer report. Coverage is evidence accounting, not a CLEAN claim.
+## Frozen denominators
 
-The514 excluded records comprise444 protected data identities and70 generated,
-fixture, lockfile or binary data records. Protected paths use opaque identities in
-the external receipt. Their byte hashes match the original inventory. This is a
-metadata preservation census; protected corpus bodies were not code-audited.
-Synthetic expected outputs are checked by consumers; four ordinary MQL optimizer
-expectations changed under narrow authorization. Search/chunk/vector fixtures and
-all lint expectations retain their original bytes. Generated Unicode61 lookup
-modules are included in maintained-source review; their generator is reviewed too.
-Markdown and license prose are handled by the bootstrap/documentation route.
-No vendored node_modules, virtualenv, build output or model/cache/store enters scope.
-No50-file limit was applied.
+Initial diagnostics covered 112 maintained targets: 109 external and 3 native
+reports. Two extra archive/license reports are excluded from that denominator.
+Gate 1 covered 129 unique files with 130 substantive reports across the changed
+generator hash. Gate 2 completed 145/145 valid 15-pass reports and completed turns,
+with zero frozen-source drift, missing/invalid reports or active readers.
 
-The external evidence retains original and sanitized hashes, exact report targets,
-all pass rows, completed turns, raw partials, process admission receipts and per-file
-convergence outputs. Existing complete evidence was reused; no round was reset.
+The 145 legacy targets include 143 runtime/configuration/test records, one LICENSE
+prose record and one auxiliary .gitkeep. Their prose/auxiliary status is explicit,
+rather than a claim of 145 runtime-code audits. The original iteration-3
+before-manifest has 146 records, including the then-absent core regression test.
 
-| Maintained file | Frozen source SHA256 |
+The per-file contract is C1–C3, S1–S5, P1–P2, M1, intra-file M2, M4 and T1/T4
+where applicable to tests. Repo M3/T2/T3, cross-file M2 and test-performance
+decisions are separate. Coverage accounting is not a CLEAN verdict.
+
+Gate 2 contains 251 raw Medium+ rows (2 Critical, 26 High, 223 Medium) and 13
+retained Low rows. The post-gate execution ledgers contain 252 corroborated rows:
+243 Medium+ real manifestations, 1 Low observation, 6 duplicates, 2 blocked. Ordinary upstream helper/caller row
+UPSTREAM-CI-F1 explains the extra execution row; it is not an extra blind report.
+Rows, duplicates and shared/paired fix units are not independently unique bugs.
+The original 244-real classification is preserved as history; native adjudication
+now retains 243 Medium+ real manifestations plus 1 Low/bootstrap observation.
+The static index pair repair remains implemented without inventing a prior
+atomic-pair contract.
+
+The original 5-iteration cap and 2 blind slots remain. Iterations 1/2 preceded
+a96aee5; iteration 3 is focused post-gate repair/integration, not a new diagnostic
+gate. The 2→4 gate-1 and 8 gate-2 allocation history, admitted dispatcher,
+exclusive lock, original/partial raw events and source-hash receipts remain
+retained. No 50-file limit or restarted collection changed the denominator.
+
+## Protected/data exclusions
+
+The historical 514 excluded records comprise 444 protected identities plus 70
+generated, fixture, lockfile or binary records. Protected identities preserve
+baseline hashes through metadata-only checks. Their bodies, customer paths and
+vector values are not reproduced here; this census is neither source inspection
+nor redistribution clearance. No node_modules, virtualenv, build output, model/
+cache/store or customer research body enters the maintained-source audit.
+
+Search/chunk/vector fixtures and all lint expectations remain unchanged. Exactly
+four authorized optimizer expectations changed before a96aee5; post-gate work
+changed none of the 49 ordinary expected-output fixtures. Production chunk_text
+and _merge_tiny remain exact to 592db43 under KNOW-1855. No copied codec,
+monkeypatch or alternate generator masks serialization drift. The four
+representation defects remain blocked; schema-dependent advice retains prior
+behavior because two ordinary expectations are outside the authorized scope.
+
+## Legacy gate-2 frozen hash inventory
+
+These identify the exact frozen inputs at checkpoint
+a96aee5409964dbf45cdef0b18b6708970a53280. They do not assert that final repair
+bytes are unchanged or received another 15-pass review.
+
+| Legacy maintained target | Frozen gate-2 source SHA256 |
 |---|---|
 | `.editorconfig` | `fa4b659891b975ba2fe617ef5eaa16e2531060af5a8b5e225ac1dff58e99aebe` |
 | `.env.example` | `fb7d988a9494e3e9f7b36b1f04e979453ff00254d8825cc2de674ba6096f50be` |
@@ -176,3 +206,97 @@ convergence outputs. Existing complete evidence was reused; no round was reset.
 | `tests/test_tui.py` | `24963290d2d04ba7d33ec8e042c3da6ea750d6b1251f960ba92985c16939ec47` |
 | `tests/test_unicode61.py` | `aa8e0d3f0e9e589afc3e4964272d69bc428bbe77687de1bb7cb70c7382a5e39a` |
 | `tests/test_web_search.py` | `dc9c7d863f8257715f1e71c7b371b6e2da9bf5266fca03aeb605e141fb7d941e` |
+
+## Subsequent maintained source/test additions
+
+At this proposal snapshot, 16 new source/test files from applied manifests and
+normal upstream integration are
+separately inventoried below. They received ordinary repair/regression work, not
+the frozen gate-2 15-pass audit. These are observed current byte hashes, not final
+remote-tree proof. The corpus-generation and public-install tests are included in this observed
+inventory. The delivery owner reconciles any later additions before publication.
+
+| Added maintained file | Observed current SHA256 | Coverage class |
+|---|---|---|
+| `editors/chrome/test/app-completion.mjs` | `9af99f27106813ac4e4ece079c308a0b27e6b1ff9e51739d624778b857c167ec` | ordinary repair/test; outside frozen 145 |
+| `editors/chrome/test/counted-source.mjs` | `d08d61a1c97096d7f95c96cf33d0ea041452d7e0c81dcc19d1fb2422620ecd87` | ordinary repair/test; outside frozen 145 |
+| `editors/chrome/test/extension-under-test.mjs` | `37c597c61ed80f3e678efa24d4ed0c20f96998a1e1d2d11cf8bb1db7db0fb876` | ordinary repair/test; outside frozen 145 |
+| `editors/chrome/test/postgate-editors.test.mjs` | `e6c5ffc9a770f1b08d869542270780a19f48d19c1d3d683c8522d91968230775` | ordinary repair/test; outside frozen 145 |
+| `editors/chrome/test/postgate-mql.test.mjs` | `41f439e77dfb75cacdbe2f21e81604ca3b775c36b947e243085576722f710798` | ordinary repair/test; outside frozen 145 |
+| `editors/vscode/server-process.js` | `b606be560d4c4876afd436ece181abd1a2852fbc8656d848d57d7a2ed6f32dee` | ordinary repair/test; outside frozen 145 |
+| `editors/vscode/test/lifecycle.test.js` | `851024c1df39803ac6cd57070b4d0bacfc5a50cadcb4020f63a3437ec72dfeb9` | ordinary repair/test; outside frozen 145 |
+| `scripts/sync_corpus_transaction.py` | `fa4ab73fcefd29bf87125c840abb0faaf9a294bda92b6973f64bd6f37fd2c080` | ordinary repair/test; outside frozen 145 |
+| `tests/test_ci_public_install.py` | `8b0dabd2ed91206e056d44816461d1a80890fd914ed64b681fcde52ab93f9106` | ordinary repair/test; outside frozen 145 |
+| `tests/test_corpus_generation.py` | `095b21beab730e57f9643bf5178209f50b1e7ea941cf23a3b192c3f9cf3fcb49` | ordinary repair/test; outside frozen 145 |
+| `tests/test_linux_offline_guard.py` | `20ac2f7cc12a45e5c81cf8c8070465a3e1078892fe3db4870962cdecf6c6ca92` | ordinary repair/test; outside frozen 145 |
+| `tests/test_postgate_core.py` | `a8fb497b44ffeb8c8869e26bc8ba107ade0b4fe09137d4467487fc1d58904da4` | ordinary repair/test; outside frozen 145 |
+| `tests/test_postgate_mql.py` | `8b949dcf079b2e924c7352c0a7d9f2e01aecf4e94bec5faebda4775c8eeec820` | ordinary repair/test; outside frozen 145 |
+| `tests/test_postgate_python.py` | `f1708b63cd55e487fd2f53ffb1d66660fdf32fd0eca369c1bd063a2dbd5583e6` | ordinary repair/test; outside frozen 145 |
+| `tests/test_publication_preservation.py` | `e42ec82afeaef8afa7788658ccb750b4117db747db38736555ee5442ee6684ae` | ordinary repair/test; outside frozen 145 |
+
+| `scripts/ci_private_dependency.py` | `1e3512a6b885cd3916dff6810f03ef42603ad6b322f46507606a3194b299db7b` | ordinary upstream 15-pass review; outside frozen blind 145 |
+
+Two pre-existing generated operator catalogs also changed under source/generator
+and parity checks. These assets are not new source files or independently
+15-pass-reviewed targets, and are not ordinary expected-output fixtures.
+
+| Additional existing generated asset | Observed current SHA256 |
+|---|---|
+| `editors/chrome/lib/operators-data.js` | `57a3ddafb667f9250e1d44a32ca4103461d0049e3dda8386813f305b9660606a` |
+| `editors/chrome/lib/operators.json` | `fca10bcaf04c9eb5c64ac9710b4f365a2f5f15f44e3017928dce43bb5bdb817a` |
+
+**FINAL_SOURCE_INVENTORY:** Current maintained runtime/config/test scope is159 files:143 legacy diagnostic sources plus16 ordinary post-gate/upstream additions. The two legacy auxiliary targets (LICENSE prose and archive .gitkeep) remain separate from runtime counts. Generated operator catalog assets are consumer-verified separately. [Current source hash inventory](source-inventory-2026-11-12.json) records every current maintained path/hash and the difference between frozen gate evidence and ordinary post-gate review.
+
+The inventory distinguishes current source hashes from immutable earlier review snapshots.
+Do not include this report's own byte hash in its source table or silently expand
+the 145-target frozen denominator. Final per-file convergence belongs in the
+[optimizer ledger](code-deep-optimizer-2026-11-12.md); local CLEAN labels remain
+separate from global blind dissent.
+
+## Retained evidence and final validation
+
+| Artifact | SHA256 / identity |
+|---|---|
+| blind-2-final-proof.json | `3e7bee89c2c4d6cc9668d02f779f6ea9209f977c793259b847bd0f5ad8431d30` |
+| Frozen gate-2 inventory | `8bcf3f21109d0cccfd1ce664254812596acc421171f0a2c914ada83245bc11ae` |
+| Frozen gate-2 collection | `9ceb8d7d5bbbf1e461e75824fe5a2e6430a5ea7f95f575c52b5d08e2f607b930` |
+| Original postgate-before-manifest.json, 146 records | `4979a7a9443d6ccdf46f8d2f2c3f5c7ff17e41976f05da6f0c91022b10d33ffe` |
+
+Core, MQL, Python, editor, publication, Linux and corpus-generation application
+manifests retain exact before/after hashes, modes and path scope. Disposition
+ledgers preserve individual corroboration, duplicates and limitations. Complete
+raw logs/partial events stay external; no private log body was read for this
+report. Final source coverage is not empirical model-quality evaluation. The source-head
+08708f0 local result was 668 Python passes/2 skips plus the retained static,
+package and Node evidence in final-local-checks.json; final-head CI and remote
+content proof remain separate fields.
+
+**FINAL_VALIDATION:** Actual integrated source at08708f0:668 Python tests passed,2 skipped (real ONNX unavailable and Linux-only proof on macOS); Chrome280 and VS Code20 passed. Ruff, compilation, shell syntax, five generator freshness checks, wheel, code-only Chrome ZIP and VSIX builds passed. Exact commands/results and later CI-repair checks are retained in the external delivery receipt. The independent production scope proof passed64 synthetic outputs and exact selected source/AST checks.
+
+**FINAL_CI:** [PR7 checks](https://github.com/mithudso/mdb-expertise-search/pull/7/checks) cover macOS and Ubuntu on Python3.11/3.12/3.13. First integrated run43312948550 exposed Linux inherited-guard self-recognition and nested-runner failures; its failed result is retained. Final pushed-head CI must pass before merge; actual run IDs/results are recorded in the delivery receipt.
+
+**FINAL_MERGE:** [PR7](https://github.com/mithudso/mdb-expertise-search/pull/7) records the final pushed and merged commit identities. This source audit does not infer delivery from an open PR or branch ancestry.
+
+**FINAL_REMOTE:** Delivery verification compares the intended complete Git tree and every tracked blob/mode with the fetched remote default branch after merge. Exact tree/commit IDs and postmerge CI belong to the external delivery receipt.
+
+The delivery owner supplies actual final-head checks and required CI, normal
+upstream integration, remote default-tree proof and safe checkout/hub disposition.
+A source census or passing local suite alone does not establish delivery.
+
+
+### Required CI repair appendix
+
+Run43312948550 exposed Linux inherited-isolation self-recognition failures.
+Diagnostic run43314617512 proved only routeheader_ok failed: the successful IPv4
+route read was exactly empty; all identity, capability, NoNewPrivs, down-loopback
+and inert IPv6 predicates passed. Linux fib_route_seq_start returns NULL before
+the header token when the main table is absent ([primary kernel source](https://kernel.googlesource.com/pub/scm/linux/kernel/git/torvalds/linux/%2B/627b7865c062ff642c0000f3a4775f1a44b986a4/net/ipv4/fib_trie.c)).
+The correction accepts exactly empty or valid-header/zero-row IPv4 output.
+Missing, unreadable, whitespace, malformed and nonempty controls remain rejected.
+The synthetic empty-file regression was RED before and GREEN after the correction.
+Actual socket assertions run in the fresh Python parent→Node→Python descendant
+chain under the inherited kernel guard, with scratch state and fake factories.
+The generic pytest socket mock is explicitly rejected as kernel evidence.
+After this correction the actual macOS full suite passed673 tests with2 skips;
+Ruff passed. Final full-matrix CI remains a required delivery gate at PR7.
+These are necessary ordinary CI repairs, with no third blind gate or budget reset.
