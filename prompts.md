@@ -45,3 +45,10 @@
     Also is there a way to package the symantic search such that a separate ollama process isn't required"
     (→ `scripts/sync_corpus.sh`, `scripts/corpus_autoupdate.py`, ONNX embedding parity test)
 14. "Write a small install script that does all of what you need with one command" (→ `scripts/install.sh`)
+
+Version: 2026.11.12.2
+Delta: Preserve outstanding local changes and synchronize cross-system Git work.
+
+## 2026-11-12 — Git reconciliation
+
+For all of my repos in this directory, get them up to date. commit anything outstanding and get current with the most recent branch, there was a lot of work done on other systems optimizing all of them.
