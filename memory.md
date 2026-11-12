@@ -152,3 +152,5 @@ Delta: Preserve outstanding local changes and synchronize cross-system Git work.
 Preserve the existing project-local MCP disable configuration. The server definition remains available under _disabled_mcpServers.
 
 Git reconciliation is separate from paused optimization work. Preserve generated logs, local backups and concurrent work. Verification and delivery receipts are recorded by the fleet synchronization task TASK-1968. Verification: scoped local checks passed. Remaining: final commit, CI and verified remote delivery.
+
+CI initially failed before tests because the runner lacked access to private ollama-client. Configured a dedicated read-only deploy key for that dependency and stored it only as a repository Actions secret. Added strict SSH host verification using GitHub's HTTPS metadata and an exact dependency URL rewrite. The key cannot write to the dependency. Remaining: final CI and verified remote delivery.

@@ -23,6 +23,11 @@ jobs:
       - name: Git auth for private libraries
         if: env.LIBS_TOKEN != ''
         run: git config --global url."https://x-access-token:${LIBS_TOKEN}@github.com/".insteadOf "https://github.com/"
+      - name: Scoped read-only access to ollama-client
+        if: env.LIBS_TOKEN == ''
+        env:
+          OLLAMA_CLIENT_DEPLOY_KEY: ${{ secrets.OLLAMA_CLIENT_DEPLOY_KEY }}
+        run: python scripts/ci_private_dependency.py
       - run: pip install -e '.[dev]'
       - run: ruff check .
       - run: pytest -q
@@ -56,6 +61,11 @@ jobs:
       - name: Git auth for private libraries
         if: env.LIBS_TOKEN != ''
         run: git config --global url."https://x-access-token:${LIBS_TOKEN}@github.com/".insteadOf "https://github.com/"
+      - name: Scoped read-only access to ollama-client
+        if: env.LIBS_TOKEN == ''
+        env:
+          OLLAMA_CLIENT_DEPLOY_KEY: ${{ secrets.OLLAMA_CLIENT_DEPLOY_KEY }}
+        run: python scripts/ci_private_dependency.py
       - run: pip install -e .
       - run: python -m mdbx.cli index --skip-semantic
       - run: python scripts/package_chrome_extension.py --no-vectors
