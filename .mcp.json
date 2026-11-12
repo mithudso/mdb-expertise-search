@@ -1,8 +1,11 @@
 {
-  "mcpServers": {
+  "mcpServers": {},
+  "_disabled_mcpServers": {
     "mdbx": {
       "command": ".venv/bin/mdbx",
-      "args": ["mcp"]
+      "args": [
+        "mcp"
+      ]
     }
   }
 }
