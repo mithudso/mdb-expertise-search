@@ -258,7 +258,8 @@ def test_actual_linux_guard_is_inherited_by_python_and_node(tmp_path):
     probe, _node = _egress_probe()
     result = subprocess.run([sys.executable, str(ROOT / 'scripts/offline_test.py'), '--',
                              sys.executable, '-c', probe],
-                            capture_output=True, text=True, check=True, timeout=30)
+                            capture_output=True, text=True, check=False, timeout=30)
+    assert result.returncode == 0, result.stderr[-8000:]
     row = json.loads(result.stdout)
     assert Path(row['home']) == Path(row['root']) / 'home'
     assert not Path(row['root']).exists()
